@@ -14,6 +14,17 @@ if (!defined('ABSPATH')) exit;
 // cache-buster para JS/CSS – mude sempre que alterar assets
 if (!defined('VEMCOMER_CORE_VERSION')) {
   define('VEMCOMER_CORE_VERSION', '0.5.2-test1');
+  // Módulos do core (estrutura v0.6 - stubs iniciais)
+require_once __DIR__ . '/inc/bootstrap.php';
+require_once __DIR__ . '/inc/filters.php';
+require_once __DIR__ . '/inc/geo.php';
+require_once __DIR__ . '/inc/restaurants.php';
+require_once __DIR__ . '/inc/checkout.php';
+require_once __DIR__ . '/inc/kds.php';
+require_once __DIR__ . '/inc/rest.php';
+require_once __DIR__ . '/inc/shortcodes.php';
+require_once __DIR__ . '/inc/settings.php';
+
 }
 
 define('VEMCOMER_CORE_URL', plugin_dir_url(__FILE__));
