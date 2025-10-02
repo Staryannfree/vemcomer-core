@@ -1,0 +1,163 @@
+Claro, Yann — dá para mexer **direto nos arquivos** sem depender de novos .zip toda hora. Abaixo te passo **como editar rapidamente** no Hostinger (ou via SFTP), **onde ficam as coisas** e **o que mudar para ver efeito na hora**.
+
+---
+
+## 1) Onde estão os arquivos (v0.5)
+
+`/wp-content/plugins/vemcomer-core/`
+
+```
+vemcomer-core.php        // Arquivo principal: shortcodes, hooks, validações, REST, etc.
+assets/
+  style.css              // Estilos gerais das páginas/painéis
+  explore.js             // Botão “Usar minha localização” no Explorar
+  explore-map.js         // Mapa do Explorar (Leaflet)
+  restaurant-map.js      // Mapa na página do restaurante (Leaflet)
+  checkout-geo.js        // Botão “Usar minha localização” no checkout (coordenadas)
+  geo-address.js         // “Buscar endereço” (geocode) + preencher endereço (reverse)
+  kds.js                 // KDS: auto‑refresh, ações, beep
+readme.txt
+```
+
+> Você **não precisa** me pedir um novo .zip para cada ajuste. Abrindo esses arquivos, você já altera textos/labels/regras/UX.
+
+---
+
+## 2) Como editar rápido no **Hostinger**
+
+**Opção A — Gerenciador de Arquivos (hPanel)**
+
+1. hPanel → **Arquivos → Gerenciador de Arquivos**.
+2. Entre em `public_html/wp-content/plugins/vemcomer-core/`.
+3. Clique em **Editar** no arquivo desejado (ex.: `assets/geo-address.js`) → salve.
+4. **Recarregue** o site com **Ctrl/Cmd + F5** (ou “Limpar cache” se usar plugin de cache).
+
+**Opção B — SFTP (FileZilla/WinSCP)**
+
+1. Pegue os dados SFTP do seu hPanel.
+2. Conecte → vá em `wp-content/plugins/vemcomer-core/`.
+3. Baixe/edite/suba de volta o arquivo.
+
+> **Editor de Plugins** dentro do WP:** se quiser usar, ative em `wp-config.php`:
+>
+> ```php
+> define('DISALLOW_FILE_EDIT', false);
+> ```
+>
+> (Não é o mais seguro em produção; recomendo o Gerenciador de Arquivos/SFTP.)
+
+---
+
+## 3) Evitando cache (vendo a mudança na hora)
+
+Os JS/CSS são enfileirados com a versão `VEMCOMER_CORE_VERSION`.
+Troque **rapidamente** este valor no topo do `vemcomer-core.php` sempre que mexer nos arquivos estáticos:
+
+```php
+define('VEMCOMER_CORE_VERSION', '0.5.1-dev'); // qualquer string nova
+```
+
+Sempre que trocar essa string, o navegador baixa o arquivo novo (cache‑buster).
+Depois dê **Ctrl/Cmd + F5**.
+
+---
+
+## 4) Alterações comuns (e onde mexer)
+
+### A) Checkout: textos e botões de endereço
+
+* Arquivo: `assets/geo-address.js`
+
+  * Labels **“Buscar endereço”** e **“Usar minha localização”** → troque o texto dos botões.
+  * Se quiser **desligar o reverse‑geocode** (não preencher endereço automaticamente), comente a chamada `fillFromReverse(j)`.
+
+### B) KDS
+
+* Arquivo: `assets/kds.js`
+
+  * **Intervalo de atualização**: o polling vem do PHP, mas dá para fixar no JS também. O ideal é ajustar no PHP:
+
+    * Em `vemcomer-core.php`, dentro do shortcode `[vc_kds]`, procure:
+
+      ```php
+      wp_localize_script('vemcomer-kds','VC_KDS',[ 'poll' => 7000, ... ]);
+      ```
+
+      Troque para `4000` (4s), por exemplo.
+  * **Beep ao chegar pedido**: procure a função `beep()` e:
+
+    * Para **desativar por padrão**, defina `state.enabledSound = false` no topo.
+    * Ou comente a chamada `if (newOrChanged) beep();`.
+
+### C) Explorar (mapa e “perto de mim”)
+
+* **Mapa (tiles)**: em `assets/explore-map.js` e `assets/restaurant-map.js`, troque:
+
+  ```
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+  ```
+
+  por outro tileserver (ex.: Mapbox — exigirá chave).
+* **Raio padrão**: você pode **não** editar código — basta chamar:
+
+  ```
+  [vc_explore default_radius="7"]
+  ```
+
+  Se quiser fixo no código, altere em `vemcomer-core.php` na chamada do shortcode:
+
+  ```php
+  shortcode_atts(['per_page'=>12,'default_radius'=>5], $atts);
+  ```
+
+### D) Mensagens
+
+* Mensagem “**Seu carrinho já tem itens de outro restaurante**”: em `vemcomer-core.php`, no filtro `woocommerce_add_to_cart_validation` → edite o texto em `wc_add_notice(...)`.
+
+### E) Checkout (pagamento offline, troco, etc.)
+
+* Campos e validações estão em `vemcomer-core.php` na seção **“Checkout: campos, validações e taxas”**.
+  Procure por `woocommerce_checkout_fields`, `woocommerce_checkout_process` e `woocommerce_cart_calculate_fees`.
+
+### F) “Aceitando pedidos” (pausar loja)
+
+* Já está implementado: se `_rc_accepting_orders` não estiver marcado, o produto fica **não comprável** (`woocommerce_is_purchasable`).
+* O texto do botão/UX você pode ajustar no tema (template do produto) ou eu posso colocar um aviso nativo.
+
+---
+
+## 5) Trabalhando “solto” sem perder nada depois
+
+* **Mantenha só um plugin ativo** (para não dar “Cannot redeclare function”).
+* **Guarde uma cópia** local do diretório `/vemcomer-core` (zip ou repositório Git).
+* Se quiser fluxo profissional:
+
+  * Crie um repositório **GitHub** e use o plugin **Git Updater** ou **WP Pusher** para “puxar” atualizações diretamente do Git (sem subir zip).
+  * Quando eu te mandar melhorias, você “mergeia” com os seus ajustes.
+
+> Dica extra: se preferir ter um “fork” seu, duplique a pasta para `vemcomer-core-dev`, abra `vemcomer-core.php` e mude o cabeçalho:
+>
+> ```
+> Plugin Name: Vemcomer Core (seu DEV)
+> ```
+>
+> **Desative** o original e **ative só** o DEV. Assim você edita à vontade sem medo de sobrescrever.
+> (Só não mantenha os dois ativos ao mesmo tempo.)
+
+---
+
+## 6) Se quiser, deixo **ganchos (filters)** para customizar sem editar o core
+
+Posso te entregar uma 0.5.1 com filtros como:
+
+* `apply_filters('vemcomer_kds_poll', 7000)`
+* `apply_filters('vemcomer_tiles_url', '...')`
+* `apply_filters('vemcomer_default_radius', 5)`
+* `apply_filters('vemcomer_checkout_labels', [...])`
+
+Aí você cria um micro‑plugin `vemcomer-overrides.php` em `/wp-content/mu-plugins/` e muda tudo por lá, **sem tocar no core**. Se quiser, já preparo essa variação.
+
+---
+
+## 7) Quer um guia “mexam aqui” pronto?
+
