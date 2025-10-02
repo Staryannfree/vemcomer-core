@@ -12,9 +12,11 @@
 if (!defined('ABSPATH')) exit;
 
 // cache-buster para JS/CSS – mude sempre que alterar assets
+// TRECHO SUBSTITUTO (novo)
 if (!defined('VEMCOMER_CORE_VERSION')) {
-  define('VEMCOMER_CORE_VERSION', '0.5.2-test1');
-  // Módulos do core (estrutura v0.6 - stubs iniciais)
+  define('VEMCOMER_CORE_VERSION', '0.5.2-test1'); // cache-buster de assets
+}
+// Módulos do core (estrutura v0.6 - stubs iniciais)
 require_once __DIR__ . '/inc/bootstrap.php';
 require_once __DIR__ . '/inc/filters.php';
 require_once __DIR__ . '/inc/geo.php';
@@ -25,13 +27,14 @@ require_once __DIR__ . '/inc/rest.php';
 require_once __DIR__ . '/inc/shortcodes.php';
 require_once __DIR__ . '/inc/settings.php';
 
-}
 
 define('VEMCOMER_CORE_URL', plugin_dir_url(__FILE__));
+// TRECHO SUBSTITUTO (novo)
 define('VEMCOMER_CORE_PATH', plugin_dir_path(__FILE__));
 
 // ======================================================
 // 0) Helpers
+// (moveram-se para inc/geo.php; nada aqui)
 // ======================================================
 
 
