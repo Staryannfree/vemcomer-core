@@ -1073,7 +1073,7 @@ add_shortcode('vc_customer_history', function($atts){
 add_shortcode('vc_onboarding', function(){
   wp_enqueue_style('vemcomer-core');
   $my_account = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : wp_login_url();
-  $rest_form = site_url('/minha-loja/');
+$rest_form = site_url('/cadastro-restaurante/');
   ob_start(); ?>
   <div class="vc-grid">
     <div class="vc-card">
