@@ -1,0 +1,138 @@
+Como quero receber instruções de código
+
+Contexto do meu projeto
+
+Código está no GitHub (repo: Staryannfree/vemcomer-core, branch principal: main).
+
+O deploy do plugin no WordPress é feito com WP Pusher.
+
+Sempre que for preciso alterar algo, não me faça caçar: diga exatamente onde, o que trocar e o que colocar.
+
+Regras de formatação das respostas
+
+Identifique o arquivo e caminho completo
+
+Sempre traga o caminho absoluto dentro do plugin, por ex.
+wp-content/plugins/vemcomer-core/vemcomer-core.php
+
+Se houver mais de um arquivo, liste em ordem de edição.
+
+Troca de código (replace)
+
+Mostre duas caixas de código:
+
+Trecho a localizar (original) – exatamente como está no arquivo (ou com anchors se for longo).
+
+Trecho substituto (novo) – exatamente o que devo colar no lugar.
+
+Se usar anchors, coloque 1–2 linhas acima/abaixo do alvo para facilitar a busca.
+
+Exemplo de formato:
+
+Arquivo: wp-content/plugins/vemcomer-core/vemcomer-core.php
+Localizar e substituir:
+
+// TRECHO A LOCALIZAR (original)
+$rest_form = site_url('/minha-loja/');
+
+// TRECHO SUBSTITUTO (novo)
+$rest_form = site_url('/cadastro-restaurante/');
+
+
+Inserção de novo bloco (add)
+
+Diga exatamente onde inserir (antes/depois de qual linha/trecho).
+
+Traga 3 linhas antes e 3 linhas depois do ponto de inserção (contexto), marcando o local com um comentário // INSERT HERE.
+
+Exemplo:
+
+Arquivo: .../vemcomer-core.php
+Inserir logo depois deste bloco (contexto 3↑/3↓):
+
+add_action('wp_enqueue_scripts', function(){
+  // ...
+  wp_register_script('vemcomer-kds', VEMCOMER_CORE_URL . 'assets/kds.js', [], VEMCOMER_CORE_VERSION, true);
+}); // INSERT HERE
+// ======================================================
+// 3) Botões Add to Cart/externo...
+// ======================================================
+
+
+Código a adicionar:
+
+add_action('init', function(){
+  // novo hook...
+});
+
+
+Arquivos novos / renomear / remover
+
+Para arquivos novos, informe:
+
+Caminho completo + conteúdo inteiro.
+
+Para renomear/remover, informe:
+
+Caminho atual → novo caminho (se renomear) ou “remover” (se excluir).
+
+SQL/Metas/Options (se houver)
+
+Se precisar criar/atualizar options/metas, traga comandos WP-CLI (quando aplicável) e o equivalente via PHP (para execução única).
+
+Passos após editar (WP Pusher)
+
+Sempre finalize com uma seção “Depois de editar, faça” contendo:
+
+Commit no GitHub (branch main).
+
+Se necessário, bump de versão no cabeçalho:
+Version: x.y.z e define('VEMCOMER_CORE_VERSION', 'x.y.z');
+
+WP Admin → WP Pusher → “Update plugin” (ou aguardar Push-to-Deploy se habilitado).
+
+Limpar cache (se houver) e, se aplicável, desativar/ativar o plugin para recarregar autoload/OPcache.
+
+Padronização de código
+
+PHP ≥ 7.4, compatível com WP 6.x e WooCommerce.
+
+Use esc_html(), esc_url(), sanitize_text_field() etc. onde manipular entrada/saída.
+
+Evite quebrar hooks existentes. Se mudar comportamento, documente o hook e impacto.
+
+Mensagens curtas e objetivas
+
+Nada de explicações longas antes do “como fazer”.
+
+Comece direto com Arquivo → Troca/Inserção, depois (se necessário) adicione “Notas rápidas”.
+
+Mini-exemplo (template)
+
+Arquivo: wp-content/plugins/vemcomer-core/vemcomer-core.php
+Localizar e substituir:
+
+// original
+add_shortcode('vc_onboarding', function(){
+  wp_enqueue_style('vemcomer-core');
+  $my_account = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : wp_login_url();
+  $rest_form = site_url('/minha-loja/');
+
+// novo
+add_shortcode('vc_onboarding', function(){
+  wp_enqueue_style('vemcomer-core');
+  $my_account = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : wp_login_url();
+  $rest_form = site_url('/cadastro-restaurante/');
+
+
+Depois de editar, faça
+
+Atualize Version: e VEMCOMER_CORE_VERSION se mudou JS/CSS.
+
+Commit em main.
+
+WP Admin → WP Pusher → Update plugin.
+
+Limpar cache / reativar plugin se necessário.
+
+Se eu fugir desse formato, pode me lembrar: “AAA”.
