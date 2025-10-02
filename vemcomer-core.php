@@ -28,9 +28,14 @@ require_once __DIR__ . '/inc/shortcodes.php';
 require_once __DIR__ . '/inc/settings.php';
 
 
-define('VEMCOMER_CORE_URL', plugin_dir_url(__FILE__));
 // TRECHO SUBSTITUTO (novo)
-define('VEMCOMER_CORE_PATH', plugin_dir_path(__FILE__));
+if (!defined('VEMCOMER_CORE_URL')) {
+  define('VEMCOMER_CORE_URL', plugin_dir_url(__FILE__));
+}
+if (!defined('VEMCOMER_CORE_PATH')) {
+  define('VEMCOMER_CORE_PATH', plugin_dir_path(__FILE__));
+}
+
 
 // ======================================================
 // 0) Helpers
