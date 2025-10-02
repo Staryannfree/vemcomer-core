@@ -52,4 +52,3 @@ if (!function_exists('vc_haversine_km')) {
     return (float) ($R * $c);
   }
 }
-```0
