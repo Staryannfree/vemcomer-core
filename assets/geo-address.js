@@ -8,7 +8,7 @@
     // Botões
     var bar = $('<p class="form-row form-row-wide" />');
     var btnSearch = $('<a href="#" class="button" style="margin-right:8px;">Buscar endereço</a>');
-    var btnLocate = $('<a href="#" class="button button-outline">Usar minha localização</a>');
+    var btnLocate = $('<a href="#" class="button button-outline">Detectar localização</a>');
     bar.append(btnSearch).append(btnLocate);
     txt.closest('.form-row').after(bar);
 
@@ -66,7 +66,7 @@
       }, function(){
         alert('Não foi possível obter sua localização.');
       }, { enableHighAccuracy:true, timeout:8000 });
-      btnLocate.text('Usar minha localização').prop('disabled', false);
+    btnLocate.text('Detectar localização').prop('disabled', false);
     });
   });
 })(jQuery);
