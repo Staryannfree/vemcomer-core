@@ -1,0 +1,19 @@
+{
+  "name": "vemcomer/vemcomer-core",
+  "description": "Core do marketplace VemComer (WordPress plugin).",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "VemComer\\Core\\": "inc/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-main": "0.1.x-dev"
+    }
+  }
+}
