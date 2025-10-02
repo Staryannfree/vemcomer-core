@@ -8,11 +8,12 @@
  * GitHub Plugin URI: Staryannfree/vemcomer-core
  * Primary Branch: main
  */
- 
+
 // cache-buster para JS/CSS – mude sempre que alterar assets
 if (!defined('VEMCOMER_CORE_VERSION')) {
   define('VEMCOMER_CORE_VERSION', '0.5.2-test1');
 }
+
 define('VEMCOMER_CORE_URL', plugin_dir_url(__FILE__));
 define('VEMCOMER_CORE_PATH', plugin_dir_path(__FILE__));
 
