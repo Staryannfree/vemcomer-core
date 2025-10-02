@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) exit;
 // cache-buster para JS/CSS – mude sempre que alterar assets
 // TRECHO SUBSTITUTO (novo)
 if (!defined('VEMCOMER_CORE_VERSION')) {
-  define('VEMCOMER_CORE_VERSION', '0.5.2-test1'); // cache-buster de assets
+  define('VEMCOMER_CORE_VERSION', '0.5.2-test2'); // cache-buster de assets
 }
 // Módulos do core (estrutura v0.6 - stubs iniciais)
 require_once __DIR__ . '/inc/bootstrap.php';
