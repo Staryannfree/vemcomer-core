@@ -15,11 +15,20 @@
 - [x] ESLint/Stylelint configurados
 - [x] CI: job de lint JS/CSS
 
+## Segurança & Observabilidade
+- [x] Rate limiting nas rotas REST
+- [x] Auditoria de ações (CPT vc_audit)
+
+## Catálogo: Restaurantes
+- [x] Delete em cascata (restaurante → itens de cardápio)
+
 ## Catálogo: Restaurantes (Fase 2)
 - [x] REST de escrita (POST/PATCH) + DELETE com caps
 
 ## Admin UX
 - [x] Filtros na listagem do CPT (cozinha, bairro, delivery)
+- [x] Export CSV a partir da listagem
+- [x] Colunas ordenáveis e ajustes visuais
 
 ## 0) Higiene e fundação
 - [ ] Blindar `define()` de constantes (URL/PATH/VERSION) com `if (!defined(...))`
