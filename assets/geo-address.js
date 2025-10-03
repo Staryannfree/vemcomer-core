@@ -3,7 +3,7 @@
     var txt = $('input[name="rc_shipping_address_text"]');
     var lat = $('input[name="rc_shipping_lat"]');
     var lng = $('input[name="rc_shipping_lng"]');
-    if (!txt.length) return;
+    if (!txt.length) {return;}
 
     // Botões
     var bar = $('<p class="form-row form-row-wide" />');
@@ -23,7 +23,7 @@
     function fillFromReverse(json){
       try{
         var addr = json.display_name || '';
-        if (addr && txt.val().trim() === '') txt.val(addr);
+        if (addr && txt.val().trim() === '') {txt.val(addr);}
         var comp = json.address || {};
         var map = {
           'shipping_address_1': [comp.road, comp.house_number].filter(Boolean).join(', '),
@@ -33,9 +33,9 @@
         };
         Object.keys(map).forEach(function(k){
           var el = $('[name="'+k+'"]');
-          if (el.length && !el.val()) el.val(map[k]);
+          if (el.length && !el.val()) {el.val(map[k]);}
         });
-      }catch(e){}
+      }catch{}
     }
 
     btnSearch.on('click', function(e){

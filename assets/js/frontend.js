@@ -1,7 +1,7 @@
 (function(){
   // ===== Utilidades de moeda =====
   function currencyToFloat(v){
-    if(typeof v !== 'string') return Number(v||0);
+    if(typeof v !== 'string') {return Number(v||0);}
     v = v.replace(/[^0-9,\.]/g,'');
     if(v.indexOf(',')>-1 && v.lastIndexOf(',')>v.lastIndexOf('.')){
       v = v.replace(/\./g,'').replace(',', '.');
@@ -24,14 +24,14 @@
     root.querySelector('.vc-cart').innerHTML = list || '<div class="vc-empty">Carrinho vazio</div>';
     root.querySelector('.vc-subtotal').innerHTML = `Subtotal: <strong>R$ ${floatToBR(subtotal)}</strong>`;
     root.dataset.subtotal = String(subtotal);
-    const has = cart.length>0; const place = root.querySelector('.vc-place-order'); if(place) place.disabled = !has;
+    const has = cart.length>0; const place = root.querySelector('.vc-place-order'); if(place) {place.disabled = !has;}
   }
 
   // ===== Cupom simples =====
   const COUPON_KEY = 'vc_coupon_v1';
   function applyCoupon(code, subtotal){
     code = (code||'').trim().toUpperCase();
-    if(!code) return {ok:false, msg:'Cupom vazio.'};
+    if(!code) {return {ok:false, msg:'Cupom vazio.'};}
     // Regras simples (poderá vir de REST no futuro)
     const rules = {
       'DESC10': { type:'percent', value:10 },
@@ -39,11 +39,11 @@
       'FRETEGRATIS': { type:'freight', value:1 }
     };
     const r = rules[code];
-    if(!r) return {ok:false, msg:'Cupom inválido.'};
+    if(!r) {return {ok:false, msg:'Cupom inválido.'};}
     let discount = 0, freightFree = false;
-    if(r.type==='percent') discount = subtotal * (r.value/100);
-    if(r.type==='money') discount = r.value;
-    if(r.type==='freight') freightFree = true;
+    if(r.type==='percent') {discount = subtotal * (r.value/100);}
+    if(r.type==='money') {discount = r.value;}
+    if(r.type==='freight') {freightFree = true;}
     return {ok:true, code, discount, freightFree};
   }
 
@@ -55,30 +55,30 @@
       const rid = Number(add.dataset.restaurant);
       const title = add.dataset.title; const price = add.dataset.price;
       const found = cart.find(i=>i.id===id);
-      if(found) found.qtd++; else cart.push({id, rid, title, price, qtd:1});
+      if(found) {found.qtd++;} else {cart.push({id, rid, title, price, qtd:1});}
       saveCart();
       const checkout = document.querySelector('.vc-checkout');
-      if(checkout) renderCart(checkout);
+      if(checkout) {renderCart(checkout);}
     }
   });
 
   document.addEventListener('click', function(e){
     const dec = e.target.closest('.vc-dec');
     const inc = e.target.closest('.vc-inc');
-    if(!dec && !inc) return;
+    if(!dec && !inc) {return;}
     const id = Number((dec||inc).dataset.id);
-    const found = cart.find(i=>i.id===id); if(!found) return;
+    const found = cart.find(i=>i.id===id); if(!found) {return;}
     if(dec){ found.qtd = Math.max(0, found.qtd-1); }
     if(inc){ found.qtd++; }
-    for(let i=cart.length-1;i>=0;i--){ if(cart[i].qtd===0) cart.splice(i,1); }
+    for(let i=cart.length-1;i>=0;i--){ if(cart[i].qtd===0) {cart.splice(i,1);} }
     saveCart();
     const checkout = document.querySelector('.vc-checkout');
-    if(checkout) renderCart(checkout);
+    if(checkout) {renderCart(checkout);}
   });
 
   document.addEventListener('click', async function(e){
     const btn = e.target.closest('.vc-quote');
-    if(!btn) return;
+    if(!btn) {return;}
     const root = btn.closest('.vc-checkout');
     const rid = Number(root.dataset.restaurant||0) || (cart[0] && cart[0].rid) || 0;
     const subtotal = Number(root.dataset.subtotal||0);
@@ -88,7 +88,7 @@
     const url = `${VemComer.rest.base}/shipping/quote?restaurant_id=${rid}&subtotal=${subtotal}`;
     const res = await fetch(url); const shipData = await res.json();
     let ship = Number(shipData.ship||0);
-    if(c.ok && c.freightFree) ship = 0;
+    if(c.ok && c.freightFree) {ship = 0;}
 
     const discount = c.ok ? (c.discount||0) : 0;
     const total = Math.max(0, subtotal - discount + ship);
@@ -100,13 +100,13 @@
 
     root.dataset.ship = String(ship);
     root.dataset.discount = String(discount);
-    if(c.ok) localStorage.setItem(COUPON_KEY, coupon); else localStorage.removeItem(COUPON_KEY);
+    if(c.ok) {localStorage.setItem(COUPON_KEY, coupon);} else {localStorage.removeItem(COUPON_KEY);}
     root.querySelector('.vc-place-order').disabled = cart.length===0;
   });
 
   document.addEventListener('click', async function(e){
     const btn = e.target.closest('.vc-place-order');
-    if(!btn) return;
+    if(!btn) {return;}
     const root = btn.closest('.vc-checkout');
     const subtotal = Number(root.dataset.subtotal||0);
     const ship = Number(root.dataset.ship||0);
@@ -144,16 +144,16 @@
           clearInterval(trackingTimer); trackingTimer = null;
         }
       }
-    }catch(err){ /* silencioso */ }
+    }catch{ /* silencioso */ }
   }
 
   document.addEventListener('click', function(e){
     const t = e.target.closest('.vc-track');
-    if(!t) return;
+    if(!t) {return;}
     const id = Number(t.dataset.id);
     const root = t.closest('.vc-checkout');
     const box = root.querySelector('.vc-order-result');
-    if(trackingTimer) clearInterval(trackingTimer);
+    if(trackingTimer) {clearInterval(trackingTimer);}
     pollStatus(id, box); // imediato
     trackingTimer = setInterval(()=>pollStatus(id, box), 5000);
   });
@@ -164,7 +164,7 @@
     if(checkout) {
       renderCart(checkout);
       const coupon = localStorage.getItem(COUPON_KEY)||'';
-      const input = document.querySelector('.vc-coupon'); if(input) input.value = coupon;
+      const input = document.querySelector('.vc-coupon'); if(input) {input.value = coupon;}
     }
   });
 })();

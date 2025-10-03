@@ -1,10 +1,11 @@
 <?php
 /**
- * REST API – Escrita para Restaurantes (POST/PATCH).
+ * REST API – Escrita para Restaurantes (POST/PATCH/DELETE)
  *
  * Rotas:
- *   POST   /wp-json/vemcomer/v1/restaurants
- *   PATCH  /wp-json/vemcomer/v1/restaurants/(?P<id>\d+)
+ *   POST    /wp-json/vemcomer/v1/restaurants
+ *   PATCH   /wp-json/vemcomer/v1/restaurants/(?P<id>\d+)
+ *   DELETE  /wp-json/vemcomer/v1/restaurants/(?P<id>\d+)
  *
  * @package VemComer\Core
  */
@@ -31,29 +32,43 @@ add_action(
 			)
 		);
 
-		register_rest_route(
-			'vemcomer/v1',
-			'/restaurants/(?P<id>\d+)',
-			array(
-				array(
-					'methods'             => 'PATCH',
-					'callback'            => 'vc_rest_update_restaurant',
-					'permission_callback' => function ( WP_REST_Request $req ) {
-						$id = (int) $req['id'];
-						return $id && current_user_can( 'edit_post', $id );
-					},
-					'args'                => array_merge(
-						array(
-							'id' => array(
-								'type'     => 'integer',
-								'required' => true,
-							),
-						),
-						vc_rest_write_args()
-					),
-				),
-			)
-		);
+                register_rest_route(
+                        'vemcomer/v1',
+                        '/restaurants/(?P<id>\d+)',
+                        array(
+                                array(
+                                        'methods'             => 'PATCH',
+                                        'callback'            => 'vc_rest_update_restaurant',
+                                        'permission_callback' => function ( WP_REST_Request $req ) {
+                                                $id = (int) $req['id'];
+                                                return $id && current_user_can( 'edit_post', $id );
+                                        },
+                                        'args'                => array_merge(
+                                                array(
+                                                        'id' => array(
+                                                                'type'     => 'integer',
+                                                                'required' => true,
+                                                        ),
+                                                ),
+                                                vc_rest_write_args()
+                                        ),
+                                ),
+                                array(
+                                        'methods'             => WP_REST_Server::DELETABLE,
+                                        'callback'            => 'vc_rest_delete_restaurant',
+                                        'permission_callback' => function ( WP_REST_Request $req ) {
+                                                $id = (int) $req['id'];
+                                                return $id && current_user_can( 'delete_post', $id );
+                                        },
+                                        'args'                => array(
+                                                'id' => array(
+                                                        'type'     => 'integer',
+                                                        'required' => true,
+                                                ),
+                                        ),
+                                ),
+                        )
+                );
 	}
 );
 
@@ -64,10 +79,10 @@ add_action(
  */
 function vc_rest_write_args(): array {
 	return array(
-		'title'      => array(
-			'type'     => 'string',
-			'required' => true,
-		),
+                'title'      => array(
+                        'type'     => 'string',
+                        'required' => false,
+                ),
 		'cnpj'       => array(
 			'type'     => 'string',
 			'required' => false,
@@ -186,32 +201,54 @@ function vc_rest_create_restaurant( WP_REST_Request $req ): WP_REST_Response {
  * @return WP_REST_Response
  */
 function vc_rest_update_restaurant( WP_REST_Request $req ): WP_REST_Response {
-	$id   = (int) $req['id'];
-	$post = get_post( $id );
-	if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
-				return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
-	}
+        $id   = (int) $req['id'];
+        $post = get_post( $id );
+        if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
+                return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
+        }
 
-	$data = vc_rest_sanitize_payload( (array) $req->get_json_params() );
+        $data = vc_rest_sanitize_payload( (array) $req->get_json_params() );
 
-	if ( ! empty( $data['post_title'] ?? '' ) ) {
-		wp_update_post(
-			array(
-				'ID'         => $id,
-				'post_title' => $data['post_title'],
-			)
-		);
-	}
+        if ( ! empty( $data['post_title'] ?? '' ) ) {
+                wp_update_post(
+                        array(
+                                'ID'         => $id,
+                                'post_title' => $data['post_title'],
+                        )
+                );
+        }
 
-	vc_rest_apply_terms_and_meta( $id, $data );
+        vc_rest_apply_terms_and_meta( $id, $data );
 
-	return new WP_REST_Response(
-		array(
-			'id'   => (int) $id,
-			'link' => get_permalink( $id ),
-		),
-		200
-	);
+        return new WP_REST_Response(
+                array(
+                        'id'   => (int) $id,
+                        'link' => get_permalink( $id ),
+                ),
+                200
+        );
+}
+
+/**
+ * Deleta um restaurante via REST.
+ *
+ * @param WP_REST_Request $req Requisição recebida.
+ *
+ * @return WP_REST_Response
+ */
+function vc_rest_delete_restaurant( WP_REST_Request $req ): WP_REST_Response {
+        $id   = (int) $req['id'];
+        $post = get_post( $id );
+        if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
+                return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
+        }
+
+        $deleted = wp_delete_post( $id, true );
+        if ( ! $deleted ) {
+                return new WP_REST_Response( array( 'message' => __( 'Falha ao deletar.', 'vemcomer' ) ), 500 );
+        }
+
+        return new WP_REST_Response( array( 'deleted' => true, 'id' => (int) $id ), 200 );
 }
 
 /**

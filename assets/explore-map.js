@@ -1,8 +1,8 @@
 (function(){
   function init(){
-    if (typeof VC_EXPLORE_MAP === 'undefined') return;
+    if (typeof VC_EXPLORE_MAP === 'undefined') {return;}
     var el = document.getElementById('vc-map');
-    if (!el) return;
+    if (!el) {return;}
     var m = L.map(el);
     var tiles = VC_EXPLORE_MAP.tiles || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     L.tileLayer(tiles, {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(m);
@@ -19,9 +19,9 @@
       L.circle([u.lat, u.lng], {radius: 200, color:'#111827'}).addTo(m);
       bounds.push([u.lat, u.lng]);
     }
-    if (bounds.length) m.fitBounds(bounds, {padding: [20,20]});
-    else m.setView([0,0], 2);
+    if (bounds.length) {m.fitBounds(bounds, {padding: [20,20]});}
+    else {m.setView([0,0], 2);}
   }
-  if (document.readyState !== 'loading') init();
-  else document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState !== 'loading') {init();}
+  else {document.addEventListener('DOMContentLoaded', init);}
 })();

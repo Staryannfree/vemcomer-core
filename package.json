@@ -1,0 +1,17 @@
+{
+  "name": "vemcomer-core",
+  "private": true,
+  "devDependencies": {
+    "eslint": "^9.11.1",
+    "@eslint/js": "^9.11.1",
+    "globals": "^15.9.0",
+    "stylelint": "^16.8.1",
+    "stylelint-config-standard": "^36.0.1"
+  },
+  "type": "module",
+  "scripts": {
+    "lint:js": "eslint --config eslint.config.mjs \"assets/**/*.js\"",
+    "lint:css": "stylelint \"assets/**/*.css\"",
+    "lint": "npm run lint:js && npm run lint:css"
+  }
+}

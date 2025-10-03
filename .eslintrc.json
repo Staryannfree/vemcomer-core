@@ -1,0 +1,21 @@
+{
+  "languageOptions": {
+    "sourceType": "module",
+    "globals": {
+      "window": true,
+      "document": true,
+      "jQuery": true
+    }
+  },
+  "ignores": [
+    "node_modules/**",
+    "vendor/**",
+    "**/*.min.js"
+  ],
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-undef": "error",
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"]
+  }
+}
