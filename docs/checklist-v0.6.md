@@ -15,6 +15,12 @@
 - [x] ESLint/Stylelint configurados
 - [x] CI: job de lint JS/CSS
 
+## Front
+- [x] Shortcodes de listagem e card (restaurants)
+- [x] Shortcode de filtros integrado
+- [x] Shortcode de menu (itens do cardápio)
+- [x] CSS dos shortcodes com enqueue condicional
+
 ## Catálogo: Restaurantes (Fase 2)
 - [x] REST de escrita (POST/PATCH) + DELETE com caps
 
