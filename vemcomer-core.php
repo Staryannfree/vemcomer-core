@@ -1,67 +1,48 @@
 <?php
 /**
- * Plugin Name:       VemComer Core
- * Plugin URI:        https://github.com/Staryannfree/vemcomer-core
- * Description:       Núcleo do marketplace VemComer (WordPress).
- * Version:           0.1.0
- * Requires at least: 6.2
- * Requires PHP:      8.1
- * Author:            VemComer
- * License:           GPL-2.0-or-later
- * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       vemcomer-core
- * Domain Path:       /languages
+ * Plugin Name: VemComer Core
+ * Description: Core do marketplace VemComer — CPTs, Admin e REST base.
+ * Version: 0.1.0
+ * Requires at least: 6.0
+ * Requires PHP: 8.0
+ * Author: VemComer
+ * Text Domain: vemcomer
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-/**
- * Constantes úteis
- */
-define( 'VMC_VERSION', '0.1.0' );
-define( 'VMC_FILE', __FILE__ );
-define( 'VMC_DIR', plugin_dir_path( __FILE__ ) );
-define( 'VMC_URL', plugin_dir_url( __FILE__ ) );
+// Constantes básicas
+define( 'VEMCOMER_CORE_VERSION', '0.1.0' );
+define( 'VEMCOMER_CORE_FILE', __FILE__ );
+define( 'VEMCOMER_CORE_DIR', plugin_dir_path( __FILE__ ) );
+define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
 
-/**
- * Autoload via Composer, com fallback PSR-4 simples
- */
-$composer = VMC_DIR . 'vendor/autoload.php';
-if ( file_exists( $composer ) ) {
-	require_once $composer;
-} else {
-	// Fallback PSR-4 básico para o namespace "VemComer\Core\"
-	spl_autoload_register( function ( $class ) {
-		$prefix   = 'VemComer\\Core\\';
-		$base_dir = VMC_DIR . 'inc/';
-		$len      = strlen( $prefix );
-
-		if ( strncmp( $prefix, $class, $len ) !== 0 ) {
-			return;
-		}
-		$relative_class = substr( $class, $len );
-		$file           = $base_dir . str_replace( '\\', '/', $relative_class ) . '.php';
-
-		if ( file_exists( $file ) ) {
-			require $file;
-		}
-	} );
-}
-
-/**
- * Inicialização principal
- */
-add_action( 'plugins_loaded', static function () {
-	// Carrega o core
-	if ( class_exists( 'VemComer\\Core\\Plugin' ) ) {
-		VemComer\Core\Plugin::instance()->boot();
-	}
+// Autoload simples das classes do inc/
+spl_autoload_register( function ( $class ) {
+    if ( str_starts_with( $class, 'VC_' ) ) {
+        $path = VEMCOMER_CORE_DIR . 'inc/' . 'class-' . strtolower( str_replace( '_', '-', $class ) ) . '.php';
+        if ( file_exists( $path ) ) {
+            require_once $path;
+        }
+    }
 } );
 
-/**
- * Hooks de ativação/desativação
- */
-register_activation_hook( __FILE__, [ 'VemComer\\Core\\Plugin', 'activate' ] );
-register_deactivation_hook( __FILE__, [ 'VemComer\\Core\\Plugin', 'deactivate' ] );
+// Helpers comuns
+require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
+
+// Bootstrap
+add_action( 'plugins_loaded', function () {
+    // Loader central (ganchos, assets, etc.)
+    $loader = new VC_Loader();
+    $loader->init();
+
+    // CPTs
+    ( new VC_CPT_Produto() )->init();
+    ( new VC_CPT_Pedido() )->init();
+
+    // Admin
+    ( new VC_Admin_Menu() )->init();
+
+    // REST
+    ( new VC_REST() )->init();
+} );
