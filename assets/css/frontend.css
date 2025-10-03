@@ -1,1 +1,15 @@
-/* VemComer Frontend base */
+.vc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.vc-card{border:1px solid #e6e6e6;border-radius:12px;padding:12px}
+.vc-thumb{width:100%;height:auto;border-radius:8px}
+.vc-title{margin:8px 0}
+.vc-meta,.vc-desc{font-size:0.9rem;color:#555}
+.vc-line{margin-top:6px;display:flex;align-items:center;justify-content:space-between}
+.vc-btn{background:#111;color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}
+.vc-btn:disabled{opacity:.5;cursor:not-allowed}
+.vc-empty{padding:12px;background:#fafafa;border:1px dashed #ddd;border-radius:8px}
+
+.vc-checkout{border:2px solid #111;border-radius:14px;padding:16px;margin-top:24px}
+.vc-row{display:flex;gap:8px;justify-content:space-between;border-bottom:1px solid #eee;padding:6px 0}
+.vc-summary{margin-top:12px}
+.vc-summary>div{margin:4px 0}
+.vc-zip{width:160px;margin-left:8px}
