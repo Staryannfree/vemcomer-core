@@ -19,6 +19,7 @@ require_once __DIR__ . '/rest-api.php';
 require_once __DIR__ . '/rest-api-write.php';
 require_once __DIR__ . '/roles-capabilities.php';
 require_once __DIR__ . '/templates-loader.php';
+require_once __DIR__ . '/shortcodes/loader.php';
 
 $preenchedor_file = __DIR__ . '/admin/preenchedor.php';
 if ( file_exists( $preenchedor_file ) ) {
