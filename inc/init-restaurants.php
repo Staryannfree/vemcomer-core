@@ -1,23 +1,21 @@
 <?php
 /**
- * Bootstrap do módulo de Restaurantes do VemComer Core
- *
- * Carrega CPT, taxonomias, metaboxes e colunas administrativas.
+ * Bootstrap do módulo de Restaurantes – Atualizado com REST e Roles
  */
 
-// Impede acesso direto.
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 require_once __DIR__ . '/post-types.php';
 require_once __DIR__ . '/taxonomies.php';
 require_once __DIR__ . '/meta-restaurants.php';
 require_once __DIR__ . '/admin-columns.php';
+require_once __DIR__ . '/rest-api.php';
+require_once __DIR__ . '/roles-capabilities.php';
 
-// Assets de admin (opcional)
-add_action( 'admin_enqueue_scripts', function( $hook ) {
-    // Carrega apenas nas telas do CPT de restaurantes
-    $screen = get_current_screen();
-    if ( isset( $screen->post_type ) && 'vc_restaurant' === $screen->post_type ) {
+// Assets de admin
+add_action( 'admin_enqueue_scripts', function() {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if ( $screen && isset( $screen->post_type ) && 'vc_restaurant' === $screen->post_type ) {
         wp_enqueue_script(
             'vc-restaurants-admin',
             plugins_url( '../assets/js/restaurants-admin.js', __FILE__ ),
@@ -33,3 +31,18 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
         );
     }
 });
+
+// Garante capabilities ao ativar o plugin principal
+if ( function_exists( 'register_activation_hook' ) ) {
+    // Tenta detectar o arquivo principal do plugin a partir deste diretório
+    $plugin_main = dirname( __DIR__ ) . '/vemcomer-core.php';
+    if ( file_exists( $plugin_main ) ) {
+        register_activation_hook( $plugin_main, function() {
+            // Registra CPT antes de atribuir caps (para map_meta_cap)
+            if ( function_exists( 'register_post_type' ) && ! post_type_exists( 'vc_restaurant' ) ) {
+                do_action( 'init' ); // garante init para registrar CPT/Tax
+            }
+            vc_assign_caps_to_roles();
+        });
+    }
+}
