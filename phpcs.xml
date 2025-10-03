@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ruleset name="VemComer – WPCS">
+  <description>WordPress Coding Standards + PHPCompatibility</description>
+
+  <!-- Alvos -->
+  <file>inc/rest-api-write.php</file>
+  <file>inc/templates-loader.php</file>
+  <file>templates</file>
+
+  <!-- Ignorados -->
+  <exclude-pattern>vendor/*</exclude-pattern>
+  <exclude-pattern>node_modules/*</exclude-pattern>
+  <exclude-pattern>.github/*</exclude-pattern>
+  <exclude-pattern>assets/*</exclude-pattern>
+  <exclude-pattern>*.min.js</exclude-pattern>
+  <exclude-pattern>*.min.css</exclude-pattern>
+
+  <!-- PHP alvo (8.1+) -->
+  <config name="php_version" value="80100"/>
+
+  <!-- Standards -->
+  <rule ref="WordPress-Core"/>
+  <rule ref="WordPress-Docs"/>
+  <rule ref="WordPress-Extra"/>
+  <rule ref="PHPCompatibility"/>
+
+  <!-- Ajustes -->
+  <rule ref="WordPress.Files.FileName">
+    <properties>
+      <property name="strict_class_file_names" value="false"/>
+    </properties>
+  </rule>
+
+  <arg name="colors"/>
+  <arg name="extensions" value="php"/>
+  <arg value="sp"/>
+</ruleset>
