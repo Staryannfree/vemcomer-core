@@ -18,7 +18,6 @@ class Settings {
         add_action( 'admin_menu', [ $this, 'ensure_menu' ], 20 );
     }
 
-    /** Garante que a página de Configurações exista como submenu (caso não tenha o pacote 1) */
     public function ensure_menu(): void {
         add_submenu_page( 'vemcomer-root', __( 'Configurações', 'vemcomer' ), __( 'Configurações', 'vemcomer' ), 'manage_options', self::PAGE_SLUG, [ $this, 'render_page' ] );
     }
@@ -33,6 +32,8 @@ class Settings {
         add_settings_field( 'payment_provider', __( 'Gateway de Pagamento', 'vemcomer' ), [ $this, 'field_payment_provider' ], self::PAGE_SLUG, 'vc_general' );
         add_settings_field( 'payment_secret', __( 'Segredo do Webhook (HMAC)', 'vemcomer' ), [ $this, 'field_payment_secret' ], self::PAGE_SLUG, 'vc_general' );
         add_settings_field( 'delivery_provider', __( 'Serviço de Entrega', 'vemcomer' ), [ $this, 'field_delivery_provider' ], self::PAGE_SLUG, 'vc_general' );
+
+        add_settings_field( 'enable_wc_sync', __( 'Sincronizar com WooCommerce', 'vemcomer' ), [ $this, 'field_enable_wc_sync' ], self::PAGE_SLUG, 'vc_general' );
     }
 
     public function sanitize( $input ): array {
@@ -40,6 +41,7 @@ class Settings {
         $out['payment_provider']  = isset( $input['payment_provider'] ) ? sanitize_text_field( wp_unslash( $input['payment_provider'] ) ) : '';
         $out['payment_secret']    = isset( $input['payment_secret'] ) ? sanitize_text_field( wp_unslash( $input['payment_secret'] ) ) : '';
         $out['delivery_provider'] = isset( $input['delivery_provider'] ) ? sanitize_text_field( wp_unslash( $input['delivery_provider'] ) ) : '';
+        $out['enable_wc_sync']    = ! empty( $input['enable_wc_sync'] ) ? '1' : '';
         return $out;
     }
 
@@ -48,6 +50,7 @@ class Settings {
             'payment_provider'  => '',
             'payment_secret'    => '',
             'delivery_provider' => '',
+            'enable_wc_sync'    => '',
         ];
         return wp_parse_args( (array) get_option( self::OPTION_NAME, [] ), $defaults );
     }
@@ -78,5 +81,9 @@ class Settings {
     public function field_delivery_provider(): void {
         $o = $this->get();
         $this->text( 'delivery_provider', (string) $o['delivery_provider'], 'text', 'ex.: loggi, lalamove' );
+    }
+    public function field_enable_wc_sync(): void {
+        $o = $this->get();
+        echo '<label><input type="checkbox" name="' . esc_attr( self::OPTION_NAME . '[enable_wc_sync]' ) . '" value="1" ' . checked( (bool) $o['enable_wc_sync'], true, false ) . ' /> ' . esc_html__( 'Ativar sincronização com WooCommerce', 'vemcomer' ) . '</label>';
     }
 }
