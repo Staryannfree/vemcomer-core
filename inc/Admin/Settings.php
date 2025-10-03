@@ -34,6 +34,8 @@ class Settings {
         add_settings_field( 'delivery_provider', __( 'Serviço de Entrega', 'vemcomer' ), [ $this, 'field_delivery_provider' ], self::PAGE_SLUG, 'vc_general' );
 
         add_settings_field( 'enable_wc_sync', __( 'Sincronizar com WooCommerce', 'vemcomer' ), [ $this, 'field_enable_wc_sync' ], self::PAGE_SLUG, 'vc_general' );
+        add_settings_field( 'email_enabled', __( 'Enviar emails de eventos', 'vemcomer' ), [ $this, 'field_email_enabled' ], self::PAGE_SLUG, 'vc_general' );
+        add_settings_field( 'email_from', __( 'Remetente (email)', 'vemcomer' ), [ $this, 'field_email_from' ], self::PAGE_SLUG, 'vc_general' );
     }
 
     public function sanitize( $input ): array {
@@ -42,6 +44,8 @@ class Settings {
         $out['payment_secret']    = isset( $input['payment_secret'] ) ? sanitize_text_field( wp_unslash( $input['payment_secret'] ) ) : '';
         $out['delivery_provider'] = isset( $input['delivery_provider'] ) ? sanitize_text_field( wp_unslash( $input['delivery_provider'] ) ) : '';
         $out['enable_wc_sync']    = ! empty( $input['enable_wc_sync'] ) ? '1' : '';
+        $out['email_enabled']     = ! empty( $input['email_enabled'] ) ? '1' : '';
+        $out['email_from']        = isset( $input['email_from'] ) ? sanitize_email( $input['email_from'] ) : '';
         return $out;
     }
 
@@ -51,6 +55,8 @@ class Settings {
             'payment_secret'    => '',
             'delivery_provider' => '',
             'enable_wc_sync'    => '',
+            'email_enabled'     => '',
+            'email_from'        => '',
         ];
         return wp_parse_args( (array) get_option( self::OPTION_NAME, [] ), $defaults );
     }
@@ -85,5 +91,16 @@ class Settings {
     public function field_enable_wc_sync(): void {
         $o = $this->get();
         echo '<label><input type="checkbox" name="' . esc_attr( self::OPTION_NAME . '[enable_wc_sync]' ) . '" value="1" ' . checked( (bool) $o['enable_wc_sync'], true, false ) . ' /> ' . esc_html__( 'Ativar sincronização com WooCommerce', 'vemcomer' ) . '</label>';
+    }
+    public function field_email_enabled(): void {
+        $o = $this->get();
+        echo '<label><input type="checkbox" name="' . esc_attr( self::OPTION_NAME . '[email_enabled]' ) . '" value="1" ' . checked( (bool) $o['email_enabled'], true, false ) . ' /> ' . esc_html__( 'Ativar emails (admin)', 'vemcomer' ) . '</label>';
+    }
+    public function field_email_from(): void {
+        $o = $this->get();
+        echo '<input type="email" class="regular-text" name="' . esc_attr( self::OPTION_NAME . '[email_from]' ) . '" value="' . esc_attr( (string) $o['email_from'] ) . '" placeholder="admin@exemplo.com" />';
+        add_filter( 'wp_mail_from', static function ( $from ) use ( $o ) {
+            return ! empty( $o['email_from'] ) ? $o['email_from'] : $from;
+        } );
     }
 }

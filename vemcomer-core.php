@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: VemComer Core
- * Description: Core do marketplace VemComer — CPTs, Admin, REST, Frontend e Frete.
- * Version: 0.5.0
+ * Description: Core do marketplace VemComer — UX+ (carrinho, cupons, tracking e emails)
+ * Version: 0.6.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: VemComer
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'VEMCOMER_CORE_VERSION', '0.5.0' );
+define( 'VEMCOMER_CORE_VERSION', '0.6.0' );
 
 define( 'VEMCOMER_CORE_FILE', __FILE__ );
 
@@ -19,7 +19,7 @@ define( 'VEMCOMER_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
 define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
 
-// Autoload legado VC_*
+// autoloads (legado + PSR-4) — mesmos dos pacotes anteriores
 spl_autoload_register( function ( $class ) {
     if ( str_starts_with( $class, 'VC_' ) ) {
         $path = VEMCOMER_CORE_DIR . 'inc/' . 'class-' . strtolower( str_replace( '_', '-', $class ) ) . '.php';
@@ -27,7 +27,6 @@ spl_autoload_register( function ( $class ) {
     }
 } );
 
-// Autoload PSR-4 (namespace VC\*)
 spl_autoload_register( function ( $class ) {
     if ( str_starts_with( $class, 'VC\\' ) ) {
         $relative = str_replace( 'VC\\', '', $class );
@@ -40,27 +39,25 @@ spl_autoload_register( function ( $class ) {
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
 
 add_action( 'plugins_loaded', function () {
-    // Pacote 1
+    // (carrega tudo dos pacotes 1 a 5 como antes)
     if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); }
     if ( class_exists( 'VC_CPT_Produto' ) ) { ( new \VC_CPT_Produto() )->init(); }
     if ( class_exists( 'VC_CPT_Pedido' ) )  { ( new \VC_CPT_Pedido() )->init(); }
     if ( class_exists( 'VC_Admin_Menu' ) )  { ( new \VC_Admin_Menu() )->init(); }
     if ( class_exists( 'VC_REST' ) )        { ( new \VC_REST() )->init(); }
-
-    // Pacote 2
     if ( class_exists( '\\VC\\Model\\CPT_Restaurant' ) )      { ( new \VC\Model\CPT_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_MenuItem' ) )        { ( new \VC\Model\CPT_MenuItem() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); }
-
-    // Pacote 3
     if ( class_exists( '\\VC\\Admin\\Settings' ) )            { ( new \VC\Admin\Settings() )->init(); }
     if ( class_exists( '\\VC\\Order\\Statuses' ) )            { ( new \VC\Order\Statuses() )->init(); }
     if ( class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); }
     if ( class_exists( '\\VC\\CLI\\Seed' ) )                  { ( new \VC\CLI\Seed() )->init(); }
-
-    // Pacote 5 — Frontend
     if ( class_exists( '\\VC\\Frontend\\Shortcodes' ) )        { ( new \VC\Frontend\Shortcodes() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Shipping' ) )          { ( new \VC\Frontend\Shipping() )->init(); }
     if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
+
+    // Pacote 6 — Orders REST + Emails
+    if ( class_exists( '\\VC\\REST\\Orders_Controller' ) )     { ( new \VC\REST\Orders_Controller() )->init(); }
+    if ( class_exists( '\\VC\\Email\\Events' ) )               { ( new \VC\Email\Events() )->init(); }
 } );
