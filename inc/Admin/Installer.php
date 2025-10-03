@@ -41,13 +41,13 @@ class Installer {
             'vc_restaurant' => [
                 'title'     => __( 'Página do Restaurante (VC)', 'vemcomer' ),
                 'desc'      => __( 'Exibe o cartão de um restaurante (aceita ?restaurant_id=ID).', 'vemcomer' ),
-                'shortcode' => '', // construído dinamicamente
+                'shortcode' => '',
                 'needs'     => [ 'restaurant_id' ],
             ],
             'vc_menu_items' => [
                 'title'     => __( 'Cardápio por Restaurante (VC)', 'vemcomer' ),
                 'desc'      => __( 'Lista os itens do cardápio (aceita ?restaurant_id=ID).', 'vemcomer' ),
-                'shortcode' => '', // construído dinamicamente
+                'shortcode' => '',
                 'needs'     => [ 'restaurant_id' ],
             ],
             'vc_filters' => [
