@@ -74,3 +74,9 @@ add_action( 'plugins_loaded', function () {
     // Pacote 8 — Instalador de Páginas
     if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); }
 } );
+
+// --- Bootstrap do módulo Restaurantes ---
+$vc_inc_base = VEMCOMER_CORE_DIR . 'inc/';
+if ( file_exists( $vc_inc_base . 'init-restaurants.php' ) ) {
+    require_once $vc_inc_base . 'init-restaurants.php';
+}
