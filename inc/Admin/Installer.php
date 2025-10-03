@@ -1,8 +1,7 @@
 <?php
 /**
  * Installer — Cria páginas com shortcodes via Admin
- * Compatível com todos os shortcodes encontrados no repo.
- * Suporte para placeholders e fallback em query string (ex.: ?restaurant_id=123).
+ * Versão simplificada (sem placeholders nem regex), estável em PHP 7.4+.
  *
  * @package VemComerCore
  */
@@ -41,14 +40,14 @@ class Installer {
             ],
             'vc_restaurant' => [
                 'title'     => __( 'Página do Restaurante (VC)', 'vemcomer' ),
-                'desc'      => __( 'Exibe o cartão de um restaurante específico (ou via ?restaurant_id=ID).', 'vemcomer' ),
-                'shortcode' => '[vc_restaurant id="{{restaurant_id}}"]',
+                'desc'      => __( 'Exibe o cartão de um restaurante (aceita ?restaurant_id=ID).', 'vemcomer' ),
+                'shortcode' => '', // construído dinamicamente
                 'needs'     => [ 'restaurant_id' ],
             ],
             'vc_menu_items' => [
                 'title'     => __( 'Cardápio por Restaurante (VC)', 'vemcomer' ),
-                'desc'      => __( 'Lista os itens do cardápio de um restaurante (ou via ?restaurant_id=ID).', 'vemcomer' ),
-                'shortcode' => '[vc_menu_items restaurant="{{restaurant_id}}"]',
+                'desc'      => __( 'Lista os itens do cardápio (aceita ?restaurant_id=ID).', 'vemcomer' ),
+                'shortcode' => '', // construído dinamicamente
                 'needs'     => [ 'restaurant_id' ],
             ],
             'vc_filters' => [
@@ -65,7 +64,7 @@ class Installer {
             ],
             'vemcomer_menu' => [
                 'title'     => __( 'Cardápio (VemComer)', 'vemcomer' ),
-                'desc'      => __( 'Mostra o cardápio do restaurante corrente (?restaurant_id=ID) ou informado.', 'vemcomer' ),
+                'desc'      => __( 'Mostra o cardápio do restaurante corrente (pode usar ?restaurant_id=ID).', 'vemcomer' ),
                 'shortcode' => '[vemcomer_menu]',
                 'needs'     => [],
             ],
@@ -102,9 +101,15 @@ class Installer {
             . '</tr></thead><tbody>';
 
         foreach ( $map as $key => $cfg ) {
-            $id  = isset( $created[ $key ] ) ? (int) $created[ $key ] : 0;
-            $sc  = $cfg['shortcode'] ?? '';
-            $needs = $cfg['needs'] ?? [];
+            $id    = isset( $created[ $key ] ) ? (int) $created[ $key ] : 0;
+            $sc    = $cfg['shortcode'];
+            $needs = $cfg['needs'];
+
+            if ( $key === 'vc_restaurant' ) {
+                $sc = '[vc_restaurant id="123"] (ou sem id, usando ?restaurant_id=)';
+            } elseif ( $key === 'vc_menu_items' ) {
+                $sc = '[vc_menu_items restaurant="123"] (ou sem restaurant, usando ?restaurant_id=)';
+            }
 
             echo '<tr>';
             echo '<td><strong>' . esc_html( $cfg['title'] ) . '</strong></td>';
@@ -120,7 +125,7 @@ class Installer {
                 echo '<label>' . esc_html__( 'ID do restaurante (opcional)', 'vemcomer' ) . ' ';
                 echo '<input type="number" name="restaurant_id" min="1" style="width:120px" placeholder="123" />';
                 echo '</label>';
-                echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página usará ?restaurant_id= na URL.', 'vemcomer' ) . '</p>';
+                echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página funcionará com ?restaurant_id= na URL.', 'vemcomer' ) . '</p>';
             }
 
             wp_nonce_field( 'vc_install_' . $key, 'vc_install_nonce' );
@@ -164,24 +169,10 @@ class Installer {
             exit;
         }
 
-        $shortcode = (string) $map[ $type ]['shortcode'];
+        $restaurant_id = isset( $_POST['restaurant_id'] ) ? absint( $_POST['restaurant_id'] ) : 0;
+        $content = $this->build_content( $type, $restaurant_id );
 
-        if ( ! empty( $map[ $type ]['needs'] ) ) {
-            foreach ( (array) $map[ $type ]['needs'] as $need ) {
-                $val = '';
-                if ( 'restaurant_id' === $need ) {
-                    $val = isset( $_POST['restaurant_id'] ) ? absint( $_POST['restaurant_id'] ) : 0;
-                    if ( ! $val ) {
-                        // fallback para query string
-                        $shortcode = str_replace( '="{{restaurant_id}}"', '="<?php echo esc_attr( $_GET[\'restaurant_id\'] ?? \'' ); ?>"', $shortcode );
-                        continue;
-                    }
-                }
-                $shortcode = str_replace( '{{' . $need . '}}', (string) $val, $shortcode );
-            }
-        }
-
-        $this->create_or_update_page( $type, (string) $map[ $type ]['title'], $shortcode );
+        $this->create_or_update_page( $type, (string) $map[ $type ]['title'], $content );
 
         wp_redirect( add_query_arg( 'vc_installed', '1', admin_url( 'admin.php?page=vemcomer-installer' ) ) );
         exit;
@@ -193,13 +184,42 @@ class Installer {
 
         $map = $this->pages_map();
         foreach ( $map as $key => $cfg ) {
-            $needs = $cfg['needs'] ?? [];
+            $needs = $cfg['needs'];
             if ( ! empty( $needs ) ) { continue; }
-            $this->create_or_update_page( $key, (string) $cfg['title'], (string) $cfg['shortcode'] );
+            $content = $this->build_content( $key, 0 );
+            $this->create_or_update_page( $key, (string) $cfg['title'], $content );
         }
 
         wp_redirect( add_query_arg( 'vc_installed', '1', admin_url( 'admin.php?page=vemcomer-installer' ) ) );
         exit;
+    }
+
+    /**
+     * Constrói o conteúdo do shortcode sem usar placeholders.
+     */
+    private function build_content( string $type, int $restaurant_id ): string {
+        switch ( $type ) {
+            case 'vc_restaurant':
+                return $restaurant_id > 0
+                    ? '[vc_restaurant id="' . $restaurant_id . '"]'
+                    : '[vc_restaurant]';
+            case 'vc_menu_items':
+                return $restaurant_id > 0
+                    ? '[vc_menu_items restaurant="' . $restaurant_id . '"]'
+                    : '[vc_menu_items]';
+            case 'vc_restaurants':
+                return "[vc_filters]\n\n[vc_restaurants]";
+            case 'vc_filters':
+                return '[vc_filters]';
+            case 'vemcomer_restaurants':
+                return '[vemcomer_restaurants]';
+            case 'vemcomer_menu':
+                return '[vemcomer_menu]';
+            case 'vemcomer_checkout':
+                return '[vemcomer_checkout]';
+            default:
+                return '';
+        }
     }
 
     private function create_or_update_page( string $key, string $title, string $content ): int {
