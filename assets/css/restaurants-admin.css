@@ -1,0 +1,10 @@
+/* Estilos simples para a metabox */
+#vc_restaurant_info .form-table th {
+  width: 220px;
+}
+
+#vc_restaurant_info .form-table input[type="text"],
+#vc_restaurant_info .form-table input[type="url"],
+#vc_restaurant_info .form-table textarea {
+  max-width: 520px;
+}
