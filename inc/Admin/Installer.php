@@ -2,7 +2,8 @@
 /**
  * Installer — Cria páginas com shortcodes via Admin
  * Compatível com todos os shortcodes do repo.
- * Aceita ID manual e, se vazio, gera shortcode SEM atributo; os handlers pegam da query string via filtros.
+ * Aceita ID manual e, se vazio, gera shortcode sem atributo; os handlers podem
+ * completar via query string (ex.: ?restaurant_id=123) usando filtros em defaults.php.
  *
  * @package VemComerCore
  */
@@ -12,14 +13,20 @@ namespace VC\Admin;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Installer {
+    /**
+     * Armazena os IDs das páginas criadas.
+     * Ex.: [ 'vc_restaurants' => 10, 'vc_restaurant' => 12, ... ]
+     */
     const OPTION_PAGES = 'vemcomer_pages';
 
+    /** Hook de inicialização. */
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'menu' ] );
         add_action( 'admin_post_vc_install_page', [ $this, 'handle' ] );
         add_action( 'admin_post_vc_install_all', [ $this, 'handle_all' ] );
     }
 
+    /** Registra submenu. */
     public function menu(): void {
         add_submenu_page(
             'vemcomer-root',
@@ -31,6 +38,13 @@ class Installer {
         );
     }
 
+    /**
+     * Mapa de páginas instaláveis.
+     * - title: título da página
+     * - desc: descrição
+     * - shortcode: conteúdo a ser inserido
+     * - needs: parâmetros opcionais obrigatórios (ex.: restaurant_id)
+     */
     private function pages_map(): array {
         return [
             // --- Shortcodes "vc_*" ---
@@ -42,13 +56,13 @@ class Installer {
             ],
             'vc_restaurant' => [
                 'title'     => __( 'Página do Restaurante (VC)', 'vemcomer' ),
-                'desc'      => __( 'Exibe o cartão de um restaurante específico (aceita ?restaurant_id=ID na URL).', 'vemcomer' ),
+                'desc'      => __( 'Exibe o cartão de um restaurante (pode usar ?restaurant_id=ID).', 'vemcomer' ),
                 'shortcode' => '[vc_restaurant id="{{restaurant_id}}"]',
                 'needs'     => [ 'restaurant_id' ],
             ],
             'vc_menu_items' => [
                 'title'     => __( 'Cardápio por Restaurante (VC)', 'vemcomer' ),
-                'desc'      => __( 'Lista os itens do cardápio (aceita ?restaurant_id=ID na URL).', 'vemcomer' ),
+                'desc'      => __( 'Lista os itens do cardápio (pode usar ?restaurant_id=ID).', 'vemcomer' ),
                 'shortcode' => '[vc_menu_items restaurant="{{restaurant_id}}"]',
                 'needs'     => [ 'restaurant_id' ],
             ],
@@ -81,6 +95,7 @@ class Installer {
         ];
     }
 
+    /** Renderiza a tela do instalador. */
     public function render(): void {
         if ( ! current_user_can( 'manage_options' ) ) { wp_die( __( 'Sem permissão.', 'vemcomer' ) ); }
 
@@ -155,6 +170,7 @@ class Installer {
         echo '</div>';
     }
 
+    /** Cria/recria uma página específica. */
     public function handle(): void {
         if ( ! current_user_can( 'manage_options' ) ) { wp_die( __( 'Sem permissão.', 'vemcomer' ) ); }
 
@@ -182,6 +198,7 @@ class Installer {
         exit;
     }
 
+    /** Cria/recria todas as páginas possíveis sem parâmetros obrigatórios. */
     public function handle_all(): void {
         if ( ! current_user_can( 'manage_options' ) ) { wp_die( __( 'Sem permissão.', 'vemcomer' ) ); }
         check_admin_referer( 'vc_install_all', 'vc_install_all_nonce' );
@@ -198,20 +215,23 @@ class Installer {
     }
 
     /**
-     * Substitui placeholders e remove atributos não resolvidos.
+     * Substitui placeholders por valores informados e remove atributos não resolvidos.
+     * Ex.: [vc_restaurant id="{{restaurant_id}}"] -> [vc_restaurant] quando não enviado.
      */
     private function resolve_placeholders( string $template, array $params ): string {
         $out = $template;
         foreach ( $params as $k => $v ) {
-            if ( $v !== '' && $v !== null ) {
+            if ( $v !== '' && $v !== null && $v !== 0 ) {
                 $out = str_replace( '{{' . $k . '}}', (string) $v, $out );
             }
         }
         // Remove atributos que ficaram com {{placeholder}}
+        // Remove padrões do tipo: space + atributo="{{qualquer}}"
         $out = preg_replace( '/\s+[\w\-]+="\{\{[\w\-]+\}\}"/', '', $out );
         return (string) $out;
     }
 
+    /** Cria/atualiza página e persiste ID em OPTION_PAGES. */
     private function create_or_update_page( string $key, string $title, string $content ): int {
         $pages       = (array) get_option( self::OPTION_PAGES, [] );
         $existing_id = isset( $pages[ $key ] ) ? (int) $pages[ $key ] : 0;
