@@ -19,7 +19,7 @@ define( 'VEMCOMER_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
 define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
 
-// Autoload legado VC_*
+// autoloads (legado + PSR-4) — mesmos dos pacotes anteriores
 spl_autoload_register( function ( $class ) {
     if ( str_starts_with( $class, 'VC_' ) ) {
         $path = VEMCOMER_CORE_DIR . 'inc/' . 'class-' . strtolower( str_replace( '_', '-', $class ) ) . '.php';
@@ -27,7 +27,6 @@ spl_autoload_register( function ( $class ) {
     }
 } );
 
-// Autoload PSR-4 (namespace VC\*)
 spl_autoload_register( function ( $class ) {
     if ( str_starts_with( $class, 'VC\\' ) ) {
         $relative = str_replace( 'VC\\', '', $class );

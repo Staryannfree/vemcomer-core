@@ -13,3 +13,8 @@
 .vc-summary{margin-top:12px}
 .vc-summary>div{margin:4px 0}
 .vc-zip{width:160px;margin-left:8px}
+/* Pacote 6 */
+.vc-qbtn{border:1px solid #ddd;background:#fff;border-radius:6px;padding:2px 8px;margin:0 6px}
+.vc-qtd{display:flex;align-items:center;gap:4px}
+.vc-status-banner{background:#111;color:#fff;padding:8px 12px;border-radius:8px;margin-top:8px;display:inline-block}
+.vc-discount{margin-top:4px}
