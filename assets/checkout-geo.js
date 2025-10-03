@@ -2,7 +2,7 @@
   $(function(){
     var lat = $('input[name="rc_shipping_lat"]');
     var lng = $('input[name="rc_shipping_lng"]');
-    if (!lat.length || !lng.length || !navigator.geolocation) return;
+    if (!lat.length || !lng.length || !navigator.geolocation) {return;}
 
     // Mantemos este helper para cenários onde o cliente quer apenas GPS
     var html = '<p class="form-row form-row-wide"><a href="#" id="vc-btn-geo" class="button">Usar minha localização</a></p>';

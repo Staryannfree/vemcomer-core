@@ -10,6 +10,16 @@
 - [ ] **v0.6.4 – A11y, SEO & Performance**
 
 ---
+ 
+## Qualidade e DX
+- [x] ESLint/Stylelint configurados
+- [x] CI: job de lint JS/CSS
+
+## Catálogo: Restaurantes (Fase 2)
+- [x] REST de escrita (POST/PATCH) + DELETE com caps
+
+## Admin UX
+- [x] Filtros na listagem do CPT (cozinha, bairro, delivery)
 
 ## 0) Higiene e fundação
 - [ ] Blindar `define()` de constantes (URL/PATH/VERSION) com `if (!defined(...))`

@@ -1,0 +1,20 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "block-no-empty": true,
+    "declaration-block-single-line-max-declarations": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
+    "selector-id-pattern": null,
+    "comment-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "media-feature-range-notation": null
+  },
+  "ignoreFiles": [
+    "**/*.min.css",
+    "vendor/**",
+    "node_modules/**"
+  ]
+}
