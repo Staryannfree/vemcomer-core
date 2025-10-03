@@ -10,7 +10,9 @@ require_once __DIR__ . '/taxonomies.php';
 require_once __DIR__ . '/meta-restaurants.php';
 require_once __DIR__ . '/admin-columns.php';
 require_once __DIR__ . '/rest-api.php';
+require_once __DIR__ . '/rest-api-write.php';
 require_once __DIR__ . '/roles-capabilities.php';
+require_once __DIR__ . '/templates-loader.php';
 
 $preenchedor_file = __DIR__ . '/admin/preenchedor.php';
 if ( file_exists( $preenchedor_file ) ) {
