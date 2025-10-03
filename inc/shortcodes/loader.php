@@ -20,6 +20,30 @@ add_action( 'wp_enqueue_scripts', function() {
 function vc_sc_mark_used() { do_action( 'vc_shortcodes_used' ); }
 function vc_sc_bool( $val ) { return filter_var( $val, FILTER_VALIDATE_BOOLEAN ); }
 
+// Defaults/Fallbacks de atributos para shortcodes.
+// Permite usar ?restaurant_id=123 na URL quando o atributo não for passado.
+add_filter( 'shortcode_atts_vc_restaurant', function( $out, $pairs, $atts ) {
+    if ( empty( $out['id'] ) ) {
+        $qs = isset( $_GET['restaurant_id'] ) ? absint( wp_unslash( $_GET['restaurant_id'] ) ) : 0;
+        if ( $qs ) {
+            $out['id'] = $qs;
+        }
+    }
+
+    return $out;
+}, 10, 3 );
+
+add_filter( 'shortcode_atts_vc_menu_items', function( $out, $pairs, $atts ) {
+    if ( empty( $out['restaurant_id'] ) ) {
+        $qs = isset( $_GET['restaurant_id'] ) ? absint( wp_unslash( $_GET['restaurant_id'] ) ) : 0;
+        if ( $qs ) {
+            $out['restaurant_id'] = $qs;
+        }
+    }
+
+    return $out;
+}, 10, 3 );
+
 // Registrar shortcodes
 require_once __DIR__ . '/restaurants-grid.php';
 require_once __DIR__ . '/restaurant-card.php';
