@@ -1,6 +1,8 @@
 <?php
 /**
  * CPT_MenuItem — Custom Post Type "Menu Item" (Itens do Cardápio)
+ * + Capabilities customizadas e concessão por role (grant_caps).
+ *
  * @package VemComerCore
  */
 
@@ -19,90 +21,76 @@ class CPT_MenuItem {
         add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
+        add_action( 'init', [ $this, 'grant_caps' ], 5 );
+    }
+
+    private function capabilities(): array {
+        return [
+            'edit_post'              => 'edit_vc_menu_item',
+            'read_post'              => 'read_vc_menu_item',
+            'delete_post'            => 'delete_vc_menu_item',
+            'edit_posts'             => 'edit_vc_menu_items',
+            'edit_others_posts'      => 'edit_others_vc_menu_items',
+            'publish_posts'          => 'publish_vc_menu_items',
+            'read_private_posts'     => 'read_private_vc_menu_items',
+            'delete_posts'           => 'delete_vc_menu_items',
+            'delete_private_posts'   => 'delete_private_vc_menu_items',
+            'delete_published_posts' => 'delete_pc_menu_items',
+            'delete_others_posts'    => 'delete_others_vc_menu_items',
+            'edit_private_posts'     => 'edit_private_vc_menu_items',
+            'edit_published_posts'   => 'edit_published_vc_menu_items',
+            'create_posts'           => 'create_vc_menu_items',
+        ];
     }
 
     public function register_cpt(): void {
         $labels = [ 'name' => __( 'Itens do Cardápio', 'vemcomer' ), 'singular_name' => __( 'Item do Cardápio', 'vemcomer' ) ];
         $args = [
-            'labels' => $labels,
-            'public' => true,
-            'show_ui' => true,
+            'labels'       => $labels,
+            'public'       => true,
+            'show_ui'      => true,
             'show_in_menu' => false,
             'show_in_rest' => true,
-            'supports' => [ 'title', 'editor', 'thumbnail' ],
-            'has_archive' => false,
-            'rewrite' => [ 'slug' => 'menu-item' ],
+            'supports'     => [ 'title', 'editor', 'thumbnail' ],
+            'capability_type' => [ 'vc_menu_item', 'vc_menu_items' ],
+            'map_meta_cap'    => true,
+            'capabilities'    => $this->capabilities(),
         ];
         register_post_type( self::SLUG, $args );
     }
 
     public function register_taxonomies(): void {
-        $labels = [ 'name' => __( 'Categorias do Cardápio', 'vemcomer' ), 'singular_name' => __( 'Categoria do Cardápio', 'vemcomer' ) ];
-        register_taxonomy( self::TAX_CATEGORY, [ self::SLUG ], [
-            'labels' => $labels,
-            'public' => true,
-            'hierarchical' => true,
-            'show_ui' => true,
+        register_taxonomy( self::TAX_CATEGORY, self::SLUG, [
+            'label'        => __( 'Categoria do Cardápio', 'vemcomer' ),
+            'public'       => true,
+            'hierarchical' => false,
             'show_in_rest' => true,
         ] );
     }
 
     public function register_metaboxes(): void {
-        add_meta_box( 'vc_menu_item_info', __( 'Informações do Item', 'vemcomer' ), [ $this, 'render_metabox' ], self::SLUG, 'normal', 'default' );
+        add_meta_box( 'vc_menu_item_meta', __( 'Dados do Item', 'vemcomer' ), [ $this, 'metabox' ], self::SLUG, 'normal', 'high' );
     }
 
-    public function render_metabox( $post ): void {
-        $fields = $this->get_fields( (int) $post->ID );
-        wp_nonce_field( 'vc_menu_item_nonce', 'vc_menu_item_nonce_field' );
-        echo '<table class="form-table">';
-        // Relacionamento com Restaurante
-        echo '<tr><th><label for="vc_restaurant_id">' . esc_html__( 'Restaurante', 'vemcomer' ) . '</label></th><td>';
-        wp_dropdown_pages([
-            'post_type'        => CPT_Restaurant::SLUG,
-            'name'             => 'vc_restaurant_id',
-            'id'               => 'vc_restaurant_id',
-            'show_option_none' => __( '— Selecione —', 'vemcomer' ),
-            'option_none_value'=> '',
-            'selected'         => $fields['restaurant_id'],
-        ]);
-        echo '</td></tr>';
-        // Preço
-        $this->text_row( 'vc_price', __( 'Preço', 'vemcomer' ), $fields['price'] );
-        // Tempo de preparo
-        $this->text_row( 'vc_prep_time', __( 'Tempo de preparo (min)', 'vemcomer' ), $fields['prep_time'] );
-        // Disponibilidade
-        echo '<tr><th>' . esc_html__( 'Disponível', 'vemcomer' ) . '</th><td>';
-        echo '<label><input type="checkbox" name="vc_is_available" value="1" ' . checked( $fields['is_available'], '1', false ) . ' /> ' . esc_html__( 'Ativo', 'vemcomer' ) . '</label>';
-        echo '</td></tr>';
-        echo '</table>';
-    }
-
-    private function text_row( string $name, string $label, string $value ): void {
-        echo '<tr><th><label for="' . esc_attr( $name ) . '">' . esc_html( $label ) . '</label></th>';
-        echo '<td><input type="text" class="regular-text" id="' . esc_attr( $name ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" /></td></tr>';
-    }
-
-    private function get_fields( int $post_id ): array {
-        return [
-            'restaurant_id' => (int) get_post_meta( $post_id, '_vc_restaurant_id', true ),
-            'price'         => (string) get_post_meta( $post_id, '_vc_price', true ),
-            'prep_time'     => (string) get_post_meta( $post_id, '_vc_prep_time', true ),
-            'is_available'  => (string) get_post_meta( $post_id, '_vc_is_available', true ),
-        ];
+    public function metabox( $post ): void {
+        echo '<p><label>' . esc_html__( 'Preço (R$)', 'vemcomer' ) . '</label><br />';
+        echo '<input type="text" name="_vc_price" value="' . esc_attr( (string) get_post_meta( $post->ID, '_vc_price', true ) ) . '" class="widefat" /></p>';
+        echo '<p><label>' . esc_html__( 'Tempo de preparo (min)', 'vemcomer' ) . '</label><br />';
+        echo '<input type="number" name="_vc_prep_time" value="' . esc_attr( (string) get_post_meta( $post->ID, '_vc_prep_time', true ) ) . '" class="small-text" /></p>';
+        echo '<p><label><input type="checkbox" name="_vc_is_available" value="1" ' . checked( (bool) get_post_meta( $post->ID, '_vc_is_available', true ), true, false ) . ' /> ' . esc_html__( 'Disponível', 'vemcomer' ) . '</label></p>';
     }
 
     public function save_meta( int $post_id ): void {
-        if ( ! isset( $_POST['vc_menu_item_nonce_field'] ) || ! wp_verify_nonce( $_POST['vc_menu_item_nonce_field'], 'vc_menu_item_nonce' ) ) { return; }
-        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) { return; }
-        if ( ! current_user_can( 'edit_post', $post_id ) ) { return; }
-        $restaurant_id = isset( $_POST['vc_restaurant_id'] ) ? (int) $_POST['vc_restaurant_id'] : 0;
-        $price         = isset( $_POST['vc_price'] ) ? preg_replace( '/[^0-9.,]/', '', (string) wp_unslash( $_POST['vc_price'] ) ) : '';
-        $prep_time     = isset( $_POST['vc_prep_time'] ) ? preg_replace( '/[^0-9]/', '', (string) wp_unslash( $_POST['vc_prep_time'] ) ) : '';
-        $is_available  = isset( $_POST['vc_is_available'] ) ? '1' : '';
-        update_post_meta( $post_id, '_vc_restaurant_id', $restaurant_id );
-        update_post_meta( $post_id, '_vc_price', $price );
-        update_post_meta( $post_id, '_vc_prep_time', $prep_time );
-        update_post_meta( $post_id, '_vc_is_available', $is_available );
+        $map = [ '_vc_price', '_vc_prep_time', '_vc_is_available' ];
+        foreach ( $map as $key ) {
+            if ( isset( $_POST[ $key ] ) ) {
+                $value = $_POST[ $key ];
+                if ( '_vc_is_available' === $key ) { $value = '1'; }
+                update_post_meta( $post_id, $key, sanitize_text_field( wp_unslash( (string) $value ) ) );
+            } else if ( '_vc_is_available' === $key ) {
+                delete_post_meta( $post_id, $key );
+            }
+        }
     }
 
     public function admin_columns( array $columns ): array {
@@ -126,5 +114,24 @@ class CPT_MenuItem {
             $v = (string) get_post_meta( $post_id, '_vc_is_available', true );
             echo esc_html( $v ? __( 'Sim', 'vemcomer' ) : __( 'Não', 'vemcomer' ) );
         }
+    }
+
+    public function grant_caps(): void {
+        if ( ! function_exists( 'get_role' ) ) { return; }
+        $all = array_values( $this->capabilities() );
+
+        $admins = get_role( 'administrator' );
+        $editor = get_role( 'editor' );
+        $author = get_role( 'author' );
+        $contrib= get_role( 'contributor' );
+
+        foreach ( $all as $cap ) {
+            if ( $admins && ! $admins->has_cap( $cap ) ) { $admins->add_cap( $cap ); }
+            if ( $editor && ! $editor->has_cap( $cap ) ) { $editor->add_cap( $cap ); }
+        }
+        $author_caps = [ 'edit_vc_menu_item', 'edit_vc_menu_items', 'publish_vc_menu_items', 'delete_vc_menu_item', 'delete_vc_menu_items', 'edit_published_vc_menu_items', 'delete_published_vc_menu_items', 'create_vc_menu_items' ];
+        if ( $author ) { foreach ( $author_caps as $c ) { if ( ! $author->has_cap( $c ) ) { $author->add_cap( $c ); } } }
+        $contrib_caps = [ 'edit_vc_menu_item', 'edit_vc_menu_items', 'create_vc_menu_items' ];
+        if ( $contrib ) { foreach ( $contrib_caps as $c ) { if ( ! $contrib->has_cap( $c ) ) { $contrib->add_cap( $c ); } } }
     }
 }

@@ -1,6 +1,14 @@
 <?php
 /**
  * Restaurant_Controller — REST endpoints públicos para restaurantes e itens
+ * Filtros suportados em GET /wp-json/vemcomer/v1/restaurants:
+ *   - cuisine (slug da taxonomia vc_cuisine)
+ *   - delivery (true|false) — meta _vc_has_delivery
+ *   - is_open (true|false) — meta _vc_is_open
+ *   - per_page (1..50)
+ *   - search (texto)
+ *   - orderby (title|date) e order (asc|desc)
+ *
  * @package VemComerCore
  */
 
@@ -10,7 +18,7 @@ use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
 use WP_Query;
 use WP_REST_Request;
-use WP_Error;
+use WP_REST_Response;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -21,68 +29,104 @@ class Restaurant_Controller {
 
     public function routes(): void {
         register_rest_route( 'vemcomer/v1', '/restaurants', [
-            'methods'             => 'GET',
-            'callback'            => [ $this, 'get_restaurants' ],
+            'methods'  => 'GET',
+            'callback' => [ $this, 'get_restaurants' ],
             'permission_callback' => '__return_true',
         ] );
 
-        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\\d+)/menu-items', [
-            'methods'             => 'GET',
-            'callback'            => [ $this, 'get_menu_items' ],
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/menu-items', [
+            'methods'  => 'GET',
+            'callback' => [ $this, 'get_menu_items' ],
             'permission_callback' => '__return_true',
-            'args'                => [ 'id' => [ 'validate_callback' => 'is_numeric' ] ],
+            'args' => [ 'id' => [ 'validate_callback' => 'is_numeric' ] ],
         ] );
     }
 
     public function get_restaurants( WP_REST_Request $request ) {
-        $q = new WP_Query([
+        $per_page = (int) $request->get_param( 'per_page' );
+        $per_page = $per_page > 0 ? min( $per_page, 50 ) : 10;
+
+        $args = [
             'post_type'      => CPT_Restaurant::SLUG,
-            'posts_per_page' => 50,
+            'posts_per_page' => $per_page,
             'no_found_rows'  => true,
             'post_status'    => 'publish',
-        ]);
-        $items = [];
-        foreach ( $q->posts as $p ) {
-            $items[] = [
-                'id'            => $p->ID,
-                'title'         => get_the_title( $p ),
-                'address'       => get_post_meta( $p->ID, '_vc_address', true ),
-                'phone'         => get_post_meta( $p->ID, '_vc_phone', true ),
-                'whatsapp'      => get_post_meta( $p->ID, '_vc_whatsapp', true ),
-                'min_order'     => get_post_meta( $p->ID, '_vc_min_order', true ),
-                'delivery_time' => get_post_meta( $p->ID, '_vc_delivery_time', true ),
-                'opening_hours' => get_post_meta( $p->ID, '_vc_opening_hours', true ),
-                'is_open'       => (bool) get_post_meta( $p->ID, '_vc_is_open', true ),
-                'cuisines'      => wp_get_post_terms( $p->ID, CPT_Restaurant::TAX_CUISINE, [ 'fields' => 'names' ] ),
+        ];
+
+        // Busca livre
+        $search = (string) $request->get_param( 'search' );
+        if ( $search ) { $args['s'] = $search; }
+
+        // Ordenação
+        $orderby = (string) $request->get_param( 'orderby' );
+        $order   = strtoupper( (string) $request->get_param( 'order' ) );
+        if ( in_array( $orderby, [ 'title', 'date' ], true ) ) { $args['orderby'] = $orderby; }
+        if ( in_array( $order, [ 'ASC', 'DESC' ], true ) ) { $args['order'] = $order; }
+
+        // Taxonomia: cozinha
+        $cuisine = (string) $request->get_param( 'cuisine' );
+        if ( $cuisine ) {
+            $args['tax_query'][] = [
+                'taxonomy' => CPT_Restaurant::TAX_CUISINE,
+                'field'    => 'slug',
+                'terms'    => array_map( 'sanitize_title', array_map( 'trim', explode( ',', $cuisine ) ) ),
             ];
         }
-        return rest_ensure_response( $items );
+
+        // Metas: delivery / is_open
+        $meta = [];
+        $delivery = $request->get_param( 'delivery' );
+        if ( null !== $delivery ) {
+            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
+        }
+        $is_open = $request->get_param( 'is_open' );
+        if ( null !== $is_open ) {
+            $meta[] = [ 'key' => '_vc_is_open', 'value' => ( filter_var( $is_open, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
+        }
+        if ( $meta ) { $args['meta_query'] = $meta; }
+
+        $q = new WP_Query( $args );
+
+        $items = [];
+        foreach ( $q->posts as $p ) {
+            $terms = wp_get_object_terms( $p->ID, CPT_Restaurant::TAX_CUISINE, [ 'fields' => 'slugs' ] );
+            $items[] = [
+                'id'        => $p->ID,
+                'title'     => get_the_title( $p ),
+                'address'   => (string) get_post_meta( $p->ID, '_vc_address', true ),
+                'phone'     => (string) get_post_meta( $p->ID, '_vc_phone', true ),
+                'has_delivery' => (bool) get_post_meta( $p->ID, '_vc_has_delivery', true ),
+                'is_open'   => (bool) get_post_meta( $p->ID, '_vc_is_open', true ),
+                'cuisines'  => array_values( array_map( 'strval', (array) $terms ) ),
+            ];
+        }
+
+        return new WP_REST_Response( $items, 200 );
     }
 
     public function get_menu_items( WP_REST_Request $request ) {
         $rid = (int) $request->get_param( 'id' );
-        if ( $rid <= 0 ) {
-            return new WP_Error( 'vc_invalid_restaurant', __( 'Restaurante inválido.', 'vemcomer' ), [ 'status' => 400 ] );
-        }
+        if ( ! $rid ) { return new WP_REST_Response( [], 200 ); }
+
         $q = new WP_Query([
             'post_type'      => CPT_MenuItem::SLUG,
             'posts_per_page' => 100,
             'no_found_rows'  => true,
             'post_status'    => 'publish',
-            'meta_query'     => [ [ 'key' => '_vc_restaurant_id', 'value' => $rid, 'compare' => '=' ] ],
+            'meta_query'     => [ [ 'key' => '_vc_restaurant_id', 'value' => (string) $rid ] ],
         ]);
+
         $items = [];
         foreach ( $q->posts as $p ) {
             $items[] = [
                 'id'          => $p->ID,
                 'title'       => get_the_title( $p ),
-                'description' => wp_strip_all_tags( get_post_field( 'post_content', $p ) ),
-                'price'       => get_post_meta( $p->ID, '_vc_price', true ),
-                'prep_time'   => get_post_meta( $p->ID, '_vc_prep_time', true ),
-                'available'   => (bool) get_post_meta( $p->ID, '_vc_is_available', true ),
-                'categories'  => wp_get_post_terms( $p->ID, CPT_MenuItem::TAX_CATEGORY, [ 'fields' => 'names' ] ),
+                'price'       => (string) get_post_meta( $p->ID, '_vc_price', true ),
+                'prep_time'   => (int) get_post_meta( $p->ID, '_vc_prep_time', true ),
+                'is_available'=> (bool) get_post_meta( $p->ID, '_vc_is_available', true ),
             ];
         }
-        return rest_ensure_response( $items );
+
+        return new WP_REST_Response( $items, 200 );
     }
 }
