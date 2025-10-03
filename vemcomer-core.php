@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: VemComer Core
- * Description: Core do marketplace VemComer — CPTs, Admin e REST base.
- * Version: 0.3.0
+ * Description: Core do marketplace VemComer — CPTs, Admin, REST, Integrações.
+ * Version: 0.4.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: VemComer
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'VEMCOMER_CORE_VERSION', '0.3.0' );
+define( 'VEMCOMER_CORE_VERSION', '0.4.0' );
 
 define( 'VEMCOMER_CORE_FILE', __FILE__ );
 
@@ -40,10 +40,8 @@ spl_autoload_register( function ( $class ) {
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
 
 add_action( 'plugins_loaded', function () {
-    // Loader central
-    if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); }
-
     // Pacote 1
+    if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); }
     if ( class_exists( 'VC_CPT_Produto' ) ) { ( new \VC_CPT_Produto() )->init(); }
     if ( class_exists( 'VC_CPT_Pedido' ) )  { ( new \VC_CPT_Pedido() )->init(); }
     if ( class_exists( 'VC_Admin_Menu' ) )  { ( new \VC_Admin_Menu() )->init(); }
@@ -60,4 +58,14 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Order\\Statuses' ) )            { ( new \VC\Order\Statuses() )->init(); }
     if ( class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); }
     if ( class_exists( '\\VC\\CLI\\Seed' ) )                  { ( new \VC\CLI\Seed() )->init(); }
+
+    // Pacote 4 — Integrações
+    // WooCommerce (opcional e controlado por setting)
+    if ( class_exists( '\\VC\\Integration\\WooCommerce' ) ) {
+        $settings = get_option( 'vemcomer_settings', [] );
+        $enabled  = ! empty( $settings['enable_wc_sync'] );
+        if ( $enabled && class_exists( 'WooCommerce' ) ) {
+            ( new \VC\Integration\WooCommerce() )->init();
+        }
+    }
 } );

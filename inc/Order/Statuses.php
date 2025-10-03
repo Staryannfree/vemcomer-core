@@ -63,10 +63,16 @@ class Statuses {
         if ( isset( $_POST['vc_order_status_sel'] ) ) {
             $new = sanitize_text_field( wp_unslash( $_POST['vc_order_status_sel'] ) );
             if ( isset( self::STATUSES[ $new ] ) ) {
-                // muda o post_status sem alterar a data
                 global $wpdb;
-                $wpdb->update( $wpdb->posts, [ 'post_status' => $new ], [ 'ID' => $post_id ] );
-                clean_post_cache( $post_id );
+                $old = get_post_status( $post_id );
+                if ( $new !== $old ) {
+                    $wpdb->update( $wpdb->posts, [ 'post_status' => $new ], [ 'ID' => $post_id ] );
+                    clean_post_cache( $post_id );
+                    do_action( 'vemcomer/order_status_changed', $post_id, $new, $old );
+                    if ( 'vc-paid' === $new ) {
+                        do_action( 'vemcomer/order_paid', $post_id );
+                    }
+                }
             }
         }
     }
