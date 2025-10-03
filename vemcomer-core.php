@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: VemComer Core
- * Description: Core do marketplace VemComer — CPTs, Admin, REST, Integrações.
- * Version: 0.4.0
+ * Description: Core do marketplace VemComer — CPTs, Admin, REST, Frontend e Frete.
+ * Version: 0.5.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: VemComer
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'VEMCOMER_CORE_VERSION', '0.4.0' );
+define( 'VEMCOMER_CORE_VERSION', '0.5.0' );
 
 define( 'VEMCOMER_CORE_FILE', __FILE__ );
 
@@ -59,13 +59,8 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); }
     if ( class_exists( '\\VC\\CLI\\Seed' ) )                  { ( new \VC\CLI\Seed() )->init(); }
 
-    // Pacote 4 — Integrações
-    // WooCommerce (opcional e controlado por setting)
-    if ( class_exists( '\\VC\\Integration\\WooCommerce' ) ) {
-        $settings = get_option( 'vemcomer_settings', [] );
-        $enabled  = ! empty( $settings['enable_wc_sync'] );
-        if ( $enabled && class_exists( 'WooCommerce' ) ) {
-            ( new \VC\Integration\WooCommerce() )->init();
-        }
-    }
+    // Pacote 5 — Frontend
+    if ( class_exists( '\\VC\\Frontend\\Shortcodes' ) )        { ( new \VC\Frontend\Shortcodes() )->init(); }
+    if ( class_exists( '\\VC\\Frontend\\Shipping' ) )          { ( new \VC\Frontend\Shipping() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
 } );
