@@ -1,8 +1,8 @@
 <?php
 /**
  * Installer — Cria páginas com shortcodes via Admin
- * Compatível com todos os shortcodes encontrados no repo.
- * Suporte para placeholders e fallback em query string (ex.: ?restaurant_id=123).
+ * Compatível com todos os shortcodes do repo.
+ * Aceita ID manual e, se vazio, gera shortcode SEM atributo; os handlers pegam da query string via filtros.
  *
  * @package VemComerCore
  */
@@ -33,6 +33,7 @@ class Installer {
 
     private function pages_map(): array {
         return [
+            // --- Shortcodes "vc_*" ---
             'vc_restaurants' => [
                 'title'     => __( 'Lista de Restaurantes (VC)', 'vemcomer' ),
                 'desc'      => __( 'Lista todos os restaurantes com filtros.', 'vemcomer' ),
@@ -41,13 +42,13 @@ class Installer {
             ],
             'vc_restaurant' => [
                 'title'     => __( 'Página do Restaurante (VC)', 'vemcomer' ),
-                'desc'      => __( 'Exibe o cartão de um restaurante específico (ou via ?restaurant_id=ID).', 'vemcomer' ),
+                'desc'      => __( 'Exibe o cartão de um restaurante específico (aceita ?restaurant_id=ID na URL).', 'vemcomer' ),
                 'shortcode' => '[vc_restaurant id="{{restaurant_id}}"]',
                 'needs'     => [ 'restaurant_id' ],
             ],
             'vc_menu_items' => [
                 'title'     => __( 'Cardápio por Restaurante (VC)', 'vemcomer' ),
-                'desc'      => __( 'Lista os itens do cardápio de um restaurante (ou via ?restaurant_id=ID).', 'vemcomer' ),
+                'desc'      => __( 'Lista os itens do cardápio (aceita ?restaurant_id=ID na URL).', 'vemcomer' ),
                 'shortcode' => '[vc_menu_items restaurant="{{restaurant_id}}"]',
                 'needs'     => [ 'restaurant_id' ],
             ],
@@ -57,6 +58,8 @@ class Installer {
                 'shortcode' => '[vc_filters]',
                 'needs'     => [],
             ],
+
+            // --- Shortcodes "vemcomer_*" ---
             'vemcomer_restaurants' => [
                 'title'     => __( 'Lista de Restaurantes (VemComer)', 'vemcomer' ),
                 'desc'      => __( 'Lista restaurantes usando o conjunto de shortcodes VemComer.', 'vemcomer' ),
@@ -65,7 +68,7 @@ class Installer {
             ],
             'vemcomer_menu' => [
                 'title'     => __( 'Cardápio (VemComer)', 'vemcomer' ),
-                'desc'      => __( 'Mostra o cardápio do restaurante corrente (?restaurant_id=ID) ou informado.', 'vemcomer' ),
+                'desc'      => __( 'Mostra o cardápio do restaurante corrente (pode usar ?restaurant_id=ID).', 'vemcomer' ),
                 'shortcode' => '[vemcomer_menu]',
                 'needs'     => [],
             ],
@@ -102,8 +105,8 @@ class Installer {
             . '</tr></thead><tbody>';
 
         foreach ( $map as $key => $cfg ) {
-            $id  = isset( $created[ $key ] ) ? (int) $created[ $key ] : 0;
-            $sc  = $cfg['shortcode'] ?? '';
+            $id    = isset( $created[ $key ] ) ? (int) $created[ $key ] : 0;
+            $sc    = $cfg['shortcode'] ?? '';
             $needs = $cfg['needs'] ?? [];
 
             echo '<tr>';
@@ -120,7 +123,7 @@ class Installer {
                 echo '<label>' . esc_html__( 'ID do restaurante (opcional)', 'vemcomer' ) . ' ';
                 echo '<input type="number" name="restaurant_id" min="1" style="width:120px" placeholder="123" />';
                 echo '</label>';
-                echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página usará ?restaurant_id= na URL.', 'vemcomer' ) . '</p>';
+                echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página funcionará com ?restaurant_id= na URL.', 'vemcomer' ) . '</p>';
             }
 
             wp_nonce_field( 'vc_install_' . $key, 'vc_install_nonce' );
@@ -164,24 +167,16 @@ class Installer {
             exit;
         }
 
-        $shortcode = (string) $map[ $type ]['shortcode'];
+        $tpl   = (string) $map[ $type ]['shortcode'];
+        $needs = (array) ( $map[ $type ]['needs'] ?? [] );
 
-        if ( ! empty( $map[ $type ]['needs'] ) ) {
-            foreach ( (array) $map[ $type ]['needs'] as $need ) {
-                $val = '';
-                if ( 'restaurant_id' === $need ) {
-                    $val = isset( $_POST['restaurant_id'] ) ? absint( $_POST['restaurant_id'] ) : 0;
-                    if ( ! $val ) {
-                        // fallback para query string
-                        $shortcode = str_replace( '="{{restaurant_id}}"', '="<?php echo esc_attr( $_GET[\'restaurant_id\'] ?? \'' ); ?>"', $shortcode );
-                        continue;
-                    }
-                }
-                $shortcode = str_replace( '{{' . $need . '}}', (string) $val, $shortcode );
-            }
+        $params = [];
+        if ( in_array( 'restaurant_id', $needs, true ) ) {
+            $params['restaurant_id'] = isset( $_POST['restaurant_id'] ) ? absint( $_POST['restaurant_id'] ) : 0;
         }
 
-        $this->create_or_update_page( $type, (string) $map[ $type ]['title'], $shortcode );
+        $content = $this->resolve_placeholders( $tpl, $params );
+        $this->create_or_update_page( $type, (string) $map[ $type ]['title'], $content );
 
         wp_redirect( add_query_arg( 'vc_installed', '1', admin_url( 'admin.php?page=vemcomer-installer' ) ) );
         exit;
@@ -200,6 +195,21 @@ class Installer {
 
         wp_redirect( add_query_arg( 'vc_installed', '1', admin_url( 'admin.php?page=vemcomer-installer' ) ) );
         exit;
+    }
+
+    /**
+     * Substitui placeholders e remove atributos não resolvidos.
+     */
+    private function resolve_placeholders( string $template, array $params ): string {
+        $out = $template;
+        foreach ( $params as $k => $v ) {
+            if ( $v !== '' && $v !== null ) {
+                $out = str_replace( '{{' . $k . '}}', (string) $v, $out );
+            }
+        }
+        // Remove atributos que ficaram com {{placeholder}}
+        $out = preg_replace( '/\s+[\w\-]+="\{\{[\w\-]+\}\}"/', '', $out );
+        return (string) $out;
     }
 
     private function create_or_update_page( string $key, string $title, string $content ): int {
