@@ -27,15 +27,51 @@ get_header();
 			$title_letter    = get_the_title();
 			$title_letter    = strtoupper( (string) ( function_exists( 'mb_substr' ) ? mb_substr( $title_letter, 0, 1, 'UTF-8' ) : substr( $title_letter, 0, 1 ) ) );
 			?>
-			<article class="vc-single__card">
-				<section class="vc-single__hero">
-					<div class="vc-single__media">
-						<?php if ( has_post_thumbnail() ) : ?>
-						<?php the_post_thumbnail( 'large', array( 'class' => 'vc-single__image' ) ); ?>
-						<?php else : ?>
-							<div class="vc-single__placeholder" aria-hidden="true">
-								<span><?php echo esc_html( $title_letter ); ?></span>
-							</div>
+		<article class="vc-single__card">
+			<section class="vc-single__hero">
+				<div class="vc-single__media">
+					<?php if ( has_post_thumbnail() ) : ?>
+<?php the_post_thumbnail( 'large', array( 'class' => 'vc-single__image' ) ); ?>
+					<?php else : ?>
+					<div class="vc-single__placeholder" aria-hidden="true">
+						<span><?php echo esc_html( $title_letter ); ?></span>
+					</div>
+					<?php endif; ?>
+				</div>
+				<div class="vc-single__summary">
+					<?php if ( $cuisine_list ) : ?>
+					<span class="vc-single__eyebrow"><?php echo esc_html( $cuisine_list ); ?></span>
+					<?php endif; ?>
+					<h1 class="vc-single__title"><?php the_title(); ?></h1>
+					<?php if ( $excerpt ) : ?>
+					<p class="vc-single__excerpt"><?php echo esc_html( $excerpt ); ?></p>
+					<?php endif; ?>
+					<ul class="vc-single__details">
+						<?php if ( $address ) : ?>
+						<li>
+							<span><?php echo esc_html__( 'Endereço', 'vemcomer' ); ?></span>
+							<strong><?php echo esc_html( $address ); ?></strong>
+						</li>
+						<?php endif; ?>
+						<?php if ( $whatsapp ) : ?>
+						<li>
+							<span><?php echo esc_html__( 'WhatsApp', 'vemcomer' ); ?></span>
+							<strong>
+								<?php if ( $wa_digits ) : ?>
+								<a href="<?php echo esc_url( 'https://wa.me/' . ltrim( $wa_digits, '0' ) ); ?>" target="_blank" rel="noopener">
+<?php echo esc_html( $whatsapp ); ?>
+								</a>
+								<?php else : ?>
+									<?php echo esc_html( $whatsapp ); ?>
+								<?php endif; ?>
+							</strong>
+						</li>
+						<?php endif; ?>
+						<?php if ( $hours ) : ?>
+						<li>
+							<span><?php echo esc_html__( 'Horário', 'vemcomer' ); ?></span>
+							<strong><?php echo esc_html( $hours ); ?></strong>
+						</li>
 						<?php endif; ?>
 					</div>
 					<div class="vc-single__summary">
