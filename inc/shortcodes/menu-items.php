@@ -37,12 +37,50 @@ add_shortcode( 'vc_menu_items', function( $atts = [] ) {
     ?>
     <div class="vc-sc vc-menu">
       <?php if ( $q->have_posts() ) : ?>
-        <ul class="vc-list">
+        <ul class="vc-menu-list">
           <?php while ( $q->have_posts() ) : $q->the_post(); ?>
-            <li class="vc-row">
-              <span class="vc-row__title"><?php the_title(); ?></span>
-              <span class="vc-row__dots"></span>
-              <span class="vc-row__price"><?php echo esc_html( (string) get_post_meta( get_the_ID(), '_vc_price', true ) ); ?></span>
+            <?php
+                $mid        = get_the_ID();
+                $title      = get_the_title();
+                $raw_price  = trim( (string) get_post_meta( $mid, '_vc_price', true ) );
+                $price      = $raw_price !== '' ? ( stripos( $raw_price, 'R$' ) === false ? 'R$ ' . $raw_price : $raw_price ) : __( 'Consulte', 'vemcomer' );
+                $desc       = trim( wp_strip_all_tags( get_post_field( 'post_content', $mid ) ) );
+                $prep_time  = (string) get_post_meta( $mid, '_vc_prep_time', true );
+                $is_avail   = (string) get_post_meta( $mid, '_vc_is_available', true );
+                $categories = get_the_terms( $mid, 'vc_menu_category' );
+                $cat_names  = ! is_wp_error( $categories ) && $categories ? wp_list_pluck( $categories, 'name' ) : [];
+                $letter     = strtoupper( (string) ( function_exists( 'mb_substr' ) ? mb_substr( $title, 0, 1, 'UTF-8' ) : substr( $title, 0, 1 ) ) );
+            ?>
+            <li class="vc-menu-item<?php echo $is_avail ? '' : ' is-unavailable'; ?>">
+              <div class="vc-menu-item__media">
+                <?php if ( has_post_thumbnail() ) : ?>
+                    <?php the_post_thumbnail( 'medium', [ 'class' => 'vc-menu-item__thumb', 'loading' => 'lazy' ] ); ?>
+                <?php else : ?>
+                    <div class="vc-menu-item__thumb is-placeholder" aria-hidden="true"><span><?php echo esc_html( $letter ); ?></span></div>
+                <?php endif; ?>
+              </div>
+              <div class="vc-menu-item__info">
+                <div class="vc-menu-item__labels">
+                  <?php if ( $cat_names ) : ?>
+                    <span class="vc-badge vc-badge--pill"><?php echo esc_html( implode( ' · ', $cat_names ) ); ?></span>
+                  <?php endif; ?>
+                  <?php if ( ! $is_avail ) : ?>
+                    <span class="vc-badge vc-badge--alert"><?php echo esc_html__( 'Indisponível', 'vemcomer' ); ?></span>
+                  <?php endif; ?>
+                </div>
+                <h3 class="vc-menu-item__title"><?php echo esc_html( $title ); ?></h3>
+                <?php if ( $desc ) : ?>
+                  <p class="vc-menu-item__desc"><?php echo esc_html( $desc ); ?></p>
+                <?php endif; ?>
+                <div class="vc-menu-item__meta">
+                  <?php if ( $prep_time ) : ?>
+                    <span><?php echo esc_html( sprintf( __( 'Preparo: %s min', 'vemcomer' ), $prep_time ) ); ?></span>
+                  <?php endif; ?>
+                </div>
+              </div>
+              <div class="vc-menu-item__price">
+                <span class="vc-price"><?php echo esc_html( $price ); ?></span>
+              </div>
             </li>
           <?php endwhile; ?>
         </ul>
