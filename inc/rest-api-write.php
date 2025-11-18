@@ -304,7 +304,13 @@ function vc_rest_delete_restaurant( WP_REST_Request $req ): WP_REST_Response {
 		)
 	);
 
-	return new WP_REST_Response( array( 'deleted' => true, 'id' => (int) $id ), 200 );
+	return new WP_REST_Response(
+		array(
+			'deleted' => true,
+			'id'      => (int) $id,
+		),
+		200
+	);
 }
 
 /**
