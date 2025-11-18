@@ -9,7 +9,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-// Registra o CSS; será enfileirado quando algum shortcode sinalizar uso.
+// Registra o CSS legado (mantido para compatibilidade com temas antigos).
 add_action( 'wp_enqueue_scripts', function () {
     wp_register_style(
         'vc-shortcodes',
@@ -19,9 +19,20 @@ add_action( 'wp_enqueue_scripts', function () {
     );
 });
 
-// Quando um shortcode for usado, enfileira o CSS.
+// Quando um shortcode for usado, enfileira tanto o CSS novo quanto o legado.
 add_action( 'vc_shortcodes_used', function () {
     wp_enqueue_style( 'vc-shortcodes' );
+
+    if ( wp_style_is( 'vemcomer-front', 'registered' ) ) {
+        wp_enqueue_style( 'vemcomer-front' );
+    } else {
+        wp_enqueue_style(
+            'vemcomer-front',
+            plugins_url( '../../assets/css/frontend.css', __FILE__ ),
+            [],
+            defined( 'VEMCOMER_CORE_VERSION' ) ? VEMCOMER_CORE_VERSION : '1.0.0'
+        );
+    }
 });
 
 // Helper para os shortcodes chamarem assim que renderizarem.
