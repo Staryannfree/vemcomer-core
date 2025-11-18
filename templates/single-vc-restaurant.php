@@ -43,8 +43,12 @@ get_header();
 		<div class="vc-content">
 			<?php the_content(); ?>
 		</div>
-		</article>
-	<?php endwhile; ?>
+		<div class="vc-menu-wrapper">
+			<h2><?php echo esc_html__( 'Cardápio', 'vemcomer' ); ?></h2>
+			<?php echo do_shortcode( '[vc_menu_items]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		</div>
+</article>
+<?php endwhile; ?>
 	</div>
 </main>
 <?php get_footer(); ?>
