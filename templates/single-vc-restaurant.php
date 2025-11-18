@@ -23,7 +23,7 @@ get_header();
 			$whatsapp        = get_post_meta( get_the_ID(), 'vc_restaurant_whatsapp', true );
 			$hours           = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
 			$excerpt         = has_excerpt() ? get_the_excerpt() : '';
-			$wa_digits       = preg_replace( '/\D+/', '', (string) $whatsapp );
+			$wa_digits       = preg_replace( '/\\D+/', '', (string) $whatsapp );
 			$title_letter    = get_the_title();
 			$title_letter    = strtoupper( (string) ( function_exists( 'mb_substr' ) ? mb_substr( $title_letter, 0, 1, 'UTF-8' ) : substr( $title_letter, 0, 1 ) ) );
 			?>
@@ -31,7 +31,7 @@ get_header();
 				<section class="vc-single__hero">
 					<div class="vc-single__media">
 						<?php if ( has_post_thumbnail() ) : ?>
-							<?php the_post_thumbnail( 'large', array( 'class' => 'vc-single__image' ) ); ?>
+						<?php the_post_thumbnail( 'large', array( 'class' => 'vc-single__image' ) ); ?>
 						<?php else : ?>
 							<div class="vc-single__placeholder" aria-hidden="true">
 								<span><?php echo esc_html( $title_letter ); ?></span>
@@ -46,6 +46,14 @@ get_header();
 						<?php if ( $excerpt ) : ?>
 							<p class="vc-single__excerpt"><?php echo esc_html( $excerpt ); ?></p>
 						<?php endif; ?>
+						<div class="vc-single__chips">
+							<?php if ( $location_list ) : ?>
+								<span class="vc-chip vc-chip--muted"><?php echo esc_html( $location_list ); ?></span>
+							<?php endif; ?>
+							<span class="vc-chip vc-chip--status <?php echo '1' === $delivery_raw ? 'is-on' : 'is-off'; ?>">
+								<?php echo '1' === $delivery_raw ? esc_html__( 'Delivery ativo', 'vemcomer' ) : esc_html__( 'Somente retirada', 'vemcomer' ); ?>
+							</span>
+						</div>
 						<ul class="vc-single__details">
 							<?php if ( $address ) : ?>
 								<li>
@@ -58,7 +66,7 @@ get_header();
 									<span><?php echo esc_html__( 'WhatsApp', 'vemcomer' ); ?></span>
 									<strong>
 										<?php if ( $wa_digits ) : ?>
-											<a href="<?php echo esc_url( 'https://wa.me/' . ltrim( $wa_digits, '0' ) ); ?>" target="_blank" rel="noopener">
+											<a class="vc-link" href="<?php echo esc_url( 'https://wa.me/' . ltrim( $wa_digits, '0' ) ); ?>" target="_blank" rel="noopener">
 												<?php echo esc_html( $whatsapp ); ?>
 											</a>
 										<?php else : ?>
@@ -79,18 +87,27 @@ get_header();
 									<?php echo esc_html( $delivery_status ); ?>
 								</strong>
 							</li>
-							<?php if ( $location_list ) : ?>
+							<?php if ( $site_url ) : ?>
 								<li>
-									<span><?php echo esc_html__( 'Bairro', 'vemcomer' ); ?></span>
-									<strong><?php echo esc_html( $location_list ); ?></strong>
+									<span><?php echo esc_html__( 'Site oficial', 'vemcomer' ); ?></span>
+									<strong>
+										<a class="vc-link" href="<?php echo esc_url( $site_url ); ?>" target="_blank" rel="noopener">
+											<?php echo esc_html( wp_parse_url( $site_url, PHP_URL_HOST ) ?: $site_url ); ?>
+										</a>
+									</strong>
 								</li>
 							<?php endif; ?>
 						</ul>
 						<div class="vc-single__ctas">
 							<a class="vc-btn" href="#vc-menu"><?php echo esc_html__( 'Ver cardápio completo', 'vemcomer' ); ?></a>
-							<?php if ( ! empty( $site_url ) ) : ?>
+							<?php if ( $site_url ) : ?>
 								<a class="vc-btn vc-btn--ghost" href="<?php echo esc_url( $site_url ); ?>" target="_blank" rel="noopener">
 									<?php echo esc_html__( 'Visitar site', 'vemcomer' ); ?>
+								</a>
+							<?php endif; ?>
+							<?php if ( $wa_digits ) : ?>
+								<a class="vc-btn vc-btn--outline" href="<?php echo esc_url( 'https://wa.me/' . ltrim( $wa_digits, '0' ) ); ?>" target="_blank" rel="noopener">
+									<?php echo esc_html__( 'Falar no WhatsApp', 'vemcomer' ); ?>
 								</a>
 							<?php endif; ?>
 						</div>
@@ -102,11 +119,19 @@ get_header();
 					</section>
 				<?php endif; ?>
 				<div class="vc-menu-wrapper" id="vc-menu">
-					<h2><?php echo esc_html__( 'Cardápio', 'vemcomer' ); ?></h2>
+					<div class="vc-menu-wrapper__header">
+						<div>
+							<p class="vc-menu-wrapper__eyebrow"><?php echo esc_html__( 'Cardápio oficial', 'vemcomer' ); ?></p>
+							<h2><?php echo esc_html__( 'Peça agora mesmo', 'vemcomer' ); ?></h2>
+						</div>
+						<a class="vc-btn" href="#vc-menu"><?php echo esc_html__( 'Atualizar lista', 'vemcomer' ); ?></a>
+					</div>
 					<?php echo do_shortcode( '[vc_menu_items]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 			</article>
-		<?php endwhile; ?>
+			<?php
+		endwhile;
+		?>
 	</div>
 </main>
 <?php get_footer(); ?>
