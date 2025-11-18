@@ -38,6 +38,12 @@ spl_autoload_register( function ( $class ) {
 
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
 
+register_activation_hook( __FILE__, function () {
+    if ( class_exists( '\\VC\\Admin\\Installer' ) ) {
+        ( new \VC\Admin\Installer() )->install_defaults();
+    }
+} );
+
 add_action( 'plugins_loaded', function () {
     // (carrega os módulos já existentes dos Pacotes 1..7)
     if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); }
