@@ -10,6 +10,9 @@ Core de marketplace para WordPress com:
 2. Ative **VemComer Core** no painel do WordPress.
 3. (Opcional) Configure **VemComer ▸ Configurações** → Segredo do Webhook e integrações.
 
+### Páginas públicas (shortcodes)
+Ao ativar o plugin o núcleo cria/atualiza automaticamente as páginas que contêm apenas os shortcodes principais (lista, cardápio e checkout) e elas passam a aparecer em **Páginas ▸ Todas** como qualquer outra página. Se quiser recriá-las depois — ou gerar versões parametrizadas para um restaurante específico — use **VemComer ▸ Instalador**, que reaproveita as mesmas rotinas sem duplicar conteúdos existentes.
+
 ## Seed (dados de demonstração)
 Cria 1 restaurante e 5 itens de cardápio:
 ```bash

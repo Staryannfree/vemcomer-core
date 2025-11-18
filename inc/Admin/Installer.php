@@ -182,16 +182,26 @@ class Installer {
         if ( ! current_user_can( 'manage_options' ) ) { wp_die( __( 'Sem permissão.', 'vemcomer' ) ); }
         check_admin_referer( 'vc_install_all', 'vc_install_all_nonce' );
 
-        $map = $this->pages_map();
-        foreach ( $map as $key => $cfg ) {
-            $needs = $cfg['needs'];
-            if ( ! empty( $needs ) ) { continue; }
-            $content = $this->build_content( $key, 0 );
-            $this->create_or_update_page( $key, (string) $cfg['title'], $content );
-        }
+        $this->install_defaults();
 
         wp_redirect( add_query_arg( 'vc_installed', '1', admin_url( 'admin.php?page=vemcomer-installer' ) ) );
         exit;
+    }
+
+    /**
+     * Cria/atualiza todas as páginas que não dependem de parâmetros.
+     */
+    public function install_defaults(): void {
+        $map = $this->pages_map();
+        foreach ( $map as $key => $cfg ) {
+            $needs = $cfg['needs'];
+            if ( ! empty( $needs ) ) {
+                continue;
+            }
+
+            $content = $this->build_content( $key, 0 );
+            $this->create_or_update_page( $key, (string) $cfg['title'], $content );
+        }
     }
 
     /**
