@@ -60,7 +60,7 @@ class Signups {
             <div class="vc-form__row">
                 <label>
                     <?php echo esc_html__( 'WhatsApp', 'vemcomer' ); ?>
-                    <input type="text" name="restaurant_whatsapp" maxlength="20" placeholder="55 11 99999-9999" />
+                    <input type="text" name="restaurant_whatsapp" maxlength="20" placeholder="(61) 98187-2528" />
                 </label>
                 <label>
                     <?php echo esc_html__( 'Site', 'vemcomer' ); ?>
@@ -98,10 +98,52 @@ class Signups {
             const form = document.querySelector('form[data-vc-form="restaurant"]');
             if(!form){return;}
 
+            const formatCnpj = (value) => {
+                const digits = value.replace(/\D/g, '').slice(0, 14);
+                const parts = [
+                    digits.slice(0, 2),
+                    digits.slice(2, 5),
+                    digits.slice(5, 8),
+                    digits.slice(8, 12),
+                    digits.slice(12, 14),
+                ];
+
+                let formatted = parts[0] || '';
+                if (parts[1]) { formatted += '.' + parts[1]; }
+                if (parts[2]) { formatted += '.' + parts[2]; }
+                if (parts[3]) { formatted += '/' + parts[3]; }
+                if (parts[4]) { formatted += '-' + parts[4]; }
+
+                return formatted;
+            };
+
+            const formatPhone = (value) => {
+                const digits = value.replace(/\D/g, '').slice(0, 11);
+                if (!digits) {
+                    return '';
+                }
+
+                const ddd = digits.slice(0, Math.min(2, digits.length));
+                const number = digits.slice(2);
+
+                let formatted = '(' + ddd;
+                if (digits.length >= 2) {
+                    formatted += ') ';
+                }
+
+                if (number.length > 5) {
+                    formatted += number.slice(0, 5) + '-' + number.slice(5);
+                } else {
+                    formatted += number;
+                }
+
+                return formatted;
+            };
+
             const fields = [
                 { name: 'restaurant_name', max: 120 },
-                { name: 'restaurant_cnpj', max: 18, pattern: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, message: '<?php echo esc_js( __( 'CNPJ inválido ou incompleto.', 'vemcomer' ) ); ?>' },
-                { name: 'restaurant_whatsapp', max: 20, pattern: /^[0-9+\s().-]{10,20}$/, message: '<?php echo esc_js( __( 'WhatsApp inválido.', 'vemcomer' ) ); ?>' },
+                { name: 'restaurant_cnpj', max: 18, pattern: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, message: '<?php echo esc_js( __( 'CNPJ inválido ou incompleto.', 'vemcomer' ) ); ?>', formatter: formatCnpj },
+                { name: 'restaurant_whatsapp', max: 20, pattern: /^\(\d{2}\) \d{4,5}-\d{4}$/, message: '<?php echo esc_js( __( 'WhatsApp inválido.', 'vemcomer' ) ); ?>', formatter: formatPhone },
                 { name: 'restaurant_site', max: 200 },
                 { name: 'restaurant_address', max: 200 },
                 { name: 'restaurant_cuisine', max: 60 },
@@ -128,6 +170,9 @@ class Signups {
                     errorBox.textContent = message;
                 };
                 input.addEventListener('input', () => {
+                    if (cfg.formatter) {
+                        input.value = cfg.formatter(input.value);
+                    }
                     if(cfg.max && input.value.length > cfg.max){
                         input.value = input.value.slice(0, cfg.max);
                     }
