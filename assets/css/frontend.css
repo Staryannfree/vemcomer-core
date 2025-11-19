@@ -3,6 +3,7 @@
 .vc-form h3{margin:0 0 12px;font-size:1.5rem}
 .vc-form label{display:block;font-weight:600;margin-top:12px}
 .vc-form input,.vc-form textarea{width:100%;border:1px solid var(--vc-border);border-radius:12px;padding:10px 12px;margin-top:4px;font-size:1rem}
+.vc-form__error{color:#b42318;font-size:0.9rem;margin-top:6px}
 .vc-form textarea{min-height:110px}
 .vc-form__row{display:flex;gap:12px;flex-wrap:wrap}
 .vc-form__row label{flex:1}

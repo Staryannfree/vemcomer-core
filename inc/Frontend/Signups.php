@@ -44,46 +44,46 @@ class Signups {
 
         ob_start();
         ?>
-        <form class="vc-form" method="post" action="<?php echo $action; ?>">
+        <form class="vc-form" data-vc-form="restaurant" method="post" action="<?php echo $action; ?>">
             <h3><?php echo esc_html__( 'Cadastro de restaurante', 'vemcomer' ); ?></h3>
             <?php echo $message; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <input type="hidden" name="action" value="vc_restaurant_signup" />
             <?php wp_nonce_field( 'vc_restaurant_signup', '_vc_restaurant_nonce' ); ?>
             <label>
                 <?php echo esc_html__( 'Nome do restaurante', 'vemcomer' ); ?>
-                <input type="text" name="restaurant_name" required />
+                <input type="text" name="restaurant_name" maxlength="120" required />
             </label>
             <label>
                 <?php echo esc_html__( 'CNPJ', 'vemcomer' ); ?>
-                <input type="text" name="restaurant_cnpj" placeholder="00.000.000/0000-00" required />
+                <input type="text" name="restaurant_cnpj" maxlength="18" placeholder="00.000.000/0000-00" required />
             </label>
             <div class="vc-form__row">
                 <label>
                     <?php echo esc_html__( 'WhatsApp', 'vemcomer' ); ?>
-                    <input type="text" name="restaurant_whatsapp" placeholder="55 11 99999-9999" />
+                    <input type="text" name="restaurant_whatsapp" maxlength="20" placeholder="55 11 99999-9999" />
                 </label>
                 <label>
                     <?php echo esc_html__( 'Site', 'vemcomer' ); ?>
-                    <input type="url" name="restaurant_site" placeholder="https://" />
+                    <input type="url" name="restaurant_site" maxlength="200" placeholder="https://" />
                 </label>
             </div>
             <label>
                 <?php echo esc_html__( 'Endereço completo', 'vemcomer' ); ?>
-                <input type="text" name="restaurant_address" />
+                <input type="text" name="restaurant_address" maxlength="200" />
             </label>
             <div class="vc-form__row">
                 <label>
                     <?php echo esc_html__( 'Cozinha/Categoria', 'vemcomer' ); ?>
-                    <input type="text" name="restaurant_cuisine" placeholder="ex.: pizza" />
+                    <input type="text" name="restaurant_cuisine" maxlength="60" placeholder="ex.: pizza" />
                 </label>
                 <label>
                     <?php echo esc_html__( 'Localização/bairro', 'vemcomer' ); ?>
-                    <input type="text" name="restaurant_location" placeholder="ex.: centro" />
+                    <input type="text" name="restaurant_location" maxlength="60" placeholder="ex.: centro" />
                 </label>
             </div>
             <label>
                 <?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?>
-                <textarea name="restaurant_open_hours" rows="3"></textarea>
+                <textarea name="restaurant_open_hours" rows="3" maxlength="240"></textarea>
             </label>
             <label class="vc-form__check">
                 <input type="checkbox" name="restaurant_delivery" value="1" />
@@ -93,6 +93,50 @@ class Signups {
                 <button type="submit" class="vc-btn"><?php echo esc_html__( 'Enviar para análise', 'vemcomer' ); ?></button>
             </div>
         </form>
+        <script>
+        (function(){
+            const form = document.querySelector('form[data-vc-form="restaurant"]');
+            if(!form){return;}
+
+            const fields = [
+                { name: 'restaurant_name', max: 120 },
+                { name: 'restaurant_cnpj', max: 18, pattern: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, message: '<?php echo esc_js( __( 'CNPJ inválido ou incompleto.', 'vemcomer' ) ); ?>' },
+                { name: 'restaurant_whatsapp', max: 20, pattern: /^[0-9+\s().-]{10,20}$/, message: '<?php echo esc_js( __( 'WhatsApp inválido.', 'vemcomer' ) ); ?>' },
+                { name: 'restaurant_site', max: 200 },
+                { name: 'restaurant_address', max: 200 },
+                { name: 'restaurant_cuisine', max: 60 },
+                { name: 'restaurant_location', max: 60 },
+                { name: 'restaurant_open_hours', max: 240 }
+            ];
+
+            fields.forEach((cfg)=>{
+                const input = form.querySelector(`[name="${cfg.name}"]`);
+                if(!input){return;}
+                if(cfg.max){ input.maxLength = cfg.max; }
+                let errorBox = input.nextElementSibling;
+                if(!errorBox || !errorBox.classList.contains('vc-form__error')){
+                    errorBox = document.createElement('div');
+                    errorBox.className = 'vc-form__error';
+                    input.insertAdjacentElement('afterend', errorBox);
+                }
+                const renderError = () => {
+                    let message = '';
+                    const value = input.value.trim();
+                    if(cfg.pattern && value && (value.length >= (cfg.max||0)) && !cfg.pattern.test(value)){
+                        message = cfg.message || '';
+                    }
+                    errorBox.textContent = message;
+                };
+                input.addEventListener('input', () => {
+                    if(cfg.max && input.value.length > cfg.max){
+                        input.value = input.value.slice(0, cfg.max);
+                    }
+                    renderError();
+                });
+                input.addEventListener('blur', renderError);
+            });
+        })();
+        </script>
         <?php
         return (string) ob_get_clean();
     }
