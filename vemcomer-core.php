@@ -11,13 +11,21 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'VEMCOMER_CORE_VERSION', '0.8.0' );
+if ( ! defined( 'VEMCOMER_CORE_VERSION' ) ) {
+    define( 'VEMCOMER_CORE_VERSION', '0.8.0' );
+}
 
-define( 'VEMCOMER_CORE_FILE', __FILE__ );
+if ( ! defined( 'VEMCOMER_CORE_FILE' ) ) {
+    define( 'VEMCOMER_CORE_FILE', __FILE__ );
+}
 
-define( 'VEMCOMER_CORE_DIR', plugin_dir_path( __FILE__ ) );
+if ( ! defined( 'VEMCOMER_CORE_DIR' ) ) {
+    define( 'VEMCOMER_CORE_DIR', plugin_dir_path( __FILE__ ) );
+}
 
-define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
+if ( ! defined( 'VEMCOMER_CORE_URL' ) ) {
+    define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
+}
 
 require_once VEMCOMER_CORE_DIR . 'inc/bootstrap.php';
 require_once VEMCOMER_CORE_DIR . 'inc/logging.php';
