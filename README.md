@@ -53,6 +53,20 @@ add_action( 'vemcomer_register_fulfillment_method', function () {
 * Header: `X-VemComer-Signature: sha256=<hmac_hex_do_corpo>`
 * Body: `{ "order_id": 10, "status": "paid|refunded|failed", "amount": "99,90", "ts": 1690000000 }`
 
+### Mercado Pago → VemComer
+
+O plugin expõe um handler dedicado para notificações do Mercado Pago (`/wp-json/vemcomer/v1/mercadopago/webhook`).
+
+1. Execute `composer require mercadopago/dx-php` no diretório do plugin e garanta que `vendor/autoload.php` esteja presente.
+2. Em **VemComer ▸ Configurações** configure:
+   * **Gateway de pagamento**: `mercadopago`.
+   * **Segredo do webhook (HMAC)**: gere pelo botão "Gerar novo segredo" e compartilhe com o serviço intermediário.
+   * **Token do Mercado Pago**: cole o `access_token` do APP (`APP_USR-...`).
+3. No checkout do Mercado Pago informe `external_reference = <ID do vc_pedido>` (ou `metadata.vemcomer_order_id`).
+4. Cadastre a URL `/wp-json/vemcomer/v1/mercadopago/webhook` nas notificações do Mercado Pago.
+
+O handler valida o `id` recebido junto ao SDK oficial, resolve o pedido e encaminha o payload assinado para `/wp-json/vemcomer/v1/webhook/payment`. Após o processamento você pode ouvir `vemcomer_mercadopago_payment_processed` para executar automações adicionais (envio de comprovantes, atualização de painel, etc.).
+
 ## Status de Pedido
 
 Os pedidos (`vc_pedido`) podem ter:

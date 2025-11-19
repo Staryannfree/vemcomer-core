@@ -24,8 +24,9 @@ class Settings {
             'payment_text_pix'   => __( 'Pagamento via Pix na entrega.', 'vemcomer' ),
             'payment_text_card'  => __( 'Cartão na entrega (maquininha).', 'vemcomer' ),
             'payment_text_cash'  => __( 'Dinheiro (informe se precisa de troco).', 'vemcomer' ),
-            'payment_provider'   => '',
+            'payment_provider'   => 'mercadopago',
             'payment_secret'     => '',
+            'payment_mp_access_token' => '',
             'delivery_provider'  => '',
             'enable_wc_sync'     => '',
             'email_enabled'      => '',
@@ -102,6 +103,7 @@ class Settings {
 
         add_settings_field( 'payment_provider', __( 'Gateway de pagamento', 'vemcomer' ), [ $this, 'field_payment_provider' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'payment_secret', __( 'Segredo do webhook (HMAC)', 'vemcomer' ), [ $this, 'field_payment_secret' ], self::PAGE_SLUG, 'vc_integrations' );
+        add_settings_field( 'payment_mp_access_token', __( 'Token do Mercado Pago', 'vemcomer' ), [ $this, 'field_payment_mp_access_token' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'delivery_provider', __( 'Serviço de entrega', 'vemcomer' ), [ $this, 'field_delivery_provider' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'enable_wc_sync', __( 'Sincronizar com WooCommerce', 'vemcomer' ), [ $this, 'field_enable_wc_sync' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'email_enabled', __( 'Enviar emails de eventos', 'vemcomer' ), [ $this, 'field_email_enabled' ], self::PAGE_SLUG, 'vc_integrations' );
@@ -128,6 +130,7 @@ class Settings {
 
         $output['payment_provider']  = isset( $input['payment_provider'] ) ? sanitize_text_field( wp_unslash( $input['payment_provider'] ) ) : $current['payment_provider'];
         $output['payment_secret']    = isset( $input['payment_secret'] ) ? sanitize_text_field( wp_unslash( $input['payment_secret'] ) ) : $current['payment_secret'];
+        $output['payment_mp_access_token'] = isset( $input['payment_mp_access_token'] ) ? sanitize_text_field( wp_unslash( $input['payment_mp_access_token'] ) ) : $current['payment_mp_access_token'];
         $output['delivery_provider'] = isset( $input['delivery_provider'] ) ? sanitize_text_field( wp_unslash( $input['delivery_provider'] ) ) : $current['delivery_provider'];
         $output['enable_wc_sync']    = ! empty( $input['enable_wc_sync'] ) ? '1' : '';
         $output['email_enabled']     = ! empty( $input['email_enabled'] ) ? '1' : '';
@@ -197,12 +200,48 @@ class Settings {
     }
 
     public function field_payment_provider(): void {
-        $this->text_input( 'payment_provider', (string) $this->get()['payment_provider'], [ 'class' => 'regular-text', 'placeholder' => 'ex.: pagarme, stripe' ] );
+        $this->text_input( 'payment_provider', (string) $this->get()['payment_provider'], [ 'class' => 'regular-text', 'placeholder' => 'ex.: mercadopago, pagarme', 'id' => 'vemcomer-payment-provider' ] );
     }
 
     public function field_payment_secret(): void {
-        $this->text_input( 'payment_secret', (string) $this->get()['payment_secret'], [ 'class' => 'regular-text', 'type' => 'password' ] );
-        echo '<p class="description">' . esc_html__( 'Usado para validar webhooks (sha256 HMAC).', 'vemcomer' ) . '</p>';
+        $input_id = 'vemcomer-payment-secret';
+        $this->text_input( 'payment_secret', (string) $this->get()['payment_secret'], [ 'class' => 'regular-text', 'type' => 'password', 'id' => $input_id, 'autocomplete' => 'off' ] );
+        echo '<p class="description">' . esc_html__( 'Usado para validar webhooks (sha256 HMAC). Compartilhe apenas com o serviço intermediário.', 'vemcomer' ) . '</p>';
+        echo '<p><button type="button" class="button" id="vemcomer-generate-secret">' . esc_html__( 'Gerar novo segredo', 'vemcomer' ) . '</button></p>';
+        static $secret_script_printed = false;
+        if ( ! $secret_script_printed ) {
+            $secret_script_printed = true;
+            ?>
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var button = document.getElementById('vemcomer-generate-secret');
+                var input  = document.getElementById('<?php echo esc_js( $input_id ); ?>');
+                if (!button || !input) {
+                    return;
+                }
+                button.addEventListener('click', function () {
+                    var random = window.crypto && window.crypto.getRandomValues ?
+                        function () {
+                            var array = new Uint32Array(8);
+                            window.crypto.getRandomValues(array);
+                            return Array.from(array).map(function (value) {
+                                return value.toString(16).padStart(8, '0');
+                            }).join('').slice(0, 64);
+                        }() :
+                        (Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2) + Date.now().toString(36)).slice(0, 64);
+                    input.value = random;
+                    input.type = 'text';
+                    input.focus();
+                });
+            });
+            </script>
+            <?php
+        }
+    }
+
+    public function field_payment_mp_access_token(): void {
+        $this->text_input( 'payment_mp_access_token', (string) $this->get()['payment_mp_access_token'], [ 'class' => 'regular-text', 'type' => 'password', 'placeholder' => 'APP_USR-xxxxxxxxxxxx', 'autocomplete' => 'off' ] );
+        echo '<p class="description">' . esc_html__( 'Token de acesso usado pelo SDK oficial do Mercado Pago para validar notificações.', 'vemcomer' ) . '</p>';
     }
 
     public function field_delivery_provider(): void {

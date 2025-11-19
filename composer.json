@@ -6,6 +6,9 @@
   "require": {
     "php": ">=8.1"
   },
+  "suggest": {
+    "mercadopago/dx-php": "Necessário para validar notificações oficiais do Mercado Pago."
+  },
   "autoload": {
     "psr-4": {
       "VemComer\\Core\\": "inc/"
