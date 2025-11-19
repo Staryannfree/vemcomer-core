@@ -19,6 +19,7 @@ class Signups {
         add_shortcode( 'vemcomer_customer_signup', [ $this, 'customer_form' ] );
 
         add_action( 'admin_post_vc_restaurant_signup', [ $this, 'handle_restaurant_form' ] );
+        add_action( 'admin_post_nopriv_vc_restaurant_signup', [ $this, 'handle_restaurant_form' ] );
         add_action( 'admin_post_vc_customer_signup', [ $this, 'handle_customer_form' ] );
         add_action( 'admin_post_nopriv_vc_customer_signup', [ $this, 'handle_customer_form' ] );
     }
@@ -34,14 +35,6 @@ class Signups {
 
     public function restaurant_form(): string {
         $this->ensure_assets();
-
-        if ( ! is_user_logged_in() ) {
-            return '<div class="vc-alert vc-alert--warning">' . esc_html__( 'Faça login para enviar os dados do restaurante.', 'vemcomer' ) . '</div>';
-        }
-
-        if ( ! current_user_can( 'create_vc_restaurants' ) && ! current_user_can( 'publish_vc_restaurants' ) ) {
-            return '<div class="vc-alert vc-alert--warning">' . esc_html__( 'Seu usuário não tem permissão para cadastrar restaurantes.', 'vemcomer' ) . '</div>';
-        }
 
         $message = $this->get_feedback_box( 'vc_restaurant' );
         $action  = esc_url( admin_url( 'admin-post.php' ) );
@@ -145,22 +138,6 @@ class Signups {
     }
 
     public function handle_restaurant_form(): void {
-        if ( ! is_user_logged_in() ) {
-            wp_die(
-                esc_html__( 'Você precisa estar autenticado para cadastrar um restaurante.', 'vemcomer' ),
-                esc_html__( 'Acesso negado', 'vemcomer' ),
-                [ 'response' => 403 ]
-            );
-        }
-
-        if ( ! current_user_can( 'create_vc_restaurants' ) && ! current_user_can( 'publish_vc_restaurants' ) ) {
-            wp_die(
-                esc_html__( 'Permissão insuficiente.', 'vemcomer' ),
-                esc_html__( 'Acesso negado', 'vemcomer' ),
-                [ 'response' => 403 ]
-            );
-        }
-
         check_admin_referer( 'vc_restaurant_signup', '_vc_restaurant_nonce' );
 
         $name      = sanitize_text_field( wp_unslash( $_POST['restaurant_name'] ?? '' ) );
@@ -186,7 +163,7 @@ class Signups {
             $this->redirect_with_args( [ 'vc_restaurant_error' => $cnpj_validation->get_error_code() ?: 'invalid_cnpj' ] );
         }
 
-        $status = current_user_can( 'publish_vc_restaurants' ) ? 'publish' : 'pending';
+        $status = 'pending';
         $post_id = wp_insert_post(
             [
                 'post_type'   => 'vc_restaurant',

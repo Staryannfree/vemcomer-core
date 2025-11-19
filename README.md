@@ -18,7 +18,7 @@ Shortcodes principais disponíveis:
 * `[vemcomer_restaurants]` — grade pública de restaurantes cadastrados.
 * `[vemcomer_menu]` — lista os itens de um restaurante (usa `?restaurant_id=` ou o atributo `restaurant_id`).
 * `[vemcomer_checkout]` — checkout simplificado para o carrinho do marketplace.
-* `[vemcomer_restaurant_signup]` — formulário para restaurantes enviarem seus dados (requer usuário logado com permissão de publicar restaurantes).
+* `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).
 * `[vemcomer_customer_signup]` — formulário de criação de conta para clientes finais.
 
 ## Seed (dados de demonstração)
