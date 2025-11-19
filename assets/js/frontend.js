@@ -15,6 +15,9 @@
   // ===== Carrinho persistente =====
   const CART_KEY = 'vc_cart_v1';
   const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+  function getCartRestaurantId(){
+    return cart.length ? Number(cart[0].rid) : 0;
+  }
   function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
 
   // ===== UI: render de carrinho =====
@@ -24,6 +27,18 @@
     root.querySelector('.vc-cart').innerHTML = list || '<div class="vc-empty">Carrinho vazio</div>';
     root.querySelector('.vc-subtotal').innerHTML = `Subtotal: <strong>R$ ${floatToBR(subtotal)}</strong>`;
     root.dataset.subtotal = String(subtotal);
+    const rid = getCartRestaurantId();
+    root.dataset.restaurant = rid ? String(rid) : (root.dataset.restaurant||'');
+    root.dataset.ship = '0';
+    root.dataset.discount = '0';
+    root.dataset.fulfillmentMethod = '';
+    root.dataset.fulfillmentLabel = '';
+    root.dataset.fulfillmentEta = '';
+    const freightBox = root.querySelector('.vc-freight'); if(freightBox){freightBox.innerHTML='';}
+    const discountBox = root.querySelector('.vc-discount'); if(discountBox){discountBox.innerHTML='';}
+    const totalBox = root.querySelector('.vc-total'); if(totalBox){totalBox.innerHTML='';}
+    const etaBox = root.querySelector('.vc-eta'); if(etaBox){etaBox.innerHTML='';}
+    const quoteResult = root.querySelector('.vc-quote-result'); if(quoteResult){quoteResult.innerHTML='';}
     const has = cart.length>0; const place = root.querySelector('.vc-place-order'); if(place) {place.disabled = !has;}
   }
 
@@ -54,11 +69,17 @@
       const id  = Number(add.dataset.id);
       const rid = Number(add.dataset.restaurant);
       const title = add.dataset.title; const price = add.dataset.price;
+      const currentRid = getCartRestaurantId();
+      const checkoutRoot = document.querySelector('.vc-checkout');
+      const lockedRid = checkoutRoot ? Number(checkoutRoot.dataset.restaurant||0) : 0;
+      if((currentRid && currentRid !== rid) || (lockedRid && lockedRid !== rid)){
+        alert('O checkout aceita itens de um único restaurante. Esvazie o carrinho para trocar.');
+        return;
+      }
       const found = cart.find(i=>i.id===id);
       if(found) {found.qtd++;} else {cart.push({id, rid, title, price, qtd:1});}
       saveCart();
-      const checkout = document.querySelector('.vc-checkout');
-      if(checkout) {renderCart(checkout);}
+      if(checkoutRoot) {renderCart(checkoutRoot);}
     }
   });
 
@@ -80,26 +101,55 @@
     const btn = e.target.closest('.vc-quote');
     if(!btn) {return;}
     const root = btn.closest('.vc-checkout');
-    const rid = Number(root.dataset.restaurant||0) || (cart[0] && cart[0].rid) || 0;
+    const ridAttr = Number(root.dataset.restaurant||0);
+    const rid = ridAttr || getCartRestaurantId();
+    if(!rid){ alert('Selecione um restaurante antes de calcular o frete.'); return; }
+    root.dataset.restaurant = String(rid);
     const subtotal = Number(root.dataset.subtotal||0);
+    if(subtotal<=0){ alert('Adicione itens ao carrinho antes de calcular o frete.'); return; }
 
     const coupon = (root.querySelector('.vc-coupon')?.value||'').trim().toUpperCase();
-    const c = applyCoupon(coupon, subtotal);
+    const c = coupon ? applyCoupon(coupon, subtotal) : {ok:false};
     const url = `${VemComer.rest.base}/shipping/quote?restaurant_id=${rid}&subtotal=${subtotal}`;
-    const res = await fetch(url); const shipData = await res.json();
-    let ship = Number(shipData.ship||0);
-    if(c.ok && c.freightFree) {ship = 0;}
-
-    const discount = c.ok ? (c.discount||0) : 0;
+    let shipData = null;
+    try {
+      const res = await fetch(url);
+      shipData = await res.json();
+    } catch(err) {
+      root.querySelector('.vc-quote-result').innerHTML = 'Erro ao consultar frete.';
+      return;
+    }
+    const methods = Array.isArray(shipData.methods) ? shipData.methods : [];
+    if(!methods.length){
+      const msg = shipData && shipData.message ? shipData.message : 'Nenhum método disponível.';
+      root.querySelector('.vc-quote-result').innerHTML = msg;
+      root.dataset.fulfillmentMethod = '';
+      root.dataset.ship = '0';
+      return;
+    }
+    const method = methods[0];
+    const methodShip = Number(method.amount||0);
+    const etaText = method.eta || '';
+    let ship = methodShip;
+    let discount = c.ok ? (c.discount||0) : 0;
+    if(c.ok && c.freightFree){
+      discount += ship;
+    }
     const total = Math.max(0, subtotal - discount + ship);
 
-    root.querySelector('.vc-quote-result').innerHTML = shipData.free || (c.ok && c.freightFree) ? 'Frete grátis' : `Frete: R$ ${floatToBR(ship)}`;
-    root.querySelector('.vc-freight').innerHTML = `Frete: <strong>R$ ${floatToBR(ship)}</strong>`;
-    root.querySelector('.vc-discount').innerHTML = c.ok ? `Desconto: <strong>- R$ ${floatToBR(discount)}</strong>` : '';
+    const labelText = method.label || 'Entrega';
+    const etaLabel = etaText ? ` • ${etaText}` : '';
+    root.querySelector('.vc-quote-result').innerHTML = `${labelText}${etaLabel}`;
+    root.querySelector('.vc-freight').innerHTML = `Frete: <strong>R$ ${floatToBR(methodShip)}</strong>`;
+    root.querySelector('.vc-discount').innerHTML = discount>0 ? `Descontos: <strong>- R$ ${floatToBR(discount)}</strong>` : '';
     root.querySelector('.vc-total').innerHTML = `Total: <strong>R$ ${floatToBR(total)}</strong>`;
+    root.querySelector('.vc-eta').innerHTML = etaText ? `Entrega estimada: <strong>${etaText}</strong>` : '';
 
     root.dataset.ship = String(ship);
     root.dataset.discount = String(discount);
+    root.dataset.fulfillmentMethod = method.id || '';
+    root.dataset.fulfillmentLabel = method.label || '';
+    root.dataset.fulfillmentEta = etaText;
     if(c.ok) {localStorage.setItem(COUPON_KEY, coupon);} else {localStorage.removeItem(COUPON_KEY);}
     root.querySelector('.vc-place-order').disabled = cart.length===0;
   });
@@ -108,19 +158,33 @@
     const btn = e.target.closest('.vc-place-order');
     if(!btn) {return;}
     const root = btn.closest('.vc-checkout');
+    const restaurantId = Number(root.dataset.restaurant||0);
+    if(!restaurantId){ alert('Selecione um restaurante antes de finalizar.'); return; }
     const subtotal = Number(root.dataset.subtotal||0);
     const ship = Number(root.dataset.ship||0);
     const discount = Number(root.dataset.discount||0);
     const total = Math.max(0, subtotal - discount + ship);
+    const fulfillmentMethod = root.dataset.fulfillmentMethod || '';
+    if(!fulfillmentMethod){ alert('Calcule o frete e escolha um método de entrega antes de finalizar.'); return; }
 
     const itens = cart.map(i=>({ produto_id: i.id, qtd: i.qtd }));
-    const payload = { itens, total: floatToBR(total) };
+    const payload = {
+      restaurant_id: restaurantId,
+      itens,
+      subtotal: floatToBR(subtotal),
+      fulfillment: {
+        method: fulfillmentMethod,
+        ship_total: floatToBR(ship)
+      }
+    };
     const res = await fetch(`${VemComer.rest.base}/pedidos`,{
       method:'POST', headers:{'Content-Type':'application/json','X-WP-Nonce': VemComer.nonce}, body: JSON.stringify(payload)
     });
     const data = await res.json();
     if(data && data.id){
-      root.querySelector('.vc-order-result').innerHTML = `Pedido criado #${data.id}. <button class="vc-btn vc-track" data-id="${data.id}">Acompanhar</button>`;
+      const fulfillmentLabel = data.fulfillment && data.fulfillment.label ? data.fulfillment.label : '';
+      const etaInfo = data.fulfillment && data.fulfillment.eta ? ` ETA: ${data.fulfillment.eta}` : '';
+      root.querySelector('.vc-order-result').innerHTML = `Pedido criado #${data.id}. Frete ${fulfillmentLabel}.${etaInfo} <button class="vc-btn vc-track" data-id="${data.id}">Acompanhar</button>`;
       cart.length = 0; saveCart(); renderCart(root);
       root.querySelector('.vc-freight').innerHTML='';
       root.querySelector('.vc-total').innerHTML='';

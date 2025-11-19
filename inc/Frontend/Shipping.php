@@ -8,19 +8,21 @@
 
 namespace VC\Frontend;
 
+use VC\Checkout\FulfillmentRegistry;
+
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Shipping {
     public function init(): void { /* reservado para futuras integrações */ }
 
     public static function quote( int $restaurant_id, float $subtotal ): array {
-        $min   = (float) str_replace( ',', '.', (string) get_post_meta( $restaurant_id, '_vc_min_order', true ) );
-        $flatS = get_post_meta( $restaurant_id, '_vc_ship_flat', true );
-        $flat  = $flatS !== '' ? (float) str_replace( ',', '.', (string) $flatS ) : (float) apply_filters( 'vemcomer/default_ship_flat', 9.90, $restaurant_id );
+        $order   = [ 'restaurant_id' => $restaurant_id, 'subtotal' => $subtotal ];
+        $methods = FulfillmentRegistry::get_quotes( $order );
 
-        $free = $min > 0 && $subtotal >= $min;
-        $price = $free ? 0.0 : $flat;
-
-        return [ 'restaurant_id' => $restaurant_id, 'subtotal' => $subtotal, 'min' => $min, 'ship' => $price, 'free' => $free ];
+        return [
+            'restaurant_id' => $restaurant_id,
+            'subtotal'      => $subtotal,
+            'methods'       => $methods,
+        ];
     }
 }
