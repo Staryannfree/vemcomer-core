@@ -56,7 +56,7 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_style('vc-shortcodes', $base_url . 'assets/css/shortcodes.css', [], $ver);
 
         // Scripts
-        wp_register_script('vemcomer-front', $base_url . 'assets/js/frontend.js', ['wp-element'], $ver, true);
+        wp_register_script('vemcomer-front', $base_url . 'assets/js/frontend.js', [], $ver, true);
         wp_register_script('vemcomer-checkout', $base_url . 'assets/js/checkout.js', [], $ver, true);
         wp_register_script('vemcomer-checkout-geo', $base_url . 'assets/checkout-geo.js', ['jquery'], $ver, true);
         wp_register_script('vemcomer-geo-address', $base_url . 'assets/geo-address.js', ['jquery'], $ver, true);
@@ -84,7 +84,7 @@ if (!function_exists('vc_register_admin_assets')) {
         wp_register_style('vc-preenchedor', $base_url . 'assets/css/preenchedor.css', [], $ver);
 
         // Scripts
-        wp_register_script('vemcomer-admin', $base_url . 'assets/js/admin.js', ['wp-element'], $ver, true);
+        wp_register_script('vemcomer-admin', $base_url . 'assets/js/admin.js', [], $ver, true);
         wp_register_script('vc-restaurants-admin', $base_url . 'assets/js/restaurants-admin.js', ['jquery'], $ver, true);
     }
 }
