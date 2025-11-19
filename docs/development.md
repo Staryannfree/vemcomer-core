@@ -34,3 +34,10 @@ curl -X PATCH \
   -d '{ "title":"Nome Atualizado" }' \
   https://SEU.DOMINIO/wp-json/vemcomer/v1/restaurants/123
 ```
+
+## QA manual — CNPJ do restaurante
+
+1. Abra **Restaurantes ▸ Adicionar novo** (ou edite um existente) e tente salvar com `00.000.000/0000-00`.
+   - O metabox deve impedir o salvamento, mantendo o CNPJ anterior, e exibir um aviso em vermelho com a mensagem de erro.
+2. Atualize o campo para um CNPJ válido (ex.: `04.252.011/0001-10`) e salve novamente.
+   - O aviso desaparece e o valor normalizado (apenas dígitos) é persistido normalmente na meta `vc_restaurant_cnpj`.
