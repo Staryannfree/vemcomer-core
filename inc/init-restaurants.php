@@ -15,6 +15,7 @@ require_once __DIR__ . '/audit/logger.php';
 require_once __DIR__ . '/rest-middleware-rate-limit.php';
 require_once __DIR__ . '/admin/export-csv.php';
 require_once __DIR__ . '/admin/list-advanced.php';
+require_once __DIR__ . '/admin/menu.php';
 require_once __DIR__ . '/rest-api.php';
 require_once __DIR__ . '/rest-api-write.php';
 require_once __DIR__ . '/roles-capabilities.php';
