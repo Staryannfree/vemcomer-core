@@ -8,7 +8,7 @@ PHP Deprecated:  Creation of dynamic property Pusher\Dashboard::$pusher is depre
 PHP Fatal error:  Cannot declare class Elementor\Element_Column, because the name is already in use
 ```
 
-Os dois primeiros avisos são o motivo do erro crítico: o WP Pusher (versões < 3.0) cria propriedades dinâmicas e o PHP 8.2 passou a bloquear esse padrão. Quando o carregamento é interrompido no meio, outros plugins (como o Elementor) podem ser incluídos duas vezes e gerar o `Cannot declare class ... already in use`.
+Os dois primeiros avisos são o motivo do erro crítico: o WP Pusher (versões < 3.0) cria propriedades dinâmicas e o PHP 8.2 passou a bloquear esse padrão. Quando o carregamento é interrompido no meio, outros plugins podem ser incluídos duas vezes e gerar o `Cannot declare class ... already in use`. Mesmo que a mensagem cite `Elementor\Element_Column`, o VemComer Core não depende do Elementor — trata-se apenas de um efeito colateral do autoloader interrompido.
 
 ## Solução rápida (script incluso no VemComer Core)
 
@@ -53,4 +53,4 @@ Os dois primeiros avisos são o motivo do erro crítico: o WP Pusher (versões <
 
 - Ativar o WP Pusher sem warnings/fatals no `debug.log`.
 - Em seguida ativar o `vemcomer-core` normalmente.
-- Se o Elementor continuar acusando `Cannot declare class`, remova caches e garanta que só exista uma cópia do plugin.
+- Se algum plugin continuar acusando `Cannot declare class`, remova caches e garanta que só exista uma única cópia desse plugin no servidor.

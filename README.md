@@ -21,6 +21,8 @@ Shortcodes principais disponíveis:
 * `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).
 * `[vemcomer_customer_signup]` — formulário de criação de conta para clientes finais.
 
+Todos os shortcodes acima renderizam HTML, CSS e JavaScript próprios do plugin — não há dependência de construtores como o Elementor para exibir as páginas públicas.
+
 ## Seed (dados de demonstração)
 Cria 1 restaurante e 5 itens de cardápio:
 ```bash
@@ -108,4 +110,4 @@ Use esses nomes nos “Custom Action Hook” dos automators para disparar receit
 
 ## Troubleshooting
 
-- **WP Pusher em PHP 8.2**: se o log mostrar `Creation of dynamic property Pusher\Log\Logger::$file` ou `Cannot declare class Elementor\Element_Column`, execute o script `bin/fix-wppusher-php82.php` descrito em [`docs/troubleshooting/wp-pusher.md`](docs/troubleshooting/wp-pusher.md).
+- **WP Pusher em PHP 8.2**: se o log mostrar `Creation of dynamic property Pusher\Log\Logger::$file` ou `Cannot declare class Elementor\Element_Column` (mesmo que o Elementor não esteja instalado), execute o script `bin/fix-wppusher-php82.php` descrito em [`docs/troubleshooting/wp-pusher.md`](docs/troubleshooting/wp-pusher.md).
