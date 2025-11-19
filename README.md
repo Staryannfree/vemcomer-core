@@ -105,3 +105,7 @@ Use esses nomes nos “Custom Action Hook” dos automators para disparar receit
 * Autoload interno + PSR‑4 simples (namespace `VC\*` mapeado para `inc/`).
 * Sanitização e escapes seguindo o Handbook do WordPress.
 
+
+## Troubleshooting
+
+- **WP Pusher em PHP 8.2**: se o log mostrar `Creation of dynamic property Pusher\Log\Logger::$file` ou `Cannot declare class Elementor\Element_Column`, execute o script `bin/fix-wppusher-php82.php` descrito em [`docs/troubleshooting/wp-pusher.md`](docs/troubleshooting/wp-pusher.md).
