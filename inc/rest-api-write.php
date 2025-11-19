@@ -147,11 +147,12 @@ function vc_rest_sanitize_payload( array $data ): array {
  * @return WP_REST_Response|null
  */
 function vc_rest_rate_limit_or_block( string $operation ) {
-	$key = 'restaurants_' . $operation;
-	if ( ! vc_rate_limit_allow( $key, 60, 60 ) ) {
-		return new WP_REST_Response( array( 'message' => __( 'Rate limit excedido.', 'vemcomer' ) ), 429 );
-	}
-	return null;
+        $key = 'restaurants_' . $operation;
+        if ( ! vc_rate_limit_allow( $key, 60, 60 ) ) {
+                \VC\Logging\log_event( 'REST write rate limit hit', [ 'operation' => $operation ], 'warning' );
+                return new WP_REST_Response( array( 'message' => __( 'Rate limit excedido.', 'vemcomer' ) ), 429 );
+        }
+        return null;
 }
 
 /**
@@ -162,15 +163,17 @@ function vc_rest_rate_limit_or_block( string $operation ) {
  * @return WP_REST_Response
  */
 function vc_rest_create_restaurant( WP_REST_Request $req ): WP_REST_Response {
-	$rl = vc_rest_rate_limit_or_block( 'create' );
-	if ( $rl ) {
-		return $rl;
-	}
+        $rl = vc_rest_rate_limit_or_block( 'create' );
+        if ( $rl ) {
+                \VC\Logging\log_event( 'REST create blocked', [], 'warning' );
+                return $rl;
+        }
 
-	$data = vc_rest_sanitize_payload( (array) $req->get_json_params() );
-	if ( empty( $data['post_title'] ?? '' ) ) {
-		return new WP_REST_Response( array( 'message' => __( 'O campo "title" é obrigatório.', 'vemcomer' ) ), 400 );
-	}
+        $data = vc_rest_sanitize_payload( (array) $req->get_json_params() );
+        if ( empty( $data['post_title'] ?? '' ) ) {
+                \VC\Logging\log_event( 'REST create missing title', [ 'payload' => $data ], 'warning' );
+                return new WP_REST_Response( array( 'message' => __( 'O campo "title" é obrigatório.', 'vemcomer' ) ), 400 );
+        }
 
 	$pid = wp_insert_post(
 		array(
@@ -180,11 +183,14 @@ function vc_rest_create_restaurant( WP_REST_Request $req ): WP_REST_Response {
 		)
 	);
 
-	if ( is_wp_error( $pid ) ) {
-		return new WP_REST_Response( array( 'message' => $pid->get_error_message() ), 500 );
-	}
+        if ( is_wp_error( $pid ) ) {
+                \VC\Logging\log_event( 'REST create error', [ 'error' => $pid->get_error_message() ], 'error' );
+                return new WP_REST_Response( array( 'message' => $pid->get_error_message() ), 500 );
+        }
 
-	vc_rest_apply_terms_and_meta( $pid, $data );
+        vc_rest_apply_terms_and_meta( $pid, $data );
+
+        \VC\Logging\log_event( 'REST restaurant created', [ 'id' => (int) $pid ], 'info' );
 
 	vc_audit_log(
 		'create_restaurant',
@@ -211,16 +217,18 @@ function vc_rest_create_restaurant( WP_REST_Request $req ): WP_REST_Response {
  * @return WP_REST_Response
  */
 function vc_rest_update_restaurant( WP_REST_Request $req ): WP_REST_Response {
-	$rl = vc_rest_rate_limit_or_block( 'update' );
-	if ( $rl ) {
-		return $rl;
-	}
+        $rl = vc_rest_rate_limit_or_block( 'update' );
+        if ( $rl ) {
+                \VC\Logging\log_event( 'REST update blocked', [], 'warning' );
+                return $rl;
+        }
 
-	$id   = (int) $req['id'];
-	$post = get_post( $id );
-	if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
-		return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
-	}
+        $id   = (int) $req['id'];
+        $post = get_post( $id );
+        if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
+                \VC\Logging\log_event( 'REST update not found', [ 'id' => $id ], 'warning' );
+                return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
+        }
 
 	$data = vc_rest_sanitize_payload( (array) $req->get_json_params() );
 
@@ -233,7 +241,9 @@ function vc_rest_update_restaurant( WP_REST_Request $req ): WP_REST_Response {
 		);
 	}
 
-	vc_rest_apply_terms_and_meta( $id, $data );
+        vc_rest_apply_terms_and_meta( $id, $data );
+
+        \VC\Logging\log_event( 'REST restaurant updated', [ 'id' => $id ], 'info' );
 
 	vc_audit_log(
 		'update_restaurant',
@@ -260,16 +270,18 @@ function vc_rest_update_restaurant( WP_REST_Request $req ): WP_REST_Response {
  * @return WP_REST_Response
  */
 function vc_rest_delete_restaurant( WP_REST_Request $req ): WP_REST_Response {
-	$rl = vc_rest_rate_limit_or_block( 'delete' );
-	if ( $rl ) {
-		return $rl;
-	}
+        $rl = vc_rest_rate_limit_or_block( 'delete' );
+        if ( $rl ) {
+                \VC\Logging\log_event( 'REST delete blocked', [], 'warning' );
+                return $rl;
+        }
 
 	$id   = (int) $req['id'];
-	$post = get_post( $id );
-	if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
-		return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
-	}
+        $post = get_post( $id );
+        if ( ! $post || 'vc_restaurant' !== $post->post_type ) {
+                \VC\Logging\log_event( 'REST delete not found', [ 'id' => $id ], 'warning' );
+                return new WP_REST_Response( array( 'message' => __( 'Restaurante não encontrado.', 'vemcomer' ) ), 404 );
+        }
 
 	if ( post_type_exists( 'vc_menu_item' ) ) {
 		$items = get_posts(
@@ -292,10 +304,13 @@ function vc_rest_delete_restaurant( WP_REST_Request $req ): WP_REST_Response {
 		}
 	}
 
-	$deleted = wp_delete_post( $id, true );
-	if ( ! $deleted ) {
-		return new WP_REST_Response( array( 'message' => __( 'Falha ao deletar.', 'vemcomer' ) ), 500 );
-	}
+        $deleted = wp_delete_post( $id, true );
+        if ( ! $deleted ) {
+                \VC\Logging\log_event( 'REST delete failed', [ 'id' => $id ], 'error' );
+                return new WP_REST_Response( array( 'message' => __( 'Falha ao deletar.', 'vemcomer' ) ), 500 );
+        }
+
+        \VC\Logging\log_event( 'REST restaurant deleted', [ 'id' => $id ], 'info' );
 
 	vc_audit_log(
 		'delete_restaurant',
@@ -304,13 +319,13 @@ function vc_rest_delete_restaurant( WP_REST_Request $req ): WP_REST_Response {
 		)
 	);
 
-	return new WP_REST_Response(
-		array(
-			'deleted' => true,
-			'id'      => (int) $id,
-		),
-		200
-	);
+        return new WP_REST_Response(
+                array(
+                        'deleted' => true,
+                        'id'      => (int) $id,
+                ),
+                200
+        );
 }
 
 /**

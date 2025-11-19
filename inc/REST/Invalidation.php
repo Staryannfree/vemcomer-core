@@ -6,6 +6,8 @@
 
 namespace VC\REST;
 
+use function VC\Logging\log_event;
+
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Invalidation {
@@ -20,5 +22,6 @@ class Invalidation {
     public function flush_all(): void {
         global $wpdb;
         $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_vc_rest_cache_%' OR option_name LIKE '_transient_timeout_vc_rest_cache_%'" );
+        log_event( 'REST cache invalidated', [], 'info' );
     }
 }

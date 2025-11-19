@@ -8,8 +8,9 @@
 namespace VC\REST;
 
 use VC\Frontend\Shipping;
-use WP_REST_Request;
 use WP_Error;
+use WP_REST_Request;
+use function VC\Logging\log_event;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -34,8 +35,11 @@ class Shipping_Controller {
         $rid = (int) $req->get_param( 'restaurant_id' );
         $sub = (float) str_replace( ',', '.', (string) $req->get_param( 'subtotal' ) );
         if ( $rid <= 0 || $sub < 0 ) {
+            log_event( 'REST shipping quote invalid params', [ 'restaurant_id' => $rid, 'subtotal' => $sub ], 'warning' );
             return new WP_Error( 'vc_bad_params', __( 'Parâmetros inválidos.', 'vemcomer' ), [ 'status' => 400 ] );
         }
-        return rest_ensure_response( Shipping::quote( $rid, $sub ) );
+        $quote = Shipping::quote( $rid, $sub );
+        log_event( 'REST shipping quote', [ 'restaurant_id' => $rid, 'subtotal' => $sub, 'quote' => $quote ], 'debug' );
+        return rest_ensure_response( $quote );
     }
 }
