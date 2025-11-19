@@ -1,7 +1,7 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+namespace VC\Admin {
 
-namespace VC\Admin;
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Settings {
     public const OPTION_GROUP = 'vemcomer_settings_group';
@@ -359,6 +359,7 @@ class Settings {
         }
         return implode( ' ', $parts );
     }
+}
 }
 
 namespace {
