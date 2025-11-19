@@ -26,8 +26,11 @@ class VC_Admin_Menu {
     }
 
     public function render_settings(): void {
-        wp_enqueue_style( 'vemcomer-admin' );
-        wp_enqueue_script( 'vemcomer-admin' );
-        echo '<div class="wrap"><h1>Configurações</h1><p>Em breve: chaves de API, loja, etc.</p></div>';
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Sem permissão.', 'vemcomer' ) );
+        }
+
+        wp_safe_redirect( admin_url( 'options-general.php?page=vemcomer-settings' ) );
+        exit;
     }
 }
