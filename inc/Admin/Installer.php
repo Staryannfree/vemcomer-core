@@ -74,6 +74,18 @@ class Installer {
                 'shortcode' => '[vemcomer_checkout]',
                 'needs'     => [],
             ],
+            'vemcomer_restaurant_signup' => [
+                'title'     => __( 'Cadastro de Restaurantes (VemComer)', 'vemcomer' ),
+                'desc'      => __( 'Formulário público para restaurantes enviarem seus dados.', 'vemcomer' ),
+                'shortcode' => '[vemcomer_restaurant_signup]',
+                'needs'     => [],
+            ],
+            'vemcomer_customer_signup' => [
+                'title'     => __( 'Cadastro de Clientes (VemComer)', 'vemcomer' ),
+                'desc'      => __( 'Formulário para consumidores criarem contas no marketplace.', 'vemcomer' ),
+                'shortcode' => '[vemcomer_customer_signup]',
+                'needs'     => [],
+            ],
         ];
     }
 
@@ -227,6 +239,10 @@ class Installer {
                 return '[vemcomer_menu]';
             case 'vemcomer_checkout':
                 return '[vemcomer_checkout]';
+            case 'vemcomer_restaurant_signup':
+                return '[vemcomer_restaurant_signup]';
+            case 'vemcomer_customer_signup':
+                return '[vemcomer_customer_signup]';
             default:
                 return '';
         }
