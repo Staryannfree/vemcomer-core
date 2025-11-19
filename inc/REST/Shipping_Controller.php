@@ -36,6 +36,15 @@ class Shipping_Controller {
         if ( $rid <= 0 || $sub < 0 ) {
             return new WP_Error( 'vc_bad_params', __( 'Parâmetros inválidos.', 'vemcomer' ), [ 'status' => 400 ] );
         }
-        return rest_ensure_response( Shipping::quote( $rid, $sub ) );
+        $quote = Shipping::quote( $rid, $sub );
+        if ( empty( $quote['methods'] ) ) {
+            return rest_ensure_response( [
+                'restaurant_id' => $rid,
+                'subtotal'      => $sub,
+                'methods'       => [],
+                'message'       => __( 'Nenhum método de fulfillment disponível para este restaurante.', 'vemcomer' ),
+            ] );
+        }
+        return rest_ensure_response( $quote );
     }
 }

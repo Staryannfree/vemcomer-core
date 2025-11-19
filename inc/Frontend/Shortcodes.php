@@ -98,7 +98,7 @@ class Shortcodes {
         $rid = isset( $_GET['restaurant_id'] ) ? (int) $_GET['restaurant_id'] : 0;
         ob_start();
         ?>
-        <div class="vc-checkout" data-restaurant="<?php echo esc_attr( (string) $rid ); ?>">
+        <div class="vc-checkout" data-restaurant="<?php echo esc_attr( (string) $rid ); ?>" data-single-seller="1">
             <h3><?php echo esc_html__( 'Checkout', 'vemcomer' ); ?></h3>
             <div class="vc-cart"></div>
             <div class="vc-shipping">
@@ -112,10 +112,13 @@ class Shortcodes {
             <div class="vc-summary">
                 <div class="vc-subtotal"></div>
                 <div class="vc-freight"></div>
+                <div class="vc-discount"></div>
                 <div class="vc-total"></div>
+                <div class="vc-eta"></div>
             </div>
             <button class="vc-btn vc-place-order" disabled><?php echo esc_html__( 'Finalizar pedido', 'vemcomer' ); ?></button>
             <div class="vc-order-result"></div>
+            <p class="vc-tip"><?php echo esc_html__( 'O carrinho aceita itens de um único restaurante para garantir cálculo correto de frete.', 'vemcomer' ); ?></p>
         </div>
         <?php
         return ob_get_clean();

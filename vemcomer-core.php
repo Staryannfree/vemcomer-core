@@ -37,6 +37,7 @@ spl_autoload_register( function ( $class ) {
 } );
 
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
+require_once VEMCOMER_CORE_DIR . 'inc/checkout.php';
 
 register_activation_hook( __FILE__, function () {
     if ( class_exists( '\\VC\\Admin\\Installer' ) ) {

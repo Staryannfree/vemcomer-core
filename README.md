@@ -30,7 +30,22 @@ wp vc seed
 
 * **POST** `/wp-json/vemcomer/v1/pedidos`
 
-  * Body: `{ "itens": [ {"produto_id": 123, "qtd": 2} ], "total": "49,90" }`
+* Body: `{ "restaurant_id": 123, "itens": [ {"produto_id": 123, "qtd": 2} ], "subtotal": "49,90", "fulfillment": { "method": "flat_rate_delivery", "ship_total": "9,90" } }`
+
+### Fulfillment e Checkout
+
+* O checkout público trabalha somente com **um restaurante por vez** e exige um método de fulfillment válido.
+* Cada método implementa `VC\Checkout\FulfillmentMethod` (`inc/Checkout/FulfillmentMethod.php`).
+* Registre seus métodos no action `vemcomer_register_fulfillment_method` — o registro padrão (`inc/Checkout/Methods/FlatRateDelivery.php`) aplica o frete fixo + pedido mínimo dos metadados do restaurante.
+* Use os helpers JS em `assets/js/checkout.js` para testar rapidamente as rotas de frete/pedido (`window.VemComerCheckoutExamples.exampleQuote()` e `.exampleOrder()`).
+
+Exemplo de registro:
+
+```php
+add_action( 'vemcomer_register_fulfillment_method', function () {
+    \VC\Checkout\FulfillmentRegistry::register( new My_Custom_Method(), 'my-method' );
+} );
+```
 
 ### Webhook de Pagamento (entrada)
 
