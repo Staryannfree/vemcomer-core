@@ -9,6 +9,9 @@ namespace VC\Frontend;
 
 use function VC\Utils\validate_cnpj;
 
+// Carrega utilitários necessários para validação de CNPJ.
+require_once VEMCOMER_CORE_DIR . 'inc/Utils/cnpj.php';
+
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Signups {
