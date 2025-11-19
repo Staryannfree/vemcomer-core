@@ -12,23 +12,31 @@ use VC\Model\CPT_MenuItem;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Shortcodes {
+    private bool $assets_enqueued = false;
+
     public function init(): void {
         add_shortcode( 'vemcomer_restaurants', [ $this, 'sc_restaurants' ] );
         add_shortcode( 'vemcomer_menu', [ $this, 'sc_menu' ] );
         add_shortcode( 'vemcomer_checkout', [ $this, 'sc_checkout' ] );
+    }
 
-        add_action( 'wp_enqueue_scripts', function () {
-            wp_enqueue_style( 'vemcomer-front' );
-            wp_enqueue_script( 'vemcomer-front' );
-            wp_localize_script( 'vemcomer-front', 'VemComer', [
-                'rest' => [ 'base' => esc_url_raw( rest_url( 'vemcomer/v1' ) ) ],
-                'nonce' => wp_create_nonce( 'wp_rest' ),
-            ] );
-        } );
+    private function ensure_assets(): void {
+        if ( $this->assets_enqueued ) {
+            return;
+        }
+
+        $this->assets_enqueued = true;
+        wp_enqueue_style( 'vemcomer-front' );
+        wp_enqueue_script( 'vemcomer-front' );
+        wp_localize_script( 'vemcomer-front', 'VemComer', [
+            'rest'  => [ 'base' => esc_url_raw( rest_url( 'vemcomer/v1' ) ) ],
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+        ] );
     }
 
     /** Lista de restaurantes com link para menu */
     public function sc_restaurants( $atts = [] ): string {
+        $this->ensure_assets();
         $q = new \WP_Query([
             'post_type'      => CPT_Restaurant::SLUG,
             'posts_per_page' => 100,
@@ -57,6 +65,7 @@ class Shortcodes {
 
     /** Lista itens do cardápio de um restaurante */
     public function sc_menu( $atts = [] ): string {
+        $this->ensure_assets();
         $rid = isset( $_GET['restaurant_id'] ) ? (int) $_GET['restaurant_id'] : 0; // permite via URL
         $atts = shortcode_atts( [ 'restaurant_id' => $rid ], $atts, 'vemcomer_menu' );
         $rid  = (int) $atts['restaurant_id'];
@@ -95,6 +104,7 @@ class Shortcodes {
 
     /** Checkout simples */
     public function sc_checkout( $atts = [] ): string {
+        $this->ensure_assets();
         $rid = isset( $_GET['restaurant_id'] ) ? (int) $_GET['restaurant_id'] : 0;
         ob_start();
         ?>

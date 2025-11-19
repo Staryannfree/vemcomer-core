@@ -3,6 +3,10 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class VC_Loader {
     public function init(): void {
+        if ( function_exists( 'vc_register_front_assets' ) && function_exists( 'vc_register_admin_assets' ) ) {
+            return;
+        }
+
         add_action( 'init', [ $this, 'register_assets' ] );
     }
 
