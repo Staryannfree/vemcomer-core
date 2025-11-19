@@ -99,7 +99,9 @@ class VC_Restaurants_Table extends WP_List_Table {
 
     public function column_status( $item ): string {
         $status = get_post_status_object( $item->post_status );
-        return $status ? esc_html( $status->label ) : esc_html( ucfirst( $item->post_status ) );
+        $label  = $status ? esc_html( $status->label ) : esc_html( ucfirst( $item->post_status ) );
+
+        return sprintf( '%s %s', $this->get_status_icon( $item->post_status ), $label );
     }
 
     public function column_location( $item ): string {
@@ -267,6 +269,14 @@ class VC_Restaurants_Table extends WP_List_Table {
             }
         }
         return '';
+    }
+
+    private function get_status_icon( string $post_status ): string {
+        if ( 'publish' === $post_status ) {
+            return '<span class="dashicons dashicons-yes-alt" style="color:#2ecc71;" aria-hidden="true"></span><span class="screen-reader-text">' . esc_html__( 'Aprovado', 'vemcomer' ) . '</span>';
+        }
+
+        return '<span class="dashicons dashicons-no" style="color:#e74c3c;" aria-hidden="true"></span><span class="screen-reader-text">' . esc_html__( 'Pendente', 'vemcomer' ) . '</span>';
     }
 
     private function format_bool( bool $value ): string {
