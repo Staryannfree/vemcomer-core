@@ -35,15 +35,8 @@ add_action(
                         return;
                 }
 
-                if ( wp_style_is( 'vemcomer-front', 'registered' ) ) {
-                        wp_enqueue_style( 'vemcomer-front' );
-                } else {
-                        wp_enqueue_style( 'vemcomer-front', VEMCOMER_CORE_URL . 'assets/css/frontend.css', [], VEMCOMER_CORE_VERSION );
-                }
-
-                if ( wp_script_is( 'vemcomer-front', 'registered' ) ) {
-                        wp_enqueue_script( 'vemcomer-front' );
-                }
+                wp_enqueue_style( 'vemcomer-front' );
+                wp_enqueue_script( 'vemcomer-front' );
         },
         20
 );

@@ -31,19 +31,8 @@ if ( file_exists( $preenchedor_file ) ) {
 add_action( 'admin_enqueue_scripts', function() {
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if ( $screen && isset( $screen->post_type ) && 'vc_restaurant' === $screen->post_type ) {
-        wp_enqueue_script(
-            'vc-restaurants-admin',
-            plugins_url( '../assets/js/restaurants-admin.js', __FILE__ ),
-            [ 'jquery' ],
-            defined('VEMCOMER_CORE_VERSION') ? VEMCOMER_CORE_VERSION : '1.0.0',
-            true
-        );
-        wp_enqueue_style(
-            'vc-restaurants-admin',
-            plugins_url( '../assets/css/restaurants-admin.css', __FILE__ ),
-            [],
-            defined('VEMCOMER_CORE_VERSION') ? VEMCOMER_CORE_VERSION : '1.0.0'
-        );
+        wp_enqueue_script( 'vc-restaurants-admin' );
+        wp_enqueue_style( 'vc-restaurants-admin' );
     }
 });
 

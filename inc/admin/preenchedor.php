@@ -20,14 +20,7 @@ add_action( 'admin_enqueue_scripts', static function( $hook ) {
         return;
     }
 
-    if ( defined( 'VEMCOMER_CORE_DIR' ) && file_exists( VEMCOMER_CORE_DIR . 'assets/css/preenchedor.css' ) ) {
-        wp_enqueue_style(
-            'vc-preenchedor',
-            defined( 'VEMCOMER_CORE_URL' ) ? VEMCOMER_CORE_URL . 'assets/css/preenchedor.css' : plugins_url( '../../assets/css/preenchedor.css', __FILE__ ),
-            [],
-            defined( 'VEMCOMER_CORE_VERSION' ) ? VEMCOMER_CORE_VERSION : '1.0.0'
-        );
-    }
+    wp_enqueue_style( 'vc-preenchedor' );
 });
 
 function vc_render_preenchedor() {
