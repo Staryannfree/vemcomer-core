@@ -33,7 +33,7 @@ class Signups {
         $this->assets_enqueued = true;
     }
 
-    public function restaurant_form(): string {
+    public function restaurant_form( $atts = [], $content = '', $tag = '' ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface
         $this->ensure_assets();
 
         $message = $this->get_feedback_box( 'vc_restaurant' );
@@ -94,7 +94,7 @@ class Signups {
         return (string) ob_get_clean();
     }
 
-    public function customer_form(): string {
+    public function customer_form( $atts = [], $content = '', $tag = '' ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface
         $this->ensure_assets();
 
         $message = $this->get_feedback_box( 'vc_customer' );
