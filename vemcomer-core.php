@@ -27,6 +27,11 @@ if ( ! defined( 'VEMCOMER_CORE_URL' ) ) {
     define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
 }
 
+$vemcomer_autoload = VEMCOMER_CORE_DIR . 'vendor/autoload.php';
+if ( file_exists( $vemcomer_autoload ) ) {
+    require_once $vemcomer_autoload;
+}
+
 require_once VEMCOMER_CORE_DIR . 'inc/bootstrap.php';
 require_once VEMCOMER_CORE_DIR . 'inc/logging.php';
 
@@ -88,6 +93,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Admin\\Export' ) )               { ( new \VC\Admin\Export() )->init(); }
     if ( class_exists( '\\VC\\REST\\Cache_Middleware' ) )      { ( new \VC\REST\Cache_Middleware() )->init(); }
     if ( class_exists( '\\VC\\REST\\Invalidation' ) )          { ( new \VC\REST\Invalidation() )->init(); }
+    if ( class_exists( '\\VC\\Integration\\MercadoPago\\Webhook_Handler' ) ) { ( new \VC\Integration\MercadoPago\Webhook_Handler() )->init(); }
 
     // Pacote 8 — Instalador de Páginas
     if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); }
