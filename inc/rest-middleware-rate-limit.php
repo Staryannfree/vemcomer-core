@@ -39,6 +39,7 @@ function vc_rate_limit_allow( string $key, int $limit = 60, int $window = 60 ): 
         }
 
         if ( $data['count'] >= $limit ) {
+                \VC\Logging\log_event( 'REST rate limit reached', [ 'key' => $key, 'ip' => $ip, 'limit' => $limit ], 'warning' );
                 return false;
         }
 

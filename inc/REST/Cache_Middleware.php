@@ -12,6 +12,7 @@ namespace VC\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
+use function VC\Logging\log_event;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -39,6 +40,7 @@ class Cache_Middleware {
         $key = $this->key_for( $request );
         $cached = get_transient( $key );
         if ( false !== $cached ) {
+            log_event( 'REST cache hit', [ 'route' => $route, 'key' => $key ], 'debug' );
             return new WP_REST_Response( $cached, 200 );
         }
         return $response; // segue para os callbacks normais
@@ -56,6 +58,7 @@ class Cache_Middleware {
         // Extrai os dados do response
         $data = ( $response instanceof WP_REST_Response ) ? $response->get_data() : $response;
         set_transient( $key, $data, $ttl );
+        log_event( 'REST cache stored', [ 'route' => $route, 'key' => $key, 'ttl' => $ttl ], 'debug' );
         return $response;
     }
 }

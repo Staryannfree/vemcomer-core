@@ -57,6 +57,15 @@ function vc_rest_api_get_restaurants( WP_REST_Request $req ) : WP_REST_Response 
         ];
     }
 
+    \VC\Logging\log_event( 'Legacy REST restaurants query', [
+        'page'     => $page,
+        'per_page' => $per_page,
+        'search'   => $search,
+        'cuisine'  => $cuisine,
+        'location' => $location,
+        'delivery' => $delivery,
+    ], 'debug' );
+
     $q = new WP_Query([
         'post_type'      => 'vc_restaurant',
         's'              => $search ?: '',
@@ -95,6 +104,8 @@ function vc_rest_api_get_restaurants( WP_REST_Request $req ) : WP_REST_Response 
     $res = new WP_REST_Response( $items );
     $res->header( 'X-WP-Total', $total );
     $res->header( 'X-WP-TotalPages', $total_pg );
+
+    \VC\Logging\log_event( 'Legacy REST restaurants response', [ 'count' => count( $items ), 'total' => $total ], 'debug' );
 
     return $res;
 }

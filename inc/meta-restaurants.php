@@ -70,11 +70,67 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-    // Sanitização e salvamento
-    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['cnpj'], sanitize_text_field( $_POST['vc_restaurant_cnpj'] ?? '' ) );
+    $errors = new WP_Error();
+
+    $cnpj_input  = sanitize_text_field( $_POST['vc_restaurant_cnpj'] ?? '' );
+    $cnpj_digits = preg_replace( '/\D+/', '', $cnpj_input );
+
+    if ( '' === $cnpj_digits ) {
+        $errors->add( 'vc_restaurant_cnpj_empty', __( 'Informe o CNPJ do restaurante.', 'vemcomer' ) );
+    } else {
+        $use_remote   = (bool) apply_filters( 'vc_restaurant_validate_cnpj_remote', false, $post_id );
+        $validation   = \VC\Utils\validate_cnpj( $cnpj_digits, $use_remote );
+
+        if ( is_wp_error( $validation ) ) {
+            foreach ( $validation->get_error_messages() as $message ) {
+                $errors->add( $validation->get_error_code(), $message );
+            }
+        } else {
+            update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['cnpj'], $validation['normalized'] );
+        }
+    }
+
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['whatsapp'], sanitize_text_field( $_POST['vc_restaurant_whatsapp'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['site'], esc_url_raw( $_POST['vc_restaurant_site'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['open_hours'], wp_kses_post( $_POST['vc_restaurant_open_hours'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery'], isset( $_POST['vc_restaurant_delivery'] ) ? '1' : '0' );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['address'], sanitize_text_field( $_POST['vc_restaurant_address'] ?? '' ) );
+
+    if ( $errors->has_errors() ) {
+        vc_restaurant_store_errors( $errors );
+    }
+});
+
+function vc_restaurant_store_errors( WP_Error $errors ): void {
+    $user_id = get_current_user_id();
+    if ( ! $user_id ) {
+        return;
+    }
+
+    set_transient( 'vc_restaurant_meta_errors_' . $user_id, $errors->get_error_messages(), MINUTE_IN_SECONDS );
+}
+
+add_action( 'admin_notices', function() {
+    $user_id = get_current_user_id();
+    if ( ! $user_id ) {
+        return;
+    }
+
+    $messages = get_transient( 'vc_restaurant_meta_errors_' . $user_id );
+    if ( empty( $messages ) ) {
+        return;
+    }
+
+    delete_transient( 'vc_restaurant_meta_errors_' . $user_id );
+
+    $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+    if ( ! $screen || ( isset( $screen->post_type ) && 'vc_restaurant' !== $screen->post_type ) ) {
+        return;
+    }
+
+    echo '<div class="notice notice-error">';
+    foreach ( $messages as $message ) {
+        echo '<p>' . esc_html( $message ) . '</p>';
+    }
+    echo '</div>';
 });
