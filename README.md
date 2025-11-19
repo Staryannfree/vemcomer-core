@@ -13,6 +13,14 @@ Core de marketplace para WordPress com:
 ### Páginas públicas (shortcodes)
 Ao ativar o plugin o núcleo cria/atualiza automaticamente as páginas que contêm apenas os shortcodes principais (lista, cardápio e checkout) e elas passam a aparecer em **Páginas ▸ Todas** como qualquer outra página. Se quiser recriá-las depois — ou gerar versões parametrizadas para um restaurante específico — use **VemComer ▸ Instalador**, que reaproveita as mesmas rotinas sem duplicar conteúdos existentes.
 
+Shortcodes principais disponíveis:
+
+* `[vemcomer_restaurants]` — grade pública de restaurantes cadastrados.
+* `[vemcomer_menu]` — lista os itens de um restaurante (usa `?restaurant_id=` ou o atributo `restaurant_id`).
+* `[vemcomer_checkout]` — checkout simplificado para o carrinho do marketplace.
+* `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).
+* `[vemcomer_customer_signup]` — formulário de criação de conta para clientes finais.
+
 ## Seed (dados de demonstração)
 Cria 1 restaurante e 5 itens de cardápio:
 ```bash
