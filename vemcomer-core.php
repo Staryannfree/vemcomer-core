@@ -37,6 +37,9 @@ spl_autoload_register( function ( $class ) {
 } );
 
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
+if ( file_exists( VEMCOMER_CORE_DIR . 'inc/Utils/cnpj.php' ) ) {
+    require_once VEMCOMER_CORE_DIR . 'inc/Utils/cnpj.php';
+}
 
 register_activation_hook( __FILE__, function () {
     if ( class_exists( '\\VC\\Admin\\Installer' ) ) {
