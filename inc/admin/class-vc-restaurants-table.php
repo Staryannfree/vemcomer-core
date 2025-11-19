@@ -14,7 +14,11 @@ class VC_Restaurants_Table extends WP_List_Table {
 
     private ?WP_Query $query = null;
 
-    public function __construct() {
+    private array $post_statuses = [];
+
+    private bool $approval_mode = false;
+
+    public function __construct( array $args = [] ) {
         parent::__construct(
             [
                 'singular' => 'vc_restaurant',
@@ -22,6 +26,9 @@ class VC_Restaurants_Table extends WP_List_Table {
                 'ajax'     => false,
             ]
         );
+
+        $this->post_statuses = $args['post_statuses'] ?? array_keys( get_post_stati( [ 'internal' => false ] ) );
+        $this->approval_mode = (bool) ( $args['approval_mode'] ?? false );
     }
 
     public function get_columns(): array {
@@ -45,10 +52,16 @@ class VC_Restaurants_Table extends WP_List_Table {
     }
 
     protected function get_bulk_actions(): array {
-        return [
-            'enable_delivery'  => __( 'Ativar delivery', 'vemcomer' ),
-            'disable_delivery' => __( 'Desativar delivery', 'vemcomer' ),
-        ];
+        $actions = [];
+
+        if ( $this->approval_mode ) {
+            $actions['approve'] = __( 'Aprovar restaurantes', 'vemcomer' );
+        }
+
+        $actions['enable_delivery']  = __( 'Ativar delivery', 'vemcomer' );
+        $actions['disable_delivery'] = __( 'Desativar delivery', 'vemcomer' );
+
+        return $actions;
     }
 
     public function column_cb( $item ): string {
@@ -63,6 +76,20 @@ class VC_Restaurants_Table extends WP_List_Table {
         }
         if ( current_user_can( 'delete_post', $item->ID ) ) {
             $actions['trash'] = sprintf( '<a href="%s">%s</a>', esc_url( get_delete_post_link( $item->ID ) ), esc_html__( 'Lixeira', 'vemcomer' ) );
+        }
+        if ( $this->approval_mode && 'publish' !== get_post_status( $item ) && current_user_can( 'publish_post', $item->ID ) ) {
+            $page = sanitize_key( $_REQUEST['page'] ?? 'vemcomer-restaurants' );
+            $approve_url = wp_nonce_url(
+                add_query_arg(
+                    [
+                        'page'          => $page,
+                        'action'        => 'approve',
+                        'vc_restaurant' => $item->ID,
+                    ]
+                ),
+                'vc_approve_restaurant'
+            );
+            $actions['approve'] = sprintf( '<a href="%s">%s</a>', esc_url( $approve_url ), esc_html__( 'Aprovar', 'vemcomer' ) );
         }
         if ( get_post_status( $item ) === 'publish' ) {
             $actions['view'] = sprintf( '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>', esc_url( get_permalink( $item ) ), esc_html__( 'Ver', 'vemcomer' ) );
@@ -108,7 +135,7 @@ class VC_Restaurants_Table extends WP_List_Table {
 
         $args = [
             'post_type'      => self::POST_TYPE,
-            'post_status'    => array_keys( get_post_stati( [ 'internal' => false ] ) ),
+            'post_status'    => $this->post_statuses,
             'posts_per_page' => $per_page,
             'paged'          => $paged,
         ];
@@ -302,7 +329,7 @@ class VC_Restaurants_Table extends WP_List_Table {
 
     protected function process_bulk_action(): void {
         $action = $this->current_action();
-        if ( ! $action || ! in_array( $action, [ 'enable_delivery', 'disable_delivery' ], true ) ) {
+        if ( ! $action || ! in_array( $action, [ 'enable_delivery', 'disable_delivery', 'approve' ], true ) ) {
             return;
         }
 
@@ -310,16 +337,61 @@ class VC_Restaurants_Table extends WP_List_Table {
             return;
         }
 
-        check_admin_referer( 'bulk-' . $this->_args['plural'] );
+        $nonce = isset( $_REQUEST['_wpnonce'] ) ? (string) $_REQUEST['_wpnonce'] : '';
+        if ( ! wp_verify_nonce( $nonce, 'bulk-' . $this->_args['plural'] ) && ! wp_verify_nonce( $nonce, 'vc_approve_restaurant' ) ) {
+            return;
+        }
 
         $ids = isset( $_REQUEST[ $this->_args['singular'] ] ) ? (array) $_REQUEST[ $this->_args['singular'] ] : [];
-        $ids = array_map( 'absint', $ids );
+        $ids = array_map( 'absint', (array) $ids );
         $ids = array_filter( $ids );
         if ( ! $ids ) {
             return;
         }
 
-        $value = 'enable_delivery' === $action ? '1' : '0';
+        if ( 'approve' === $action ) {
+            $this->approve_restaurants( $ids );
+            return;
+        }
+
+        $this->update_delivery_flag( $ids, 'enable_delivery' === $action ? '1' : '0' );
+    }
+
+    private function approve_restaurants( array $ids ): void {
+        if ( ! current_user_can( 'publish_vc_restaurants' ) ) {
+            return;
+        }
+
+        $updated = 0;
+
+        foreach ( $ids as $post_id ) {
+            if ( self::POST_TYPE !== get_post_type( $post_id ) ) {
+                continue;
+            }
+
+            if ( 'publish' === get_post_status( $post_id ) ) {
+                continue;
+            }
+
+            $result = wp_update_post(
+                [
+                    'ID'          => $post_id,
+                    'post_status' => 'publish',
+                ],
+                true
+            );
+
+            if ( ! is_wp_error( $result ) ) {
+                $updated++;
+            }
+        }
+
+        if ( $updated ) {
+            add_settings_error( 'vc_restaurants', 'vc_restaurants_notice', __( 'Restaurantes aprovados.', 'vemcomer' ), 'updated' );
+        }
+    }
+
+    private function update_delivery_flag( array $ids, string $value ): void {
         $updated = 0;
 
         foreach ( $ids as $post_id ) {
@@ -333,7 +405,7 @@ class VC_Restaurants_Table extends WP_List_Table {
         }
 
         if ( $updated ) {
-            $message = 'enable_delivery' === $action
+            $message = '1' === $value
                 ? __( 'Delivery ativado para os restaurantes selecionados.', 'vemcomer' )
                 : __( 'Delivery desativado para os restaurantes selecionados.', 'vemcomer' );
             add_settings_error( 'vc_restaurants', 'vc_restaurants_notice', $message, 'updated' );
