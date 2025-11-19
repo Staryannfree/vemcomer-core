@@ -14,11 +14,12 @@
 
 namespace VC\REST;
 
-use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
+use VC\Model\CPT_Restaurant;
 use WP_Query;
 use WP_REST_Request;
 use WP_REST_Response;
+use function VC\Logging\log_event;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -85,6 +86,8 @@ class Restaurant_Controller {
         }
         if ( $meta ) { $args['meta_query'] = $meta; }
 
+        log_event( 'REST restaurants query', [ 'args' => $args ], 'debug' );
+
         $q = new WP_Query( $args );
 
         $items = [];
@@ -106,7 +109,10 @@ class Restaurant_Controller {
 
     public function get_menu_items( WP_REST_Request $request ) {
         $rid = (int) $request->get_param( 'id' );
-        if ( ! $rid ) { return new WP_REST_Response( [], 200 ); }
+        if ( ! $rid ) {
+            log_event( 'REST menu items missing id', [], 'warning' );
+            return new WP_REST_Response( [], 200 );
+        }
 
         $q = new WP_Query([
             'post_type'      => CPT_MenuItem::SLUG,
@@ -126,6 +132,8 @@ class Restaurant_Controller {
                 'is_available'=> (bool) get_post_meta( $p->ID, '_vc_is_available', true ),
             ];
         }
+
+        log_event( 'REST menu items query', [ 'restaurant_id' => $rid, 'count' => count( $items ) ], 'debug' );
 
         return new WP_REST_Response( $items, 200 );
     }

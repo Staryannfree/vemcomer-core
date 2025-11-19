@@ -36,6 +36,7 @@ class Settings {
         add_settings_field( 'enable_wc_sync', __( 'Sincronizar com WooCommerce', 'vemcomer' ), [ $this, 'field_enable_wc_sync' ], self::PAGE_SLUG, 'vc_general' );
         add_settings_field( 'email_enabled', __( 'Enviar emails de eventos', 'vemcomer' ), [ $this, 'field_email_enabled' ], self::PAGE_SLUG, 'vc_general' );
         add_settings_field( 'email_from', __( 'Remetente (email)', 'vemcomer' ), [ $this, 'field_email_from' ], self::PAGE_SLUG, 'vc_general' );
+        add_settings_field( 'debug_logging', __( 'Modo debug', 'vemcomer' ), [ $this, 'field_debug_logging' ], self::PAGE_SLUG, 'vc_general' );
     }
 
     public function sanitize( $input ): array {
@@ -46,6 +47,7 @@ class Settings {
         $out['enable_wc_sync']    = ! empty( $input['enable_wc_sync'] ) ? '1' : '';
         $out['email_enabled']     = ! empty( $input['email_enabled'] ) ? '1' : '';
         $out['email_from']        = isset( $input['email_from'] ) ? sanitize_email( $input['email_from'] ) : '';
+        $out['debug_logging']     = ! empty( $input['debug_logging'] ) ? '1' : '';
         return $out;
     }
 
@@ -57,6 +59,7 @@ class Settings {
             'enable_wc_sync'    => '',
             'email_enabled'     => '',
             'email_from'        => '',
+            'debug_logging'     => '',
         ];
         return wp_parse_args( (array) get_option( self::OPTION_NAME, [] ), $defaults );
     }
@@ -102,5 +105,11 @@ class Settings {
         add_filter( 'wp_mail_from', static function ( $from ) use ( $o ) {
             return ! empty( $o['email_from'] ) ? $o['email_from'] : $from;
         } );
+    }
+
+    public function field_debug_logging(): void {
+        $o = $this->get();
+        echo '<label><input type="checkbox" name="' . esc_attr( self::OPTION_NAME . '[debug_logging]' ) . '" value="1" ' . checked( (bool) $o['debug_logging'], true, false ) . ' /> ' . esc_html__( 'Ativar logs detalhados (VC_DEBUG).', 'vemcomer' ) . '</label>';
+        echo '<p class="description">' . esc_html__( 'Quando ativo, grava wp-content/uploads/vemcomer-debug.log além do WP_DEBUG.', 'vemcomer' ) . '</p>';
     }
 }

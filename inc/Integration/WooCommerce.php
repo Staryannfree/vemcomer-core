@@ -7,6 +7,7 @@
 namespace VC\Integration;
 
 use VC_CPT_Pedido;
+use function VC\Logging\log_event;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -36,21 +37,33 @@ class WooCommerce {
         if ( ! $vc_id ) {
             // Sem vínculo? tenta criar um espelho
             $vc_id = $this->create_mirror_from_wc( $order_id );
+            if ( ! $vc_id ) {
+                log_event( 'WooCommerce sync sem espelho', [ 'order_id' => $order_id ], 'warning' );
+                return;
+            }
         }
         if ( $vc_id ) {
             $this->set_vc_status( $vc_id, $this->map_wc_to_vc( $new_status ) );
+            log_event( 'WooCommerce status synced', [ 'wc_order' => $order_id, 'vc_id' => $vc_id, 'new_status' => $new_status ], 'info' );
         }
     }
 
     public function maybe_mirror_order( int $order_id, array $posted_data, $order ): void {
         if ( (int) get_post_meta( $order_id, '_vc_pedido_id', true ) ) { return; }
+        log_event( 'WooCommerce criando espelho', [ 'order_id' => $order_id ], 'debug' );
         $this->create_mirror_from_wc( $order_id );
     }
 
     private function create_mirror_from_wc( int $order_id ): int {
-        if ( ! function_exists( 'wc_get_order' ) ) { return 0; }
+        if ( ! function_exists( 'wc_get_order' ) ) {
+            log_event( 'WooCommerce não disponível para espelho', [], 'error' );
+            return 0;
+        }
         $order = wc_get_order( $order_id );
-        if ( ! $order ) { return 0; }
+        if ( ! $order ) {
+            log_event( 'WooCommerce order não encontrado', [ 'order_id' => $order_id ], 'warning' );
+            return 0;
+        }
 
         $items = [];
         foreach ( $order->get_items() as $item ) {
@@ -67,7 +80,10 @@ class WooCommerce {
             'post_title'  => 'WC #' . $order_id,
             'post_status' => 'vc-pending',
         ]);
-        if ( is_wp_error( $vc_id ) ) { return 0; }
+        if ( is_wp_error( $vc_id ) ) {
+            log_event( 'Falha ao criar espelho VC', [ 'order_id' => $order_id, 'error' => $vc_id->get_error_message() ], 'error' );
+            return 0;
+        }
 
         update_post_meta( $vc_id, '_vc_itens', $items );
         update_post_meta( $vc_id, '_vc_total', (string) $order->get_total() );
@@ -78,6 +94,7 @@ class WooCommerce {
 
         /** Gatilho para Automator */
         do_action( 'vemcomer/order_status_changed', $vc_id, 'vc-pending', 'new' );
+        log_event( 'Automator hook disparado (novo pedido)', [ 'vc_id' => $vc_id, 'wc_order' => $order_id ], 'debug' );
 
         return (int) $vc_id;
     }
@@ -89,8 +106,10 @@ class WooCommerce {
         $wpdb->update( $wpdb->posts, [ 'post_status' => $status ], [ 'ID' => $vc_id ] );
         clean_post_cache( $vc_id );
         do_action( 'vemcomer/order_status_changed', $vc_id, $status, $old );
+        log_event( 'Automator hook disparado (status)', [ 'vc_id' => $vc_id, 'status' => $status, 'old' => $old ], 'debug' );
         if ( 'vc-paid' === $status ) {
             do_action( 'vemcomer/order_paid', $vc_id );
+            log_event( 'Automator hook order_paid', [ 'vc_id' => $vc_id ], 'debug' );
         }
     }
 }

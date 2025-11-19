@@ -19,6 +19,9 @@ define( 'VEMCOMER_CORE_DIR', plugin_dir_path( __FILE__ ) );
 
 define( 'VEMCOMER_CORE_URL', plugin_dir_url( __FILE__ ) );
 
+require_once VEMCOMER_CORE_DIR . 'inc/bootstrap.php';
+require_once VEMCOMER_CORE_DIR . 'inc/logging.php';
+
 // autoloads (legado + PSR-4) — mesmos dos pacotes anteriores
 spl_autoload_register( function ( $class ) {
     if ( str_starts_with( $class, 'VC_' ) ) {
