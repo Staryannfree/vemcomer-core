@@ -182,13 +182,15 @@ class SMClick {
                 return new WP_Error( 'vc_smclick_invalid_restaurant', __( 'Restaurante inválido para webhook.', 'vemcomer' ) );
             }
 
-            return [
-                'event'        => $event,
-                'variant'      => $event,
-                'triggered_at' => current_time( 'mysql', true ),
-                'restaurant'   => $this->build_restaurant_payload( $post ),
-                'source'       => 'vemcomer-core',
-            ];
+            return array_merge(
+                [
+                    'event'        => $event,
+                    'variant'      => $event,
+                    'triggered_at' => current_time( 'mysql', true ),
+                    'source'       => 'vemcomer-core',
+                ],
+                $this->build_restaurant_payload( $post )
+            );
         }
 
         if ( 'order' === $type ) {
@@ -196,13 +198,15 @@ class SMClick {
                 return new WP_Error( 'vc_smclick_invalid_order', __( 'Pedido inválido para webhook.', 'vemcomer' ) );
             }
 
-            return [
-                'event'        => $event,
-                'variant'      => $event,
-                'triggered_at' => current_time( 'mysql', true ),
-                'order'        => $this->build_order_payload( $post ),
-                'source'       => 'vemcomer-core',
-            ];
+            return array_merge(
+                [
+                    'event'        => $event,
+                    'variant'      => $event,
+                    'triggered_at' => current_time( 'mysql', true ),
+                    'source'       => 'vemcomer-core',
+                ],
+                $this->build_order_payload( $post )
+            );
         }
 
         return new WP_Error( 'vc_smclick_invalid_type', __( 'Tipo de evento desconhecido.', 'vemcomer' ) );
