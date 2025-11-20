@@ -74,6 +74,12 @@ class Installer {
                 'shortcode' => '[vemcomer_checkout]',
                 'needs'     => [],
             ],
+            'vemcomer_restaurant_panel' => [
+                'title'     => __( 'Painel do Restaurante (VemComer)', 'vemcomer' ),
+                'desc'      => __( 'Área logada para restaurantes gerenciarem dados e pedidos.', 'vemcomer' ),
+                'shortcode' => '[vemcomer_restaurant_panel]',
+                'needs'     => [],
+            ],
             'vemcomer_restaurant_signup' => [
                 'title'     => __( 'Cadastro de Restaurantes (VemComer)', 'vemcomer' ),
                 'desc'      => __( 'Formulário público para restaurantes enviarem seus dados.', 'vemcomer' ),
@@ -239,6 +245,8 @@ class Installer {
                 return '[vemcomer_menu]';
             case 'vemcomer_checkout':
                 return '[vemcomer_checkout]';
+            case 'vemcomer_restaurant_panel':
+                return '[vemcomer_restaurant_panel]';
             case 'vemcomer_restaurant_signup':
                 return '[vemcomer_restaurant_signup]';
             case 'vemcomer_customer_signup':

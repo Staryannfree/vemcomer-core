@@ -19,6 +19,7 @@ Shortcodes principais disponíveis:
 * `[vc_restaurants_map]` — mapa público com pins e botão “Perto de mim”.
 * `[vemcomer_menu]` — lista os itens de um restaurante (usa `?restaurant_id=` ou o atributo `restaurant_id`).
 * `[vemcomer_checkout]` — checkout simplificado para o carrinho do marketplace.
+* `[vemcomer_restaurant_panel]` — painel front-end para donos de restaurante (requer login).
 * `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).
 * `[vemcomer_customer_signup]` — formulário de criação de conta para clientes finais.
 
