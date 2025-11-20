@@ -14,6 +14,7 @@ export default [
         L: "readonly",
         VC_EXPLORE_MAP: "readonly",
         VC_RESTAURANT_MAP: "readonly",
+        VC_RESTAURANTS_MAP: "readonly",
         VC_KDS: "readonly",
         VemComer: "readonly"
       }

@@ -26,6 +26,7 @@ if ( ! function_exists( 'vc_sc_mark_used' ) ) {
 // Registrar shortcodes (arquivos originais)
 require_once __DIR__ . '/restaurant-card.php';
 require_once __DIR__ . '/restaurants-grid.php';
+require_once __DIR__ . '/restaurants-map.php';
 require_once __DIR__ . '/menu-items.php';
 require_once __DIR__ . '/filters.php';
 

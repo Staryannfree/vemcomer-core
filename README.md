@@ -16,6 +16,7 @@ Ao ativar o plugin o núcleo cria/atualiza automaticamente as páginas que cont�
 Shortcodes principais disponíveis:
 
 * `[vemcomer_restaurants]` — grade pública de restaurantes cadastrados.
+* `[vc_restaurants_map]` — mapa público com pins e botão “Perto de mim”.
 * `[vemcomer_menu]` — lista os itens de um restaurante (usa `?restaurant_id=` ou o atributo `restaurant_id`).
 * `[vemcomer_checkout]` — checkout simplificado para o carrinho do marketplace.
 * `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).

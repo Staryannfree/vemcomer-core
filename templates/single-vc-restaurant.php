@@ -22,10 +22,29 @@ get_header();
 			$address         = get_post_meta( get_the_ID(), 'vc_restaurant_address', true );
 			$whatsapp        = get_post_meta( get_the_ID(), 'vc_restaurant_whatsapp', true );
 			$hours           = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
+			$lat             = (float) get_post_meta( get_the_ID(), 'vc_restaurant_lat', true );
+			$lng             = (float) get_post_meta( get_the_ID(), 'vc_restaurant_lng', true );
 			$excerpt         = has_excerpt() ? get_the_excerpt() : '';
 			$wa_digits       = preg_replace( '/\\D+/', '', (string) $whatsapp );
 			$title_letter    = get_the_title();
 			$title_letter    = strtoupper( (string) ( function_exists( 'mb_substr' ) ? mb_substr( $title_letter, 0, 1, 'UTF-8' ) : substr( $title_letter, 0, 1 ) ) );
+			$has_coordinates = $lat && $lng;
+
+			if ( $has_coordinates ) {
+				wp_enqueue_style( 'leaflet' );
+				wp_enqueue_script( 'leaflet' );
+				wp_enqueue_script( 'vemcomer-restaurant-map' );
+				wp_localize_script(
+					'vemcomer-restaurant-map',
+					'VC_RESTAURANT_MAP',
+					[
+						'lat'   => $lat,
+						'lng'   => $lng,
+						'title' => get_the_title(),
+						'tiles' => function_exists( 'vc_tiles_url' ) ? vc_tiles_url() : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+					]
+				);
+			}
 			?>
 		<article class="vc-single__card">
 			<section class="vc-single__hero">
@@ -149,6 +168,27 @@ get_header();
 						</div>
 					</div>
 				</section>
+				<?php if ( $has_coordinates ) :
+					$coords            = $lat . ',' . $lng;
+					$google_directions = 'https://www.google.com/maps/dir/?api=1&destination=' . rawurlencode( $coords );
+					$osm_directions    = 'https://www.openstreetmap.org/directions?to=' . rawurlencode( $coords );
+					?>
+					<section class="vc-single__map">
+						<div class="vc-single__map-header">
+							<p class="vc-single__eyebrow"><?php echo esc_html__( 'Localização', 'vemcomer' ); ?></p>
+							<h2><?php echo esc_html__( 'Onde estamos', 'vemcomer' ); ?></h2>
+						</div>
+						<div id="vc-restaurant-map" class="vc-map" aria-label="<?php echo esc_attr__( 'Mapa do restaurante', 'vemcomer' ); ?>"></div>
+						<div class="vc-map__actions">
+							<a class="vc-btn vc-btn--ghost" href="<?php echo esc_url( $google_directions ); ?>" target="_blank" rel="noopener">
+								<?php echo esc_html__( 'Ver rota no Google Maps', 'vemcomer' ); ?>
+							</a>
+							<a class="vc-btn vc-btn--outline" href="<?php echo esc_url( $osm_directions ); ?>" target="_blank" rel="noopener">
+								<?php echo esc_html__( 'Ver rota no OpenStreetMap', 'vemcomer' ); ?>
+							</a>
+						</div>
+					</section>
+				<?php endif; ?>
 				<?php if ( get_the_content() ) : ?>
 					<section class="vc-single__content">
 						<?php the_content(); ?>
