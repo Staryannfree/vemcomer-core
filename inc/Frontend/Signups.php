@@ -33,6 +33,9 @@ class Signups {
         }
 
         wp_enqueue_style( 'vemcomer-front' );
+        wp_enqueue_style( 'leaflet' );
+        wp_enqueue_script( 'leaflet' );
+        wp_enqueue_script( 'vemcomer-signup-map' );
         $this->assets_enqueued = true;
     }
 
@@ -60,7 +63,7 @@ class Signups {
             <div class="vc-form__row">
                 <label>
                     <?php echo esc_html__( 'WhatsApp', 'vemcomer' ); ?>
-                    <input type="text" name="restaurant_whatsapp" maxlength="20" placeholder="(61) 98187-2528" />
+                    <input type="text" name="restaurant_whatsapp" maxlength="11" placeholder="61981872528" />
                 </label>
                 <label>
                     <?php echo esc_html__( 'Site', 'vemcomer' ); ?>
@@ -71,6 +74,20 @@ class Signups {
                 <?php echo esc_html__( 'Endereço completo', 'vemcomer' ); ?>
                 <input type="text" name="restaurant_address" maxlength="200" />
             </label>
+            <div class="vc-form__geo">
+                <div class="vc-form__row">
+                    <label>
+                        <?php echo esc_html__( 'Latitude', 'vemcomer' ); ?>
+                        <input type="text" name="restaurant_lat" maxlength="20" readonly />
+                    </label>
+                    <label>
+                        <?php echo esc_html__( 'Longitude', 'vemcomer' ); ?>
+                        <input type="text" name="restaurant_lng" maxlength="20" readonly />
+                    </label>
+                </div>
+                <div id="vc-restaurant-map-picker" class="vc-form__map" aria-label="<?php echo esc_attr__( 'Mapa para selecionar localização do restaurante', 'vemcomer' ); ?>"></div>
+                <button type="button" class="vc-btn vc-btn--ghost vc-form__location" id="vc-use-my-location"><?php echo esc_html__( 'Usar minha localização', 'vemcomer' ); ?></button>
+            </div>
             <div class="vc-form__row">
                 <label>
                     <?php echo esc_html__( 'Cozinha/Categoria', 'vemcomer' ); ?>
@@ -117,33 +134,12 @@ class Signups {
                 return formatted;
             };
 
-            const formatPhone = (value) => {
-                const digits = value.replace(/\D/g, '').slice(0, 11);
-                if (!digits) {
-                    return '';
-                }
-
-                const ddd = digits.slice(0, Math.min(2, digits.length));
-                const number = digits.slice(2);
-
-                let formatted = '(' + ddd;
-                if (digits.length >= 2) {
-                    formatted += ') ';
-                }
-
-                if (number.length > 5) {
-                    formatted += number.slice(0, 5) + '-' + number.slice(5);
-                } else {
-                    formatted += number;
-                }
-
-                return formatted;
-            };
+            const onlyDigits = (value) => value.replace(/\D/g, '').slice(0, 11);
 
             const fields = [
                 { name: 'restaurant_name', max: 120 },
                 { name: 'restaurant_cnpj', max: 18, pattern: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, message: '<?php echo esc_js( __( 'CNPJ inválido ou incompleto.', 'vemcomer' ) ); ?>', formatter: formatCnpj },
-                { name: 'restaurant_whatsapp', max: 20, pattern: /^\(\d{2}\) \d{4,5}-\d{4}$/, message: '<?php echo esc_js( __( 'WhatsApp inválido.', 'vemcomer' ) ); ?>', formatter: formatPhone },
+                { name: 'restaurant_whatsapp', max: 11, pattern: /^\d{10,11}$/, message: '<?php echo esc_js( __( 'WhatsApp inválido. Use apenas números com DDD.', 'vemcomer' ) ); ?>', formatter: onlyDigits },
                 { name: 'restaurant_site', max: 200 },
                 { name: 'restaurant_address', max: 200 },
                 { name: 'restaurant_cuisine', max: 60 },
@@ -238,6 +234,8 @@ class Signups {
         $site      = esc_url_raw( wp_unslash( $_POST['restaurant_site'] ?? '' ) );
         $open      = wp_kses_post( wp_unslash( $_POST['restaurant_open_hours'] ?? '' ) );
         $address   = sanitize_text_field( wp_unslash( $_POST['restaurant_address'] ?? '' ) );
+        $lat       = sanitize_text_field( wp_unslash( $_POST['restaurant_lat'] ?? '' ) );
+        $lng       = sanitize_text_field( wp_unslash( $_POST['restaurant_lng'] ?? '' ) );
         $cuisine   = sanitize_title( wp_unslash( $_POST['restaurant_cuisine'] ?? '' ) );
         $location  = sanitize_title( wp_unslash( $_POST['restaurant_location'] ?? '' ) );
         $delivery  = isset( $_POST['restaurant_delivery'] ) ? '1' : '0';
@@ -274,6 +272,8 @@ class Signups {
         update_post_meta( $post_id, 'vc_restaurant_open_hours', $open );
         update_post_meta( $post_id, 'vc_restaurant_delivery', $delivery );
         update_post_meta( $post_id, 'vc_restaurant_address', $address );
+        update_post_meta( $post_id, 'vc_restaurant_lat', $lat );
+        update_post_meta( $post_id, 'vc_restaurant_lng', $lng );
 
         if ( $cuisine && taxonomy_exists( 'vc_cuisine' ) ) {
             wp_set_object_terms( $post_id, [ $cuisine ], 'vc_cuisine', false );

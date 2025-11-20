@@ -13,6 +13,8 @@ const VC_META_RESTAURANT_FIELDS = [
     'open_hours'  => 'vc_restaurant_open_hours',
     'delivery'    => 'vc_restaurant_delivery', // bool
     'address'     => 'vc_restaurant_address',
+    'lat'         => 'vc_restaurant_lat',
+    'lng'         => 'vc_restaurant_lng',
 ];
 
 add_action( 'add_meta_boxes', function() {
@@ -41,7 +43,7 @@ function vc_render_restaurant_metabox( $post ) {
         </tr>
         <tr>
             <th><label for="vc_restaurant_whatsapp"><?php echo esc_html__( 'WhatsApp', 'vemcomer' ); ?></label></th>
-            <td><input type="text" id="vc_restaurant_whatsapp" name="vc_restaurant_whatsapp" class="regular-text" placeholder="55 11 99999-9999" value="<?php echo esc_attr( $values['whatsapp'] ); ?>" /></td>
+            <td><input type="text" id="vc_restaurant_whatsapp" name="vc_restaurant_whatsapp" class="regular-text" placeholder="61981872528" value="<?php echo esc_attr( $values['whatsapp'] ); ?>" /></td>
         </tr>
         <tr>
             <th><label for="vc_restaurant_site"><?php echo esc_html__( 'Site', 'vemcomer' ); ?></label></th>
@@ -58,6 +60,14 @@ function vc_render_restaurant_metabox( $post ) {
         <tr>
             <th><label for="vc_restaurant_address"><?php echo esc_html__( 'Endereço', 'vemcomer' ); ?></label></th>
             <td><input type="text" id="vc_restaurant_address" name="vc_restaurant_address" class="regular-text" value="<?php echo esc_attr( $values['address'] ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_lat"><?php echo esc_html__( 'Latitude', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_lat" name="vc_restaurant_lat" class="regular-text" value="<?php echo esc_attr( $values['lat'] ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_lng"><?php echo esc_html__( 'Longitude', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_lng" name="vc_restaurant_lng" class="regular-text" value="<?php echo esc_attr( $values['lng'] ); ?>" /></td>
         </tr>
     </table>
     <?php
@@ -94,7 +104,12 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['site'], esc_url_raw( $_POST['vc_restaurant_site'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['open_hours'], wp_kses_post( $_POST['vc_restaurant_open_hours'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery'], isset( $_POST['vc_restaurant_delivery'] ) ? '1' : '0' );
+    $lat = sanitize_text_field( $_POST['vc_restaurant_lat'] ?? '' );
+    $lng = sanitize_text_field( $_POST['vc_restaurant_lng'] ?? '' );
+
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['address'], sanitize_text_field( $_POST['vc_restaurant_address'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['lat'], $lat );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['lng'], $lng );
 
     if ( $errors->has_errors() ) {
         vc_restaurant_store_errors( $errors );
