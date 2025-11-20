@@ -54,15 +54,18 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_style('vemcomer-front', $base_url . 'assets/css/frontend.css', [], $ver);
         wp_register_style('vemcomer-style', $base_url . 'assets/style.css', [], $ver);
         wp_register_style('vc-shortcodes', $base_url . 'assets/css/shortcodes.css', [], $ver);
+        wp_register_style('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', [], '1.9.4');
 
         // Scripts
         wp_register_script('vemcomer-front', $base_url . 'assets/js/frontend.js', [], $ver, true);
+        wp_register_script('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', [], '1.9.4', true);
         wp_register_script('vemcomer-checkout', $base_url . 'assets/js/checkout.js', [], $ver, true);
         wp_register_script('vemcomer-checkout-geo', $base_url . 'assets/checkout-geo.js', ['jquery'], $ver, true);
         wp_register_script('vemcomer-geo-address', $base_url . 'assets/geo-address.js', ['jquery'], $ver, true);
         wp_register_script('vemcomer-explore', $base_url . 'assets/explore.js', [], $ver, true);
         wp_register_script('vemcomer-explore-map', $base_url . 'assets/explore-map.js', [], $ver, true);
         wp_register_script('vemcomer-restaurant-map', $base_url . 'assets/restaurant-map.js', [], $ver, true);
+        wp_register_script('vemcomer-signup-map', $base_url . 'assets/js/signup-map.js', ['leaflet'], $ver, true);
         wp_register_script('vemcomer-kds', $base_url . 'assets/kds.js', [], $ver, true);
     }
 }

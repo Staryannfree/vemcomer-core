@@ -101,15 +101,23 @@ function vc_rest_write_args(): array {
 			'type'     => 'boolean',
 			'required' => false,
 		),
-		'address'    => array(
-			'type'     => 'string',
-			'required' => false,
-		),
-		'cuisine'    => array(
-			'type'     => 'string',
-			'required' => false,
-		),
-		'location'   => array(
+                'address'    => array(
+                        'type'     => 'string',
+                        'required' => false,
+                ),
+                'lat'        => array(
+                        'type'     => 'number',
+                        'required' => false,
+                ),
+                'lng'        => array(
+                        'type'     => 'number',
+                        'required' => false,
+                ),
+                'cuisine'    => array(
+                        'type'     => 'string',
+                        'required' => false,
+                ),
+                'location'   => array(
 			'type'     => 'string',
 			'required' => false,
 		),
@@ -131,12 +139,14 @@ function vc_rest_sanitize_payload( array $data ): array {
 	$out['cnpj']       = array_key_exists( 'cnpj', $data ) ? preg_replace( '/[^\\d\\.\\-\/]/', '', (string) $data['cnpj'] ) : null;
 	$out['whatsapp']   = array_key_exists( 'whatsapp', $data ) ? sanitize_text_field( (string) $data['whatsapp'] ) : null;
 	$out['site']       = array_key_exists( 'site', $data ) ? esc_url_raw( (string) $data['site'] ) : null;
-	$out['open_hours'] = array_key_exists( 'open_hours', $data ) ? wp_kses_post( (string) $data['open_hours'] ) : null;
-	$out['delivery']   = array_key_exists( 'delivery', $data ) ? ( ! empty( $data['delivery'] ) ? '1' : '0' ) : null;
-	$out['address']    = array_key_exists( 'address', $data ) ? sanitize_text_field( (string) $data['address'] ) : null;
-	$out['cuisine']    = array_key_exists( 'cuisine', $data ) ? sanitize_title( (string) $data['cuisine'] ) : null;
-	$out['location']   = array_key_exists( 'location', $data ) ? sanitize_title( (string) $data['location'] ) : null;
-	return $out;
+        $out['open_hours'] = array_key_exists( 'open_hours', $data ) ? wp_kses_post( (string) $data['open_hours'] ) : null;
+        $out['delivery']   = array_key_exists( 'delivery', $data ) ? ( ! empty( $data['delivery'] ) ? '1' : '0' ) : null;
+        $out['address']    = array_key_exists( 'address', $data ) ? sanitize_text_field( (string) $data['address'] ) : null;
+        $out['lat']        = array_key_exists( 'lat', $data ) ? sanitize_text_field( (string) $data['lat'] ) : null;
+        $out['lng']        = array_key_exists( 'lng', $data ) ? sanitize_text_field( (string) $data['lng'] ) : null;
+        $out['cuisine']    = array_key_exists( 'cuisine', $data ) ? sanitize_title( (string) $data['cuisine'] ) : null;
+        $out['location']   = array_key_exists( 'location', $data ) ? sanitize_title( (string) $data['location'] ) : null;
+        return $out;
 }
 
 /**
@@ -335,14 +345,16 @@ function vc_rest_delete_restaurant( WP_REST_Request $req ): WP_REST_Response {
  * @param array $data Dados sanitizados.
  */
 function vc_rest_apply_terms_and_meta( int $pid, array $data ): void {
-	$meta_map = array(
-		'cnpj'       => 'vc_restaurant_cnpj',
-		'whatsapp'   => 'vc_restaurant_whatsapp',
-		'site'       => 'vc_restaurant_site',
-		'open_hours' => 'vc_restaurant_open_hours',
-		'delivery'   => 'vc_restaurant_delivery',
-		'address'    => 'vc_restaurant_address',
-	);
+        $meta_map = array(
+                'cnpj'       => 'vc_restaurant_cnpj',
+                'whatsapp'   => 'vc_restaurant_whatsapp',
+                'site'       => 'vc_restaurant_site',
+                'open_hours' => 'vc_restaurant_open_hours',
+                'delivery'   => 'vc_restaurant_delivery',
+                'address'    => 'vc_restaurant_address',
+                'lat'        => 'vc_restaurant_lat',
+                'lng'        => 'vc_restaurant_lng',
+        );
 
 	foreach ( $meta_map as $key => $meta_key ) {
 		if ( array_key_exists( $key, $data ) && null !== $data[ $key ] ) {

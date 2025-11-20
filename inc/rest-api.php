@@ -86,14 +86,16 @@ function vc_rest_api_get_restaurants( WP_REST_Request $req ) : WP_REST_Response 
             'thumbnail'   => get_the_post_thumbnail_url( $pid, 'medium' ),
             'cuisines'    => wp_get_post_terms( $pid, 'vc_cuisine', [ 'fields' => 'all' ] ),
             'locations'   => wp_get_post_terms( $pid, 'vc_location', [ 'fields' => 'all' ] ),
-            'meta'        => [
-                'cnpj'       => get_post_meta( $pid, 'vc_restaurant_cnpj', true ),
-                'whatsapp'   => get_post_meta( $pid, 'vc_restaurant_whatsapp', true ),
-                'site'       => get_post_meta( $pid, 'vc_restaurant_site', true ),
-                'open_hours' => get_post_meta( $pid, 'vc_restaurant_open_hours', true ),
-                'delivery'   => get_post_meta( $pid, 'vc_restaurant_delivery', true ) === '1',
-                'address'    => get_post_meta( $pid, 'vc_restaurant_address', true ),
-            ],
+                'meta'        => [
+                    'cnpj'       => get_post_meta( $pid, 'vc_restaurant_cnpj', true ),
+                    'whatsapp'   => get_post_meta( $pid, 'vc_restaurant_whatsapp', true ),
+                    'site'       => get_post_meta( $pid, 'vc_restaurant_site', true ),
+                    'open_hours' => get_post_meta( $pid, 'vc_restaurant_open_hours', true ),
+                    'delivery'   => get_post_meta( $pid, 'vc_restaurant_delivery', true ) === '1',
+                    'address'    => get_post_meta( $pid, 'vc_restaurant_address', true ),
+                    'lat'        => get_post_meta( $pid, 'vc_restaurant_lat', true ),
+                    'lng'        => get_post_meta( $pid, 'vc_restaurant_lng', true ),
+                ],
             'link'        => get_permalink( $pid ),
         ];
     }

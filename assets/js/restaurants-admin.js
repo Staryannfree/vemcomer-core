@@ -20,23 +20,8 @@
       return formatted;
     };
 
-    const formatPhone = (value) => {
-      const digits = (value || '').replace(/\D/g,'').slice(0,11);
-      if(!digits){ return ''; }
-
-      const ddd = digits.slice(0, Math.min(2, digits.length));
-      const number = digits.slice(2);
-
-      let formatted = '(' + ddd;
-      if(digits.length >= 2){ formatted += ') '; }
-
-      if(number.length > 5){
-        formatted += number.slice(0,5) + '-' + number.slice(5);
-      } else {
-        formatted += number;
-      }
-
-      return formatted;
+    const sanitizePhone = (value) => {
+      return (value || '').replace(/\D/g, '').slice(0, 11);
     };
 
     const $cnpj = $('#vc_restaurant_cnpj');
@@ -56,10 +41,10 @@
     });
 
     const $whatsapp = $('#vc_restaurant_whatsapp');
-    $whatsapp.attr('placeholder', '(61) 98187-2528');
-    $whatsapp.attr('maxlength', '20');
+    $whatsapp.attr('placeholder', '61981872528');
+    $whatsapp.attr('maxlength', '11');
     $whatsapp.on('input', function(){
-      $(this).val(formatPhone($(this).val()));
+      $(this).val(sanitizePhone($(this).val()));
     });
   });
 })(jQuery);
