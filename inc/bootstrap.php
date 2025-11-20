@@ -71,6 +71,8 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_script('vemcomer-restaurants-map', $base_url . 'assets/restaurants-map.js', ['leaflet', 'leaflet-markercluster'], $ver, true);
         wp_register_script('vemcomer-signup-map', $base_url . 'assets/js/signup-map.js', ['leaflet'], $ver, true);
         wp_register_script('vemcomer-kds', $base_url . 'assets/kds.js', [], $ver, true);
+        wp_register_style('vemcomer-onboarding', $base_url . 'assets/css/onboarding.css', [], $ver);
+        wp_register_script('vemcomer-onboarding', $base_url . 'assets/js/onboarding.js', ['jquery'], $ver, true);
     }
 }
 

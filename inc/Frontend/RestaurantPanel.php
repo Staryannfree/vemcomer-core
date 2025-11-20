@@ -64,8 +64,13 @@ class RestaurantPanel {
         $public_url     = get_permalink( $restaurant );
         $menu_admin_url = $this->menu_admin_url( $restaurant );
 
+        // Renderiza onboarding se necessário
+        $onboarding = new \VC\Frontend\Onboarding();
+        $onboarding_html = $onboarding->render( $user, $restaurant );
+
         ob_start();
         ?>
+        <?php echo $onboarding_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         <div class="vc-panel">
             <div class="vc-panel__header">
                 <div>
@@ -284,7 +289,7 @@ class RestaurantPanel {
         ];
     }
 
-    private function get_restaurant_for_user( WP_User $user ): ?WP_Post {
+    public function get_restaurant_for_user( WP_User $user ): ?WP_Post {
         $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $user );
         if ( $filtered > 0 ) {
             $post = get_post( $filtered );
@@ -348,7 +353,7 @@ class RestaurantPanel {
         return (string) apply_filters( 'vemcomer/restaurant_panel_url', home_url( '/painel-restaurante/' ) );
     }
 
-    private function edit_url( WP_Post $restaurant ): string {
+    public function edit_url( WP_Post $restaurant ): string {
         $url = (string) apply_filters( 'vemcomer/restaurant_panel_edit_url', '', $restaurant );
         if ( $url ) {
             return $url;
@@ -361,7 +366,7 @@ class RestaurantPanel {
      * URL para gerenciamento do cardápio (admin) filtrado pelo restaurante.
      * Permite que o dono cadastre/edite itens de menu de forma profissional.
      */
-    private function menu_admin_url( WP_Post $restaurant ): string {
+    public function menu_admin_url( WP_Post $restaurant ): string {
         // Permite override completo via filtro (por exemplo, para um painel 100% front-end).
         $url = (string) apply_filters( 'vemcomer/restaurant_panel_menu_url', '', $restaurant );
         if ( $url ) {
