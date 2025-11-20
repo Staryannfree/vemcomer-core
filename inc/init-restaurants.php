@@ -10,6 +10,7 @@ require_once __DIR__ . '/taxonomies.php';
 require_once __DIR__ . '/meta-restaurants.php';
 require_once __DIR__ . '/admin-columns.php';
 require_once __DIR__ . '/admin/list-filters.php';
+require_once __DIR__ . '/filters.php';
 require_once __DIR__ . '/audit/register-cpt.php';
 require_once __DIR__ . '/audit/logger.php';
 require_once __DIR__ . '/rest-middleware-rate-limit.php';

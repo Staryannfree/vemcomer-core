@@ -20,6 +20,17 @@ add_action( 'rest_api_init', function() {
             'per_page'  => [ 'type' => 'integer', 'required' => false, 'default' => 10 ],
         ],
     ]);
+
+    register_rest_route( 'vemcomer/v1', '/restaurants/nearby', [
+        'methods'  => WP_REST_Server::READABLE,
+        'callback' => 'vc_rest_api_get_restaurants_nearby',
+        'permission_callback' => '__return_true',
+        'args'     => [
+            'lat'    => [ 'type' => 'number', 'required' => true ],
+            'lng'    => [ 'type' => 'number', 'required' => true ],
+            'radius' => [ 'type' => 'number', 'required' => false ],
+        ],
+    ] );
 });
 
 function vc_rest_api_get_restaurants( WP_REST_Request $req ) : WP_REST_Response {
@@ -110,4 +121,71 @@ function vc_rest_api_get_restaurants( WP_REST_Request $req ) : WP_REST_Response 
     \VC\Logging\log_event( 'Legacy REST restaurants response', [ 'count' => count( $items ), 'total' => $total ], 'debug' );
 
     return $res;
+}
+
+function vc_rest_api_get_restaurants_nearby( WP_REST_Request $req ): WP_REST_Response {
+    $lat_raw = $req->get_param( 'lat' );
+    $lng_raw = $req->get_param( 'lng' );
+    if ( $lat_raw === null || $lng_raw === null || $lat_raw === '' || $lng_raw === '' ) {
+        return new WP_REST_Response( [ 'message' => __( 'Latitude e longitude são obrigatórias.', 'vemcomer' ) ], 400 );
+    }
+
+    $lat    = (float) $lat_raw;
+    $lng    = (float) $lng_raw;
+    $radius = (float) $req->get_param( 'radius' );
+    $radius = $radius > 0 ? $radius : vc_default_radius();
+
+    $q = new WP_Query([
+        'post_type'      => 'vc_restaurant',
+        'posts_per_page' => 500,
+        'post_status'    => 'publish',
+        'no_found_rows'  => true,
+        'meta_query'     => [
+            [ 'key' => 'vc_restaurant_lat', 'compare' => '!=', 'value' => '' ],
+            [ 'key' => 'vc_restaurant_lng', 'compare' => '!=', 'value' => '' ],
+        ],
+    ] );
+
+    $items = [];
+    foreach ( $q->posts as $post ) {
+        $pid    = $post->ID;
+        $rlat   = (float) get_post_meta( $pid, 'vc_restaurant_lat', true );
+        $rlng   = (float) get_post_meta( $pid, 'vc_restaurant_lng', true );
+        $dist   = vc_haversine_distance_km( $lat, $lng, $rlat, $rlng );
+        $within = $dist <= $radius;
+        if ( ! $within ) {
+            continue;
+        }
+
+        $cuisines = wp_get_post_terms( $pid, 'vc_cuisine', [ 'fields' => 'names' ] );
+        $items[]  = [
+            'id'       => $pid,
+            'title'    => get_the_title( $pid ),
+            'address'  => (string) get_post_meta( $pid, 'vc_restaurant_address', true ),
+            'distance' => round( $dist, 2 ),
+            'lat'      => $rlat,
+            'lng'      => $rlng,
+            'cuisine'  => ! is_wp_error( $cuisines ) ? implode( ', ', $cuisines ) : '',
+            'url'      => get_permalink( $pid ),
+        ];
+    }
+
+    usort(
+        $items,
+        function ( $a, $b ) {
+            return $a['distance'] <=> $b['distance'];
+        }
+    );
+
+    return new WP_REST_Response( array_values( $items ), 200 );
+}
+
+function vc_haversine_distance_km( float $lat1, float $lng1, float $lat2, float $lng2 ): float {
+    $earth_radius = 6371; // km
+    $dlat         = deg2rad( $lat2 - $lat1 );
+    $dlng         = deg2rad( $lng2 - $lng1 );
+    $a            = pow( sin( $dlat / 2 ), 2 ) + cos( deg2rad( $lat1 ) ) * cos( deg2rad( $lat2 ) ) * pow( sin( $dlng / 2 ), 2 );
+    $c            = 2 * asin( min( 1, sqrt( $a ) ) );
+
+    return $earth_radius * $c;
 }

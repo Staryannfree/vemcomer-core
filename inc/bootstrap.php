@@ -32,6 +32,7 @@ if (!function_exists('vc_get_asset_version')) {
  * - vemcomer-geo-address (js – buscador de endereço no checkout)
  * - vemcomer-explore e vemcomer-explore-map (js – explorar + mapa Leaflet)
  * - vemcomer-restaurant-map (js – mapa no single de restaurante)
+ * - vemcomer-restaurants-map (js – mapa geral + geolocalização)
  * - vemcomer-kds (js – painel da cozinha)
  *
  * Admin
@@ -55,6 +56,8 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_style('vemcomer-style', $base_url . 'assets/style.css', [], $ver);
         wp_register_style('vc-shortcodes', $base_url . 'assets/css/shortcodes.css', [], $ver);
         wp_register_style('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', [], '1.9.4');
+        wp_register_style('leaflet-markercluster', 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css', ['leaflet'], '1.5.3');
+        wp_register_style('leaflet-markercluster-default', 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css', ['leaflet-markercluster'], '1.5.3');
 
         // Scripts
         wp_register_script('vemcomer-front', $base_url . 'assets/js/frontend.js', [], $ver, true);
@@ -65,6 +68,7 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_script('vemcomer-explore', $base_url . 'assets/explore.js', [], $ver, true);
         wp_register_script('vemcomer-explore-map', $base_url . 'assets/explore-map.js', [], $ver, true);
         wp_register_script('vemcomer-restaurant-map', $base_url . 'assets/restaurant-map.js', [], $ver, true);
+        wp_register_script('vemcomer-restaurants-map', $base_url . 'assets/restaurants-map.js', ['leaflet', 'leaflet-markercluster'], $ver, true);
         wp_register_script('vemcomer-signup-map', $base_url . 'assets/js/signup-map.js', ['leaflet'], $ver, true);
         wp_register_script('vemcomer-kds', $base_url . 'assets/kds.js', [], $ver, true);
     }
