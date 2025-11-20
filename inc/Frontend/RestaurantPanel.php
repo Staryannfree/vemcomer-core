@@ -22,6 +22,8 @@ class RestaurantPanel {
         add_action( 'admin_post_vc_panel_login', [ $this, 'handle_login' ] );
         add_action( 'admin_post_nopriv_vc_panel_login', [ $this, 'handle_login' ] );
         add_filter( 'wp_nav_menu_items', [ $this, 'maybe_add_nav_items' ], 10, 2 );
+        add_action( 'admin_init', [ $this, 'ensure_caps_in_admin' ] );
+        add_action( 'load-edit.php', [ $this, 'ensure_caps_in_admin' ] );
     }
 
     private function ensure_assets(): void {
@@ -401,6 +403,28 @@ class RestaurantPanel {
     }
 
     /**
+     * Garante que usuários "lojista" tenham as capabilities necessárias
+     * ao acessar o admin do WordPress.
+     */
+    public function ensure_caps_in_admin(): void {
+        if ( ! is_user_logged_in() ) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        if ( ! $user instanceof WP_User ) {
+            return;
+        }
+
+        // Aplica apenas para usuários com role "lojista"
+        if ( ! in_array( 'lojista', $user->roles, true ) ) {
+            return;
+        }
+
+        $this->ensure_caps_for_user( $user );
+    }
+
+    /**
      * Garante que o usuário logado tenha as capabilities necessárias
      * para editar o próprio restaurante e gerenciar os itens de cardápio.
      *
@@ -440,6 +464,12 @@ class RestaurantPanel {
             if ( $cap && ! $user->has_cap( $cap ) ) {
                 $user->add_cap( $cap );
             }
+        }
+
+        // Adiciona capability básica edit_posts que o WordPress pode verificar
+        // antes de mapear para edit_vc_menu_items via map_meta_cap
+        if ( ! $user->has_cap( 'edit_posts' ) ) {
+            $user->add_cap( 'edit_posts' );
         }
     }
 }

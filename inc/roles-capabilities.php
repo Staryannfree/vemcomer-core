@@ -84,7 +84,7 @@ function vc_register_restaurant_owner_role(): void {
     $caps = array_merge(
         vc_get_restaurant_caps(),
         vc_get_menu_caps(),
-        [ 'read' ]
+        [ 'read', 'edit_posts' ] // edit_posts é necessário para o WordPress permitir acesso ao admin
     );
 
     $caps_map = [];
