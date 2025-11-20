@@ -142,6 +142,8 @@ Quando um restaurante é aprovado:
 - Formulário de validação com campos: email, senha e confirmação de senha
 - Login automático e redirecionamento para painel após criação de conta
 - Vinculação automática de usuário ao restaurante via meta `vc_restaurant_id`
+- Concessão automática de permissões para o dono do restaurante editar seus dados e gerenciar itens de cardápio
+- Nova role `Lojista` atribuída aos donos de restaurante, já com permissões de edição
 
 **Arquivos modificados:**
 - `inc/meta-restaurants.php` - Adicionado campo access_url no metabox

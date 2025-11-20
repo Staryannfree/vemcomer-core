@@ -19,6 +19,23 @@ function vc_get_restaurant_caps() : array {
 }
 
 /**
+ * Capabilities necessárias para gerenciar itens do cardápio.
+ */
+function vc_get_menu_caps() : array {
+    return [
+        'edit_vc_menu_item',
+        'read_vc_menu_item',
+        'delete_vc_menu_item',
+        'edit_vc_menu_items',
+        'publish_vc_menu_items',
+        'delete_vc_menu_items',
+        'edit_published_vc_menu_items',
+        'delete_published_vc_menu_items',
+        'create_vc_menu_items',
+    ];
+}
+
+/**
  * Atribui capabilities às roles padrão (admin, editor, author opcional, shop_manager se Woo existir)
  */
 function vc_assign_caps_to_roles() : void {
@@ -29,7 +46,7 @@ function vc_assign_caps_to_roles() : void {
         $roles[] = 'shop_manager';
     }
 
-    $caps = vc_get_restaurant_caps();
+    $caps = array_merge( vc_get_restaurant_caps(), vc_get_menu_caps() );
     foreach ( $roles as $role_name ) {
         $role = get_role( $role_name );
         if ( ! $role ) continue;
@@ -57,3 +74,33 @@ function vc_remove_caps_from_roles() : void {
 }
 
 // Activation/Deactivation hooks (precisam estar no arquivo principal, mas re-exportamos funções aqui)
+
+add_action( 'init', 'vc_register_restaurant_owner_role' );
+
+/**
+ * Registra/atualiza a role "lojista" (donos de restaurante no painel).
+ */
+function vc_register_restaurant_owner_role(): void {
+    $caps = array_merge(
+        vc_get_restaurant_caps(),
+        vc_get_menu_caps(),
+        [ 'read' ]
+    );
+
+    $caps_map = [];
+    foreach ( $caps as $cap ) {
+        $caps_map[ $cap ] = true;
+    }
+
+    $role = get_role( 'lojista' );
+    if ( ! $role ) {
+        add_role( 'lojista', __( 'Lojista', 'vemcomer' ), $caps_map );
+        return;
+    }
+
+    foreach ( array_keys( $caps_map ) as $cap ) {
+        if ( ! $role->has_cap( $cap ) ) {
+            $role->add_cap( $cap );
+        }
+    }
+}

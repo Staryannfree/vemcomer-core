@@ -316,14 +316,14 @@ class AccessValidation {
             exit;
         }
 
-        // Cria o usuário
+        // Cria o usuário (role básica, capabilities específicas são atribuídas abaixo)
         $restaurant_name = get_the_title( $restaurant );
         $user_id = wp_insert_user([
             'user_login'   => $email,
             'user_email'   => $email,
             'display_name' => $restaurant_name,
             'user_pass'    => $password,
-            'role'         => 'subscriber', // Pode ser ajustado conforme necessário
+            'role'         => 'lojista',
         ]);
 
         if ( is_wp_error( $user_id ) ) {
@@ -334,6 +334,9 @@ class AccessValidation {
         // Vincula o usuário ao restaurante
         update_user_meta( $user_id, 'vc_restaurant_id', $restaurant->ID );
 
+        // Concede permissões para gerenciar o próprio restaurante e o cardápio
+        $this->grant_restaurant_caps( (int) $user_id );
+
         // Faz login automático
         wp_set_current_user( $user_id );
         wp_set_auth_cookie( $user_id );
@@ -342,6 +345,52 @@ class AccessValidation {
         $panel_url = apply_filters( 'vemcomer/restaurant_panel_url', home_url( '/painel-restaurante/' ) );
         wp_safe_redirect( add_query_arg( 'vc_validation_success', '1', $panel_url ) );
         exit;
+    }
+
+    /**
+     * Concede capabilities ao usuário do restaurante para gerenciar
+     * seus próprios dados e itens de cardápio.
+     *
+     * @param int $user_id ID do usuário criado.
+     */
+    private function grant_restaurant_caps( int $user_id ): void {
+        $user = get_user_by( 'id', $user_id );
+        if ( ! $user instanceof WP_User ) {
+            return;
+        }
+
+        // Caps do CPT vc_restaurant (se helper existir).
+        if ( function_exists( 'vc_get_restaurant_caps' ) ) {
+            $restaurant_caps = (array) vc_get_restaurant_caps();
+            foreach ( $restaurant_caps as $cap ) {
+                if ( $cap && ! $user->has_cap( $cap ) ) {
+                    $user->add_cap( $cap );
+                }
+            }
+        }
+
+        // Caps mínimos para gerenciar itens de cardápio (vc_menu_item).
+        if ( function_exists( 'vc_get_menu_caps' ) ) {
+            $menu_caps = (array) vc_get_menu_caps();
+        } else {
+            $menu_caps = [
+                'edit_vc_menu_item',
+                'read_vc_menu_item',
+                'delete_vc_menu_item',
+                'edit_vc_menu_items',
+                'publish_vc_menu_items',
+                'delete_vc_menu_items',
+                'edit_published_vc_menu_items',
+                'delete_published_vc_menu_items',
+                'create_vc_menu_items',
+            ];
+        }
+
+        foreach ( $menu_caps as $cap ) {
+            if ( $cap && ! $user->has_cap( $cap ) ) {
+                $user->add_cap( $cap );
+            }
+        }
     }
 }
 

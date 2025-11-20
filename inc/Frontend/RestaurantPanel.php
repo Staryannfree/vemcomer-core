@@ -43,18 +43,24 @@ class RestaurantPanel {
         }
 
         $user       = wp_get_current_user();
+        // Garante que o usuário logado (dono do restaurante) tenha as permissões
+        // mínimas para editar seus dados e gerenciar o cardápio, mesmo que a conta
+        // tenha sido criada antes da tela de validação via access_url.
+        $this->ensure_caps_for_user( $user );
+
         $restaurant = $this->get_restaurant_for_user( $user );
 
         if ( ! $restaurant ) {
             return $this->render_empty_state();
         }
 
-        $status_obj   = get_post_status_object( $restaurant->post_status );
-        $status_label = $status_obj ? $status_obj->label : $restaurant->post_status;
-        $meta         = $this->restaurant_meta( $restaurant->ID );
-        $orders       = $this->order_summary( $restaurant->ID );
-        $edit_url     = $this->edit_url( $restaurant );
-        $public_url   = get_permalink( $restaurant );
+        $status_obj     = get_post_status_object( $restaurant->post_status );
+        $status_label   = $status_obj ? $status_obj->label : $restaurant->post_status;
+        $meta           = $this->restaurant_meta( $restaurant->ID );
+        $orders         = $this->order_summary( $restaurant->ID );
+        $edit_url       = $this->edit_url( $restaurant );
+        $public_url     = get_permalink( $restaurant );
+        $menu_admin_url = $this->menu_admin_url( $restaurant );
 
         ob_start();
         ?>
@@ -69,6 +75,13 @@ class RestaurantPanel {
                     <?php if ( $edit_url ) : ?>
                         <a class="vc-btn" href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html__( 'Editar dados', 'vemcomer' ); ?></a>
                     <?php endif; ?>
+
+                    <?php if ( $menu_admin_url ) : ?>
+                        <a class="vc-btn vc-btn--secondary" href="<?php echo esc_url( $menu_admin_url ); ?>" target="_blank" rel="noopener">
+                            <?php echo esc_html__( 'Gerenciar cardápio', 'vemcomer' ); ?>
+                        </a>
+                    <?php endif; ?>
+
                     <a class="vc-btn vc-btn--ghost" href="<?php echo esc_url( $public_url ); ?>" target="_blank" rel="noopener">
                         <?php echo esc_html__( 'Ver página pública', 'vemcomer' ); ?>
                     </a>
@@ -342,6 +355,32 @@ class RestaurantPanel {
         return (string) get_edit_post_link( $restaurant );
     }
 
+    /**
+     * URL para gerenciamento do cardápio (admin) filtrado pelo restaurante.
+     * Permite que o dono cadastre/edite itens de menu de forma profissional.
+     */
+    private function menu_admin_url( WP_Post $restaurant ): string {
+        // Permite override completo via filtro (por exemplo, para um painel 100% front-end).
+        $url = (string) apply_filters( 'vemcomer/restaurant_panel_menu_url', '', $restaurant );
+        if ( $url ) {
+            return $url;
+        }
+
+        // Garante que o usuário tenha permissão mínima para gerenciar itens de cardápio.
+        if ( ! current_user_can( 'edit_vc_menu_items' ) ) {
+            return '';
+        }
+
+        $base = admin_url( 'edit.php?post_type=vc_menu_item' );
+
+        return (string) add_query_arg(
+            [
+                '_vc_restaurant_id' => (int) $restaurant->ID,
+            ],
+            $base
+        );
+    }
+
     public function maybe_add_nav_items( string $items, $args ): string {
         if ( ! is_user_logged_in() ) {
             return $items;
@@ -359,5 +398,48 @@ class RestaurantPanel {
         $items .= '<li class="menu-item menu-item-vc-logout"><a href="' . esc_url( $logout ) . '">' . esc_html__( 'Sair', 'vemcomer' ) . '</a></li>';
 
         return $items;
+    }
+
+    /**
+     * Garante que o usuário logado tenha as capabilities necessárias
+     * para editar o próprio restaurante e gerenciar os itens de cardápio.
+     *
+     * Isso é útil para contas criadas antes do fluxo de validação via access_url.
+     *
+     * @param WP_User $user Usuário logado.
+     */
+    private function ensure_caps_for_user( WP_User $user ): void {
+        // Caps do CPT vc_restaurant.
+        if ( function_exists( 'vc_get_restaurant_caps' ) ) {
+            $restaurant_caps = (array) vc_get_restaurant_caps();
+            foreach ( $restaurant_caps as $cap ) {
+                if ( $cap && ! $user->has_cap( $cap ) ) {
+                    $user->add_cap( $cap );
+                }
+            }
+        }
+
+        // Caps mínimos para gerenciar itens de cardápio (vc_menu_item).
+        if ( function_exists( 'vc_get_menu_caps' ) ) {
+            $menu_caps = (array) vc_get_menu_caps();
+        } else {
+            $menu_caps = [
+                'edit_vc_menu_item',
+                'read_vc_menu_item',
+                'delete_vc_menu_item',
+                'edit_vc_menu_items',
+                'publish_vc_menu_items',
+                'delete_vc_menu_items',
+                'edit_published_vc_menu_items',
+                'delete_published_vc_menu_items',
+                'create_vc_menu_items',
+            ];
+        }
+
+        foreach ( $menu_caps as $cap ) {
+            if ( $cap && ! $user->has_cap( $cap ) ) {
+                $user->add_cap( $cap );
+            }
+        }
     }
 }

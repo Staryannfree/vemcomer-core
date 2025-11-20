@@ -392,6 +392,8 @@ class VC_Restaurants_Table extends WP_List_Table {
             );
 
             if ( ! is_wp_error( $result ) ) {
+                // Gera token de acesso se ainda não existir
+                $this->ensure_access_token( $post_id );
                 $updated++;
             }
         }
@@ -420,5 +422,24 @@ class VC_Restaurants_Table extends WP_List_Table {
                 : __( 'Delivery desativado para os restaurantes selecionados.', 'vemcomer' );
             add_settings_error( 'vc_restaurants', 'vc_restaurants_notice', $message, 'updated' );
         }
+    }
+
+    /**
+     * Gera um token único de acesso para o restaurante se ainda não existir.
+     *
+     * @param int $post_id ID do restaurante.
+     * @return string Token gerado ou existente.
+     */
+    private function ensure_access_token( int $post_id ): string {
+        $existing = get_post_meta( $post_id, 'vc_restaurant_access_url', true );
+        if ( $existing && '' !== $existing ) {
+            return $existing;
+        }
+
+        // Gera um token único usando wp_generate_password e hash
+        $token = bin2hex( random_bytes( 32 ) );
+        update_post_meta( $post_id, 'vc_restaurant_access_url', $token );
+
+        return $token;
     }
 }
