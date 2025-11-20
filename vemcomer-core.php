@@ -95,6 +95,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Cache_Middleware' ) )      { ( new \VC\REST\Cache_Middleware() )->init(); }
     if ( class_exists( '\\VC\\REST\\Invalidation' ) )          { ( new \VC\REST\Invalidation() )->init(); }
     if ( class_exists( '\\VC\\Integration\\MercadoPago\\Webhook_Handler' ) ) { ( new \VC\Integration\MercadoPago\Webhook_Handler() )->init(); }
+    if ( class_exists( '\\VC\\Integration\\SMClick' ) )        { ( new \VC\Integration\SMClick() )->init(); }
 
     // Pacote 8 — Instalador de Páginas
     if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); }

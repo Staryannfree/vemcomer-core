@@ -28,6 +28,8 @@ class Settings {
             'payment_secret'     => '',
             'payment_mp_access_token' => '',
             'delivery_provider'  => '',
+            'smclick_enabled'    => '1',
+            'smclick_webhook_url' => 'https://api.smclick.com.br/integration/wordpress/892b64fa-3437-4430-a4bf-2bc9d3f69f1f/',
             'enable_wc_sync'     => '',
             'email_enabled'      => '',
             'email_from'         => '',
@@ -105,6 +107,8 @@ class Settings {
         add_settings_field( 'payment_secret', __( 'Segredo do webhook (HMAC)', 'vemcomer' ), [ $this, 'field_payment_secret' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'payment_mp_access_token', __( 'Token do Mercado Pago', 'vemcomer' ), [ $this, 'field_payment_mp_access_token' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'delivery_provider', __( 'Serviço de entrega', 'vemcomer' ), [ $this, 'field_delivery_provider' ], self::PAGE_SLUG, 'vc_integrations' );
+        add_settings_field( 'smclick_enabled', __( 'SMClick: ativar integração', 'vemcomer' ), [ $this, 'field_smclick_enabled' ], self::PAGE_SLUG, 'vc_integrations' );
+        add_settings_field( 'smclick_webhook_url', __( 'SMClick: webhook', 'vemcomer' ), [ $this, 'field_smclick_webhook_url' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'enable_wc_sync', __( 'Sincronizar com WooCommerce', 'vemcomer' ), [ $this, 'field_enable_wc_sync' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'email_enabled', __( 'Enviar emails de eventos', 'vemcomer' ), [ $this, 'field_email_enabled' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'email_from', __( 'Remetente (email)', 'vemcomer' ), [ $this, 'field_email_from' ], self::PAGE_SLUG, 'vc_integrations' );
@@ -132,6 +136,8 @@ class Settings {
         $output['payment_secret']    = isset( $input['payment_secret'] ) ? sanitize_text_field( wp_unslash( $input['payment_secret'] ) ) : $current['payment_secret'];
         $output['payment_mp_access_token'] = isset( $input['payment_mp_access_token'] ) ? sanitize_text_field( wp_unslash( $input['payment_mp_access_token'] ) ) : $current['payment_mp_access_token'];
         $output['delivery_provider'] = isset( $input['delivery_provider'] ) ? sanitize_text_field( wp_unslash( $input['delivery_provider'] ) ) : $current['delivery_provider'];
+        $output['smclick_enabled']   = ! empty( $input['smclick_enabled'] ) ? '1' : '';
+        $output['smclick_webhook_url'] = isset( $input['smclick_webhook_url'] ) ? esc_url_raw( $input['smclick_webhook_url'] ) : $current['smclick_webhook_url'];
         $output['enable_wc_sync']    = ! empty( $input['enable_wc_sync'] ) ? '1' : '';
         $output['email_enabled']     = ! empty( $input['email_enabled'] ) ? '1' : '';
         $output['email_from']        = isset( $input['email_from'] ) ? sanitize_email( $input['email_from'] ) : $current['email_from'];
@@ -246,6 +252,22 @@ class Settings {
 
     public function field_delivery_provider(): void {
         $this->text_input( 'delivery_provider', (string) $this->get()['delivery_provider'], [ 'class' => 'regular-text', 'placeholder' => 'loggi, lalamove...' ] );
+    }
+
+    public function field_smclick_enabled(): void {
+        $value = (bool) $this->get()['smclick_enabled'];
+        printf(
+            '<label><input type="checkbox" name="%1$s[smclick_enabled]" value="1" %2$s /> %3$s</label>',
+            esc_attr( self::OPTION_NAME ),
+            checked( $value, true, false ),
+            esc_html__( 'Ativar disparo para SMClick quando restaurantes são cadastrados/aprovados.', 'vemcomer' )
+        );
+    }
+
+    public function field_smclick_webhook_url(): void {
+        $value = (string) $this->get()['smclick_webhook_url'];
+        $this->text_input( 'smclick_webhook_url', $value, [ 'class' => 'regular-text', 'type' => 'url', 'placeholder' => 'https://api.smclick.com.br/...' ] );
+        echo '<p class="description">' . esc_html__( 'Endpoint que receberá o payload JSON do evento.', 'vemcomer' ) . '</p>';
     }
 
     public function field_enable_wc_sync(): void {
