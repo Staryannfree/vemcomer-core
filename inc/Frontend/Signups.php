@@ -39,11 +39,24 @@ class Signups {
         $this->assets_enqueued = true;
     }
 
+    private function weekday_labels(): array {
+        return [
+            'mon' => __( 'Segunda', 'vemcomer' ),
+            'tue' => __( 'Terça', 'vemcomer' ),
+            'wed' => __( 'Quarta', 'vemcomer' ),
+            'thu' => __( 'Quinta', 'vemcomer' ),
+            'fri' => __( 'Sexta', 'vemcomer' ),
+            'sat' => __( 'Sábado', 'vemcomer' ),
+            'sun' => __( 'Domingo', 'vemcomer' ),
+        ];
+    }
+
     public function restaurant_form( $atts = [], $content = '', $tag = '' ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface
         $this->ensure_assets();
 
         $message = $this->get_feedback_box( 'vc_restaurant' );
         $action  = esc_url( admin_url( 'admin-post.php' ) );
+        $days    = $this->weekday_labels();
 
         ob_start();
         ?>
@@ -98,10 +111,19 @@ class Signups {
                     <input type="text" name="restaurant_location" maxlength="60" placeholder="ex.: centro" />
                 </label>
             </div>
-            <label>
-                <?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?>
-                <textarea name="restaurant_open_hours" rows="3" maxlength="240"></textarea>
-            </label>
+            <fieldset class="vc-form__schedule">
+                <legend><?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?></legend>
+                <p class="vc-form__muted"><?php echo esc_html__( 'Escolha os dias e horários em que o restaurante funciona.', 'vemcomer' ); ?></p>
+                <?php foreach ( $days as $key => $label ) : ?>
+                    <label class="vc-form__schedule-row">
+                        <input type="checkbox" name="restaurant_open_days[]" value="<?php echo esc_attr( $key ); ?>" data-vc-schedule-day />
+                        <span class="vc-form__schedule-day"><?php echo esc_html( $label ); ?></span>
+                        <input type="time" name="restaurant_open_hours[<?php echo esc_attr( $key ); ?>][start]" aria-label="<?php echo esc_attr( sprintf( __( 'Horário inicial de %s', 'vemcomer' ), $label ) ); ?>" disabled />
+                        <span class="vc-form__schedule-sep"><?php echo esc_html__( 'até', 'vemcomer' ); ?></span>
+                        <input type="time" name="restaurant_open_hours[<?php echo esc_attr( $key ); ?>][end]" aria-label="<?php echo esc_attr( sprintf( __( 'Horário final de %s', 'vemcomer' ), $label ) ); ?>" disabled />
+                    </label>
+                <?php endforeach; ?>
+            </fieldset>
             <label class="vc-form__check">
                 <input type="checkbox" name="restaurant_delivery" value="1" />
                 <span><?php echo esc_html__( 'Oferece delivery próprio', 'vemcomer' ); ?></span>
@@ -143,8 +165,7 @@ class Signups {
                 { name: 'restaurant_site', max: 200 },
                 { name: 'restaurant_address', max: 200 },
                 { name: 'restaurant_cuisine', max: 60 },
-                { name: 'restaurant_location', max: 60 },
-                { name: 'restaurant_open_hours', max: 240 }
+                { name: 'restaurant_location', max: 60 }
             ];
 
             fields.forEach((cfg)=>{
@@ -176,6 +197,46 @@ class Signups {
                 });
                 input.addEventListener('blur', renderError);
             });
+
+            const scheduleRows = form.querySelectorAll('.vc-form__schedule-row');
+            scheduleRows.forEach((row) => {
+                const checkbox = row.querySelector('input[type="checkbox"][data-vc-schedule-day]');
+                const timeInputs = row.querySelectorAll('input[type="time"]');
+                if(!checkbox || !timeInputs.length){return;}
+                const toggleTimes = () => {
+                    const enabled = checkbox.checked;
+                    timeInputs.forEach((input) => {
+                        input.disabled = !enabled;
+                        if(!enabled){ input.value=''; }
+                    });
+                };
+                checkbox.addEventListener('change', toggleTimes);
+                toggleTimes();
+            });
+
+            if(!window.vcFeedbackModal){
+                window.vcFeedbackModal = function(message){
+                    if(!message){return;}
+                    const modal = document.createElement('div');
+                    modal.className = 'vc-modal';
+                    modal.innerHTML = `
+                        <div class="vc-modal__dialog" role="alertdialog" aria-live="assertive">
+                            <p class="vc-modal__text"></p>
+                            <button type="button" class="vc-btn vc-modal__btn">OK</button>
+                        </div>`;
+                    modal.querySelector('.vc-modal__text').textContent = message;
+                    const close = () => modal.remove();
+                    modal.addEventListener('click', (ev) => { if(ev.target === modal){ close(); } });
+                    modal.querySelector('button').addEventListener('click', close);
+                    document.body.appendChild(modal);
+                };
+            }
+
+            const feedback = form.querySelector('.vc-feedback[data-vc-feedback="success"]');
+            if(feedback){
+                const message = feedback.dataset.vcMessage || feedback.textContent;
+                window.vcFeedbackModal(message);
+            }
         })();
         </script>
         <?php
@@ -190,7 +251,7 @@ class Signups {
 
         ob_start();
         ?>
-        <form class="vc-form" method="post" action="<?php echo $action; ?>">
+        <form class="vc-form" data-vc-form="customer" method="post" action="<?php echo $action; ?>">
             <h3><?php echo esc_html__( 'Crie sua conta', 'vemcomer' ); ?></h3>
             <?php echo $message; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <input type="hidden" name="action" value="vc_customer_signup" />
@@ -221,6 +282,36 @@ class Signups {
                 <button type="submit" class="vc-btn"><?php echo esc_html__( 'Criar conta', 'vemcomer' ); ?></button>
             </div>
         </form>
+        <script>
+        (function(){
+            if(!window.vcFeedbackModal){
+                window.vcFeedbackModal = function(message){
+                    if(!message){return;}
+                    const modal = document.createElement('div');
+                    modal.className = 'vc-modal';
+                    modal.innerHTML = `
+                        <div class="vc-modal__dialog" role="alertdialog" aria-live="assertive">
+                            <p class="vc-modal__text"></p>
+                            <button type="button" class="vc-btn vc-modal__btn">OK</button>
+                        </div>`;
+                    modal.querySelector('.vc-modal__text').textContent = message;
+                    const close = () => modal.remove();
+                    modal.addEventListener('click', (ev) => { if(ev.target === modal){ close(); } });
+                    modal.querySelector('button').addEventListener('click', close);
+                    document.body.appendChild(modal);
+                };
+            }
+
+            const form = document.querySelector('form[data-vc-form="customer"]');
+            if(!form){return;}
+
+            const feedback = form.querySelector('.vc-feedback[data-vc-feedback="success"]');
+            if(feedback && window.vcFeedbackModal){
+                const message = feedback.dataset.vcMessage || feedback.textContent;
+                window.vcFeedbackModal(message);
+            }
+        })();
+        </script>
         <?php
         return (string) ob_get_clean();
     }
@@ -232,7 +323,10 @@ class Signups {
         $cnpj_raw  = sanitize_text_field( wp_unslash( $_POST['restaurant_cnpj'] ?? '' ) );
         $whatsapp  = sanitize_text_field( wp_unslash( $_POST['restaurant_whatsapp'] ?? '' ) );
         $site      = esc_url_raw( wp_unslash( $_POST['restaurant_site'] ?? '' ) );
-        $open      = wp_kses_post( wp_unslash( $_POST['restaurant_open_hours'] ?? '' ) );
+        $open_raw  = $_POST['restaurant_open_hours'] ?? '';
+        $open      = is_string( $open_raw ) ? wp_kses_post( wp_unslash( $open_raw ) ) : '';
+        $open_days = array_map( 'sanitize_key', (array) ( $_POST['restaurant_open_days'] ?? [] ) );
+        $open_map  = is_array( $open_raw ) ? (array) $open_raw : [];
         $address   = sanitize_text_field( wp_unslash( $_POST['restaurant_address'] ?? '' ) );
         $lat       = sanitize_text_field( wp_unslash( $_POST['restaurant_lat'] ?? '' ) );
         $lng       = sanitize_text_field( wp_unslash( $_POST['restaurant_lng'] ?? '' ) );
@@ -269,7 +363,12 @@ class Signups {
         update_post_meta( $post_id, 'vc_restaurant_cnpj', $cnpj_validation['normalized'] ?? '' );
         update_post_meta( $post_id, 'vc_restaurant_whatsapp', $whatsapp );
         update_post_meta( $post_id, 'vc_restaurant_site', $site );
-        update_post_meta( $post_id, 'vc_restaurant_open_hours', $open );
+        $hours_string = $this->format_open_hours_for_storage( $open_days, $open_map );
+        if ( '' === $hours_string && $open ) {
+            $hours_string = $open;
+        }
+
+        update_post_meta( $post_id, 'vc_restaurant_open_hours', $hours_string );
         update_post_meta( $post_id, 'vc_restaurant_delivery', $delivery );
         update_post_meta( $post_id, 'vc_restaurant_address', $address );
         update_post_meta( $post_id, 'vc_restaurant_lat', $lat );
@@ -351,7 +450,7 @@ class Signups {
 
         if ( $success ) {
             $message = ( 'vc_restaurant' === $prefix ) ? esc_html__( 'Recebemos os dados e entraremos em contato em breve.', 'vemcomer' ) : esc_html__( 'Conta criada! Verifique seu e-mail para fazer login.', 'vemcomer' );
-            return '<div class="vc-alert vc-alert--success">' . $message . '</div>';
+            return '<div class="vc-feedback" data-vc-feedback="success" data-vc-message="' . esc_attr( $message ) . '">' . $message . '</div>';
         }
 
         if ( $error ) {
@@ -389,6 +488,33 @@ class Signups {
             'password_mismatch' => __( 'As senhas digitadas não conferem.', 'vemcomer' ),
             'insert_error'      => __( 'Não foi possível criar sua conta. Tente novamente.', 'vemcomer' ),
         ];
+    }
+
+    private function format_open_hours_for_storage( array $selected_days, array $hours_map ): string {
+        $labels = $this->weekday_labels();
+
+        $result = [];
+        foreach ( $selected_days as $day ) {
+            if ( ! isset( $labels[ $day ] ) ) {
+                continue;
+            }
+
+            $times = $hours_map[ $day ] ?? [];
+            $start = isset( $times['start'] ) ? sanitize_text_field( $times['start'] ) : '';
+            $end   = isset( $times['end'] ) ? sanitize_text_field( $times['end'] ) : '';
+
+            if ( ! $this->is_valid_time( $start ) || ! $this->is_valid_time( $end ) ) {
+                continue;
+            }
+
+            $result[] = sprintf( '%s: %s-%s', $labels[ $day ], $start, $end );
+        }
+
+        return implode( ' | ', $result );
+    }
+
+    private function is_valid_time( string $value ): bool {
+        return (bool) preg_match( '/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value );
     }
 
     private function redirect_with_args( array $args ): void {

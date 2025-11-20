@@ -33,9 +33,24 @@
 
     map.on('click', function(e){
       setMarker(e.latlng.lat, e.latlng.lng);
+      reverseGeocode(e.latlng.lat, e.latlng.lng);
     });
 
     var geoBtn = document.getElementById('vc-use-my-location');
+    var addressInput = form.querySelector('input[name="restaurant_address"]');
+    var reverseGeocode = function(lat, lng){
+      if(!addressInput){ return; }
+      var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
+      fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(function(resp){ return resp.ok ? resp.json() : null; })
+        .then(function(data){
+          if(data && data.display_name){
+            addressInput.value = data.display_name;
+          }
+        })
+        .catch(function(){});
+    };
+
     if (geoBtn){
       if (!navigator.geolocation){
         geoBtn.disabled = true;
@@ -50,6 +65,7 @@
           var lng = pos.coords.longitude;
           setMarker(lat, lng);
           map.setView([lat, lng], 16);
+          reverseGeocode(lat, lng);
           geoBtn.classList.remove('is-loading');
         }, function(){
           alert('Não foi possível obter sua localização.');
