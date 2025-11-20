@@ -23,6 +23,8 @@ Shortcodes principais disponíveis:
 * `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).
 * `[vemcomer_customer_signup]` — formulário de criação de conta para clientes finais.
 
+**Página de validação de acesso**: `/validar-acesso/?token={access_url}` — página automática onde restaurantes aprovados podem criar sua conta de acesso usando o token recebido no webhook.
+
 Todos os shortcodes acima renderizam HTML, CSS e JavaScript próprios do plugin — não há dependência de construtores como o Elementor para exibir as páginas públicas.
 
 ## Seed (dados de demonstração)
@@ -101,7 +103,52 @@ O plugin expõe **actions** que podem ser usadas como **gatilhos de hook persona
 * `vemcomer/webhook_payment_processed`, args: `(int $vc_order_id, array $payload)`
 * `vemcomer/restaurant_created`, args: `(int $restaurant_id)`
 
-Use esses nomes nos “Custom Action Hook” dos automators para disparar receitas.
+Use esses nomes nos "Custom Action Hook" dos automators para disparar receitas.
+
+### SMClick (Webhooks de Restaurantes)
+
+O plugin integra com SMClick para notificações de eventos relacionados a restaurantes:
+
+* **Webhook de Cadastro**: `restaurant_registered` — dispara quando um restaurante envia o formulário (status pendente).
+* **Webhook de Aprovação**: `restaurant_approved` — dispara quando o restaurante é aprovado (status muda para publicado).
+
+#### Sistema de Token de Acesso (access_url)
+
+Quando um restaurante é aprovado:
+
+1. **Token único gerado**: Um token único (`access_url`) é gerado automaticamente e armazenado no meta `vc_restaurant_access_url`.
+2. **Webhook enviado**: O webhook `restaurant_approved` é enviado para a URL configurada (padrão: `https://api.smclick.com.br/integration/wordpress/5f98815b-640d-44c9-88b4-f17d6b059b35/`) contendo:
+   - Todos os dados do restaurante
+   - Campo `access_url`: token único para acesso
+   - Campo `access_url_validation`: URL completa para validação (`/validar-acesso/?token={access_url}`)
+3. **Página de validação**: O restaurante pode acessar `/validar-acesso/?token={access_url}` para:
+   - Criar uma conta de acesso (email e senha)
+   - Validar que as senhas coincidem (confirmação)
+   - Fazer login automático após criação
+   - Ser redirecionado para o painel do restaurante
+
+**Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
+
+## Changelog
+
+### v0.7 - Sistema de Token de Acesso para Restaurantes Aprovados
+
+**Novas funcionalidades:**
+- Campo `access_url` adicionado ao modelo de restaurante (meta `vc_restaurant_access_url`)
+- Geração automática de token único quando restaurante é aprovado
+- Webhook `restaurant_approved` configurado com URL padrão do SMClick
+- Campo `access_url` incluído no payload do webhook de aprovação
+- Página de validação `/validar-acesso/?token={access_url}` para restaurantes criarem conta de acesso
+- Formulário de validação com campos: email, senha e confirmação de senha
+- Login automático e redirecionamento para painel após criação de conta
+- Vinculação automática de usuário ao restaurante via meta `vc_restaurant_id`
+
+**Arquivos modificados:**
+- `inc/meta-restaurants.php` - Adicionado campo access_url no metabox
+- `inc/Admin/class-vc-restaurants-table.php` - Geração de token na aprovação
+- `inc/Integration/SMClick.php` - Geração de token, webhook configurado, payload atualizado
+- `inc/Frontend/AccessValidation.php` - Nova classe para página de validação
+- `vemcomer-core.php` - Registro da nova classe AccessValidation
 
 ## Desenvolvimento
 

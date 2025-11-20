@@ -36,6 +36,8 @@ class SMClick {
         }
 
         if ( 'publish' === $new_status && 'publish' !== $old_status ) {
+            // Garante que o token de acesso seja gerado antes de enviar o webhook
+            $this->ensure_access_token( (int) $post->ID );
             $this->dispatch_event( 'restaurant_approved', (int) $post->ID );
         }
     }
@@ -99,8 +101,9 @@ class SMClick {
     private function build_restaurant_payload( WP_Post $post ): array {
         $cuisines  = $this->get_terms_names( $post->ID, 'vc_cuisine' );
         $locations = $this->get_terms_names( $post->ID, 'vc_location' );
+        $access_url = get_post_meta( $post->ID, 'vc_restaurant_access_url', true );
 
-        return [
+        $payload = [
             'id'         => (int) $post->ID,
             'name'       => get_the_title( $post ),
             'status'     => $post->post_status,
@@ -116,6 +119,15 @@ class SMClick {
             'created_at' => $post->post_date_gmt,
             'updated_at' => $post->post_modified_gmt,
         ];
+
+        // Adiciona access_url apenas se existir (geralmente quando aprovado)
+        if ( $access_url && '' !== $access_url ) {
+            $payload['access_url'] = $access_url;
+            // URL completa para validação
+            $payload['access_url_validation'] = home_url( '/validar-acesso/?token=' . urlencode( $access_url ) );
+        }
+
+        return $payload;
     }
 
     private function build_order_payload( WP_Post $post ): array {
@@ -216,10 +228,29 @@ class SMClick {
         return self::ORDER_STATUSES[ $status ] ?? $status;
     }
 
+    /**
+     * Gera um token único de acesso para o restaurante se ainda não existir.
+     *
+     * @param int $post_id ID do restaurante.
+     * @return string Token gerado ou existente.
+     */
+    private function ensure_access_token( int $post_id ): string {
+        $existing = get_post_meta( $post_id, 'vc_restaurant_access_url', true );
+        if ( $existing && '' !== $existing ) {
+            return $existing;
+        }
+
+        // Gera um token único usando random_bytes
+        $token = bin2hex( random_bytes( 32 ) );
+        update_post_meta( $post_id, 'vc_restaurant_access_url', $token );
+
+        return $token;
+    }
+
     public static function default_event_urls(): array {
         $defaults = [
             'restaurant_registered' => 'https://api.smclick.com.br/integration/wordpress/892b64fa-3437-4430-a4bf-2bc9d3f69f1f/',
-            'restaurant_approved'   => '',
+            'restaurant_approved'   => 'https://api.smclick.com.br/integration/wordpress/5f98815b-640d-44c9-88b4-f17d6b059b35/',
         ];
 
         foreach ( array_keys( self::ORDER_STATUSES ) as $status ) {
@@ -230,7 +261,7 @@ class SMClick {
     }
 
     public static function event_definitions(): array {
-        $restaurant_placeholders = [ 'id', 'name', 'status', 'cnpj', 'whatsapp', 'site', 'address', 'open_hours', 'delivery', 'cuisines', 'locations', 'permalink', 'created_at', 'updated_at' ];
+        $restaurant_placeholders = [ 'id', 'name', 'status', 'cnpj', 'whatsapp', 'site', 'address', 'open_hours', 'delivery', 'cuisines', 'locations', 'permalink', 'created_at', 'updated_at', 'access_url', 'access_url_validation' ];
         $order_placeholders      = [ 'id', 'status', 'status_label', 'restaurant_id', 'subtotal', 'ship_total', 'total', 'items', 'fulfillment.method', 'fulfillment.label', 'fulfillment.eta', 'created_at', 'updated_at' ];
 
         $definitions = [
@@ -293,6 +324,12 @@ class SMClick {
                 'created_at' => current_time( 'mysql', true ),
                 'updated_at' => current_time( 'mysql', true ),
             ];
+
+            // Adiciona access_url apenas para eventos de aprovação
+            if ( 'restaurant_approved' === $event ) {
+                $base['restaurant']['access_url'] = 'exemplo-token-1234567890abcdef';
+                $base['restaurant']['access_url_validation'] = 'https://seusite.com/validar-acesso/?token=exemplo-token-1234567890abcdef';
+            }
         }
 
         if ( 'order' === $definitions[ $event ]['type'] ) {

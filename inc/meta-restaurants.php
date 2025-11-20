@@ -15,6 +15,7 @@ const VC_META_RESTAURANT_FIELDS = [
     'address'     => 'vc_restaurant_address',
     'lat'         => 'vc_restaurant_lat',
     'lng'         => 'vc_restaurant_lng',
+    'access_url'  => 'vc_restaurant_access_url', // token único para acesso ao painel
 ];
 
 add_action( 'add_meta_boxes', function() {
@@ -68,6 +69,21 @@ function vc_render_restaurant_metabox( $post ) {
         <tr>
             <th><label for="vc_restaurant_lng"><?php echo esc_html__( 'Longitude', 'vemcomer' ); ?></label></th>
             <td><input type="text" id="vc_restaurant_lng" name="vc_restaurant_lng" class="regular-text" value="<?php echo esc_attr( $values['lng'] ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_access_url"><?php echo esc_html__( 'Token de acesso (access_url)', 'vemcomer' ); ?></label></th>
+            <td>
+                <?php
+                $access_url = $values['access_url'];
+                if ( $access_url ) {
+                    $validation_url = home_url( '/validar-acesso/?token=' . esc_attr( $access_url ) );
+                    echo '<code style="display: block; margin-bottom: 5px;">' . esc_html( $access_url ) . '</code>';
+                    echo '<a href="' . esc_url( $validation_url ) . '" target="_blank" class="button button-small">' . esc_html__( 'Ver página de validação', 'vemcomer' ) . '</a>';
+                } else {
+                    echo '<span class="description">' . esc_html__( 'Token será gerado automaticamente quando o restaurante for aprovado.', 'vemcomer' ) . '</span>';
+                }
+                ?>
+            </td>
         </tr>
     </table>
     <?php
