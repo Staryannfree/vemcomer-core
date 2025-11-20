@@ -3,6 +3,8 @@ namespace VC\Admin {
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+use VC\Integration\SMClick;
+
 class Settings {
     public const OPTION_GROUP = 'vemcomer_settings_group';
     public const OPTION_NAME  = 'vemcomer_settings';
@@ -11,6 +13,7 @@ class Settings {
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_page' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
+        add_action( 'admin_post_vc_smclick_test', [ $this, 'handle_test_webhook' ] );
     }
 
     public static function defaults(): array {
@@ -30,6 +33,7 @@ class Settings {
             'delivery_provider'  => '',
             'smclick_enabled'    => '1',
             'smclick_webhook_url' => 'https://api.smclick.com.br/integration/wordpress/892b64fa-3437-4430-a4bf-2bc9d3f69f1f/',
+            'smclick_event_urls' => SMClick::default_event_urls(),
             'enable_wc_sync'     => '',
             'email_enabled'      => '',
             'email_from'         => '',
@@ -95,6 +99,15 @@ class Settings {
             self::PAGE_SLUG
         );
 
+        add_settings_section(
+            'vc_smclick',
+            __( 'SMClick', 'vemcomer' ),
+            function () {
+                echo '<p>' . esc_html__( 'URLs específicas por evento para disparos no SMClick.', 'vemcomer' ) . '</p>';
+            },
+            self::PAGE_SLUG
+        );
+
         add_settings_field( 'tiles_url', __( 'Tiles URL', 'vemcomer' ), [ $this, 'field_tiles_url' ], self::PAGE_SLUG, 'vc_maps' );
         add_settings_field( 'default_radius', __( 'Raio padrão (km)', 'vemcomer' ), [ $this, 'field_default_radius' ], self::PAGE_SLUG, 'vc_maps' );
         add_settings_field( 'kds_poll', __( 'KDS poll (ms)', 'vemcomer' ), [ $this, 'field_kds_poll' ], self::PAGE_SLUG, 'vc_operations' );
@@ -109,6 +122,7 @@ class Settings {
         add_settings_field( 'delivery_provider', __( 'Serviço de entrega', 'vemcomer' ), [ $this, 'field_delivery_provider' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'smclick_enabled', __( 'SMClick: ativar integração', 'vemcomer' ), [ $this, 'field_smclick_enabled' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'smclick_webhook_url', __( 'SMClick: webhook', 'vemcomer' ), [ $this, 'field_smclick_webhook_url' ], self::PAGE_SLUG, 'vc_integrations' );
+        add_settings_field( 'smclick_event_urls', __( 'SMClick: webhooks por evento', 'vemcomer' ), [ $this, 'field_smclick_events' ], self::PAGE_SLUG, 'vc_smclick' );
         add_settings_field( 'enable_wc_sync', __( 'Sincronizar com WooCommerce', 'vemcomer' ), [ $this, 'field_enable_wc_sync' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'email_enabled', __( 'Enviar emails de eventos', 'vemcomer' ), [ $this, 'field_email_enabled' ], self::PAGE_SLUG, 'vc_integrations' );
         add_settings_field( 'email_from', __( 'Remetente (email)', 'vemcomer' ), [ $this, 'field_email_from' ], self::PAGE_SLUG, 'vc_integrations' );
@@ -138,12 +152,54 @@ class Settings {
         $output['delivery_provider'] = isset( $input['delivery_provider'] ) ? sanitize_text_field( wp_unslash( $input['delivery_provider'] ) ) : $current['delivery_provider'];
         $output['smclick_enabled']   = ! empty( $input['smclick_enabled'] ) ? '1' : '';
         $output['smclick_webhook_url'] = isset( $input['smclick_webhook_url'] ) ? esc_url_raw( $input['smclick_webhook_url'] ) : $current['smclick_webhook_url'];
+        $output['smclick_event_urls']  = $this->sanitize_smclick_events( $input['smclick_event_urls'] ?? [] );
         $output['enable_wc_sync']    = ! empty( $input['enable_wc_sync'] ) ? '1' : '';
         $output['email_enabled']     = ! empty( $input['email_enabled'] ) ? '1' : '';
         $output['email_from']        = isset( $input['email_from'] ) ? sanitize_email( $input['email_from'] ) : $current['email_from'];
         $output['debug_logging']     = ! empty( $input['debug_logging'] ) ? '1' : '';
 
         return $output;
+    }
+
+    public function handle_test_webhook(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Sem permissão.', 'vemcomer' ) );
+        }
+
+        check_admin_referer( 'vc_smclick_test' );
+
+        $event    = isset( $_POST['event'] ) ? sanitize_key( wp_unslash( $_POST['event'] ) ) : '';
+        $url      = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : '';
+        $redirect = admin_url( 'options-general.php?page=' . self::PAGE_SLUG );
+
+        if ( '' === $event || '' === $url ) {
+            wp_safe_redirect( add_query_arg( [ 'smclick_test' => 'missing' ], $redirect ) );
+            exit;
+        }
+
+        $payload = SMClick::sample_payload( $event );
+        if ( is_wp_error( $payload ) ) {
+            wp_safe_redirect( add_query_arg( [ 'smclick_test' => 'invalid', 'smclick_error' => $payload->get_error_message() ], $redirect ) );
+            exit;
+        }
+
+        $response = wp_remote_post(
+            $url,
+            [
+                'headers' => [ 'Content-Type' => 'application/json' ],
+                'body'    => wp_json_encode( $payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+                'timeout' => 15,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            wp_safe_redirect( add_query_arg( [ 'smclick_test' => $event, 'smclick_error' => $response->get_error_message() ], $redirect ) );
+            exit;
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        wp_safe_redirect( add_query_arg( [ 'smclick_test' => $event, 'smclick_status' => $code ], $redirect ) );
+        exit;
     }
 
     public function get(): array {
@@ -154,6 +210,17 @@ class Settings {
         wp_enqueue_style( 'vemcomer-admin' );
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'Configurações do VemComer', 'vemcomer' ) . '</h1>';
+        $test_event  = isset( $_GET['smclick_test'] ) ? sanitize_text_field( wp_unslash( $_GET['smclick_test'] ) ) : '';
+        $test_error  = isset( $_GET['smclick_error'] ) ? sanitize_text_field( wp_unslash( $_GET['smclick_error'] ) ) : '';
+        $test_status = isset( $_GET['smclick_status'] ) ? (int) $_GET['smclick_status'] : null;
+
+        if ( $test_event ) {
+            $message = $test_error
+                ? sprintf( __( 'Falha ao testar o webhook %1$s: %2$s', 'vemcomer' ), $test_event, $test_error )
+                : sprintf( __( 'Webhook %1$s testado (HTTP %2$s).', 'vemcomer' ), $test_event, $test_status ?? '-' );
+            $class   = $test_error ? 'notice-error' : 'notice-success';
+            echo '<div class="notice ' . esc_attr( $class ) . ' is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
+        }
         echo '<form method="post" action="options.php" novalidate="novalidate">';
         settings_fields( self::OPTION_GROUP );
         do_settings_sections( self::PAGE_SLUG );
@@ -270,6 +337,89 @@ class Settings {
         echo '<p class="description">' . esc_html__( 'Endpoint que receberá o payload JSON do evento.', 'vemcomer' ) . '</p>';
     }
 
+    public function field_smclick_events(): void {
+        $settings     = $this->get();
+        $event_urls   = is_array( $settings['smclick_event_urls'] ?? null ) ? $settings['smclick_event_urls'] : [];
+        $definitions  = SMClick::event_definitions();
+        $test_nonce   = wp_create_nonce( 'vc_smclick_test' );
+
+        echo '<table class="widefat striped">';
+        echo '<thead><tr><th>' . esc_html__( 'Evento', 'vemcomer' ) . '</th><th>' . esc_html__( 'Webhook e placeholders', 'vemcomer' ) . '</th></tr></thead><tbody>';
+
+        foreach ( $definitions as $event => $def ) {
+            $url            = isset( $event_urls[ $event ] ) ? (string) $event_urls[ $event ] : '';
+            $placeholder_url = $def['placeholder_url'] ?? '';
+            echo '<tr>';
+            echo '<th scope="row" style="width: 220px">' . esc_html( $def['label'] ) . '</th>';
+            echo '<td>';
+            $this->text_input( 'smclick_event_urls[' . $event . ']', $url, [ 'class' => 'regular-text', 'type' => 'url', 'placeholder' => $placeholder_url ] );
+            echo ' <button type="button" class="button vc-smclick-test" data-event="' . esc_attr( $event ) . '" data-nonce="' . esc_attr( $test_nonce ) . '">' . esc_html__( 'Testar', 'vemcomer' ) . '</button>';
+
+            if ( ! empty( $def['description'] ) ) {
+                echo '<p class="description">' . esc_html( $def['description'] ) . '</p>';
+            }
+
+            if ( ! empty( $def['placeholders'] ) ) {
+                echo '<p class="description"><strong>' . esc_html__( 'Placeholders:', 'vemcomer' ) . '</strong> ' . esc_html( implode( ', ', $def['placeholders'] ) ) . '</p>';
+            }
+
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
+
+        ?>
+        <script>
+        (function() {
+            const buttons = document.querySelectorAll('.vc-smclick-test');
+            if (!buttons.length) {
+                return;
+            }
+
+            const submitTest = function(eventKey, url, nonce) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '<?php echo esc_js( admin_url( 'admin-post.php' ) ); ?>';
+                form.style.display = 'none';
+
+                const fields = {
+                    action: 'vc_smclick_test',
+                    event: eventKey,
+                    url: url,
+                    _wpnonce: nonce
+                };
+
+                Object.keys(fields).forEach(function (name) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = fields[name];
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            };
+
+            buttons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const row = btn.closest('tr');
+                    if (!row) return;
+                    const input = row.querySelector('input[type="url"]');
+                    const url = input ? input.value : '';
+                    if (!url) {
+                        window.alert('<?php echo esc_js( __( 'Informe uma URL antes de testar.', 'vemcomer' ) ); ?>');
+                        return;
+                    }
+                    submitTest(btn.dataset.event, url, btn.dataset.nonce);
+                });
+            });
+        })();
+        </script>
+        <?php
+    }
+
     public function field_enable_wc_sync(): void {
         $value = (bool) $this->get()['enable_wc_sync'];
         printf(
@@ -364,6 +514,24 @@ class Settings {
             $value = $default;
         }
         return $value;
+    }
+
+    private function sanitize_smclick_events( $values ): array {
+        $defaults = SMClick::default_event_urls();
+        $output   = $defaults;
+
+        if ( ! is_array( $values ) ) {
+            return $output;
+        }
+
+        foreach ( $defaults as $event => $placeholder ) {
+            if ( isset( $values[ $event ] ) ) {
+                $sanitized = esc_url_raw( (string) $values[ $event ] );
+                $output[ $event ] = $sanitized;
+            }
+        }
+
+        return $output;
     }
 
     private function sanitize_textarea( string $value, string $default ): string {
