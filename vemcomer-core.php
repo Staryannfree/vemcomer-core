@@ -86,6 +86,9 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
         // Classe já está disponível via autoload, função helper global registrada
     }
+    if ( class_exists( '\\VC\\Utils\\Favorites_Helper' ) ) {
+        // Classe já está disponível via autoload
+    }
 
     if ( class_exists( '\\VC\\Admin\\Settings' ) )            { ( new \VC\Admin\Settings() )->init(); }
     if ( class_exists( '\\VC\\Order\\Statuses' ) )            { ( new \VC\Order\Statuses() )->init(); }

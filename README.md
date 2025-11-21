@@ -185,6 +185,24 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.19 - Sistema de Favoritos - Estrutura de Dados (5.1)
+
+**Novas funcionalidades:**
+- **Classe `Favorites_Helper`**: Helper para gerenciar favoritos de usuários
+  - User meta: `vc_favorite_restaurants` (array de IDs)
+  - User meta: `vc_favorite_menu_items` (array de IDs)
+  - Métodos para adicionar/remover/verificar favoritos
+  - Métodos toggle para alternar status
+  - Métodos para limpar todos os favoritos
+- **Validação**: Garante que apenas IDs numéricos válidos são armazenados
+- **Reindexação automática**: Arrays são reindexados após remoção
+
+**Arquivos novos:**
+- `inc/Utils/Favorites_Helper.php` - Classe helper para gerenciar favoritos
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro do Favorites_Helper
+
 ### v0.18 - Sistema de Avaliações - REST API (4.3)
 
 **Novas funcionalidades:**
@@ -457,6 +475,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
 - ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
+- 🔄 Sistema de Favoritos (5.1 - Estrutura de Dados implementada)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
