@@ -330,12 +330,44 @@
       };
     });
 
-    // Obter dados do cliente (se disponíveis)
-    const customerName = root.dataset.customerName || '';
-    const customerPhone = root.dataset.customerPhone || '';
-    const customerAddress = root.dataset.customerAddress || '';
+    // Obter dados do cliente dos campos do formulário
+    const customerNameInput = root.querySelector('.vc-customer-name');
+    const customerPhoneInput = root.querySelector('.vc-customer-phone');
+    const customerAddressInput = root.querySelector('.vc-customer-address');
+    
+    const customerName = customerNameInput ? customerNameInput.value.trim() : '';
+    const customerPhone = customerPhoneInput ? customerPhoneInput.value.trim() : '';
+    const customerAddress = customerAddressInput ? customerAddressInput.value.trim() : '';
     const customerLat = root.dataset.customerLat ? Number(root.dataset.customerLat) : null;
     const customerLng = root.dataset.customerLng ? Number(root.dataset.customerLng) : null;
+    
+    // Validar dados obrigatórios
+    if(!customerName) {
+      resultBox.innerHTML = '<div class="vc-error"><p>Por favor, informe seu nome completo.</p></div>';
+      btn.disabled = false;
+      btn.textContent = 'Finalizar pedido';
+      if(customerNameInput) customerNameInput.focus();
+      return;
+    }
+    
+    if(!customerPhone) {
+      resultBox.innerHTML = '<div class="vc-error"><p>Por favor, informe seu telefone.</p></div>';
+      btn.disabled = false;
+      btn.textContent = 'Finalizar pedido';
+      if(customerPhoneInput) customerPhoneInput.focus();
+      return;
+    }
+    
+    // Se for delivery, validar endereço
+    if(fulfillmentMethod.includes('delivery') && !fulfillmentMethod.includes('pickup')) {
+      if(!customerAddress) {
+        resultBox.innerHTML = '<div class="vc-error"><p>Por favor, informe o endereço de entrega.</p></div>';
+        btn.disabled = false;
+        btn.textContent = 'Finalizar pedido';
+        if(customerAddressInput) customerAddressInput.focus();
+        return;
+      }
+    }
 
     // 1. Validar pedido
     const validatePayload = {

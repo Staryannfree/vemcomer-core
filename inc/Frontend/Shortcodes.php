@@ -145,29 +145,65 @@ class Shortcodes {
     public function sc_checkout( $atts = [] ): string {
         $this->ensure_assets();
         $rid = isset( $_GET['restaurant_id'] ) ? (int) $_GET['restaurant_id'] : 0;
+        
+        // Obter dados do usuário logado se disponível
+        $current_user = wp_get_current_user();
+        $user_name = $current_user->exists() ? $current_user->display_name : '';
+        $user_email = $current_user->exists() ? $current_user->user_email : '';
+        
         ob_start();
         ?>
         <div class="vc-checkout" data-restaurant="<?php echo esc_attr( (string) $rid ); ?>" data-single-seller="1">
             <h3><?php echo esc_html__( 'Checkout', 'vemcomer' ); ?></h3>
             <div class="vc-cart"></div>
-            <div class="vc-shipping">
-                <label>
-                    <?php echo esc_html__( 'CEP para entrega', 'vemcomer' ); ?>
-                    <input type="text" class="vc-zip" placeholder="00000-000" />
-                </label>
-                <button class="vc-btn vc-quote"><?php echo esc_html__( 'Calcular frete', 'vemcomer' ); ?></button>
+            
+            <div class="vc-customer-info" style="margin-top: 20px; padding: 16px; background: #f9fafb; border-radius: 12px;">
+                <h4 style="margin: 0 0 12px; font-size: 1rem;"><?php echo esc_html__( 'Dados para entrega', 'vemcomer' ); ?></h4>
+                <div style="display: grid; gap: 12px;">
+                    <label>
+                        <?php echo esc_html__( 'Nome completo', 'vemcomer' ); ?>
+                        <input type="text" class="vc-customer-name" placeholder="<?php echo esc_attr__( 'Seu nome', 'vemcomer' ); ?>" value="<?php echo esc_attr( $user_name ); ?>" />
+                    </label>
+                    <label>
+                        <?php echo esc_html__( 'Telefone', 'vemcomer' ); ?>
+                        <input type="tel" class="vc-customer-phone" placeholder="(00) 00000-0000" />
+                    </label>
+                </div>
+            </div>
+            
+            <div class="vc-shipping" style="margin-top: 20px;">
+                <h4 style="margin: 0 0 12px; font-size: 1rem;"><?php echo esc_html__( 'Endereço de entrega', 'vemcomer' ); ?></h4>
+                <div style="display: grid; gap: 12px;">
+                    <label>
+                        <?php echo esc_html__( 'CEP', 'vemcomer' ); ?>
+                        <input type="text" class="vc-zip" placeholder="00000-000" />
+                    </label>
+                    <label>
+                        <?php echo esc_html__( 'Endereço completo', 'vemcomer' ); ?>
+                        <input type="text" class="vc-customer-address" placeholder="<?php echo esc_attr__( 'Rua, número, complemento', 'vemcomer' ); ?>" />
+                    </label>
+                </div>
+                <button class="vc-btn vc-quote" style="margin-top: 12px;"><?php echo esc_html__( 'Calcular frete', 'vemcomer' ); ?></button>
                 <div class="vc-quote-result"></div>
             </div>
-            <div class="vc-summary">
+            
+            <div class="vc-coupon-section" style="margin-top: 20px; padding: 16px; background: #fff7ed; border-radius: 12px;">
+                <label>
+                    <?php echo esc_html__( 'Cupom de desconto', 'vemcomer' ); ?>
+                    <input type="text" class="vc-coupon" placeholder="<?php echo esc_attr__( 'Digite o código', 'vemcomer' ); ?>" style="margin-top: 8px;" />
+                </label>
+            </div>
+            
+            <div class="vc-summary" style="margin-top: 20px; padding: 16px; background: #f0fdf4; border-radius: 12px;">
                 <div class="vc-subtotal"></div>
                 <div class="vc-freight"></div>
                 <div class="vc-discount"></div>
-                <div class="vc-total"></div>
+                <div class="vc-total" style="font-size: 1.25rem; font-weight: 700; margin-top: 8px;"></div>
                 <div class="vc-eta"></div>
             </div>
-            <button class="vc-btn vc-place-order" disabled><?php echo esc_html__( 'Finalizar pedido', 'vemcomer' ); ?></button>
+            <button class="vc-btn vc-place-order" disabled style="margin-top: 20px; width: 100%;"><?php echo esc_html__( 'Finalizar pedido no WhatsApp', 'vemcomer' ); ?></button>
             <div class="vc-order-result"></div>
-            <p class="vc-tip"><?php echo esc_html__( 'O carrinho aceita itens de um único restaurante para garantir cálculo correto de frete.', 'vemcomer' ); ?></p>
+            <p class="vc-tip" style="margin-top: 16px; font-size: 0.9rem; color: #6b7280;"><?php echo esc_html__( 'O carrinho aceita itens de um único restaurante para garantir cálculo correto de frete.', 'vemcomer' ); ?></p>
         </div>
         <?php
         return ob_get_clean();
