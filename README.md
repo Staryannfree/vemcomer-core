@@ -71,6 +71,8 @@ wp vc seed
 
 * **GET** `/wp-json/vemcomer/v1/restaurants`
 * **GET** `/wp-json/vemcomer/v1/restaurants/{id}/menu-items`
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/schedule` - Horários estruturados do restaurante (inclui feriados)
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/is-open?timestamp={opcional}` - Verifica se restaurante está aberto (retorna próximo horário de abertura se fechado)
 
 ### Modificadores de Produtos
 
@@ -176,6 +178,19 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.15 - REST API de Horários (3.3)
+
+**Novas funcionalidades:**
+- **Endpoints REST para horários**:
+  - `GET /wp-json/vemcomer/v1/restaurants/{id}/schedule` - Retorna horários estruturados, feriados e horário legado
+  - `GET /wp-json/vemcomer/v1/restaurants/{id}/is-open?timestamp={opcional}` - Verifica se restaurante está aberto
+  - Retorna próximo horário de abertura quando fechado
+  - Suporta verificação em timestamp específico (útil para agendamentos)
+- **Integração completa**: Usa `Schedule_Helper` para validações precisas
+
+**Arquivos modificados:**
+- `inc/REST/Restaurant_Controller.php` - Adicionados endpoints de schedule e is-open
 
 ### v0.14 - Validação de Horários (3.2)
 
@@ -373,7 +388,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 **Fase 1 - Core Essencial:**
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
-- ✅ Sistema de Horários Estruturados (3.1 + 3.2 - Estrutura e Validação implementadas)
+- ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

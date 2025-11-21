@@ -16,6 +16,8 @@ namespace VC\REST;
 
 use VC\Model\CPT_MenuItem;
 use VC\Model\CPT_Restaurant;
+use VC\Utils\Schedule_Helper;
+use WP_Error;
 use WP_Query;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -40,6 +42,39 @@ class Restaurant_Controller {
             'callback' => [ $this, 'get_menu_items' ],
             'permission_callback' => '__return_true',
             'args' => [ 'id' => [ 'validate_callback' => 'is_numeric' ] ],
+        ] );
+
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/schedule', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_schedule' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/is-open', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_is_open' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'id'        => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+                'timestamp' => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
         ] );
     }
 
@@ -136,5 +171,89 @@ class Restaurant_Controller {
         log_event( 'REST menu items query', [ 'restaurant_id' => $rid, 'count' => count( $items ) ], 'debug' );
 
         return new WP_REST_Response( $items, 200 );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/restaurants/{id}/schedule
+     * Retorna os horários estruturados do restaurante
+     */
+    public function get_schedule( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $restaurant_id = (int) $request->get_param( 'id' );
+
+        // Verificar se restaurante existe
+        $restaurant = get_post( $restaurant_id );
+        if ( ! $restaurant || CPT_Restaurant::SLUG !== $restaurant->post_type ) {
+            return new WP_Error(
+                'vc_restaurant_not_found',
+                __( 'Restaurante não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        // Obter horários estruturados
+        $schedule = Schedule_Helper::get_schedule( $restaurant_id );
+
+        // Obter feriados
+        $holidays_json = get_post_meta( $restaurant_id, '_vc_restaurant_holidays', true );
+        $holidays = $holidays_json ? json_decode( $holidays_json, true ) : [];
+        $holidays = is_array( $holidays ) ? $holidays : [];
+
+        // Obter horário legado (para compatibilidade)
+        $legacy_hours = get_post_meta( $restaurant_id, 'vc_restaurant_open_hours', true );
+
+        $response = [
+            'restaurant_id' => $restaurant_id,
+            'schedule'      => $schedule,
+            'holidays'      => $holidays,
+            'legacy_hours'  => $legacy_hours ?: null,
+        ];
+
+        log_event( 'REST schedule fetched', [ 'restaurant_id' => $restaurant_id ], 'debug' );
+
+        return new WP_REST_Response( $response, 200 );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/restaurants/{id}/is-open
+     * Retorna se o restaurante está aberto no momento (ou timestamp especificado)
+     */
+    public function get_is_open( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $restaurant_id = (int) $request->get_param( 'id' );
+        $timestamp     = $request->get_param( 'timestamp' );
+        $timestamp     = $timestamp ? (int) $timestamp : null;
+
+        // Verificar se restaurante existe
+        $restaurant = get_post( $restaurant_id );
+        if ( ! $restaurant || CPT_Restaurant::SLUG !== $restaurant->post_type ) {
+            return new WP_Error(
+                'vc_restaurant_not_found',
+                __( 'Restaurante não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        // Verificar se está aberto
+        $is_open = Schedule_Helper::is_open( $restaurant_id, $timestamp );
+
+        // Obter próximo horário de abertura (se fechado)
+        $next_open = null;
+        if ( ! $is_open ) {
+            $next_open = Schedule_Helper::get_next_open_time( $restaurant_id, $timestamp );
+        }
+
+        $response = [
+            'restaurant_id' => $restaurant_id,
+            'is_open'       => $is_open,
+            'timestamp'    => $timestamp ?: time(),
+            'next_open'    => $next_open,
+        ];
+
+        log_event( 'REST is_open check', [
+            'restaurant_id' => $restaurant_id,
+            'is_open'       => $is_open,
+            'timestamp'     => $timestamp,
+        ], 'debug' );
+
+        return new WP_REST_Response( $response, 200 );
     }
 }
