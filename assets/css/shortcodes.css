@@ -14,7 +14,9 @@
 /* Menu */
 .vc-list{list-style:none;margin:0;padding:0}
 .vc-row{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px dashed #e5e5e5}
-.vc-row__title{font-weight:600}
+.vc-row-content{flex:1;display:flex;flex-direction:column;gap:4px}
+.vc-row-title{font-weight:600}
+.vc-cart-item-modifiers{font-size:0.85rem;color:#6b7280;margin-top:4px;line-height:1.4}
 .vc-row__dots{flex:1;border-bottom:1px dotted #ccc;height:0}
 .vc-row__price{min-width:72px;text-align:right;font-variant-numeric:tabular-nums}
 

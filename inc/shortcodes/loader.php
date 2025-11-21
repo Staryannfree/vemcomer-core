@@ -14,6 +14,11 @@ add_action( 'vc_shortcodes_used', function () {
     wp_enqueue_style( 'vc-shortcodes' );
     wp_enqueue_style( 'vemcomer-front' );
     wp_enqueue_script( 'vemcomer-front' );
+    // Enfileirar modal de produto se necessário
+    if ( ! wp_script_is( 'vemcomer-product-modal', 'enqueued' ) ) {
+        wp_enqueue_style( 'vemcomer-product-modal' );
+        wp_enqueue_script( 'vemcomer-product-modal' );
+    }
 });
 
 // Helper para os shortcodes chamarem assim que renderizarem.

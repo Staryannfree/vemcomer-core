@@ -10,6 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 add_shortcode( 'vc_menu_items', function( $atts = [] ) {
     vc_sc_mark_used();
 
+    // Enfileirar assets do modal de produto
+    wp_enqueue_style( 'vemcomer-product-modal' );
+    wp_enqueue_script( 'vemcomer-product-modal' );
+
     if ( ! post_type_exists( 'vc_menu_item' ) ) {
         return '<p class="vc-empty">' . esc_html__( 'Itens de cardápio indisponíveis.', 'vemcomer' ) . '</p>';
     }
@@ -80,6 +84,27 @@ add_shortcode( 'vc_menu_items', function( $atts = [] ) {
               </div>
               <div class="vc-menu-item__price">
                 <span class="vc-price"><?php echo esc_html( $price ); ?></span>
+                <button 
+                  class="vc-btn vc-btn--small vc-menu-item__add" 
+                  data-item-id="<?php echo esc_attr( (string) $mid ); ?>"
+                  data-item-title="<?php echo esc_attr( $title ); ?>"
+                  data-item-price="<?php echo esc_attr( $raw_price ); ?>"
+                  data-item-description="<?php echo esc_attr( $desc ); ?>"
+                  data-restaurant-id="<?php echo esc_attr( (string) $rid ); ?>"
+                  <?php echo $is_avail ? '' : 'disabled'; ?>
+                  <?php
+                  $image_url = '';
+                  if ( has_post_thumbnail( $mid ) ) {
+                      $image_id = get_post_thumbnail_id( $mid );
+                      $image_url = wp_get_attachment_image_url( $image_id, 'medium' );
+                  }
+                  if ( $image_url ) {
+                      echo ' data-item-image="' . esc_url( $image_url ) . '"';
+                  }
+                  ?>
+                >
+                  <?php echo esc_html__( 'Adicionar', 'vemcomer' ); ?>
+                </button>
               </div>
             </li>
           <?php endwhile; ?>

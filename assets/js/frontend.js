@@ -22,7 +22,26 @@
 
   // ===== UI: render de carrinho =====
   function renderCart(root){
-    const list = cart.map(i=>`<div class="vc-row"><span>${i.title}</span><div class="vc-qtd"><button class="vc-qbtn vc-dec" data-id="${i.id}">-</button><span>${i.qtd}</span><button class="vc-qbtn vc-inc" data-id="${i.id}">+</button></div><div>R$ ${floatToBR(i.qtd*currencyToFloat(i.price))}</div></div>`).join('');
+    const list = cart.map(i=>{
+      let modifiersHTML = '';
+      if(i.modifiers && i.modifiers.length > 0){
+        modifiersHTML = '<div class="vc-cart-item-modifiers">' + 
+          i.modifiers.map(m => `+ ${m.title}${m.price > 0 ? ` (R$ ${floatToBR(m.price)})` : ''}`).join('<br>') + 
+          '</div>';
+      }
+      return `<div class="vc-row">
+        <div class="vc-row-content">
+          <span class="vc-row-title">${i.title}</span>
+          ${modifiersHTML}
+        </div>
+        <div class="vc-qtd">
+          <button class="vc-qbtn vc-dec" data-id="${i.id}" data-modifiers="${i.modifiers ? JSON.stringify(i.modifiers).replace(/"/g, '&quot;') : ''}">-</button>
+          <span>${i.qtd}</span>
+          <button class="vc-qbtn vc-inc" data-id="${i.id}" data-modifiers="${i.modifiers ? JSON.stringify(i.modifiers).replace(/"/g, '&quot;') : ''}">+</button>
+        </div>
+        <div>R$ ${floatToBR(i.qtd*currencyToFloat(i.price))}</div>
+      </div>`;
+    }).join('');
     const subtotal = cart.reduce((s,i)=> s + i.qtd*currencyToFloat(i.price), 0);
     root.querySelector('.vc-cart').innerHTML = list || '<div class="vc-empty">Carrinho vazio</div>';
     root.querySelector('.vc-subtotal').innerHTML = `Subtotal: <strong>R$ ${floatToBR(subtotal)}</strong>`;
@@ -68,19 +87,72 @@
     if(add){
       const id  = Number(add.dataset.id);
       const rid = Number(add.dataset.restaurant);
-      const title = add.dataset.title; const price = add.dataset.price;
+      const title = add.dataset.title; 
+      const price = add.dataset.price;
       const currentRid = getCartRestaurantId();
       const checkoutRoot = document.querySelector('.vc-checkout');
       const lockedRid = checkoutRoot ? Number(checkoutRoot.dataset.restaurant||0) : 0;
+      
+      // Verificar se é de restaurante diferente
       if((currentRid && currentRid !== rid) || (lockedRid && lockedRid !== rid)){
         alert('O checkout aceita itens de um único restaurante. Esvazie o carrinho para trocar.');
         return;
       }
-      const found = cart.find(i=>i.id===id);
-      if(found) {found.qtd++;} else {cart.push({id, rid, title, price, qtd:1});}
-      saveCart();
-      if(checkoutRoot) {renderCart(checkoutRoot);}
+
+      // Se o modal de produto estiver disponível, abrir modal
+      if(typeof window.vcOpenProductModal === 'function'){
+        const itemData = {
+          title: title,
+          description: add.dataset.description || '',
+          price: price,
+          restaurant_id: rid,
+          image: add.dataset.image || null,
+        };
+        window.vcOpenProductModal(id, itemData);
+      } else {
+        // Fallback: adicionar diretamente (compatibilidade)
+        const found = cart.find(i=>i.id===id);
+        if(found) {found.qtd++;} else {cart.push({id, rid, title, price, qtd:1});}
+        saveCart();
+        if(checkoutRoot) {renderCart(checkoutRoot);}
+      }
     }
+  });
+
+  // Escutar evento do modal de produto
+  document.addEventListener('vc:add-to-cart', function(e){
+    const detail = e.detail;
+    const item = detail.item;
+    const modifiers = detail.modifiers || [];
+    const currentRid = getCartRestaurantId();
+    const checkoutRoot = document.querySelector('.vc-checkout');
+    const lockedRid = checkoutRoot ? Number(checkoutRoot.dataset.restaurant||0) : 0;
+    
+    // Verificar restaurante
+    if((currentRid && currentRid !== item.restaurant_id) || (lockedRid && lockedRid !== item.restaurant_id)){
+      alert('O checkout aceita itens de um único restaurante. Esvazie o carrinho para trocar.');
+      return;
+    }
+
+    // Adicionar ao carrinho com modificadores
+    const cartItem = {
+      id: item.id,
+      rid: item.restaurant_id,
+      title: item.title,
+      price: detail.totalPrice ? floatToBR(detail.totalPrice) : item.price,
+      qtd: 1,
+      modifiers: modifiers,
+    };
+
+    const found = cart.find(i=>i.id===item.id && JSON.stringify(i.modifiers||[]) === JSON.stringify(modifiers));
+    if(found) {
+      found.qtd++;
+    } else {
+      cart.push(cartItem);
+    }
+    
+    saveCart();
+    if(checkoutRoot) {renderCart(checkoutRoot);}
   });
 
   document.addEventListener('click', function(e){
@@ -88,7 +160,18 @@
     const inc = e.target.closest('.vc-inc');
     if(!dec && !inc) {return;}
     const id = Number((dec||inc).dataset.id);
-    const found = cart.find(i=>i.id===id); if(!found) {return;}
+    const modifiersStr = (dec||inc).dataset.modifiers;
+    let modifiers = [];
+    if(modifiersStr){
+      try {
+        modifiers = JSON.parse(modifiersStr.replace(/&quot;/g, '"'));
+      } catch(e) {
+        modifiers = [];
+      }
+    }
+    // Encontrar item com mesmo ID e modificadores
+    const found = cart.find(i=>i.id===id && JSON.stringify(i.modifiers||[]) === JSON.stringify(modifiers));
+    if(!found) {return;}
     if(dec){ found.qtd = Math.max(0, found.qtd-1); }
     if(inc){ found.qtd++; }
     for(let i=cart.length-1;i>=0;i--){ if(cart[i].qtd===0) {cart.splice(i,1);} }

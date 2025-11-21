@@ -1,0 +1,343 @@
+/**
+ * Product Modal Styles
+ * @package VemComerCore
+ */
+
+/* Modal Container */
+.vc-product-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.vc-product-modal--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Overlay */
+.vc-product-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+/* Dialog */
+.vc-product-modal__dialog {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Close Button */
+.vc-product-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+.vc-product-modal__close:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+.vc-product-modal__header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.vc-product-modal__title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.vc-product-modal__description {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Image */
+.vc-product-modal__image {
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.vc-product-modal__image img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+/* Body */
+.vc-product-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+}
+
+.vc-product-modal__modifiers {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vc-product-modal__no-modifiers {
+  text-align: center;
+  color: #6b7280;
+  padding: 24px;
+  margin: 0;
+}
+
+.vc-product-modal__loading {
+  text-align: center;
+  color: #6b7280;
+  padding: 24px;
+  margin: 0;
+}
+
+/* Modifier */
+.vc-product-modal__modifier {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.vc-product-modal__modifier--required {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.vc-product-modal__modifier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.vc-product-modal__modifier-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vc-product-modal__required {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.vc-product-modal__modifier-price {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.vc-product-modal__modifier-description {
+  margin: 8px 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.vc-product-modal__modifier-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.vc-product-modal__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vc-product-modal__option:hover {
+  border-color: #2f9e44;
+  background: #f0fdf4;
+}
+
+.vc-product-modal__option input[type="checkbox"],
+.vc-product-modal__option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #2f9e44;
+}
+
+.vc-product-modal__option-label {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.vc-product-modal__modifier-hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Errors */
+.vc-product-modal__errors {
+  margin-top: 16px;
+}
+
+.vc-product-modal__error {
+  margin: 8px 0;
+  padding: 12px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+/* Footer */
+.vc-product-modal__footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.vc-product-modal__price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.vc-product-modal__price-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.vc-product-modal__price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.vc-product-modal__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.vc-product-modal__actions .vc-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vc-product-modal__actions .vc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vc-product-modal__cancel {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.vc-product-modal__cancel:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.vc-product-modal__add {
+  background: #2f9e44;
+  color: #fff;
+}
+
+.vc-product-modal__add:hover:not(:disabled) {
+  background: #237a33;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .vc-product-modal__dialog {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 16px 16px 0 0;
+    margin-top: auto;
+  }
+
+  .vc-product-modal__header {
+    padding: 20px 20px 12px;
+  }
+
+  .vc-product-modal__title {
+    font-size: 1.25rem;
+  }
+
+  .vc-product-modal__body {
+    padding: 12px 20px;
+  }
+
+  .vc-product-modal__footer {
+    padding: 12px 20px;
+  }
+
+  .vc-product-modal__actions {
+    flex-direction: column;
+  }
+
+  .vc-product-modal__actions .vc-btn {
+    width: 100%;
+  }
+}
+

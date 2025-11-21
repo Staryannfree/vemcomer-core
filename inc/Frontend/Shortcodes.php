@@ -28,6 +28,8 @@ class Shortcodes {
         $this->assets_enqueued = true;
         wp_enqueue_style( 'vemcomer-front' );
         wp_enqueue_script( 'vemcomer-front' );
+        wp_enqueue_style( 'vemcomer-product-modal' );
+        wp_enqueue_script( 'vemcomer-product-modal' );
         wp_localize_script( 'vemcomer-front', 'VemComer', [
             'rest'  => [ 'base' => esc_url_raw( rest_url( 'vemcomer/v1' ) ) ],
             'nonce' => wp_create_nonce( 'wp_rest' ),
@@ -92,8 +94,23 @@ class Shortcodes {
             echo get_the_post_thumbnail( $mid, 'medium', [ 'class' => 'vc-thumb' ] );
             echo '<h4 class="vc-title">' . esc_html( get_the_title() ) . '</h4>';
             echo '<div class="vc-desc">' . esc_html( wp_strip_all_tags( get_post_field( 'post_content', $mid ) ) ) . '</div>';
+            $desc = wp_strip_all_tags( get_post_field( 'post_content', $mid ) );
+            $image_url = '';
+            if ( has_post_thumbnail( $mid ) ) {
+                $image_id = get_post_thumbnail_id( $mid );
+                $image_url = wp_get_attachment_image_url( $image_id, 'medium' );
+            }
             echo '<div class="vc-line"><span class="vc-price">' . esc_html( $price ) . '</span>';
-            echo '<button class="vc-btn vc-add" data-id="' . esc_attr( (string) $mid ) . '" data-title="' . esc_attr( get_the_title() ) . '" data-price="' . esc_attr( $price ) . '" data-restaurant="' . esc_attr( (string) $rid ) . '">' . esc_html__( 'Adicionar', 'vemcomer' ) . '</button></div>';
+            echo '<button class="vc-btn vc-add" 
+                data-id="' . esc_attr( (string) $mid ) . '" 
+                data-title="' . esc_attr( get_the_title() ) . '" 
+                data-price="' . esc_attr( $price ) . '" 
+                data-description="' . esc_attr( $desc ) . '"
+                data-restaurant="' . esc_attr( (string) $rid ) . '"';
+            if ( $image_url ) {
+                echo ' data-image="' . esc_url( $image_url ) . '"';
+            }
+            echo '>' . esc_html__( 'Adicionar', 'vemcomer' ) . '</button></div>';
             echo '<div class="vc-meta">' . esc_html( sprintf( __( 'Preparo: %s min', 'vemcomer' ), $ptime ?: '—' ) ) . '</div>';
             echo '</div>';
         }
