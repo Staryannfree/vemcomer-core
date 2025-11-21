@@ -344,15 +344,19 @@
         }
     }
 
-    // ===== Popup Primeira Visita - Geolocalização =====
+    // ===== Popup Boas-Vindas - Geolocalização =====
     function initWelcomePopup() {
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
         // Verificar se já tem localização
         const savedLocation = localStorage.getItem('vc_user_location');
-        if (savedLocation) {
-            return; // Não mostrar popup se já tem localização
+        const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
+        
+        if (savedLocation && locationAccepted) {
+            // Se já tem localização aceita, mostrar botão no hero
+            showHeroLocationButton();
+            return; // Não mostrar popup
         }
 
         setTimeout(() => {
@@ -362,11 +366,29 @@
         const closeBtn = popup.querySelector('.welcome-popup__close');
         const locationBtn = popup.querySelector('#welcome-popup-location-btn');
         const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
+        const heroLocationActions = document.getElementById('hero-location-actions');
 
         function closePopup() {
             popup.classList.remove('is-open');
             // Salvar cookie (expira em 30 dias)
             document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+            // NÃO mostrar botão se apenas fechou
+        }
+
+        function showHeroLocationButton() {
+            if (heroLocationActions) {
+                heroLocationActions.style.display = 'block';
+                // Animar entrada
+                setTimeout(() => {
+                    heroLocationActions.style.opacity = '0';
+                    heroLocationActions.style.transform = 'translateY(-10px)';
+                    heroLocationActions.style.transition = 'opacity 0.3s, transform 0.3s';
+                    setTimeout(() => {
+                        heroLocationActions.style.opacity = '1';
+                        heroLocationActions.style.transform = 'translateY(0)';
+                    }, 10);
+                }, 100);
+            }
         }
 
         if (closeBtn) {
@@ -378,7 +400,7 @@
         }
 
         if (locationBtn) {
-            locationBtn.addEventListener('click', () => {
+            locationBtn.addEventListener('click', async () => {
                 if (!navigator.geolocation) {
                     alert('Geolocalização não suportada pelo seu navegador.');
                     return;
@@ -386,53 +408,126 @@
 
                 locationBtn.disabled = true;
                 locationBtn.classList.add('is-loading');
-                locationBtn.innerHTML = '<span>Carregando...</span>';
+                locationBtn.innerHTML = '<span>Obtendo localização...</span>';
 
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        
-                        // Salvar no localStorage
-                        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                        
-                        // Atualizar botão de geolocalização no hero se existir
-                        const heroLocationBtn = document.getElementById('vc-use-location');
-                        if (heroLocationBtn) {
-                            heroLocationBtn.classList.add('is-active');
-                        }
-                        
-                        // Fechar popup
-                        closePopup();
-                        
-                        // Recarregar restaurantes com distância
-                        loadRestaurantsWithLocation(lat, lng);
-                        
-                        // Mostrar mensagem de sucesso
-                        showNotification('Localização salva! Mostrando restaurantes próximos.', 'success');
-                    },
-                    (error) => {
-                        locationBtn.disabled = false;
-                        locationBtn.classList.remove('is-loading');
-                        locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Usar minha localização</span>';
-                        
-                        let errorMsg = 'Não foi possível obter sua localização.';
-                        if (error.code === error.PERMISSION_DENIED) {
-                            errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador.';
-                        } else if (error.code === error.POSITION_UNAVAILABLE) {
-                            errorMsg = 'Localização indisponível.';
-                        } else if (error.code === error.TIMEOUT) {
-                            errorMsg = 'Tempo de espera esgotado. Tente novamente.';
-                        }
-                        
-                        alert(errorMsg);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
+                try {
+                    // Usar função de reverse geocoding se disponível
+                    if (window.VemComerReverseGeocode) {
+                        await window.VemComerReverseGeocode.getLocationAndFill({
+                            fillCheckout: false,
+                            onSuccess: (address, coordinates) => {
+                                // Salvar que aceitou localização
+                                localStorage.setItem('vc_location_accepted', 'true');
+                                
+                                // Fechar popup
+                                closePopup();
+                                
+                                // Mostrar botão no hero
+                                showHeroLocationButton();
+                                
+                                // Ativar botão
+                                const heroLocationBtn = document.getElementById('vc-use-location');
+                                if (heroLocationBtn) {
+                                    heroLocationBtn.classList.add('is-active');
+                                }
+                                
+                                // Recarregar restaurantes com distância
+                                loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
+                                
+                                // Mostrar mensagem de sucesso
+                                showNotification('Mostrando restaurantes próximos a você!', 'success');
+                                
+                                // Scroll suave para restaurantes
+                                setTimeout(() => {
+                                    const restaurantsSection = document.getElementById('restaurants-list');
+                                    if (restaurantsSection) {
+                                        restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }
+                                }, 500);
+                            },
+                            onError: (error) => {
+                                locationBtn.disabled = false;
+                                locationBtn.classList.remove('is-loading');
+                                locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Ver restaurantes perto de mim</span>';
+                                
+                                let errorMsg = 'Não foi possível obter sua localização.';
+                                if (error.code === error.PERMISSION_DENIED) {
+                                    errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador.';
+                                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                                    errorMsg = 'Localização indisponível.';
+                                } else if (error.code === error.TIMEOUT) {
+                                    errorMsg = 'Tempo de espera esgotado. Tente novamente.';
+                                }
+                                
+                                alert(errorMsg);
+                            }
+                        });
+                    } else {
+                        // Fallback se reverse geocoding não estiver disponível
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const lat = position.coords.latitude;
+                                const lng = position.coords.longitude;
+                                
+                                // Salvar no localStorage
+                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                                localStorage.setItem('vc_location_accepted', 'true');
+                                
+                                // Fechar popup
+                                closePopup();
+                                
+                                // Mostrar botão no hero
+                                showHeroLocationButton();
+                                
+                                // Ativar botão
+                                const heroLocationBtn = document.getElementById('vc-use-location');
+                                if (heroLocationBtn) {
+                                    heroLocationBtn.classList.add('is-active');
+                                }
+                                
+                                // Recarregar restaurantes com distância
+                                loadRestaurantsWithLocation(lat, lng);
+                                
+                                // Mostrar mensagem de sucesso
+                                showNotification('Mostrando restaurantes próximos a você!', 'success');
+                                
+                                // Scroll suave para restaurantes
+                                setTimeout(() => {
+                                    const restaurantsSection = document.getElementById('restaurants-list');
+                                    if (restaurantsSection) {
+                                        restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }
+                                }, 500);
+                            },
+                            (error) => {
+                                locationBtn.disabled = false;
+                                locationBtn.classList.remove('is-loading');
+                                locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Ver restaurantes perto de mim</span>';
+                                
+                                let errorMsg = 'Não foi possível obter sua localização.';
+                                if (error.code === error.PERMISSION_DENIED) {
+                                    errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador.';
+                                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                                    errorMsg = 'Localização indisponível.';
+                                } else if (error.code === error.TIMEOUT) {
+                                    errorMsg = 'Tempo de espera esgotado. Tente novamente.';
+                                }
+                                
+                                alert(errorMsg);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            }
+                        );
                     }
-                );
+                } catch (error) {
+                    locationBtn.disabled = false;
+                    locationBtn.classList.remove('is-loading');
+                    locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Ver restaurantes perto de mim</span>';
+                    alert('Erro ao processar localização. Tente novamente.');
+                }
             });
         }
 
@@ -442,6 +537,27 @@
                 closePopup();
             }
         });
+    }
+    
+    // Verificar se deve mostrar botão no hero ao carregar
+    function checkHeroLocationButton() {
+        const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
+        const savedLocation = localStorage.getItem('vc_user_location');
+        
+        if (locationAccepted && savedLocation) {
+            showHeroLocationButton();
+            const heroLocationBtn = document.getElementById('vc-use-location');
+            if (heroLocationBtn) {
+                heroLocationBtn.classList.add('is-active');
+            }
+        }
+    }
+    
+    function showHeroLocationButton() {
+        const heroLocationActions = document.getElementById('hero-location-actions');
+        if (heroLocationActions) {
+            heroLocationActions.style.display = 'block';
+        }
     }
 
     // ===== Notificação =====
@@ -528,6 +644,7 @@
         initDarkMode();
         initPromoBar();
         initWelcomePopup();
+        checkHeroLocationButton();
     });
 
 })();

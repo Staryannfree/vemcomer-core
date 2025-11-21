@@ -34,7 +34,7 @@ get_header();
                         <?php echo esc_html__( 'Buscar', 'vemcomer' ); ?>
                     </button>
                 </form>
-                <div class="home-hero__quick-actions">
+                <div class="home-hero__quick-actions" id="hero-location-actions" style="display: none;">
                     <button class="btn-geolocation" id="vc-use-location" type="button">
                         <span class="btn-geolocation__icon">📍</span>
                         <span class="btn-geolocation__text"><?php esc_html_e( 'Usar minha localização', 'vemcomer' ); ?></span>

@@ -76,7 +76,7 @@
     </nav>
     
     <?php
-    // Popup de Primeira Visita - Solicitar Localização
+    // Popup de Boas-Vindas - Solicitar Localização
     $welcome_seen = isset( $_COOKIE['vc_welcome_popup_seen'] ) && $_COOKIE['vc_welcome_popup_seen'] === '1';
     $has_location = isset( $_COOKIE['vc_user_location'] );
     if ( ! $welcome_seen && ! $has_location ) :
@@ -84,18 +84,18 @@
     <div class="welcome-popup" id="welcome-popup">
         <div class="welcome-popup__dialog">
             <button class="welcome-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
-            <div class="welcome-popup__icon">📍</div>
+            <div class="welcome-popup__icon">👋</div>
             <h2 class="welcome-popup__title"><?php esc_html_e( 'Bem-vindo ao VemComer!', 'vemcomer' ); ?></h2>
             <p class="welcome-popup__text">
-                <?php esc_html_e( 'Para encontrar os melhores restaurantes perto de você, precisamos da sua localização.', 'vemcomer' ); ?>
+                <?php esc_html_e( 'Descubra os melhores restaurantes perto de você!', 'vemcomer' ); ?>
             </p>
             <p class="welcome-popup__subtext">
-                <?php esc_html_e( 'Sua localização será usada apenas para mostrar restaurantes próximos e calcular distâncias.', 'vemcomer' ); ?>
+                <?php esc_html_e( 'Clique no botão abaixo para ver restaurantes próximos à sua localização.', 'vemcomer' ); ?>
             </p>
             <div class="welcome-popup__actions">
                 <button type="button" class="btn btn--primary btn--large" id="welcome-popup-location-btn">
                     <span class="btn-icon">📍</span>
-                    <span><?php esc_html_e( 'Usar minha localização', 'vemcomer' ); ?></span>
+                    <span><?php esc_html_e( 'Ver restaurantes perto de mim', 'vemcomer' ); ?></span>
                 </button>
                 <button type="button" class="btn btn--ghost" id="welcome-popup-skip-btn">
                     <?php esc_html_e( 'Pular por enquanto', 'vemcomer' ); ?>

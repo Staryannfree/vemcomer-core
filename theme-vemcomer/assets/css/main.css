@@ -559,9 +559,10 @@ section {
         padding: 14px;
     }
     
-    .home-hero__quick-actions {
-        padding: 0 var(--spacing-sm);
-    }
+.home-hero__quick-actions {
+    padding: 0 var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
     
     .btn-geolocation {
         width: 100%;

@@ -418,7 +418,19 @@
 .welcome-popup__icon {
     font-size: 4rem;
     margin-bottom: var(--spacing-md);
-    animation: bounce 2s infinite;
+    animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-10deg);
+    }
+    75% {
+        transform: rotate(10deg);
+    }
 }
 
 @keyframes bounce {
