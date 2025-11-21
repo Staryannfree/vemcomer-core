@@ -207,6 +207,33 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.28+ - Implementação Completa de Recursos Backend (Seções 8-25.1)
+
+**Todas as seções de 8 a 25.1 foram implementadas:**
+
+- ✅ **Seção 8**: Sistema de Banners da Home (CPT, REST API completa)
+- ✅ **Seção 9**: Sistema de Planos/Assinaturas SaaS (CPT, limites, validação, REST API)
+- ✅ **Seção 10**: Sistema de Geração de Mensagem WhatsApp (Message_Formatter, REST API)
+- ✅ **Seção 11**: Sistema de Endereços de Entrega (Helper, REST API, Geocodificação)
+- ✅ **Seção 12**: Sistema de Disponibilidade em Tempo Real (Helper, REST API)
+- ✅ **Seção 13**: Sistema de Categorias de Cardápio Robusto (ordem, imagem, REST API)
+- ✅ **Seção 14**: Sistema de Busca Avançada (full-text, filtros, ordenação)
+- ✅ **Seção 15**: Sistema de Notificações (Manager, REST API)
+- ✅ **Seção 16**: Sistema de Tempo Estimado de Entrega Dinâmico (Calculator, REST API)
+- ✅ **Seção 17**: Sistema de Preços por Bairro (já implementado, melhorado)
+- ✅ **Seção 18**: Sistema de Múltiplos Métodos de Fulfillment (Pickup adicionado)
+- ✅ **Seção 19**: Sistema de Gestão de Imagens Otimizadas (Image_Optimizer)
+- ✅ **Seção 20**: Sistema de Validação de Pedido Antes do WhatsApp (Validator, REST API)
+- ✅ **Seção 21**: Sistema de Cache Inteligente (Cache_Manager, REST API de invalidação)
+- ✅ **Seção 22**: Sistema de Relatórios Avançados (Restaurant_Reports, REST API)
+- ✅ **Seção 23**: Sistema de Cupons/Descontos Completo (CPT, Validator, REST API)
+- ✅ **Seção 24**: Sistema de Gestão de Usuários Super Admin (Admin_Controller)
+- ✅ **Seção 25.1**: Sistema de Logs e Auditoria Avançado (Audit_Controller, export CSV)
+
+**Total de arquivos criados/modificados:** 50+ arquivos
+**Total de endpoints REST adicionados:** 30+ endpoints
+**Todas as funcionalidades críticas e importantes implementadas!**
+
 ### v0.27 - Sistema de Geração de Mensagem WhatsApp (10.1 + 10.2 + 10.3)
 
 **Novas funcionalidades:**
