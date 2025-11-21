@@ -92,6 +92,13 @@ wp vc seed
 * Registre seus métodos no action `vemcomer_register_fulfillment_method` — o registro padrão (`inc/Checkout/Methods/FlatRateDelivery.php`) aplica o frete fixo + pedido mínimo dos metadados do restaurante.
 * Use os helpers JS em `assets/js/checkout.js` para testar rapidamente as rotas de frete/pedido (`window.VemComerCheckoutExamples.exampleQuote()` e `.exampleOrder()`).
 
+#### Cotação de Frete
+
+* **GET** `/wp-json/vemcomer/v1/shipping/quote?restaurant_id={id}&subtotal={valor}&lat={lat}&lng={lng}&address={endereco}&neighborhood={bairro}`
+* Parâmetros obrigatórios: `restaurant_id`, `subtotal`
+* Parâmetros opcionais: `lat`, `lng`, `address`, `neighborhood` (para cálculo por distância)
+* Retorna: array de métodos disponíveis, distância calculada, se está no raio, se restaurante está aberto
+
 Exemplo de registro:
 
 ```php
