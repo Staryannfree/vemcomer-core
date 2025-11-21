@@ -1,0 +1,242 @@
+/* Histórico de Pedidos */
+.vc-orders-history {
+  margin: 24px 0;
+}
+
+.vc-orders-history__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vc-orders-history__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.vc-orders-history__filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.vc-orders-history__status-filter {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.vc-orders-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vc-order-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.vc-order-item:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.vc-order-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vc-order-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.vc-order-item__number {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.vc-order-item__date {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.vc-order-item__status {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vc-order-item__status--pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.vc-order-item__status--confirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.vc-order-item__status--preparing {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.vc-order-item__status--ready {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.vc-order-item__status--delivering {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.vc-order-item__status--completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.vc-order-item__status--cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.vc-order-item__restaurant {
+  margin: 12px 0;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.vc-order-item__restaurant strong {
+  color: #111827;
+}
+
+.vc-order-item__items {
+  margin: 12px 0;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.vc-order-item__items-title {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.vc-order-item__items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vc-order-item__items-list li {
+  font-size: 0.9rem;
+  color: #6b7280;
+  display: flex;
+  justify-content: space-between;
+}
+
+.vc-order-item__items-list li strong {
+  color: #111827;
+}
+
+.vc-order-item__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.vc-order-item__total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.vc-order-item__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vc-orders-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.vc-orders-history__loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.vc-orders-history__pagination {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.vc-orders-history__pagination button {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.vc-orders-history__pagination button:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.vc-orders-history__pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vc-orders-history__pagination button.is-active {
+  background: #2f9e44;
+  color: #fff;
+  border-color: #2f9e44;
+}
+

@@ -85,6 +85,8 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_style('vemcomer-banners', $base_url . 'assets/css/banners.css', [], $ver);
         wp_register_style('vemcomer-notifications', $base_url . 'assets/css/notifications.css', [], $ver);
         wp_register_script('vemcomer-notifications', $base_url . 'assets/js/notifications.js', ['vemcomer-front'], $ver, true);
+        wp_register_style('vemcomer-orders-history', $base_url . 'assets/css/orders-history.css', [], $ver);
+        wp_register_script('vemcomer-orders-history', $base_url . 'assets/js/orders-history.js', ['vemcomer-front'], $ver, true);
     }
 }
 
