@@ -204,6 +204,7 @@ get_header();
 					</div>
 					<?php echo do_shortcode( '[vc_menu_items]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
+				<?php echo do_shortcode( '[vc_reviews restaurant_id="' . get_the_ID() . '"]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</article>
 			<?php
 		endwhile;
