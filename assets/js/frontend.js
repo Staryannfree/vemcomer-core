@@ -231,29 +231,64 @@
       root.dataset.ship = '0';
       return;
     }
-    const method = methods[0];
-    const methodShip = Number(method.amount||0);
-    const etaText = method.eta || '';
-    let ship = methodShip;
-    let discount = c.ok ? (c.discount||0) : 0;
-    if(c.ok && c.freightFree){
-      discount += ship;
+
+    // Exibir opções de métodos
+    let methodsHTML = '<div class="vc-fulfillment-methods">';
+    methods.forEach((method, index) => {
+      const methodId = method.id || method.slug || `method_${index}`;
+      const methodLabel = method.label || 'Entrega';
+      const methodAmount = Number(method.amount || 0);
+      const methodEta = method.eta || '';
+      const isAvailable = method.details?.available !== false;
+      const isSelected = index === 0;
+      
+      methodsHTML += `
+        <label class="vc-fulfillment-method ${isSelected ? 'is-selected' : ''} ${!isAvailable ? 'is-unavailable' : ''}" data-method-id="${methodId}">
+          <input type="radio" name="fulfillment_method" value="${methodId}" ${isSelected ? 'checked' : ''} ${!isAvailable ? 'disabled' : ''} />
+          <div class="vc-fulfillment-method-content">
+            <div class="vc-fulfillment-method-header">
+              <span class="vc-fulfillment-method-label">${methodLabel}</span>
+              <span class="vc-fulfillment-method-price">R$ ${floatToBR(methodAmount)}</span>
+            </div>
+            ${methodEta ? `<div class="vc-fulfillment-method-eta">${methodEta}</div>` : ''}
+            ${!isAvailable && method.details?.reason ? `<div class="vc-fulfillment-method-reason">${method.details.reason}</div>` : ''}
+          </div>
+        </label>
+      `;
+    });
+    methodsHTML += '</div>';
+    
+    root.querySelector('.vc-quote-result').innerHTML = methodsHTML;
+
+    // Selecionar primeiro método disponível por padrão
+    const firstAvailable = methods.find(m => m.details?.available !== false) || methods[0];
+    if(firstAvailable) {
+      selectFulfillmentMethod(root, firstAvailable, c, subtotal);
     }
-    const total = Math.max(0, subtotal - discount + ship);
 
-    const labelText = method.label || 'Entrega';
-    const etaLabel = etaText ? ` • ${etaText}` : '';
-    root.querySelector('.vc-quote-result').innerHTML = `${labelText}${etaLabel}`;
-    root.querySelector('.vc-freight').innerHTML = `Frete: <strong>R$ ${floatToBR(methodShip)}</strong>`;
-    root.querySelector('.vc-discount').innerHTML = discount>0 ? `Descontos: <strong>- R$ ${floatToBR(discount)}</strong>` : '';
-    root.querySelector('.vc-total').innerHTML = `Total: <strong>R$ ${floatToBR(total)}</strong>`;
-    root.querySelector('.vc-eta').innerHTML = etaText ? `Entrega estimada: <strong>${etaText}</strong>` : '';
+    // Handler para mudança de método
+    root.querySelectorAll('input[name="fulfillment_method"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        if(this.checked) {
+          const methodId = this.value;
+          const method = methods.find(m => (m.id || m.slug || `method_${methods.indexOf(m)}`) === methodId);
+          if(method) {
+            selectFulfillmentMethod(root, method, c, subtotal);
+          }
+        }
+      });
+    });
 
-    root.dataset.ship = String(ship);
-    root.dataset.discount = String(discount);
-    root.dataset.fulfillmentMethod = method.id || '';
-    root.dataset.fulfillmentLabel = method.label || '';
-    root.dataset.fulfillmentEta = etaText;
+    // Atualizar visual de seleção
+    root.querySelectorAll('.vc-fulfillment-method').forEach(label => {
+      const radio = label.querySelector('input[type="radio"]');
+      if(radio && radio.checked) {
+        label.classList.add('is-selected');
+      } else {
+        label.classList.remove('is-selected');
+      }
+    });
+
     if(c.ok) {localStorage.setItem(COUPON_KEY, coupon);} else {localStorage.removeItem(COUPON_KEY);}
     root.querySelector('.vc-place-order').disabled = cart.length===0;
   });
@@ -416,6 +451,32 @@
     pollStatus(id, box); // imediato
     trackingTimer = setInterval(()=>pollStatus(id, box), 5000);
   });
+
+  // Função para selecionar método de fulfillment
+  function selectFulfillmentMethod(root, method, coupon, subtotal) {
+    const methodShip = Number(method.amount || 0);
+    const etaText = method.eta || '';
+    const methodId = method.id || method.slug || '';
+    const methodLabel = method.label || 'Entrega';
+    
+    let ship = methodShip;
+    let discount = coupon.ok ? (coupon.discount || 0) : 0;
+    if(coupon.ok && coupon.freightFree){
+      discount += ship;
+    }
+    const total = Math.max(0, subtotal - discount + ship);
+
+    root.querySelector('.vc-freight').innerHTML = `Frete: <strong>R$ ${floatToBR(methodShip)}</strong>`;
+    root.querySelector('.vc-discount').innerHTML = discount>0 ? `Descontos: <strong>- R$ ${floatToBR(discount)}</strong>` : '';
+    root.querySelector('.vc-total').innerHTML = `Total: <strong>R$ ${floatToBR(total)}</strong>`;
+    root.querySelector('.vc-eta').innerHTML = etaText ? `Entrega estimada: <strong>${etaText}</strong>` : '';
+
+    root.dataset.ship = String(ship);
+    root.dataset.discount = String(discount);
+    root.dataset.fulfillmentMethod = methodId;
+    root.dataset.fulfillmentLabel = methodLabel;
+    root.dataset.fulfillmentEta = etaText;
+  }
 
   // Render inicial se existir checkout na página
   window.addEventListener('DOMContentLoaded', ()=>{
