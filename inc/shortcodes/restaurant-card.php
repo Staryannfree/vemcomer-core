@@ -6,9 +6,12 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-// Carregar helper de rating
+// Carregar helpers
 if ( ! function_exists( 'vc_restaurant_get_rating' ) && class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
     require_once VEMCOMER_CORE_DIR . 'inc/Utils/Rating_Helper.php';
+}
+if ( ! function_exists( 'vc_restaurant_is_open' ) && class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+    require_once VEMCOMER_CORE_DIR . 'inc/Utils/Schedule_Helper.php';
 }
 
 add_shortcode( 'vc_restaurant', function( $atts = [] ) {

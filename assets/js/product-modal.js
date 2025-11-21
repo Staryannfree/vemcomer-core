@@ -1,8 +1,7 @@
 /**
- * Product Modal - Modal para seleção de modificadores de produto
- * @package VemComerCore
+ * Modal de Produto com Modificadores
+ * Integra com REST API para carregar e validar modificadores
  */
-
 (function() {
   'use strict';
 
@@ -15,22 +14,6 @@
   const NONCE = window.VemComer.nonce;
 
   /**
-   * Utilitários de moeda
-   */
-  function currencyToFloat(v) {
-    if (typeof v !== 'string') { return Number(v || 0); }
-    v = v.replace(/[^0-9,\.]/g, '');
-    if (v.indexOf(',') > -1 && v.lastIndexOf(',') > v.lastIndexOf('.')) {
-      v = v.replace(/\./g, '').replace(',', '.');
-    }
-    return Number(v || 0);
-  }
-
-  function floatToBR(n) {
-    return (Number(n) || 0).toFixed(2).replace('.', ',');
-  }
-
-  /**
    * Classe principal do Modal de Produto
    */
   class ProductModal {
@@ -38,452 +21,515 @@
       this.modal = null;
       this.currentItem = null;
       this.modifiers = [];
-      this.selectedModifiers = {}; // { modifierId: quantity }
+      this.selectedModifiers = {};
       this.basePrice = 0;
       this.init();
     }
 
     init() {
+      // Criar estrutura do modal
       this.createModal();
-      this.bindEvents();
+      
+      // Event listeners
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.vc-menu-item__add, .vc-add[data-item-id], .vc-btn.vc-add[data-item-id]');
+        if (btn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const itemId = btn.dataset.itemId || btn.getAttribute('data-item-id');
+          if (itemId) {
+            this.open(btn);
+          }
+        }
+      });
+
+      // Fechar ao clicar no backdrop
+      if (this.modal) {
+        const backdrop = this.modal.querySelector('.vc-product-modal__backdrop');
+        if (backdrop) {
+          backdrop.addEventListener('click', () => this.close());
+        }
+
+        const closeBtn = this.modal.querySelector('.vc-product-modal__close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => this.close());
+        }
+      }
+
+      // Fechar com ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.modal && this.modal.classList.contains('is-open')) {
+          this.close();
+        }
+      });
     }
 
-    /**
-     * Cria a estrutura HTML do modal
-     */
     createModal() {
       const modalHTML = `
-        <div id="vc-product-modal" class="vc-product-modal" role="dialog" aria-labelledby="vc-product-modal-title" aria-hidden="true">
-          <div class="vc-product-modal__overlay" data-close="modal"></div>
+        <div class="vc-product-modal" id="vc-product-modal" role="dialog" aria-labelledby="vc-product-modal-title" aria-modal="true">
+          <div class="vc-product-modal__backdrop"></div>
           <div class="vc-product-modal__dialog">
-            <button class="vc-product-modal__close" aria-label="Fechar modal" data-close="modal">×</button>
             <div class="vc-product-modal__header">
-              <h2 id="vc-product-modal-title" class="vc-product-modal__title"></h2>
-              <p class="vc-product-modal__description"></p>
+              <h2 class="vc-product-modal__title" id="vc-product-modal-title"></h2>
+              <button class="vc-product-modal__close" aria-label="Fechar">&times;</button>
             </div>
-            <div class="vc-product-modal__image"></div>
             <div class="vc-product-modal__body">
-              <div class="vc-product-modal__modifiers"></div>
-              <div class="vc-product-modal__errors"></div>
+              <div class="vc-product-modal__loading">Carregando...</div>
             </div>
-            <div class="vc-product-modal__footer">
-              <div class="vc-product-modal__price">
-                <span class="vc-product-modal__price-label">Total:</span>
-                <span class="vc-product-modal__price-value">R$ 0,00</span>
+            <div class="vc-product-modal__footer" style="display: none;">
+              <div class="vc-product-modal__total">
+                <span class="vc-product-modal__total-label">Total</span>
+                <span class="vc-product-modal__total-value">R$ 0,00</span>
               </div>
-              <div class="vc-product-modal__actions">
-                <button class="vc-btn vc-btn--ghost vc-product-modal__cancel" data-close="modal">Cancelar</button>
-                <button class="vc-btn vc-product-modal__add" disabled>Adicionar ao Carrinho</button>
-              </div>
+              <button class="vc-product-modal__add-btn" disabled>Adicionar ao Carrinho</button>
             </div>
           </div>
         </div>
       `;
 
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      this.modal = document.getElementById('vc-product-modal');
+      // Inserir no body se não existir
+      if (!document.getElementById('vc-product-modal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        this.modal = document.getElementById('vc-product-modal');
+      } else {
+        this.modal = document.getElementById('vc-product-modal');
+      }
     }
 
-    /**
-     * Vincula eventos
-     */
-    bindEvents() {
-      // Fechar modal ao clicar no overlay ou botão fechar
-      this.modal.addEventListener('click', (e) => {
-        if (e.target.dataset.close === 'modal' || e.target.closest('[data-close="modal"]')) {
-          this.close();
-        }
-      });
+    async open(button) {
+      if (!this.modal) return;
 
-      // Fechar com ESC
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !this.modal.classList.contains('vc-product-modal--hidden')) {
-          this.close();
-        }
-      });
+      const itemId = button.dataset.itemId || button.getAttribute('data-item-id');
+      const itemTitle = button.dataset.itemTitle || button.getAttribute('data-item-title') || '';
+      const itemPrice = button.dataset.itemPrice || button.getAttribute('data-item-price') || '0';
+      const itemDescription = button.dataset.itemDescription || button.getAttribute('data-item-description') || '';
+      const itemImage = button.dataset.itemImage || button.getAttribute('data-item-image') || '';
+      const restaurantId = button.dataset.restaurantId || button.getAttribute('data-restaurant-id') || '';
 
-      // Botão adicionar ao carrinho
-      const addBtn = this.modal.querySelector('.vc-product-modal__add');
-      addBtn.addEventListener('click', () => {
-        this.addToCart();
-      });
-
-      // Prevenir fechamento ao clicar dentro do dialog
-      const dialog = this.modal.querySelector('.vc-product-modal__dialog');
-      dialog.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
-    }
-
-    /**
-     * Abre o modal para um item do cardápio
-     */
-    async open(itemId, itemData) {
       this.currentItem = {
-        id: itemId,
-        title: itemData.title || '',
-        description: itemData.description || '',
-        price: itemData.price || '0,00',
-        restaurant_id: itemData.restaurant_id || 0,
-        image: itemData.image || null,
+        id: parseInt(itemId, 10),
+        title: itemTitle,
+        price: itemPrice,
+        description: itemDescription,
+        image: itemImage,
+        restaurantId: parseInt(restaurantId, 10)
       };
 
-      this.basePrice = currencyToFloat(this.currentItem.price);
+      this.basePrice = this.parsePrice(itemPrice);
       this.selectedModifiers = {};
       this.modifiers = [];
 
-      // Atualizar header
-      this.modal.querySelector('.vc-product-modal__title').textContent = this.currentItem.title;
-      this.modal.querySelector('.vc-product-modal__description').textContent = this.currentItem.description || '';
-
-      // Atualizar imagem
-      const imageContainer = this.modal.querySelector('.vc-product-modal__image');
-      if (this.currentItem.image) {
-        imageContainer.innerHTML = `<img src="${this.currentItem.image}" alt="${this.currentItem.title}" />`;
-      } else {
-        imageContainer.innerHTML = '';
-      }
-
-      // Mostrar loading
-      this.showLoading();
-
-      // Carregar modificadores
-      try {
-        await this.loadModifiers(itemId);
-      } catch (error) {
-        console.error('Erro ao carregar modificadores:', error);
-        this.showError('Erro ao carregar opções do produto.');
-      }
-
-      // Renderizar modificadores
-      this.renderModifiers();
-
-      // Atualizar preço
-      this.updatePrice();
-
       // Mostrar modal
-      this.modal.classList.remove('vc-product-modal--hidden');
-      this.modal.setAttribute('aria-hidden', 'false');
+      this.modal.classList.add('is-open');
       document.body.style.overflow = 'hidden';
 
-      // Focar no modal para acessibilidade
-      this.modal.focus();
+      // Atualizar título
+      const titleEl = this.modal.querySelector('.vc-product-modal__title');
+      if (titleEl) {
+        titleEl.textContent = itemTitle;
+      }
+
+      // Carregar modificadores
+      await this.loadModifiers(itemId);
+
+      // Renderizar conteúdo
+      this.render();
     }
 
-    /**
-     * Carrega modificadores do item via REST API
-     */
     async loadModifiers(itemId) {
-      const url = `${REST_BASE}/menu-items/${itemId}/modifiers`;
-      const response = await fetch(url);
+      const body = this.modal.querySelector('.vc-product-modal__body');
+      if (!body) return;
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      body.innerHTML = '<div class="vc-product-modal__loading">Carregando modificadores...</div>';
+
+      try {
+        const response = await fetch(`${REST_BASE}/menu-items/${itemId}/modifiers`, {
+          method: 'GET',
+          headers: {
+            'X-WP-Nonce': NONCE
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao carregar modificadores');
+        }
+
+        const data = await response.json();
+        this.modifiers = Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Erro ao carregar modificadores:', error);
+        body.innerHTML = '<div class="vc-product-modal__error">Erro ao carregar modificadores. Tente novamente.</div>';
+        this.modifiers = [];
       }
-
-      const data = await response.json();
-      this.modifiers = Array.isArray(data) ? data : [];
-
-      // Separar obrigatórios e opcionais
-      this.modifiers.sort((a, b) => {
-        if (a.type === 'required' && b.type !== 'required') return -1;
-        if (a.type !== 'required' && b.type === 'required') return 1;
-        return 0;
-      });
     }
 
-    /**
-     * Renderiza os modificadores no modal
-     */
-    renderModifiers() {
-      const container = this.modal.querySelector('.vc-product-modal__modifiers');
-      container.innerHTML = '';
+    render() {
+      const body = this.modal.querySelector('.vc-product-modal__body');
+      const footer = this.modal.querySelector('.vc-product-modal__footer');
+      if (!body || !footer) return;
 
-      if (this.modifiers.length === 0) {
-        container.innerHTML = '<p class="vc-product-modal__no-modifiers">Este produto não possui opções adicionais.</p>';
-        return;
+      const { title, description, image, price } = this.currentItem;
+
+      let html = '';
+
+      // Imagem
+      if (image) {
+        html += `<img src="${this.escapeHtml(image)}" alt="${this.escapeHtml(title)}" class="vc-product-modal__image" loading="lazy">`;
       }
 
-      this.modifiers.forEach((modifier) => {
-        const modifierEl = this.createModifierElement(modifier);
-        container.appendChild(modifierEl);
-      });
+      // Descrição
+      if (description) {
+        html += `<div class="vc-product-modal__description">${this.escapeHtml(description)}</div>`;
+      }
+
+      // Preço base
+      html += `<div class="vc-product-modal__price">${this.formatPrice(this.basePrice)}</div>`;
+
+      // Modificadores
+      if (this.modifiers.length > 0) {
+        html += '<div class="vc-product-modal__modifiers">';
+        html += '<h3 class="vc-product-modal__modifiers-title">Personalize seu pedido</h3>';
+
+        this.modifiers.forEach((modifier) => {
+          html += this.renderModifierGroup(modifier);
+        });
+
+        html += '</div>';
+      }
+
+      body.innerHTML = html;
+
+      // Adicionar event listeners aos modificadores
+      this.attachModifierListeners();
+
+      // Atualizar footer
+      footer.style.display = 'flex';
+      this.updateTotal();
+      this.validateSelection();
     }
 
-    /**
-     * Cria elemento HTML para um modificador
-     */
-    createModifierElement(modifier) {
-      const div = document.createElement('div');
-      div.className = `vc-product-modal__modifier vc-product-modal__modifier--${modifier.type}`;
-      div.dataset.modifierId = modifier.id;
-
+    renderModifierGroup(modifier) {
       const isRequired = modifier.type === 'required';
+      // Se max é null ou > 1, permite múltiplas seleções (checkbox)
+      // Se max é 1, permite apenas uma (radio)
+      const maxSelections = modifier.max === null ? 999 : modifier.max;
+      const inputType = maxSelections === 1 ? 'radio' : 'checkbox';
+      const groupName = `modifier-${modifier.id}`;
       const min = modifier.min || 0;
-      const max = modifier.max || null;
-      const price = modifier.price || 0;
-      const priceText = price > 0 ? `R$ ${floatToBR(price)}` : 'Grátis';
+      const max = maxSelections;
 
-      let inputHTML = '';
-      if (max === null || max > 1) {
-        // Múltipla seleção (checkbox ou quantidade)
-        inputHTML = this.createMultipleSelectionInput(modifier, min, max);
+      let html = `<div class="vc-product-modal__modifier-group" data-modifier-id="${modifier.id}">`;
+      html += `<div class="vc-product-modal__modifier-group-title">`;
+      html += `<span>${this.escapeHtml(modifier.title)}</span>`;
+      if (isRequired) {
+        html += `<span class="vc-badge vc-badge--required">Obrigatório</span>`;
       } else {
-        // Seleção única (radio)
-        inputHTML = this.createSingleSelectionInput(modifier);
+        html += `<span class="vc-badge">Opcional</span>`;
+      }
+      html += `</div>`;
+
+      if (modifier.description) {
+        html += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px;">${this.escapeHtml(modifier.description)}</p>`;
       }
 
-      div.innerHTML = `
-        <div class="vc-product-modal__modifier-header">
-          <h3 class="vc-product-modal__modifier-title">
-            ${modifier.title}
-            ${isRequired ? '<span class="vc-product-modal__required">*</span>' : ''}
-          </h3>
-          <span class="vc-product-modal__modifier-price">${priceText}</span>
-        </div>
-        ${modifier.description ? `<p class="vc-product-modal__modifier-description">${modifier.description}</p>` : ''}
-        <div class="vc-product-modal__modifier-options">
-          ${inputHTML}
-        </div>
-        ${isRequired && min > 0 ? `<p class="vc-product-modal__modifier-hint">Selecione pelo menos ${min} opção${min > 1 ? 'ões' : ''}</p>` : ''}
-        ${max && max > 0 ? `<p class="vc-product-modal__modifier-hint">Máximo ${max} opção${max > 1 ? 'ões' : ''}</p>` : ''}
-      `;
+      html += '<div class="vc-product-modal__modifier-options">';
 
-      // Vincular eventos
-      this.bindModifierEvents(div, modifier);
+      // Cada modificador é uma opção individual
+      const optionPrice = parseFloat(modifier.price || 0);
+      const isFree = optionPrice === 0;
+      const optionId = modifier.id;
 
-      return div;
+      html += `<label class="vc-product-modal__modifier-option">`;
+      html += `<input type="${inputType}" name="${groupName}" value="${optionId}" data-price="${optionPrice}" data-modifier-id="${modifier.id}">`;
+      html += `<span class="vc-product-modal__modifier-option-label">${this.escapeHtml(modifier.title)}</span>`;
+      html += `<span class="vc-product-modal__modifier-option-price ${isFree ? 'vc-product-modal__modifier-option-price--free' : ''}">`;
+      if (isFree) {
+        html += 'Grátis';
+      } else {
+        html += this.formatPrice(optionPrice);
+      }
+      html += `</span>`;
+      html += `</label>`;
+
+      html += '</div>';
+
+      // Mostrar min/max se aplicável
+      if (min > 0 || (max > 0 && max < 999)) {
+        html += `<div class="vc-product-modal__modifier-minmax">`;
+        if (min > 0 && max > 0 && max < 999) {
+          html += `Selecione entre ${min} e ${max} opção(ões)`;
+        } else if (min > 0) {
+          html += `Selecione pelo menos ${min} opção(ões)`;
+        } else if (max > 0 && max < 999) {
+          html += `Selecione no máximo ${max} opção(ões)`;
+        }
+        html += `</div>`;
+      }
+
+      html += '</div>';
+
+      return html;
     }
 
-    /**
-     * Cria input para seleção múltipla (checkbox)
-     */
-    createMultipleSelectionInput(modifier, min, max) {
-      // Para múltipla seleção, vamos usar checkboxes simples
-      // A quantidade será sempre 1 quando selecionado
-      return `
-        <label class="vc-product-modal__option">
-          <input type="checkbox" 
-                 data-modifier-id="${modifier.id}" 
-                 data-price="${modifier.price || 0}"
-                 ${modifier.type === 'required' && min > 0 ? 'required' : ''} />
-          <span class="vc-product-modal__option-label">${modifier.title}</span>
-        </label>
-      `;
-    }
-
-    /**
-     * Cria input para seleção única (radio)
-     */
-    createSingleSelectionInput(modifier) {
-      return `
-        <label class="vc-product-modal__option">
-          <input type="radio" 
-                 name="modifier_${modifier.id}" 
-                 data-modifier-id="${modifier.id}" 
-                 data-price="${modifier.price || 0}"
-                 ${modifier.type === 'required' ? 'required' : ''} />
-          <span class="vc-product-modal__option-label">${modifier.title}</span>
-        </label>
-      `;
-    }
-
-    /**
-     * Vincula eventos de um modificador
-     */
-    bindModifierEvents(element, modifier) {
-      const inputs = element.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+    attachModifierListeners() {
+      const inputs = this.modal.querySelectorAll('.vc-product-modal__modifier-option input');
       inputs.forEach((input) => {
         input.addEventListener('change', () => {
-          this.handleModifierChange(modifier.id, input.checked, modifier);
-          this.updatePrice();
-          this.validateForm();
+          this.handleModifierChange(input);
         });
       });
     }
 
-    /**
-     * Manipula mudança em modificador
-     */
-    handleModifierChange(modifierId, checked, modifier) {
-      if (checked) {
-        this.selectedModifiers[modifierId] = 1;
+    handleModifierChange(input) {
+      const modifierId = parseInt(input.dataset.modifierId, 10);
+      const optionId = parseInt(input.value, 10);
+      const price = parseFloat(input.dataset.price || 0);
+      const modifier = this.modifiers.find(m => m.id === modifierId);
+
+      if (!modifier) return;
+
+      const isRadio = input.type === 'radio';
+      const groupName = input.name;
+      const maxSelections = modifier.max === null ? 999 : modifier.max;
+
+      if (isRadio || maxSelections === 1) {
+        // Radio ou checkbox com max=1: apenas uma seleção por grupo
+        this.selectedModifiers[modifierId] = input.checked ? [{
+          id: optionId,
+          modifierId: modifierId,
+          title: modifier.title,
+          price: price
+        }] : [];
       } else {
-        delete this.selectedModifiers[modifierId];
+        // Checkbox com múltiplas seleções permitidas
+        if (!this.selectedModifiers[modifierId]) {
+          this.selectedModifiers[modifierId] = [];
+        }
+
+        if (input.checked) {
+          // Verificar limite máximo
+          if (maxSelections > 0 && this.selectedModifiers[modifierId].length >= maxSelections) {
+            input.checked = false;
+            return;
+          }
+          this.selectedModifiers[modifierId].push({
+            id: optionId,
+            modifierId: modifierId,
+            title: modifier.title,
+            price: price
+          });
+        } else {
+          this.selectedModifiers[modifierId] = this.selectedModifiers[modifierId].filter(
+            m => m.id !== optionId
+          );
+        }
+      }
+
+      // Atualizar visual
+      this.updateModifierVisuals(groupName);
+      this.updateTotal();
+      this.validateSelection();
+    }
+
+    updateModifierVisuals(groupName) {
+      const inputs = this.modal.querySelectorAll(`input[name="${groupName}"]`);
+      inputs.forEach((input) => {
+        const option = input.closest('.vc-product-modal__modifier-option');
+        if (option) {
+          if (input.checked) {
+            option.classList.add('is-selected');
+          } else {
+            option.classList.remove('is-selected');
+          }
+        }
+      });
+    }
+
+    updateTotal() {
+      let total = this.basePrice;
+
+      Object.values(this.selectedModifiers).forEach((modifiers) => {
+        modifiers.forEach((mod) => {
+          total += mod.price || 0;
+        });
+      });
+
+      const totalEl = this.modal.querySelector('.vc-product-modal__total-value');
+      if (totalEl) {
+        totalEl.textContent = this.formatPrice(total);
       }
     }
 
-    /**
-     * Valida o formulário
-     */
-    validateForm() {
+    validateSelection() {
+      let isValid = true;
       const errors = [];
-      const addBtn = this.modal.querySelector('.vc-product-modal__add');
 
-      // Verificar modificadores obrigatórios
       this.modifiers.forEach((modifier) => {
-        if (modifier.type === 'required') {
-          const min = modifier.min || 0;
-          const selected = this.selectedModifiers[modifier.id] || 0;
+        const selected = this.selectedModifiers[modifier.id] || [];
+        const count = selected.length;
+        const min = modifier.min || 0;
+        const max = modifier.max === null ? 999 : modifier.max;
 
-          if (selected < min) {
-            errors.push(`"${modifier.title}" é obrigatório (mínimo ${min})`);
-          }
+        if (modifier.type === 'required' && count === 0) {
+          isValid = false;
+          errors.push(`"${modifier.title}" é obrigatório`);
+        }
 
-          if (modifier.max && selected > modifier.max) {
-            errors.push(`"${modifier.title}" permite no máximo ${modifier.max} opção${modifier.max > 1 ? 'ões' : ''}`);
-          }
+        if (min > 0 && count < min) {
+          isValid = false;
+          errors.push(`"${modifier.title}" requer pelo menos ${min} seleção(ões)`);
+        }
+
+        if (max > 0 && max < 999 && count > max) {
+          isValid = false;
+          errors.push(`"${modifier.title}" permite no máximo ${max} seleção(ões)`);
         }
       });
 
-      // Exibir erros
-      const errorsContainer = this.modal.querySelector('.vc-product-modal__errors');
-      if (errors.length > 0) {
-        errorsContainer.innerHTML = errors.map((e) => `<p class="vc-product-modal__error">${e}</p>`).join('');
-        addBtn.disabled = true;
-      } else {
-        errorsContainer.innerHTML = '';
-        addBtn.disabled = false;
+      const addBtn = this.modal.querySelector('.vc-product-modal__add-btn');
+      if (addBtn) {
+        addBtn.disabled = !isValid;
       }
 
-      return errors.length === 0;
-    }
-
-    /**
-     * Atualiza o preço total
-     */
-    updatePrice() {
-      let total = this.basePrice;
-
-      Object.keys(this.selectedModifiers).forEach((modifierId) => {
-        const modifier = this.modifiers.find((m) => m.id === Number(modifierId));
-        if (modifier) {
-          const quantity = this.selectedModifiers[modifierId] || 1;
-          total += (modifier.price || 0) * quantity;
-        }
-      });
-
-      const priceEl = this.modal.querySelector('.vc-product-modal__price-value');
-      priceEl.textContent = `R$ ${floatToBR(total)}`;
-    }
-
-    /**
-     * Adiciona item ao carrinho
-     */
-    addToCart() {
-      if (!this.validateForm()) {
-        return;
+      // Mostrar erros
+      const body = this.modal.querySelector('.vc-product-modal__body');
+      const existingError = body.querySelector('.vc-product-modal__error');
+      if (existingError) {
+        existingError.remove();
       }
 
-      // Disparar evento customizado para o frontend.js adicionar ao carrinho
-      const event = new CustomEvent('vc:add-to-cart', {
-        detail: {
-          item: {
-            id: this.currentItem.id,
-            title: this.currentItem.title,
-            price: floatToBR(this.basePrice),
-            restaurant_id: this.currentItem.restaurant_id,
-          },
-          modifiers: Object.keys(this.selectedModifiers).map((modifierId) => {
-            const modifier = this.modifiers.find((m) => m.id === Number(modifierId));
-            return {
-              id: Number(modifierId),
-              title: modifier ? modifier.title : '',
-              price: modifier ? modifier.price : 0,
-              quantity: this.selectedModifiers[modifierId] || 1,
-            };
-          }),
-          totalPrice: this.calculateTotalPrice(),
-        },
-      });
-
-      document.dispatchEvent(event);
-      this.close();
-    }
-
-    /**
-     * Calcula preço total incluindo modificadores
-     */
-    calculateTotalPrice() {
-      let total = this.basePrice;
-      Object.keys(this.selectedModifiers).forEach((modifierId) => {
-        const modifier = this.modifiers.find((m) => m.id === Number(modifierId));
-        if (modifier) {
-          total += (modifier.price || 0) * (this.selectedModifiers[modifierId] || 1);
+      if (!isValid && errors.length > 0) {
+        const errorHTML = `<div class="vc-product-modal__error">${errors.join('<br>')}</div>`;
+        const modifiersEl = body.querySelector('.vc-product-modal__modifiers');
+        if (modifiersEl) {
+          modifiersEl.insertAdjacentHTML('beforebegin', errorHTML);
         }
-      });
-      return total;
+      }
     }
 
-    /**
-     * Fecha o modal
-     */
     close() {
-      this.modal.classList.add('vc-product-modal--hidden');
-      this.modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      this.currentItem = null;
-      this.modifiers = [];
-      this.selectedModifiers = {};
+      if (this.modal) {
+        this.modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+        this.currentItem = null;
+        this.selectedModifiers = {};
+        this.modifiers = [];
+      }
     }
 
-    /**
-     * Mostra loading
-     */
-    showLoading() {
-      const container = this.modal.querySelector('.vc-product-modal__modifiers');
-      container.innerHTML = '<p class="vc-product-modal__loading">Carregando opções...</p>';
+    addToCart() {
+      if (!this.currentItem) return;
+
+      // Usar o carrinho do frontend.js se disponível
+      const CART_KEY = 'vc_cart_v1';
+      let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+
+      // Preparar item com modificadores
+      const modifiersArray = Object.values(this.selectedModifiers).flat();
+      const cartItem = {
+        id: this.currentItem.id,
+        rid: this.currentItem.restaurantId,
+        title: this.currentItem.title,
+        price: this.currentItem.price,
+        modifiers: modifiersArray.map(m => ({
+          id: m.id,
+          modifierId: m.modifierId,
+          title: m.title,
+          price: m.price
+        }))
+      };
+
+      // Verificar se já existe item idêntico (mesmo ID e mesmos modificadores)
+      const modifiersKey = JSON.stringify(cartItem.modifiers);
+      const found = cart.find(i => 
+        i.id === cartItem.id && 
+        JSON.stringify(i.modifiers || []) === modifiersKey
+      );
+
+      if (found) {
+        found.qtd++;
+      } else {
+        cart.push({...cartItem, qtd: 1});
+      }
+
+      // Salvar no localStorage
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+
+      // Disparar evento customizado para atualizar UI
+      window.dispatchEvent(new CustomEvent('vemcomer:cart:updated'));
+
+      // Tentar atualizar checkout se existir
+      const checkout = document.querySelector('.vc-checkout');
+      if (checkout && typeof window.renderCart === 'function') {
+        window.renderCart(checkout);
+      }
+
+      // Fechar modal
+      this.close();
+
+      // Mostrar feedback
+      this.showFeedback('Item adicionado ao carrinho!');
     }
 
-    /**
-     * Mostra erro
-     */
-    showError(message) {
-      const container = this.modal.querySelector('.vc-product-modal__modifiers');
-      container.innerHTML = `<p class="vc-product-modal__error">${message}</p>`;
+    showFeedback(message) {
+      // Criar toast simples
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #2f9e44; color: #fff; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 100000;';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+
+    // Utilitários
+    parsePrice(price) {
+      if (typeof price !== 'string') return parseFloat(price) || 0;
+      const cleaned = price.replace(/[^0-9,.]/g, '');
+      const normalized = cleaned.replace(',', '.');
+      return parseFloat(normalized) || 0;
+    }
+
+    formatPrice(price) {
+      return 'R$ ' + parseFloat(price).toFixed(2).replace('.', ',');
+    }
+
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
   }
 
   // Inicializar quando DOM estiver pronto
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      window.VemComerProductModal = new ProductModal();
+      new ProductModal();
     });
   } else {
-    window.VemComerProductModal = new ProductModal();
+    new ProductModal();
   }
 
-  // Expor função global para abrir modal
-  window.vcOpenProductModal = function(itemId, itemData) {
-    if (window.VemComerProductModal) {
-      window.VemComerProductModal.open(itemId, itemData);
-    }
-  };
-
-  // Handler para botões .vc-menu-item__add (shortcode vc_menu_items)
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.vc-menu-item__add');
-    if (!btn || btn.disabled) {
-      return;
-    }
-
-    const itemId = Number(btn.dataset.itemId);
-    if (!itemId) {
-      return;
-    }
-
-    const itemData = {
-      title: btn.dataset.itemTitle || '',
-      description: btn.dataset.itemDescription || '',
-      price: btn.dataset.itemPrice || '0,00',
-      restaurant_id: Number(btn.dataset.restaurantId) || 0,
-      image: btn.dataset.itemImage || null,
-    };
-
-    if (window.vcOpenProductModal) {
-      window.vcOpenProductModal(itemId, itemData);
+  // Adicionar listener para botão "Adicionar ao Carrinho" do modal
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.vc-product-modal__add-btn')) {
+      e.preventDefault();
+      const modal = document.getElementById('vc-product-modal');
+      if (modal && modal.classList.contains('is-open')) {
+        const instance = window.vemcomerProductModal;
+        if (instance && typeof instance.addToCart === 'function') {
+          instance.addToCart();
+        }
+      }
     }
   });
 
-})();
+  // Expor instância globalmente para acesso externo
+  document.addEventListener('DOMContentLoaded', () => {
+    window.vemcomerProductModal = new ProductModal();
+  });
 
+})();

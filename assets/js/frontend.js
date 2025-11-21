@@ -487,4 +487,15 @@
       const input = document.querySelector('.vc-coupon'); if(input) {input.value = coupon;}
     }
   });
+
+  // Escutar atualizações do carrinho (do modal de produto)
+  window.addEventListener('vemcomer:cart:updated', ()=>{
+    const checkout = document.querySelector('.vc-checkout');
+    if(checkout) {
+      renderCart(checkout);
+    }
+  });
+
+  // Expor renderCart globalmente para o modal usar
+  window.renderCart = renderCart;
 })();
