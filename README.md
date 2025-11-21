@@ -87,6 +87,15 @@ wp vc seed
 * **GET** `/wp-json/vemcomer/v1/restaurants/{id}/rating` - Retorna rating agregado (média e total) de um restaurante (público)
 * **POST** `/wp-json/vemcomer/v1/reviews` - Criar avaliação (requer autenticação, body: `restaurant_id`, `rating` (1-5), `comment` (opcional), `order_id` (opcional))
 
+### Favoritos
+
+* **GET** `/wp-json/vemcomer/v1/favorites/restaurants` - Lista restaurantes favoritos do usuário autenticado
+* **POST** `/wp-json/vemcomer/v1/favorites/restaurants/{id}` - Adicionar restaurante aos favoritos (requer autenticação)
+* **DELETE** `/wp-json/vemcomer/v1/favorites/restaurants/{id}` - Remover restaurante dos favoritos (requer autenticação)
+* **GET** `/wp-json/vemcomer/v1/favorites/menu-items` - Lista itens do cardápio favoritos do usuário autenticado
+* **POST** `/wp-json/vemcomer/v1/favorites/menu-items/{id}` - Adicionar item do cardápio aos favoritos (requer autenticação)
+* **DELETE** `/wp-json/vemcomer/v1/favorites/menu-items/{id}` - Remover item do cardápio dos favoritos (requer autenticação)
+
 ### Pedidos
 
 * **POST** `/wp-json/vemcomer/v1/pedidos`
@@ -184,6 +193,27 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.20 - Sistema de Favoritos - REST API (5.2)
+
+**Novas funcionalidades:**
+- **Endpoints REST para favoritos**:
+  - `GET /favorites/restaurants` - Lista restaurantes favoritos do usuário
+  - `POST /favorites/restaurants/{id}` - Adicionar restaurante aos favoritos
+  - `DELETE /favorites/restaurants/{id}` - Remover restaurante dos favoritos
+  - `GET /favorites/menu-items` - Lista itens do cardápio favoritos do usuário
+  - `POST /favorites/menu-items/{id}` - Adicionar item do cardápio aos favoritos
+  - `DELETE /favorites/menu-items/{id}` - Remover item do cardápio dos favoritos
+- **Validações**: Verifica se restaurante/item existe, se já está nos favoritos
+- **Autenticação obrigatória**: Todos os endpoints requerem usuário autenticado
+- **Integração completa**: Usa `Favorites_Helper` para todas as operações
+- **Respostas detalhadas**: Retorna dados completos dos restaurantes/itens favoritos
+
+**Arquivos novos:**
+- `inc/REST/Favorites_Controller.php` - Controller REST para favoritos
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro do Favorites_Controller
 
 ### v0.19 - Sistema de Favoritos - Estrutura de Dados (5.1)
 
@@ -475,7 +505,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
 - ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
-- 🔄 Sistema de Favoritos (5.1 - Estrutura de Dados implementada)
+- ✅ Sistema de Favoritos (5.1 + 5.2 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
