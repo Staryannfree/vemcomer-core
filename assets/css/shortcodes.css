@@ -35,9 +35,18 @@
 .vc-row__price{min-width:72px;text-align:right;font-variant-numeric:tabular-nums}
 
 /* Filtros */
-.vc-filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.vc-filters input[type="text"],.vc-filters select{padding:6px 8px;border:1px solid #ddd;border-radius:8px}
-.vc-filters button{padding:6px 12px;border:1px solid #111;border-radius:8px;background:#111;color:#fff;cursor:pointer}
+.vc-filters{display:flex;flex-direction:column;gap:12px;margin:12px 0;padding:16px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb}
+.vc-filters__row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vc-filters__search{flex:1;min-width:200px;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:0.95rem}
+.vc-filters__select{padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:0.95rem;min-width:150px}
+.vc-filters__checkbox{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.95rem}
+.vc-filters__checkbox input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:#2f9e44}
+.vc-filters__price-range{display:flex;align-items:center;gap:8px;font-size:0.95rem}
+.vc-filters__price-input{width:80px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem}
+.vc-filters__actions{display:flex;gap:8px;margin-top:4px}
+.vc-filters button,.vc-filters .vc-btn{padding:10px 20px;border:1px solid #111;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:0.95rem;text-decoration:none;display:inline-block}
+.vc-filters .vc-btn--ghost{background:#fff;color:#2f9e44;border-color:#2f9e44}
+.vc-filters .vc-btn--ghost:hover{background:#f0fdf4}
 
 /* Empty e paginação */
 .vc-empty{padding:12px;color:#666}

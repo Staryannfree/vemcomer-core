@@ -42,6 +42,15 @@ add_shortcode( 'vc_restaurants', function( $atts = [] ) {
     if ( $a['delivery'] !== '' ) {
         $meta_query[] = [ 'key' => 'vc_restaurant_delivery', 'value' => vc_sc_bool( $a['delivery'] ) ? '1' : '0' ];
     }
+    
+    // Suportar novos filtros via GET
+    $min_rating = isset( $_GET['min_rating'] ) ? (float) $_GET['min_rating'] : '';
+    $is_open_now = isset( $_GET['is_open_now'] ) ? (bool) filter_var( $_GET['is_open_now'], FILTER_VALIDATE_BOOLEAN ) : false;
+    $has_delivery = isset( $_GET['has_delivery'] ) ? (bool) filter_var( $_GET['has_delivery'], FILTER_VALIDATE_BOOLEAN ) : false;
+    
+    if ( $has_delivery ) {
+        $meta_query[] = [ 'key' => '_vc_has_delivery', 'value' => '1' ];
+    }
 
     $q = new WP_Query([
         'post_type'      => 'vc_restaurant',
@@ -54,6 +63,47 @@ add_shortcode( 'vc_restaurants', function( $atts = [] ) {
         'order'          => in_array( strtoupper($a['order']), ['ASC','DESC'], true ) ? strtoupper($a['order']) : 'ASC',
         'no_found_rows'  => false,
     ]);
+    
+    // Filtrar por rating mínimo e is_open_now após query (filtros mais complexos)
+    if ( $q->have_posts() && ( $min_rating > 0 || $is_open_now ) ) {
+        $filtered_posts = [];
+        while ( $q->have_posts() ) {
+            $q->the_post();
+            $rid = get_the_ID();
+            
+            // Verificar rating mínimo
+            if ( $min_rating > 0 ) {
+                if ( class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
+                    $rating = \VC\Utils\Rating_Helper::get_rating( $rid );
+                    if ( $rating['avg'] < $min_rating ) {
+                        continue;
+                    }
+                }
+            }
+            
+            // Verificar se está aberto
+            if ( $is_open_now ) {
+                if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+                    if ( ! \VC\Utils\Schedule_Helper::is_open( $rid ) ) {
+                        continue;
+                    }
+                }
+            }
+            
+            $filtered_posts[] = get_post( $rid );
+        }
+        wp_reset_postdata();
+        
+        // Recriar query com posts filtrados
+        $q = new WP_Query([
+            'post_type'      => 'vc_restaurant',
+            'post__in'       => wp_list_pluck( $filtered_posts, 'ID' ),
+            'posts_per_page' => max(1, (int) $a['per_page']),
+            'paged'          => $paged,
+            'orderby'        => 'post__in',
+            'no_found_rows'  => false,
+        ]);
+    }
 
     ob_start();
     ?>
