@@ -562,6 +562,7 @@ section {
 .home-hero__quick-actions {
     padding: 0 var(--spacing-sm);
     margin-top: var(--spacing-sm);
+    display: block !important;
 }
     
     .btn-geolocation {
