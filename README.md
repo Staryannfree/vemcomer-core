@@ -72,6 +72,13 @@ wp vc seed
 * **GET** `/wp-json/vemcomer/v1/restaurants`
 * **GET** `/wp-json/vemcomer/v1/restaurants/{id}/menu-items`
 
+### Modificadores de Produtos
+
+* **GET** `/wp-json/vemcomer/v1/menu-items/{id}/modifiers` - Lista modificadores de um item do cardápio (público)
+* **POST** `/wp-json/vemcomer/v1/menu-items/{id}/modifiers` - Criar modificador vinculado a um item (admin)
+* **PATCH** `/wp-json/vemcomer/v1/modifiers/{id}` - Atualizar modificador (admin)
+* **DELETE** `/wp-json/vemcomer/v1/modifiers/{id}` - Deletar modificador (admin)
+
 ### Pedidos
 
 * **POST** `/wp-json/vemcomer/v1/pedidos`
@@ -163,6 +170,42 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.9 - Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3)
+
+**Novas funcionalidades:**
+- **CPT `vc_product_modifier`**: Custom Post Type para gerenciar complementos/modificadores de produtos
+  - Campos: tipo (obrigatório/opcional), preço, mínimo/máximo de seleção
+  - Relacionamento Many-to-Many com `vc_menu_item` via meta fields
+  - Meta fields: `_vc_modifier_type`, `_vc_modifier_price`, `_vc_modifier_min`, `_vc_modifier_max`
+  - Meta field `_vc_modifier_menu_items` armazena array de IDs dos itens do cardápio relacionados
+  - Meta field reverso `_vc_menu_item_modifiers` nos itens do cardápio para facilitar queries
+- **Interface Admin**: Metabox completo com validações (mínimo <= máximo, preços não negativos)
+- **Capabilities customizadas**: Permissões específicas para gerenciar modificadores
+- **Submenu no Admin**: Adicionado "Modificadores" ao menu VemComer
+- **REST API completa**: Endpoints para gerenciar modificadores via API
+  - `GET /wp-json/vemcomer/v1/menu-items/{id}/modifiers` - Lista modificadores de um item (público)
+  - `POST /wp-json/vemcomer/v1/menu-items/{id}/modifiers` - Criar modificador (admin)
+  - `PATCH /wp-json/vemcomer/v1/modifiers/{id}` - Atualizar modificador (admin)
+  - `DELETE /wp-json/vemcomer/v1/modifiers/{id}` - Deletar modificador (admin)
+  - Validações: título obrigatório, mínimo <= máximo, preços não negativos
+  - Gerenciamento automático de vínculos bidirecionais entre modificadores e itens do cardápio
+- **Interface Admin Completa**: Metabox no `vc_menu_item` para gerenciar modificadores
+  - Interface drag-and-drop para reordenar modificadores (jQuery UI Sortable)
+  - Lista de modificadores vinculados e disponíveis
+  - Adicionar/remover modificadores com um clique
+  - Visualização de tipo (obrigatório/opcional), preço e limites (min/max)
+  - Validações automáticas: mínimo <= máximo, preços não negativos
+  - Sincronização automática de vínculos bidirecionais ao salvar
+
+**Arquivos novos:**
+- `inc/Model/CPT_ProductModifier.php` - Classe principal do CPT de modificadores
+- `inc/REST/Modifiers_Controller.php` - Controller REST para endpoints de modificadores
+- `inc/Admin/Modifiers_Metabox.php` - Metabox para gerenciar modificadores nos itens do cardápio
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro das classes CPT_ProductModifier, Modifiers_Controller e Modifiers_Metabox
+- `inc/Admin/Menu_Restaurant.php` - Adicionado submenu para modificadores
+
 ### v0.8 - Sistema de Onboarding e Melhorias de Permissões
 
 **Novas funcionalidades:**
@@ -222,7 +265,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 ### Principais recursos planejados:
 
 **Fase 1 - Core Essencial:**
-- Sistema de Complementos/Modificadores de Produtos
+- ✅ Sistema de Complementos/Modificadores de Produtos (1.1 - Estrutura de Dados implementada)
 - Sistema de Frete por Distância e Bairro
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp

@@ -11,6 +11,7 @@ namespace VC\Admin;
 
 use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
+use VC\Model\CPT_ProductModifier;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -48,6 +49,14 @@ class Menu_Restaurant {
             __( 'Cardápio', 'vemcomer' ),
             'edit_posts',
             'edit.php?post_type=' . CPT_MenuItem::SLUG
+        );
+
+        add_submenu_page(
+            'vemcomer-root',
+            __( 'Modificadores', 'vemcomer' ),
+            __( 'Modificadores', 'vemcomer' ),
+            'edit_posts',
+            'edit.php?post_type=' . CPT_ProductModifier::SLUG
         );
     }
 }
