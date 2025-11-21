@@ -92,6 +92,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Model\\CPT_Coupon' ) ) { ( new \VC\Model\CPT_Coupon() )->init(); }
     if ( class_exists( '\\VC\\REST\\Coupons_Controller' ) ) { ( new \VC\REST\Coupons_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Admin_Controller' ) ) { ( new \VC\REST\Admin_Controller() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Audit_Controller' ) ) { ( new \VC\REST\Audit_Controller() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Analytics_Controller' ) ) { ( new \VC\Analytics\Analytics_Controller() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Tracking_Middleware' ) ) { ( new \VC\Analytics\Tracking_Middleware() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Tracking_Controller' ) ) { ( new \VC\Analytics\Tracking_Controller() )->init(); }
