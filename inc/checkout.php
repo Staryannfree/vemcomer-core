@@ -11,4 +11,7 @@ add_action( 'vemcomer_register_fulfillment_method', static function () {
     if ( class_exists( '\\VC\\Checkout\\Methods\\DistanceBasedDelivery' ) ) {
         FulfillmentRegistry::register( new \VC\Checkout\Methods\DistanceBasedDelivery(), \VC\Checkout\Methods\DistanceBasedDelivery::SLUG );
     }
+    if ( class_exists( '\\VC\\Checkout\\Methods\\Pickup' ) ) {
+        FulfillmentRegistry::register( new \VC\Checkout\Methods\Pickup(), \VC\Checkout\Methods\Pickup::SLUG );
+    }
 }, 5 );
