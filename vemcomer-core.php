@@ -89,6 +89,8 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Utils\\Image_Optimizer' ) ) { ( new \VC\Utils\Image_Optimizer() )->init(); }
     if ( class_exists( '\\VC\\Cache\\Cache_Manager' ) ) { ( new \VC\Cache\Cache_Manager() )->init(); }
     if ( class_exists( '\\VC\\REST\\Reports_Controller' ) ) { ( new \VC\REST\Reports_Controller() )->init(); }
+    if ( class_exists( '\\VC\\Model\\CPT_Coupon' ) ) { ( new \VC\Model\CPT_Coupon() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Coupons_Controller' ) ) { ( new \VC\REST\Coupons_Controller() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Analytics_Controller' ) ) { ( new \VC\Analytics\Analytics_Controller() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Tracking_Middleware' ) ) { ( new \VC\Analytics\Tracking_Middleware() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Tracking_Controller' ) ) { ( new \VC\Analytics\Tracking_Controller() )->init(); }
