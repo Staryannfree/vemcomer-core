@@ -77,9 +77,8 @@
     
     <?php
     // Popup de Boas-Vindas - Solicitar Localização
-    $welcome_seen = isset( $_COOKIE['vc_welcome_popup_seen'] ) && $_COOKIE['vc_welcome_popup_seen'] === '1';
-    $has_location = isset( $_COOKIE['vc_user_location'] );
-    if ( ! $welcome_seen && ! $has_location ) :
+    // Por enquanto, mostrar sempre na home (remover verificação de cookie)
+    if ( is_front_page() ) :
     ?>
     <div class="welcome-popup" id="welcome-popup">
         <div class="welcome-popup__dialog">
@@ -107,7 +106,7 @@
         </div>
     </div>
     <?php
-    endif;
+    endif; // is_front_page
     ?>
 </div><!-- #page -->
 

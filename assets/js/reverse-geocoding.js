@@ -216,9 +216,14 @@
                 fillGenericFields(address);
             }
 
-            // Salvar localização
+            // Salvar localização e endereço
             localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
             localStorage.setItem('vc_user_address', JSON.stringify(address));
+            
+            // Salvar cidade separadamente para fácil acesso
+            if (address.city) {
+                localStorage.setItem('vc_user_city', address.city);
+            }
 
             if (onSuccess) {
                 onSuccess(address, { lat, lng });

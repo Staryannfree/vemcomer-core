@@ -79,7 +79,7 @@
         const btn = document.getElementById('vc-use-location');
         if (!btn) return;
 
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             if (!navigator.geolocation) {
                 alert('Geolocalização não suportada pelo seu navegador.');
                 return;
@@ -88,28 +88,61 @@
             btn.classList.add('is-loading');
             btn.disabled = true;
 
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    
-                    // Salvar no localStorage
-                    localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                    
-                    // Atualizar UI
-                    btn.classList.remove('is-loading');
-                    btn.classList.add('is-active');
-                    btn.disabled = false;
-                    
-                    // Recarregar restaurantes com distância
-                    loadRestaurantsWithLocation(lat, lng);
-                },
-                (error) => {
-                    btn.classList.remove('is-loading');
-                    btn.disabled = false;
-                    alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+            try {
+                // Usar reverse geocoding se disponível
+                if (window.VemComerReverseGeocode) {
+                    await window.VemComerReverseGeocode.getLocationAndFill({
+                        fillCheckout: false,
+                        onSuccess: (address, coordinates) => {
+                            // Atualizar título do hero
+                            updateHeroTitle(address.city || address.displayName);
+                            
+                            // Atualizar UI
+                            btn.classList.remove('is-loading');
+                            btn.classList.add('is-active');
+                            btn.disabled = false;
+                            
+                            // Recarregar restaurantes com distância
+                            loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
+                            
+                            showNotification('Localização atualizada!', 'success');
+                        },
+                        onError: (error) => {
+                            btn.classList.remove('is-loading');
+                            btn.disabled = false;
+                            alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+                        }
+                    });
+                } else {
+                    // Fallback sem reverse geocoding
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            
+                            // Salvar no localStorage
+                            localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                            
+                            // Atualizar UI
+                            btn.classList.remove('is-loading');
+                            btn.classList.add('is-active');
+                            btn.disabled = false;
+                            
+                            // Recarregar restaurantes com distância
+                            loadRestaurantsWithLocation(lat, lng);
+                        },
+                        (error) => {
+                            btn.classList.remove('is-loading');
+                            btn.disabled = false;
+                            alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+                        }
+                    );
                 }
-            );
+            } catch (error) {
+                btn.classList.remove('is-loading');
+                btn.disabled = false;
+                alert('Erro ao processar localização.');
+            }
         });
 
         // Verificar se já tem localização salva
@@ -118,6 +151,7 @@
             try {
                 const { lat, lng } = JSON.parse(savedLocation);
                 btn.classList.add('is-active');
+                updateHeroTitleFromLocation();
                 loadRestaurantsWithLocation(lat, lng);
             } catch (e) {
                 // Ignorar erro
@@ -349,16 +383,18 @@
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
-        // Verificar se já tem localização
+        // Por enquanto, mostrar sempre (remover verificação de cookie/localização)
+        // Verificar se já tem localização aceita para mostrar botão
         const savedLocation = localStorage.getItem('vc_user_location');
         const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
         
         if (savedLocation && locationAccepted) {
             // Se já tem localização aceita, mostrar botão no hero
             showHeroLocationButton();
-            return; // Não mostrar popup
+            updateHeroTitleFromLocation();
         }
 
+        // Mostrar popup sempre (por enquanto)
         setTimeout(() => {
             popup.classList.add('is-open');
         }, 1500);
@@ -400,7 +436,10 @@
         }
 
         if (locationBtn) {
-            locationBtn.addEventListener('click', async () => {
+            locationBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
                 if (!navigator.geolocation) {
                     alert('Geolocalização não suportada pelo seu navegador.');
                     return;
@@ -418,6 +457,9 @@
                             onSuccess: (address, coordinates) => {
                                 // Salvar que aceitou localização
                                 localStorage.setItem('vc_location_accepted', 'true');
+                                
+                                // Atualizar título do hero com nome da cidade
+                                updateHeroTitle(address.city || address.displayName);
                                 
                                 // Fechar popup
                                 closePopup();
@@ -472,6 +514,17 @@
                                 // Salvar no localStorage
                                 localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                                 localStorage.setItem('vc_location_accepted', 'true');
+                                
+                                // Fazer reverse geocoding para obter cidade
+                                if (window.VemComerReverseGeocode) {
+                                    window.VemComerReverseGeocode.reverseGeocode(lat, lng)
+                                        .then(address => {
+                                            updateHeroTitle(address.city || address.displayName);
+                                        })
+                                        .catch(() => {
+                                            // Se falhar, manter título padrão
+                                        });
+                                }
                                 
                                 // Fechar popup
                                 closePopup();
@@ -539,6 +592,37 @@
         });
     }
     
+    // Atualizar título do hero com nome da cidade
+    function updateHeroTitle(cityName) {
+        const heroTitle = document.getElementById('hero-title');
+        if (heroTitle && cityName) {
+            heroTitle.textContent = `Peça dos melhores restaurantes de ${cityName}`;
+            // Salvar cidade no localStorage
+            localStorage.setItem('vc_user_city', cityName);
+        }
+    }
+    
+    // Atualizar título do hero a partir da localização salva
+    function updateHeroTitleFromLocation() {
+        const savedCity = localStorage.getItem('vc_user_city');
+        if (savedCity) {
+            updateHeroTitle(savedCity);
+        } else {
+            // Tentar obter cidade do endereço salvo
+            const savedAddress = localStorage.getItem('vc_user_address');
+            if (savedAddress) {
+                try {
+                    const address = JSON.parse(savedAddress);
+                    if (address.city) {
+                        updateHeroTitle(address.city);
+                    }
+                } catch (e) {
+                    // Ignorar erro
+                }
+            }
+        }
+    }
+    
     // Verificar se deve mostrar botão no hero ao carregar
     function checkHeroLocationButton() {
         const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
@@ -546,6 +630,7 @@
         
         if (locationAccepted && savedLocation) {
             showHeroLocationButton();
+            updateHeroTitleFromLocation();
             const heroLocationBtn = document.getElementById('vc-use-location');
             if (heroLocationBtn) {
                 heroLocationBtn.classList.add('is-active');
@@ -557,6 +642,16 @@
         const heroLocationActions = document.getElementById('hero-location-actions');
         if (heroLocationActions) {
             heroLocationActions.style.display = 'block';
+            // Animar entrada
+            setTimeout(() => {
+                heroLocationActions.style.opacity = '0';
+                heroLocationActions.style.transform = 'translateY(-10px)';
+                heroLocationActions.style.transition = 'opacity 0.3s, transform 0.3s';
+                setTimeout(() => {
+                    heroLocationActions.style.opacity = '1';
+                    heroLocationActions.style.transform = 'translateY(0)';
+                }, 10);
+            }, 100);
         }
     }
 
