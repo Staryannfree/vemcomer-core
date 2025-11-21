@@ -58,5 +58,15 @@ class Menu_Restaurant {
             'edit_posts',
             'edit.php?post_type=' . CPT_ProductModifier::SLUG
         );
+
+        if ( class_exists( '\\VC\\Model\\CPT_Review' ) ) {
+            add_submenu_page(
+                'vemcomer-root',
+                __( 'Avaliações', 'vemcomer' ),
+                __( 'Avaliações', 'vemcomer' ),
+                'edit_posts',
+                'edit.php?post_type=' . \VC\Model\CPT_Review::SLUG
+            );
+        }
     }
 }

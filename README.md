@@ -179,6 +179,29 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.16 - Sistema de Avaliações - Estrutura de Dados (4.1)
+
+**Novas funcionalidades:**
+- **CPT `vc_review`**: Custom Post Type para avaliações de restaurantes
+  - Campos: restaurante_id, cliente_id, rating (1-5), comentário, pedido_id (opcional)
+  - Meta fields: `_vc_restaurant_id`, `_vc_customer_id`, `_vc_rating`, `_vc_order_id`
+  - Status customizados: `vc-review-pending`, `vc-review-approved`, `vc-review-rejected`
+- **Metaboxes Admin**: Interface completa para gerenciar avaliações
+  - Metabox de dados: restaurante, cliente, rating, pedido
+  - Metabox de status: aprovar/rejeitar avaliações
+- **Cálculo Automático de Rating**: Atualiza rating agregado do restaurante ao aprovar/rejeitar
+  - Meta `_vc_restaurant_rating_avg` (média)
+  - Meta `_vc_restaurant_rating_count` (total de avaliações aprovadas)
+  - Invalidação automática de cache
+- **Colunas Admin**: Visualização rápida de restaurante, cliente, rating e pedido na lista
+
+**Arquivos novos:**
+- `inc/Model/CPT_Review.php` - CPT e lógica de avaliações
+
+**Arquivos modificados:**
+- `inc/Admin/Menu_Restaurant.php` - Adicionado submenu "Avaliações"
+- `vemcomer-core.php` - Registro do CPT_Review
+
 ### v0.15 - REST API de Horários (3.3)
 
 **Novas funcionalidades:**
@@ -389,6 +412,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
+- 🔄 Sistema de Avaliações e Ratings (4.1 - Estrutura de Dados implementada)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
