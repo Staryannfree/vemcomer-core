@@ -170,6 +170,25 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.11 - Sistema de Frete por Distância (2.2)
+
+**Novas funcionalidades:**
+- **Método de Fulfillment DistanceBasedDelivery**: Implementação completa do cálculo de frete baseado em distância
+  - Cálculo: `base_price + (distance * price_per_km)`
+  - Verificação de raio máximo de entrega
+  - Prioridade para preços por bairro (se configurado, usa preço do bairro em vez de cálculo por distância)
+  - Verificação de pedido mínimo
+  - Frete grátis acima de valor configurado
+  - Cálculo automático de ETA baseado em distância (5 min/km)
+  - Integração com função `vc_haversine_km` para cálculo de distância
+- **Registro automático**: Método registrado no `FulfillmentRegistry` e disponível automaticamente
+
+**Arquivos novos:**
+- `inc/Checkout/Methods/DistanceBasedDelivery.php` - Classe do método de fulfillment por distância
+
+**Arquivos modificados:**
+- `inc/checkout.php` - Registro do método DistanceBasedDelivery
+
 ### v0.10 - Sistema de Frete por Distância (2.1)
 
 **Novas funcionalidades:**
@@ -282,7 +301,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 
 **Fase 1 - Core Essencial:**
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
-- ✅ Sistema de Frete por Distância e Bairro (2.1 - Configuração de Frete implementada)
+- ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 - Configuração e Método implementados)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
