@@ -177,6 +177,23 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.13 - Sistema de Horários Estruturados (3.1)
+
+**Novas funcionalidades:**
+- **Horários estruturados em JSON**: Substituição do campo texto por estrutura JSON completa
+  - Meta field: `_vc_restaurant_schedule` (JSON)
+  - Formato: `{ "monday": { "enabled": true, "periods": [{"open": "09:00", "close": "22:00"}] }, ... }`
+  - Suporte a múltiplos períodos por dia (ex: 09:00-14:00 e 18:00-22:00)
+  - Interface admin visual para configurar horários por dia da semana
+  - Checkbox para habilitar/desabilitar cada dia
+  - Botões para adicionar/remover períodos por dia
+  - Validação de formato HH:MM para horários
+- **Compatibilidade**: Mantém campo legado `vc_restaurant_open_hours` (texto) para compatibilidade com código existente
+- **JavaScript interativo**: Toggle de períodos, adicionar/remover períodos dinamicamente
+
+**Arquivos modificados:**
+- `inc/meta-restaurants.php` - Adicionada interface de horários estruturados e salvamento em JSON
+
 ### v0.12 - REST API de Cotação Expandida (2.3)
 
 **Novas funcionalidades:**
@@ -330,6 +347,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 **Fase 1 - Core Essencial:**
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
+- ✅ Sistema de Horários Estruturados (3.1 - Estrutura de Dados implementada)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

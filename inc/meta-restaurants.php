@@ -36,6 +36,54 @@ add_action( 'add_meta_boxes', function() {
     );
 });
 
+add_action( 'admin_enqueue_scripts', function( $hook ) {
+    global $post_type;
+    if ( 'vc_restaurant' !== $post_type || ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) ) {
+        return;
+    }
+    wp_add_inline_script( 'jquery', '
+        jQuery(document).ready(function($) {
+            // Toggle períodos ao habilitar/desabilitar dia
+            $(document).on("change", ".vc-schedule-enabled", function() {
+                var day = $(this).data("day");
+                var periods = $(".vc-schedule-periods[data-day=\"" + day + "\"]");
+                if ($(this).is(":checked")) {
+                    periods.show();
+                } else {
+                    periods.hide();
+                }
+            });
+
+            // Adicionar período
+            $(document).on("click", ".vc-add-period", function(e) {
+                e.preventDefault();
+                var day = $(this).data("day");
+                var periodsContainer = $(".vc-schedule-periods[data-day=\"" + day + "\"]");
+                var periodCount = periodsContainer.find(".vc-schedule-period").length;
+                var newPeriod = $("<div class=\"vc-schedule-period\" style=\"display: flex; align-items: center; gap: 10px; margin-bottom: 8px;\">" +
+                    "<input type=\"time\" name=\"vc_schedule[" + day + "][periods][" + periodCount + "][open]\" value=\"09:00\" class=\"small-text\" />" +
+                    "<span>—</span>" +
+                    "<input type=\"time\" name=\"vc_schedule[" + day + "][periods][" + periodCount + "][close]\" value=\"22:00\" class=\"small-text\" />" +
+                    "<button type=\"button\" class=\"button button-small vc-remove-period\">Remover</button>" +
+                    "</div>");
+                $(this).before(newPeriod);
+                periodsContainer.find(".vc-remove-period").show();
+            });
+
+            // Remover período
+            $(document).on("click", ".vc-remove-period", function(e) {
+                e.preventDefault();
+                var periodsContainer = $(this).closest(".vc-schedule-periods");
+                $(this).closest(".vc-schedule-period").remove();
+                var periodCount = periodsContainer.find(".vc-schedule-period").length;
+                if (periodCount <= 1) {
+                    periodsContainer.find(".vc-remove-period").hide();
+                }
+            });
+        });
+    ' );
+});
+
 function vc_render_restaurant_metabox( $post ) {
     wp_nonce_field( 'vc_restaurant_meta_nonce', 'vc_restaurant_meta_nonce_field' );
 
@@ -58,8 +106,62 @@ function vc_render_restaurant_metabox( $post ) {
             <td><input type="url" id="vc_restaurant_site" name="vc_restaurant_site" class="regular-text" value="<?php echo esc_attr( $values['site'] ); ?>" /></td>
         </tr>
         <tr>
-            <th><label for="vc_restaurant_open_hours"><?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?></label></th>
-            <td><textarea id="vc_restaurant_open_hours" name="vc_restaurant_open_hours" class="large-text" rows="3"><?php echo esc_textarea( $values['open_hours'] ); ?></textarea></td>
+            <th><label><?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?></label></th>
+            <td>
+                <div id="vc-schedule-manager">
+                    <?php
+                    $schedule_json = get_post_meta( $post->ID, '_vc_restaurant_schedule', true );
+                    $schedule = $schedule_json ? json_decode( $schedule_json, true ) : null;
+                    if ( ! is_array( $schedule ) ) {
+                        $schedule = [];
+                    }
+
+                    $days = [
+                        'monday'    => __( 'Segunda-feira', 'vemcomer' ),
+                        'tuesday'   => __( 'Terça-feira', 'vemcomer' ),
+                        'wednesday' => __( 'Quarta-feira', 'vemcomer' ),
+                        'thursday'  => __( 'Quinta-feira', 'vemcomer' ),
+                        'friday'    => __( 'Sexta-feira', 'vemcomer' ),
+                        'saturday'  => __( 'Sábado', 'vemcomer' ),
+                        'sunday'    => __( 'Domingo', 'vemcomer' ),
+                    ];
+
+                    foreach ( $days as $day_key => $day_label ) :
+                        $day_data = $schedule[ $day_key ] ?? [ 'enabled' => false, 'periods' => [ [ 'open' => '09:00', 'close' => '22:00' ] ] ];
+                        $enabled = isset( $day_data['enabled'] ) ? (bool) $day_data['enabled'] : false;
+                        $periods = isset( $day_data['periods'] ) && is_array( $day_data['periods'] ) ? $day_data['periods'] : [ [ 'open' => '09:00', 'close' => '22:00' ] ];
+                        ?>
+                        <div class="vc-schedule-day" style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                            <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <input type="checkbox" name="vc_schedule[<?php echo esc_attr( $day_key ); ?>][enabled]" value="1" <?php checked( $enabled, true ); ?> class="vc-schedule-enabled" data-day="<?php echo esc_attr( $day_key ); ?>" />
+                                <strong style="margin-left: 8px;"><?php echo esc_html( $day_label ); ?></strong>
+                            </label>
+                            <div class="vc-schedule-periods" data-day="<?php echo esc_attr( $day_key ); ?>" style="<?php echo $enabled ? '' : 'display: none;'; ?>">
+                                <?php foreach ( $periods as $period_index => $period ) : ?>
+                                    <div class="vc-schedule-period" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                        <input type="time" name="vc_schedule[<?php echo esc_attr( $day_key ); ?>][periods][<?php echo esc_attr( $period_index ); ?>][open]" value="<?php echo esc_attr( $period['open'] ?? '09:00' ); ?>" class="small-text" />
+                                        <span>—</span>
+                                        <input type="time" name="vc_schedule[<?php echo esc_attr( $day_key ); ?>][periods][<?php echo esc_attr( $period_index ); ?>][close]" value="<?php echo esc_attr( $period['close'] ?? '22:00' ); ?>" class="small-text" />
+                                        <button type="button" class="button button-small vc-remove-period" style="<?php echo count( $periods ) > 1 ? '' : 'display: none;'; ?>"><?php echo esc_html__( 'Remover', 'vemcomer' ); ?></button>
+                                    </div>
+                                <?php endforeach; ?>
+                                <button type="button" class="button button-small vc-add-period" data-day="<?php echo esc_attr( $day_key ); ?>"><?php echo esc_html__( '+ Adicionar período', 'vemcomer' ); ?></button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <p class="description">
+                    <?php echo esc_html__( 'Configure os horários de funcionamento para cada dia da semana. Você pode adicionar múltiplos períodos por dia (ex: 09:00-14:00 e 18:00-22:00).', 'vemcomer' ); ?>
+                </p>
+                <input type="hidden" id="vc_restaurant_schedule_json" name="vc_restaurant_schedule_json" value="<?php echo esc_attr( $schedule_json ); ?>" />
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_open_hours"><?php echo esc_html__( 'Horário de funcionamento (texto livre - legado)', 'vemcomer' ); ?></label></th>
+            <td>
+                <textarea id="vc_restaurant_open_hours" name="vc_restaurant_open_hours" class="large-text" rows="3" placeholder="<?php echo esc_attr__( 'Ex: Seg-Dom 11:00–23:00', 'vemcomer' ); ?>"><?php echo esc_textarea( $values['open_hours'] ); ?></textarea>
+                <p class="description"><?php echo esc_html__( 'Campo legado para compatibilidade. Use a configuração estruturada acima para melhor controle.', 'vemcomer' ); ?></p>
+            </td>
         </tr>
         <tr>
             <th><label for="vc_restaurant_delivery"><?php echo esc_html__( 'Entrega (delivery)', 'vemcomer' ); ?></label></th>
@@ -179,6 +281,40 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['whatsapp'], sanitize_text_field( $_POST['vc_restaurant_whatsapp'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['site'], esc_url_raw( $_POST['vc_restaurant_site'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['open_hours'], wp_kses_post( $_POST['vc_restaurant_open_hours'] ?? '' ) );
+
+    // Salvar horários estruturados (JSON)
+    $schedule_data = isset( $_POST['vc_schedule'] ) && is_array( $_POST['vc_schedule'] ) ? $_POST['vc_schedule'] : [];
+    $schedule_clean = [];
+    foreach ( $schedule_data as $day => $day_config ) {
+        $day = sanitize_key( $day );
+        if ( ! in_array( $day, [ 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' ], true ) ) {
+            continue;
+        }
+        $enabled = isset( $day_config['enabled'] ) && '1' === $day_config['enabled'];
+        $periods = [];
+        if ( $enabled && isset( $day_config['periods'] ) && is_array( $day_config['periods'] ) ) {
+            foreach ( $day_config['periods'] as $period ) {
+                $open  = isset( $period['open'] ) ? sanitize_text_field( $period['open'] ) : '09:00';
+                $close = isset( $period['close'] ) ? sanitize_text_field( $period['close'] ) : '22:00';
+                // Validar formato HH:MM
+                if ( preg_match( '/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/', $open ) && preg_match( '/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/', $close ) ) {
+                    $periods[] = [
+                        'open'  => $open,
+                        'close' => $close,
+                    ];
+                }
+            }
+        }
+        // Se habilitado mas sem períodos, adicionar período padrão
+        if ( $enabled && empty( $periods ) ) {
+            $periods[] = [ 'open' => '09:00', 'close' => '22:00' ];
+        }
+        $schedule_clean[ $day ] = [
+            'enabled' => $enabled,
+            'periods' => $periods,
+        ];
+    }
+    update_post_meta( $post_id, '_vc_restaurant_schedule', wp_json_encode( $schedule_clean ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery'], isset( $_POST['vc_restaurant_delivery'] ) ? '1' : '0' );
     $lat = sanitize_text_field( $_POST['vc_restaurant_lat'] ?? '' );
     $lng = sanitize_text_field( $_POST['vc_restaurant_lng'] ?? '' );
