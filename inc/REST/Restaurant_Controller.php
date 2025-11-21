@@ -45,6 +45,19 @@ class Restaurant_Controller {
             'args' => [ 'id' => [ 'validate_callback' => 'is_numeric' ] ],
         ] );
 
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/menu-categories', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_menu_categories' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
         register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/schedule', [
             'methods'             => 'GET',
             'callback'            => [ $this, 'get_schedule' ],
@@ -337,5 +350,102 @@ class Restaurant_Controller {
         ], 'debug' );
 
         return new WP_REST_Response( $response, 200 );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/restaurants/{id}/menu-categories
+     * Lista categorias do cardápio com itens, ordenadas
+     */
+    public function get_menu_categories( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $restaurant_id = (int) $request->get_param( 'id' );
+
+        // Verificar se restaurante existe
+        $restaurant = get_post( $restaurant_id );
+        if ( ! $restaurant || CPT_Restaurant::SLUG !== $restaurant->post_type ) {
+            return new WP_Error(
+                'vc_restaurant_not_found',
+                __( 'Restaurante não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        // Buscar itens do cardápio
+        $items_query = new WP_Query( [
+            'post_type'      => CPT_MenuItem::SLUG,
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'meta_query'     => [
+                [
+                    'key'   => '_vc_restaurant_id',
+                    'value' => (string) $restaurant_id,
+                ],
+            ],
+        ] );
+
+        // Agrupar itens por categoria
+        $categories_map = [];
+        foreach ( $items_query->posts as $item ) {
+            $terms = wp_get_object_terms( $item->ID, CPT_MenuItem::TAX_CATEGORY, [ 'fields' => 'ids' ] );
+            if ( is_wp_error( $terms ) || empty( $terms ) ) {
+                // Sem categoria
+                if ( ! isset( $categories_map['_uncategorized'] ) ) {
+                    $categories_map['_uncategorized'] = [
+                        'id'          => 0,
+                        'name'        => __( 'Sem categoria', 'vemcomer' ),
+                        'slug'        => '_uncategorized',
+                        'order'       => 9999,
+                        'image'       => null,
+                        'items'       => [],
+                    ];
+                }
+                $categories_map['_uncategorized']['items'][] = $this->format_menu_item( $item );
+            } else {
+                foreach ( $terms as $term_id ) {
+                    if ( ! isset( $categories_map[ $term_id ] ) ) {
+                        $term = get_term( $term_id );
+                       	if ( ! $term || is_wp_error( $term ) ) {
+                            continue;
+                        }
+
+                        $image_id = (int) get_term_meta( $term_id, '_vc_category_image', true );
+                        $categories_map[ $term_id ] = [
+                            'id'          => $term_id,
+                            'name'        => $term->name,
+                            'slug'        => $term->slug,
+                            'description' => $term->description,
+                            'order'       => (int) get_term_meta( $term_id, '_vc_category_order', true ),
+                            'image'       => $image_id > 0 ? wp_get_attachment_image_url( $image_id, 'medium' ) : null,
+                            'items'       => [],
+                        ];
+                    }
+                    $categories_map[ $term_id ]['items'][] = $this->format_menu_item( $item );
+                }
+            }
+        }
+
+        // Ordenar por ordem
+        usort( $categories_map, function( $a, $b ) {
+            return $a['order'] <=> $b['order'];
+        } );
+
+        $categories = array_values( $categories_map );
+
+        return new WP_REST_Response( [
+            'restaurant_id' => $restaurant_id,
+            'categories'   => $categories,
+        ], 200 );
+    }
+
+    /**
+     * Formata item do cardápio para resposta.
+     */
+    private function format_menu_item( \WP_Post $item ): array {
+        return [
+            'id'           => $item->ID,
+            'title'        => get_the_title( $item ),
+            'price'        => (string) get_post_meta( $item->ID, '_vc_price', true ),
+            'prep_time'    => (int) get_post_meta( $item->ID, '_vc_prep_time', true ),
+            'is_available' => (bool) get_post_meta( $item->ID, '_vc_is_available', true ),
+        ];
     }
 }
