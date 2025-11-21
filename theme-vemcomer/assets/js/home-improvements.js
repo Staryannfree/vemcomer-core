@@ -344,50 +344,123 @@
         }
     }
 
-    // ===== Popup Primeira Visita =====
+    // ===== Popup Primeira Visita - Geolocalização =====
     function initWelcomePopup() {
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
+        // Verificar se já tem localização
+        const savedLocation = localStorage.getItem('vc_user_location');
+        if (savedLocation) {
+            return; // Não mostrar popup se já tem localização
+        }
+
         setTimeout(() => {
             popup.classList.add('is-open');
-        }, 2000);
+        }, 1500);
 
         const closeBtn = popup.querySelector('.welcome-popup__close');
-        const form = popup.querySelector('.welcome-popup__form');
+        const locationBtn = popup.querySelector('#welcome-popup-location-btn');
+        const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
+
+        function closePopup() {
+            popup.classList.remove('is-open');
+            // Salvar cookie (expira em 30 dias)
+            document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+        }
 
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                popup.classList.remove('is-open');
-                // Salvar cookie (expira em 30 dias)
-                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+            closeBtn.addEventListener('click', closePopup);
+        }
+
+        if (skipBtn) {
+            skipBtn.addEventListener('click', closePopup);
+        }
+
+        if (locationBtn) {
+            locationBtn.addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                    alert('Geolocalização não suportada pelo seu navegador.');
+                    return;
+                }
+
+                locationBtn.disabled = true;
+                locationBtn.classList.add('is-loading');
+                locationBtn.innerHTML = '<span>Carregando...</span>';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Salvar no localStorage
+                        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                        
+                        // Atualizar botão de geolocalização no hero se existir
+                        const heroLocationBtn = document.getElementById('vc-use-location');
+                        if (heroLocationBtn) {
+                            heroLocationBtn.classList.add('is-active');
+                        }
+                        
+                        // Fechar popup
+                        closePopup();
+                        
+                        // Recarregar restaurantes com distância
+                        loadRestaurantsWithLocation(lat, lng);
+                        
+                        // Mostrar mensagem de sucesso
+                        showNotification('Localização salva! Mostrando restaurantes próximos.', 'success');
+                    },
+                    (error) => {
+                        locationBtn.disabled = false;
+                        locationBtn.classList.remove('is-loading');
+                        locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Usar minha localização</span>';
+                        
+                        let errorMsg = 'Não foi possível obter sua localização.';
+                        if (error.code === error.PERMISSION_DENIED) {
+                            errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador.';
+                        } else if (error.code === error.POSITION_UNAVAILABLE) {
+                            errorMsg = 'Localização indisponível.';
+                        } else if (error.code === error.TIMEOUT) {
+                            errorMsg = 'Tempo de espera esgotado. Tente novamente.';
+                        }
+                        
+                        alert(errorMsg);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
             });
         }
 
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = form.querySelector('input[type="email"]')?.value;
-                
-                // Enviar para API (implementar endpoint se necessário)
-                fetch(`${REST_BASE}newsletter/subscribe`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-WP-Nonce': NONCE,
-                    },
-                    body: JSON.stringify({ email }),
-                })
-                .then(() => {
-                    alert('Código de desconto enviado para seu e-mail!');
-                    popup.classList.remove('is-open');
-                    document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
-                })
-                .catch(() => {
-                    alert('Erro ao enviar. Tente novamente.');
-                });
-            });
-        }
+        // Fechar ao clicar fora
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup) {
+                closePopup();
+            }
+        });
+    }
+
+    // ===== Notificação =====
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification--${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('is-visible');
+        }, 100);
+        
+        setTimeout(() => {
+            notification.classList.remove('is-visible');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
     }
 
     // ===== Carregar Restaurantes =====

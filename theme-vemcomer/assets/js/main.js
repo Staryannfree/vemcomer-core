@@ -12,10 +12,37 @@
         const navigation = document.querySelector('.main-navigation');
         
         if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', () => {
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
                 menuToggle.setAttribute('aria-expanded', !isExpanded);
                 navigation.classList.toggle('is-open');
+                
+                // Prevenir scroll do body quando menu aberto
+                if (!isExpanded) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Fechar menu ao clicar em link
+            const navLinks = navigation.querySelectorAll('a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                    navigation.classList.remove('is-open');
+                    document.body.style.overflow = '';
+                });
+            });
+            
+            // Fechar menu ao clicar fora
+            document.addEventListener('click', (e) => {
+                if (!navigation.contains(e.target) && !menuToggle.contains(e.target)) {
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                    navigation.classList.remove('is-open');
+                    document.body.style.overflow = '';
+                }
             });
         }
 

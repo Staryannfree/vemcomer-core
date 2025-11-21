@@ -381,7 +381,8 @@
 .welcome-popup {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -389,6 +390,7 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
+    padding: var(--spacing-md);
 }
 
 .welcome-popup.is-open {
@@ -397,22 +399,39 @@
 }
 
 .welcome-popup__dialog {
+    position: relative;
     background: #fff;
-    border-radius: 16px;
-    max-width: 500px;
-    width: 90%;
-    padding: var(--spacing-lg);
+    border-radius: 20px;
+    max-width: 450px;
+    width: 100%;
+    padding: var(--spacing-xl);
     text-align: center;
-    transform: scale(0.9);
+    transform: scale(0.9) translateY(20px);
     transition: transform 0.3s;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .welcome-popup.is-open .welcome-popup__dialog {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
+}
+
+.welcome-popup__icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 .welcome-popup__title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 700;
     margin: 0 0 var(--spacing-sm);
     color: var(--color-text);
@@ -420,32 +439,65 @@
 
 .welcome-popup__text {
     color: var(--color-text-light);
-    margin: 0 0 var(--spacing-md);
+    margin: 0 0 var(--spacing-sm);
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
-.welcome-popup__form {
+.welcome-popup__subtext {
+    color: var(--color-text-light);
+    margin: 0 0 var(--spacing-lg);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.welcome-popup__actions {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
 }
 
-.welcome-popup__input {
-    padding: 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    font-size: 1rem;
+.welcome-popup__actions .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.welcome-popup__actions .btn-icon {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+.welcome-popup__privacy {
+    margin: var(--spacing-md) 0 0;
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+    line-height: 1.5;
 }
 
 .welcome-popup__close {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    background: none;
+    top: 16px;
+    right: 16px;
+    background: var(--color-bg-light);
     border: none;
     font-size: 1.5rem;
     color: var(--color-text-light);
     cursor: pointer;
-    padding: 4px;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.welcome-popup__close:hover {
+    background: var(--color-border);
+    color: var(--color-text);
 }
 
 /* Bottom Navigation Mobile */
@@ -675,6 +727,67 @@ body.dark-mode {
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Notificação */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s, transform 0.3s;
+    max-width: 350px;
+}
+
+.notification.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification--success {
+    border-left: 4px solid #10b981;
+}
+
+.notification--error {
+    border-left: 4px solid #ef4444;
+}
+
+.notification--info {
+    border-left: 4px solid var(--color-primary);
+}
+
+/* Responsivo - Popup Mobile */
+@media (max-width: 768px) {
+    .welcome-popup__dialog {
+        padding: var(--spacing-lg);
+        border-radius: 16px;
+    }
+    
+    .welcome-popup__icon {
+        font-size: 3rem;
+    }
+    
+    .welcome-popup__title {
+        font-size: 1.5rem;
+    }
+    
+    .welcome-popup__text,
+    .welcome-popup__subtext {
+        font-size: 0.9rem;
+    }
+    
+    .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
     }
 }
 

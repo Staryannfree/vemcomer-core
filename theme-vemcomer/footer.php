@@ -76,34 +76,37 @@
     </nav>
     
     <?php
-    // Popup de Primeira Visita
-    if ( ! is_user_logged_in() ) :
-        $welcome_seen = isset( $_COOKIE['vc_welcome_popup_seen'] ) && $_COOKIE['vc_welcome_popup_seen'] === '1';
-        if ( ! $welcome_seen ) :
+    // Popup de Primeira Visita - Solicitar Localização
+    $welcome_seen = isset( $_COOKIE['vc_welcome_popup_seen'] ) && $_COOKIE['vc_welcome_popup_seen'] === '1';
+    $has_location = isset( $_COOKIE['vc_user_location'] );
+    if ( ! $welcome_seen && ! $has_location ) :
     ?>
     <div class="welcome-popup" id="welcome-popup">
         <div class="welcome-popup__dialog">
             <button class="welcome-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
+            <div class="welcome-popup__icon">📍</div>
             <h2 class="welcome-popup__title"><?php esc_html_e( 'Bem-vindo ao VemComer!', 'vemcomer' ); ?></h2>
             <p class="welcome-popup__text">
-                <?php esc_html_e( 'Ganhe 10% OFF no seu primeiro pedido! Cadastre seu e-mail para receber o código de desconto.', 'vemcomer' ); ?>
+                <?php esc_html_e( 'Para encontrar os melhores restaurantes perto de você, precisamos da sua localização.', 'vemcomer' ); ?>
             </p>
-            <form class="welcome-popup__form" id="welcome-popup-form">
-                <input 
-                    type="email" 
-                    name="email" 
-                    placeholder="<?php esc_attr_e( 'Seu melhor e-mail', 'vemcomer' ); ?>" 
-                    class="welcome-popup__input"
-                    required
-                />
-                <button type="submit" class="btn btn--primary btn--large">
-                    <?php esc_html_e( 'Receber desconto', 'vemcomer' ); ?>
+            <p class="welcome-popup__subtext">
+                <?php esc_html_e( 'Sua localização será usada apenas para mostrar restaurantes próximos e calcular distâncias.', 'vemcomer' ); ?>
+            </p>
+            <div class="welcome-popup__actions">
+                <button type="button" class="btn btn--primary btn--large" id="welcome-popup-location-btn">
+                    <span class="btn-icon">📍</span>
+                    <span><?php esc_html_e( 'Usar minha localização', 'vemcomer' ); ?></span>
                 </button>
-            </form>
+                <button type="button" class="btn btn--ghost" id="welcome-popup-skip-btn">
+                    <?php esc_html_e( 'Pular por enquanto', 'vemcomer' ); ?>
+                </button>
+            </div>
+            <p class="welcome-popup__privacy">
+                <small><?php esc_html_e( '🔒 Sua privacidade é importante. Não compartilhamos sua localização com terceiros.', 'vemcomer' ); ?></small>
+            </p>
         </div>
     </div>
     <?php
-        endif;
     endif;
     ?>
 </div><!-- #page -->
