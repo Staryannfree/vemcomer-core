@@ -84,6 +84,6 @@ function vemcomer_enhance_restaurant_card( $content, $restaurant_id ) {
     </div>
     <?php
     
-    return $content . ob_get_clean();
+    echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 

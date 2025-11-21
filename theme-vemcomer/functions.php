@@ -85,6 +85,21 @@ function vemcomer_theme_scripts() {
         require_once get_template_directory() . '/inc/restaurant-helpers.php';
     }
     
+    // Carregar helpers de restaurante
+    if ( file_exists( get_template_directory() . '/inc/restaurant-helpers.php' ) ) {
+        require_once get_template_directory() . '/inc/restaurant-helpers.php';
+    }
+    
+    // Carregar melhorias de cards
+    if ( file_exists( get_template_directory() . '/inc/enhance-restaurant-cards.php' ) ) {
+        require_once get_template_directory() . '/inc/enhance-restaurant-cards.php';
+    }
+    
+    // Carregar melhorias de SEO
+    if ( file_exists( get_template_directory() . '/inc/seo-improvements.php' ) ) {
+        require_once get_template_directory() . '/inc/seo-improvements.php';
+    }
+    
     // Se o plugin vemcomer-core estiver ativo, carregar seus assets também
     if ( class_exists( 'VC\Frontend\Shortcodes' ) ) {
         // Os assets do plugin serão carregados automaticamente pelos shortcodes
