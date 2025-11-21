@@ -101,6 +101,10 @@ wp vc seed
 * **GET** `/wp-json/vemcomer/v1/orders?status={opcional}&data_inicio={opcional}&data_fim={opcional}&restaurant_id={opcional}&per_page={opcional}&page={opcional}` - Lista pedidos do usuário autenticado com filtros
 * **GET** `/wp-json/vemcomer/v1/orders/{id}` - Detalhes completos de um pedido (requer autenticação, apenas dono ou admin)
 
+### Analytics
+
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/analytics?period={today|week|month|custom}&date_from={opcional}&date_to={opcional}` - Métricas de analytics do restaurante (requer autenticação, apenas dono ou admin)
+
 ### Pedidos
 
 * **POST** `/wp-json/vemcomer/v1/pedidos`
@@ -198,6 +202,24 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.24 - Sistema de Analytics - Dashboard (7.2)
+
+**Novas funcionalidades:**
+- **Endpoint REST de Analytics**: `GET /restaurants/{id}/analytics`
+  - Métricas: visualizações de restaurante, visualizações de cardápio, cliques WhatsApp, adições ao carrinho, inícios de checkout
+  - Taxa de conversão: cliques WhatsApp / visualizações de restaurante
+  - Clientes únicos: total de clientes distintos que interagiram
+  - Itens mais vistos: top 10 itens do cardápio mais visualizados
+- **Filtros de período**: today, week, month, custom (com date_from e date_to)
+- **Controle de acesso**: Apenas dono do restaurante ou admin pode ver analytics
+- **Cálculo de métricas**: Agregação de eventos por tipo e período
+
+**Arquivos novos:**
+- `inc/Analytics/Analytics_Controller.php` - Controller REST para analytics
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro do Analytics_Controller
 
 ### v0.23 - Sistema de Analytics - Tracking de Eventos (7.1)
 
