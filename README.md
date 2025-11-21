@@ -179,6 +179,27 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.17 - Sistema de Avaliações - Cálculo de Rating Agregado (4.2)
+
+**Novas funcionalidades:**
+- **Classe `Rating_Helper`**: Helper para cálculo e cache de ratings agregados
+  - `get_rating($restaurant_id)`: Retorna média, total e formato formatado
+  - `get_average($restaurant_id)`: Retorna apenas a média
+  - `get_count($restaurant_id)`: Retorna apenas o total
+  - `recalculate($restaurant_id)`: Recalcula e atualiza rating
+  - `invalidate_cache($restaurant_id)`: Invalida cache
+- **Função global `vc_restaurant_get_rating()`**: Helper global para obter rating
+- **Sistema de cache**: Transient de 1 hora para melhor performance
+- **Invalidação automática**: Cache invalidado ao criar/atualizar/deletar avaliações
+- **Atualização automática de meta fields**: `_vc_restaurant_rating_avg` e `_vc_restaurant_rating_count`
+
+**Arquivos novos:**
+- `inc/Utils/Rating_Helper.php` - Classe helper para ratings com cache
+
+**Arquivos modificados:**
+- `inc/Model/CPT_Review.php` - Integração com Rating_Helper, hooks para invalidação de cache
+- `vemcomer-core.php` - Registro do Rating_Helper
+
 ### v0.16 - Sistema de Avaliações - Estrutura de Dados (4.1)
 
 **Novas funcionalidades:**
@@ -412,7 +433,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
-- 🔄 Sistema de Avaliações e Ratings (4.1 - Estrutura de Dados implementada)
+- 🔄 Sistema de Avaliações e Ratings (4.1 + 4.2 - Estrutura e Cálculo implementados)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

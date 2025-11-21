@@ -26,6 +26,10 @@ class CPT_Review {
 		add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
 		add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
 		add_action( 'init', [ $this, 'grant_caps' ], 5 );
+		
+		// Invalidar cache de rating ao criar/atualizar/deletar avaliação
+		add_action( 'wp_insert_post', [ $this, 'invalidate_rating_cache_on_save' ], 10, 3 );
+		add_action( 'before_delete_post', [ $this, 'invalidate_rating_cache_on_delete' ] );
 	}
 
 	private function capabilities(): array {
@@ -243,10 +247,20 @@ class CPT_Review {
 
 		// Salvar restaurante
 		$restaurant_id = isset( $_POST['vc_restaurant_id'] ) ? (int) $_POST['vc_restaurant_id'] : 0;
+		$old_restaurant_id = (int) get_post_meta( $post_id, '_vc_restaurant_id', true );
+		
 		if ( $restaurant_id > 0 ) {
 			update_post_meta( $post_id, '_vc_restaurant_id', $restaurant_id );
+			// Se mudou de restaurante, recalcular ambos
+			if ( $old_restaurant_id > 0 && $old_restaurant_id !== $restaurant_id ) {
+				$this->update_restaurant_rating( $old_restaurant_id );
+			}
 		} else {
 			delete_post_meta( $post_id, '_vc_restaurant_id' );
+			// Se tinha restaurante antes, recalcular
+			if ( $old_restaurant_id > 0 ) {
+				$this->update_restaurant_rating( $old_restaurant_id );
+			}
 		}
 
 		// Salvar cliente
@@ -259,8 +273,17 @@ class CPT_Review {
 
 		// Salvar rating
 		$rating = isset( $_POST['vc_rating'] ) ? (int) $_POST['vc_rating'] : 0;
+		$old_rating = (int) get_post_meta( $post_id, '_vc_rating', true );
+		
 		if ( $rating >= 1 && $rating <= 5 ) {
 			update_post_meta( $post_id, '_vc_rating', $rating );
+			// Se mudou o rating e a avaliação está aprovada, recalcular
+			if ( $old_rating !== $rating && $restaurant_id > 0 ) {
+				$current_status = get_post_status( $post_id );
+				if ( self::STATUS_APPROVED === $current_status ) {
+					$this->update_restaurant_rating( $restaurant_id );
+				}
+			}
 		} else {
 			delete_post_meta( $post_id, '_vc_rating' );
 		}
@@ -302,37 +325,40 @@ class CPT_Review {
 
 	/**
 	 * Atualiza o rating agregado do restaurante.
+	 * Usa Rating_Helper para recalcular com cache.
 	 */
 	private function update_restaurant_rating( int $restaurant_id ): void {
-		// Buscar todas as avaliações aprovadas do restaurante
-		$reviews = get_posts( [
-			'post_type'      => self::SLUG,
-			'posts_per_page' => -1,
-			'post_status'    => self::STATUS_APPROVED,
-			'meta_query'     => [
-				[
-					'key'   => '_vc_restaurant_id',
-					'value' => (string) $restaurant_id,
+		if ( class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
+			\VC\Utils\Rating_Helper::recalculate( $restaurant_id );
+		} else {
+			// Fallback se Rating_Helper não estiver disponível
+			$reviews = get_posts( [
+				'post_type'      => self::SLUG,
+				'posts_per_page' => -1,
+				'post_status'    => self::STATUS_APPROVED,
+				'meta_query'     => [
+					[
+						'key'   => '_vc_restaurant_id',
+						'value' => (string) $restaurant_id,
+					],
 				],
-			],
-		] );
+			] );
 
-		$ratings = [];
-		foreach ( $reviews as $review ) {
-			$rating = (int) get_post_meta( $review->ID, '_vc_rating', true );
-			if ( $rating >= 1 && $rating <= 5 ) {
-				$ratings[] = $rating;
+			$ratings = [];
+			foreach ( $reviews as $review ) {
+				$rating = (int) get_post_meta( $review->ID, '_vc_rating', true );
+				if ( $rating >= 1 && $rating <= 5 ) {
+					$ratings[] = $rating;
+				}
 			}
+
+			$count = count( $ratings );
+			$avg   = $count > 0 ? round( array_sum( $ratings ) / $count, 2 ) : 0.0;
+
+			update_post_meta( $restaurant_id, '_vc_restaurant_rating_avg', $avg );
+			update_post_meta( $restaurant_id, '_vc_restaurant_rating_count', $count );
+			delete_transient( 'vc_restaurant_rating_' . $restaurant_id );
 		}
-
-		$count = count( $ratings );
-		$avg   = $count > 0 ? array_sum( $ratings ) / $count : 0.0;
-
-		update_post_meta( $restaurant_id, '_vc_restaurant_rating_avg', round( $avg, 2 ) );
-		update_post_meta( $restaurant_id, '_vc_restaurant_rating_count', $count );
-
-		// Invalidar cache de rating
-		delete_transient( 'vc_restaurant_rating_' . $restaurant_id );
 	}
 
 	public function admin_columns( array $columns ): array {
@@ -440,6 +466,36 @@ class CPT_Review {
 					$contrib->add_cap( $c );
 				}
 			}
+		}
+	}
+
+	/**
+	 * Invalida cache de rating ao salvar avaliação.
+	 */
+	public function invalidate_rating_cache_on_save( int $post_id, \WP_Post $post, bool $update ): void {
+		if ( self::SLUG !== $post->post_type ) {
+			return;
+		}
+
+		$restaurant_id = (int) get_post_meta( $post_id, '_vc_restaurant_id', true );
+		if ( $restaurant_id > 0 && class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
+			\VC\Utils\Rating_Helper::invalidate_cache( $restaurant_id );
+		}
+	}
+
+	/**
+	 * Invalida cache de rating ao deletar avaliação.
+	 */
+	public function invalidate_rating_cache_on_delete( int $post_id ): void {
+		$post = get_post( $post_id );
+		if ( ! $post || self::SLUG !== $post->post_type ) {
+			return;
+		}
+
+		$restaurant_id = (int) get_post_meta( $post_id, '_vc_restaurant_id', true );
+		if ( $restaurant_id > 0 && class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
+			// Recalcular (não apenas invalidar) para atualizar meta fields
+			\VC\Utils\Rating_Helper::recalculate( $restaurant_id );
 		}
 	}
 }
