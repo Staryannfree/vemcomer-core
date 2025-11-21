@@ -97,6 +97,7 @@ class Onboarding {
 
     /**
      * Verifica se o onboarding deve ser exibido
+     * Método público para permitir verificação externa
      */
     public function should_show( WP_User $user, ?WP_Post $restaurant ): bool {
         if ( ! $restaurant ) {
@@ -118,8 +119,13 @@ class Onboarding {
 
     /**
      * Renderiza o componente de onboarding
+     *
+     * @param WP_User $user Usuário logado.
+     * @param WP_Post $restaurant Restaurante do usuário.
+     * @param bool $auto_show Se true, exibe automaticamente. Se false, fica oculto e pode ser aberto via botão.
+     * @return string HTML do onboarding.
      */
-    public function render( WP_User $user, WP_Post $restaurant ): string {
+    public function render( WP_User $user, WP_Post $restaurant, bool $auto_show = true ): string {
         if ( ! $this->should_show( $user, $restaurant ) ) {
             return '';
         }
@@ -132,7 +138,7 @@ class Onboarding {
 
         ob_start();
         ?>
-        <div class="vc-onboarding" data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>">
+        <div class="vc-onboarding <?php echo $auto_show ? '' : 'vc-onboarding--hidden'; ?>" data-user-id="<?php echo esc_attr( (string) $user->ID ); ?>">
             <div class="vc-onboarding__overlay"></div>
             <div class="vc-onboarding__modal">
                 <div class="vc-onboarding__header">

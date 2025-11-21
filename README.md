@@ -19,13 +19,45 @@ Shortcodes principais disponíveis:
 * `[vc_restaurants_map]` — mapa público com pins e botão “Perto de mim”.
 * `[vemcomer_menu]` — lista os itens de um restaurante (usa `?restaurant_id=` ou o atributo `restaurant_id`).
 * `[vemcomer_checkout]` — checkout simplificado para o carrinho do marketplace.
-* `[vemcomer_restaurant_panel]` — painel front-end para donos de restaurante (requer login).
+* `[vemcomer_restaurant_panel]` — painel front-end para donos de restaurante (requer login). Inclui botão "Configuração Rápida" para onboarding de novos usuários.
 * `[vemcomer_restaurant_signup]` — formulário público para restaurantes enviarem seus dados (entradas ficam pendentes para aprovação do admin).
 * `[vemcomer_customer_signup]` — formulário de criação de conta para clientes finais.
 
 **Página de validação de acesso**: `/validar-acesso/?token={access_url}` — página automática onde restaurantes aprovados podem criar sua conta de acesso usando o token recebido no webhook.
 
+**Sistema de Onboarding**: O painel do restaurante inclui um sistema de onboarding guiado que ajuda novos donos a configurar seus restaurantes. Acessível via botão "⚡ Configuração Rápida" no painel. Veja mais detalhes em [`docs/ONBOARDING.md`](docs/ONBOARDING.md).
+
 Todos os shortcodes acima renderizam HTML, CSS e JavaScript próprios do plugin — não há dependência de construtores como o Elementor para exibir as páginas públicas.
+
+## Sistema de Onboarding
+
+O sistema de onboarding guia novos donos de restaurantes através dos primeiros passos de configuração:
+
+### Como funciona
+
+1. **Acesso**: Quando um dono de restaurante acessa o painel pela primeira vez, vê o botão "⚡ Configuração Rápida"
+2. **Ativação**: Ao clicar no botão, um modal interativo é aberto com 5 steps guiados
+3. **Progresso**: O progresso é salvo automaticamente e pode ser retomado a qualquer momento
+4. **Verificação**: Alguns steps são verificados automaticamente (perfil completo, itens no cardápio, etc.)
+5. **Conclusão**: Ao completar todos os steps, o botão desaparece e o onboarding não aparece mais
+
+### Steps do Onboarding
+
+1. **Bem-vindo ao VemComer!** - Tela inicial de boas-vindas
+2. **Complete seu perfil** - Adicionar WhatsApp, endereço e horários
+3. **Adicione itens ao cardápio** - Criar pelo menos 3 itens
+4. **Configure delivery** - Definir se oferece delivery
+5. **Veja sua página pública** - Visualizar como os clientes veem o restaurante
+
+### Recursos
+
+- ✅ **Progresso persistente** - Salvo no banco de dados
+- ✅ **Verificação automática** - Detecta quando tarefas são completadas
+- ✅ **Dismissível** - Pode ser fechado e retomado depois
+- ✅ **Responsivo** - Funciona em desktop e mobile
+- ✅ **Acessível** - Segue boas práticas de acessibilidade
+
+Para mais detalhes, consulte [`docs/ONBOARDING.md`](docs/ONBOARDING.md) e [`docs/ONBOARDING_VISUAL.md`](docs/ONBOARDING_VISUAL.md).
 
 ## Seed (dados de demonstração)
 Cria 1 restaurante e 5 itens de cardápio:
@@ -130,6 +162,35 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.8 - Sistema de Onboarding e Melhorias de Permissões
+
+**Novas funcionalidades:**
+- **Sistema de Onboarding para Donos de Restaurantes**: Guia interativo com 5 steps para configurar o restaurante
+  - Step 1: Bem-vindo ao VemComer
+  - Step 2: Complete seu perfil (WhatsApp, endereço, horários)
+  - Step 3: Adicione itens ao cardápio (mínimo 3 itens)
+  - Step 4: Configure delivery
+  - Step 5: Veja sua página pública
+- **Botão "Configuração Rápida"**: Botão no painel do restaurante que abre o onboarding sob demanda
+- **Progresso persistente**: O progresso do onboarding é salvo e pode ser retomado a qualquer momento
+- **Verificação automática**: Alguns steps são verificados automaticamente (perfil completo, itens no cardápio, delivery configurado)
+- **Correção de permissões**: Usuários com role "lojista" agora têm acesso completo ao gerenciamento de cardápio
+- **Capability `edit_posts`**: Adicionada à role "lojista" para permitir acesso ao admin do WordPress
+
+**Arquivos novos:**
+- `inc/Frontend/Onboarding.php` - Classe principal do sistema de onboarding
+- `assets/css/onboarding.css` - Estilos do modal e componentes
+- `assets/js/onboarding.js` - JavaScript com interatividade e AJAX
+- `docs/ONBOARDING.md` - Documentação do sistema
+- `docs/ONBOARDING_STEPS.md` - Detalhes de cada step
+- `docs/ONBOARDING_VISUAL.md` - Visualização visual dos componentes
+
+**Arquivos modificados:**
+- `inc/Frontend/RestaurantPanel.php` - Integração do onboarding e botão de configuração rápida
+- `inc/roles-capabilities.php` - Adicionada capability `edit_posts` à role "lojista"
+- `inc/bootstrap.php` - Registro dos assets de onboarding
+- `vemcomer-core.php` - Inicialização da classe Onboarding
 
 ### v0.7 - Sistema de Token de Acesso para Restaurantes Aprovados
 

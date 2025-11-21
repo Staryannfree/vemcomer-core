@@ -3,6 +3,18 @@
  * VemComer Core
  */
 
+/* Hidden state */
+.vc-onboarding--hidden {
+    display: none !important;
+}
+
+.vc-onboarding--hidden .vc-onboarding__overlay,
+.vc-onboarding--hidden .vc-onboarding__modal {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* Overlay */
 .vc-onboarding__overlay {
     position: fixed;
@@ -349,5 +361,45 @@
     .vc-onboarding {
         display: none;
     }
+}
+
+/* Botão de Configuração Rápida no Painel */
+.vc-btn--onboarding {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    border: none !important;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.vc-btn--onboarding::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.vc-btn--onboarding:hover::before {
+    left: 100%;
+}
+
+.vc-btn--onboarding:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5) !important;
+}
+
+.vc-btn--onboarding:active {
+    transform: translateY(0) !important;
+}
+
+.vc-btn--onboarding:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
 }
 

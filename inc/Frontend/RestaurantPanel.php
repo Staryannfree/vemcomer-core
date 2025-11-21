@@ -64,9 +64,9 @@ class RestaurantPanel {
         $public_url     = get_permalink( $restaurant );
         $menu_admin_url = $this->menu_admin_url( $restaurant );
 
-        // Renderiza onboarding se necessário
+        // Prepara onboarding (será exibido via botão)
         $onboarding = new \VC\Frontend\Onboarding();
-        $onboarding_html = $onboarding->render( $user, $restaurant );
+        $onboarding_html = $onboarding->render( $user, $restaurant, false ); // false = não exibir automaticamente
 
         ob_start();
         ?>
@@ -79,6 +79,15 @@ class RestaurantPanel {
                     <p class="vc-panel__status"><?php echo esc_html__( 'Status:', 'vemcomer' ) . ' ' . esc_html( $status_label ); ?></p>
                 </div>
                 <div class="vc-panel__actions">
+                    <?php
+                    // Botão de Configuração Rápida (onboarding)
+                    if ( $onboarding->should_show( $user, $restaurant ) ) :
+                        ?>
+                        <button class="vc-btn vc-btn--primary vc-btn--onboarding" type="button" data-action="open-onboarding">
+                            <?php echo esc_html__( '⚡ Configuração Rápida', 'vemcomer' ); ?>
+                        </button>
+                    <?php endif; ?>
+
                     <?php if ( $edit_url ) : ?>
                         <a class="vc-btn" href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html__( 'Editar dados', 'vemcomer' ); ?></a>
                     <?php endif; ?>

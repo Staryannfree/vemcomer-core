@@ -14,11 +14,57 @@
             }
 
             this.onboarding = onboarding;
-            this.modal = onboarding.querySelector('.vc-onboarding__modal');
-            this.userId = onboarding.dataset.userId;
+            this.modal = onboarding ? onboarding.querySelector('.vc-onboarding__modal') : null;
+            this.userId = onboarding ? onboarding.dataset.userId : null;
             this.nonce = this.getNonce();
 
             this.bindEvents();
+            this.bindOpenButton();
+        },
+
+        bindOpenButton: function() {
+            // Botão para abrir o onboarding
+            const openBtn = document.querySelector('[data-action="open-onboarding"]');
+            if (openBtn) {
+                openBtn.addEventListener('click', () => this.open());
+            }
+        },
+
+        open: function() {
+            if (!this.onboarding) {
+                // Tenta encontrar novamente (caso tenha sido adicionado dinamicamente)
+                this.onboarding = document.querySelector('.vc-onboarding');
+                if (!this.onboarding) {
+                    return;
+                }
+                this.modal = this.onboarding.querySelector('.vc-onboarding__modal');
+                this.userId = this.onboarding.dataset.userId;
+            }
+
+            // Remove classe hidden e mostra
+            this.onboarding.classList.remove('vc-onboarding--hidden');
+            this.onboarding.style.display = 'block';
+            
+            // Força display dos elementos internos
+            const overlay = this.onboarding.querySelector('.vc-onboarding__overlay');
+            if (overlay) {
+                overlay.style.display = 'block';
+            }
+            if (this.modal) {
+                this.modal.style.display = 'block';
+            }
+            
+            // Previne scroll do body
+            this.preventBodyScroll(true);
+            
+            // Foca no modal para acessibilidade
+            if (this.modal) {
+                // Adiciona tabindex para permitir foco
+                if (!this.modal.hasAttribute('tabindex')) {
+                    this.modal.setAttribute('tabindex', '-1');
+                }
+                this.modal.focus();
+            }
         },
 
         getNonce: function() {
@@ -353,10 +399,10 @@
             if (this.onboarding) {
                 this.onboarding.classList.add('vc-onboarding--hidden');
                 
-                // Remove após animação
+                // Esconde após animação
                 setTimeout(() => {
-                    if (this.onboarding && this.onboarding.parentNode) {
-                        this.onboarding.parentNode.removeChild(this.onboarding);
+                    if (this.onboarding) {
+                        this.onboarding.style.display = 'none';
                     }
                 }, 300);
             }
