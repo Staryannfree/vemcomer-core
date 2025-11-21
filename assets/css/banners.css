@@ -1,0 +1,106 @@
+/* Sistema de Banners */
+.vc-banners {
+  margin: 24px 0;
+}
+
+.vc-banners__slider {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.vc-banner-item {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #f3f4f6;
+  min-height: 200px;
+}
+
+.vc-banner-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.vc-banner-item__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.vc-banner-item__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vc-banner-item__overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  padding: 20px;
+  color: #fff;
+}
+
+.vc-banner-item__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Layout de slider (carousel) - opcional */
+.vc-banners--slider .vc-banners__slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 16px;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.vc-banners--slider .vc-banner-item {
+  flex: 0 0 90%;
+  max-width: 90%;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .vc-banners--slider .vc-banner-item {
+    flex: 0 0 45%;
+    max-width: 45%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vc-banners--slider .vc-banner-item {
+    flex: 0 0 30%;
+    max-width: 30%;
+  }
+}
+
+/* Esconder scrollbar no Chrome/Safari */
+.vc-banners--slider .vc-banners__slider::-webkit-scrollbar {
+  height: 8px;
+}
+
+.vc-banners--slider .vc-banners__slider::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.vc-banners--slider .vc-banners__slider::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.vc-banners--slider .vc-banners__slider::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
