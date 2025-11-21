@@ -50,7 +50,7 @@ get_header();
 
 <?php
 // Seção 2: Banners
-if ( vemcomer_is_plugin_active() ) :
+if ( function_exists( 'vemcomer_is_plugin_active' ) && vemcomer_is_plugin_active() ) :
 ?>
 <section class="home-banners">
     <div class="container">
@@ -62,28 +62,39 @@ if ( vemcomer_is_plugin_active() ) :
 
 <?php
 // Seção 2.5: Categorias Populares
-if ( vemcomer_is_plugin_active() ) {
-    require_once get_template_directory() . '/inc/home-improvements.php';
-    echo vemcomer_home_popular_categories(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+if ( function_exists( 'vemcomer_is_plugin_active' ) && vemcomer_is_plugin_active() ) {
+    $home_improvements = get_template_directory() . '/inc/home-improvements.php';
+    if ( file_exists( $home_improvements ) ) {
+        require_once $home_improvements;
+    }
+    if ( function_exists( 'vemcomer_home_popular_categories' ) ) {
+        echo vemcomer_home_popular_categories(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    }
 }
 ?>
 
 <?php
 // Seção 2.6: Restaurantes em Destaque
-if ( vemcomer_is_plugin_active() ) {
-    echo vemcomer_home_featured_restaurants(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+if ( function_exists( 'vemcomer_is_plugin_active' ) && vemcomer_is_plugin_active() ) {
+    if ( function_exists( 'vemcomer_home_featured_restaurants' ) ) {
+        echo vemcomer_home_featured_restaurants(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    }
 }
 ?>
 
 <?php
 // Seção 3: Listagem de Restaurantes
-if ( vemcomer_is_plugin_active() ) :
+if ( function_exists( 'vemcomer_is_plugin_active' ) && vemcomer_is_plugin_active() ) :
 ?>
 <section class="home-restaurants" id="restaurants-list">
     <div class="container">
         <h2 class="section-title"><?php echo esc_html__( 'Restaurantes', 'vemcomer' ); ?></h2>
         <?php
         // Filtros rápidos
+        $home_improvements = get_template_directory() . '/inc/home-improvements.php';
+        if ( file_exists( $home_improvements ) && ! function_exists( 'vemcomer_home_quick_filters' ) ) {
+            require_once $home_improvements;
+        }
         if ( function_exists( 'vemcomer_home_quick_filters' ) ) {
             echo vemcomer_home_quick_filters(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         }
@@ -109,7 +120,7 @@ if ( vemcomer_is_plugin_active() ) :
 
 <?php
 // Seção 4: Mapa
-if ( vemcomer_is_plugin_active() ) :
+if ( function_exists( 'vemcomer_is_plugin_active' ) && vemcomer_is_plugin_active() ) :
 ?>
 <section class="home-map">
     <div class="container">
@@ -122,7 +133,7 @@ if ( vemcomer_is_plugin_active() ) :
 
 <?php
 // Seção 5: Para você (só para logados)
-if ( is_user_logged_in() && vemcomer_is_plugin_active() ) :
+if ( is_user_logged_in() && function_exists( 'vemcomer_is_plugin_active' ) && vemcomer_is_plugin_active() ) :
 ?>
 <section class="home-for-you">
     <div class="container">

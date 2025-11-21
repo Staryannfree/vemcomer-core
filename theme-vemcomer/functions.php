@@ -85,19 +85,22 @@ function vemcomer_theme_scripts() {
         require_once get_template_directory() . '/inc/restaurant-helpers.php';
     }
     
-    // Carregar helpers de restaurante
-    if ( file_exists( get_template_directory() . '/inc/restaurant-helpers.php' ) ) {
-        require_once get_template_directory() . '/inc/restaurant-helpers.php';
+    // Carregar helpers de restaurante (com verificação de erro)
+    $restaurant_helpers = get_template_directory() . '/inc/restaurant-helpers.php';
+    if ( file_exists( $restaurant_helpers ) ) {
+        require_once $restaurant_helpers;
     }
     
-    // Carregar melhorias de cards
-    if ( file_exists( get_template_directory() . '/inc/enhance-restaurant-cards.php' ) ) {
-        require_once get_template_directory() . '/inc/enhance-restaurant-cards.php';
+    // Carregar melhorias de cards (com verificação de erro)
+    $enhance_cards = get_template_directory() . '/inc/enhance-restaurant-cards.php';
+    if ( file_exists( $enhance_cards ) ) {
+        require_once $enhance_cards;
     }
     
-    // Carregar melhorias de SEO
-    if ( file_exists( get_template_directory() . '/inc/seo-improvements.php' ) ) {
-        require_once get_template_directory() . '/inc/seo-improvements.php';
+    // Carregar melhorias de SEO (com verificação de erro)
+    $seo_improvements = get_template_directory() . '/inc/seo-improvements.php';
+    if ( file_exists( $seo_improvements ) ) {
+        require_once $seo_improvements;
     }
     
     // Se o plugin vemcomer-core estiver ativo, carregar seus assets também

@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Adiciona filtros rápidos (chips) acima da listagem
  */
 function vemcomer_home_quick_filters() {
-    if ( ! vemcomer_is_plugin_active() ) {
+    if ( ! function_exists( 'vemcomer_is_plugin_active' ) || ! vemcomer_is_plugin_active() ) {
         return '';
     }
 
@@ -66,7 +66,7 @@ function vemcomer_home_quick_filters() {
  * Adiciona seção de categorias populares
  */
 function vemcomer_home_popular_categories() {
-    if ( ! vemcomer_is_plugin_active() ) {
+    if ( ! function_exists( 'vemcomer_is_plugin_active' ) || ! vemcomer_is_plugin_active() ) {
         return '';
     }
 
@@ -124,7 +124,7 @@ function vemcomer_home_popular_categories() {
  * Adiciona seção de restaurantes em destaque
  */
 function vemcomer_home_featured_restaurants() {
-    if ( ! vemcomer_is_plugin_active() ) {
+    if ( ! function_exists( 'vemcomer_is_plugin_active' ) || ! vemcomer_is_plugin_active() ) {
         return '';
     }
 
