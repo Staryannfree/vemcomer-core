@@ -16,6 +16,10 @@ if ( ! function_exists( 'vc_restaurant_is_open' ) && class_exists( '\\VC\\Utils\
 
 add_shortcode( 'vc_restaurant', function( $atts = [] ) {
     vc_sc_mark_used();
+    
+    // Enfileirar assets de favoritos
+    wp_enqueue_style( 'vemcomer-favorites' );
+    wp_enqueue_script( 'vemcomer-favorites' );
 
     $a = shortcode_atts([
         'id' => ''
@@ -64,6 +68,9 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
     ob_start();
     ?>
     <article class="vc-card vc-restaurant" data-id="<?php echo esc_attr( (string) $pid ); ?>">
+      <div class="vc-card__favorite">
+        <button class="vc-favorite-btn" data-restaurant-id="<?php echo esc_attr( (string) $pid ); ?>" aria-label="<?php echo esc_attr__( 'Adicionar aos favoritos', 'vemcomer' ); ?>">🤍</button>
+      </div>
       <a class="vc-card__link" href="<?php echo esc_url( get_permalink( $pid ) ); ?>">
         <div class="vc-card__thumb">
           <?php echo get_the_post_thumbnail( $pid, 'medium' ); ?>

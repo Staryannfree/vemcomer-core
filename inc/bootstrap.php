@@ -77,6 +77,8 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_script('vemcomer-product-modal', $base_url . 'assets/js/product-modal.js', ['vemcomer-front'], $ver, true);
         wp_register_style('vemcomer-reviews', $base_url . 'assets/css/reviews.css', [], $ver);
         wp_register_script('vemcomer-reviews', $base_url . 'assets/js/reviews.js', ['vemcomer-front'], $ver, true);
+        wp_register_style('vemcomer-favorites', $base_url . 'assets/css/favorites.css', [], $ver);
+        wp_register_script('vemcomer-favorites', $base_url . 'assets/js/favorites.js', ['vemcomer-front'], $ver, true);
     }
 }
 

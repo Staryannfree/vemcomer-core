@@ -13,6 +13,9 @@ add_shortcode( 'vc_menu_items', function( $atts = [] ) {
     // Enfileirar assets do modal de produto
     wp_enqueue_style( 'vemcomer-product-modal' );
     wp_enqueue_script( 'vemcomer-product-modal' );
+    // Enfileirar assets de favoritos
+    wp_enqueue_style( 'vemcomer-favorites' );
+    wp_enqueue_script( 'vemcomer-favorites' );
 
     if ( ! post_type_exists( 'vc_menu_item' ) ) {
         return '<p class="vc-empty">' . esc_html__( 'Itens de cardápio indisponíveis.', 'vemcomer' ) . '</p>';
@@ -84,6 +87,7 @@ add_shortcode( 'vc_menu_items', function( $atts = [] ) {
               </div>
               <div class="vc-menu-item__price">
                 <span class="vc-price"><?php echo esc_html( $price ); ?></span>
+                <button class="vc-favorite-btn vc-menu-item__favorite" data-menu-item-id="<?php echo esc_attr( (string) $mid ); ?>" aria-label="<?php echo esc_attr__( 'Adicionar aos favoritos', 'vemcomer' ); ?>" style="margin-right: 8px;">🤍</button>
                 <button 
                   class="vc-btn vc-btn--small vc-menu-item__add" 
                   data-item-id="<?php echo esc_attr( (string) $mid ); ?>"

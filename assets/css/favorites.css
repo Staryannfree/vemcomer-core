@@ -1,0 +1,74 @@
+/* Sistema de Favoritos */
+.vc-favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.vc-favorite-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.vc-favorite-btn.is-favorite {
+  animation: favorite-pulse 0.3s ease;
+}
+
+@keyframes favorite-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.vc-favorite-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Botão de favorito nos cards */
+.vc-card__favorite {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.vc-card__favorite .vc-favorite-btn {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Lista de favoritos */
+.vc-favorites-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.vc-favorites-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.vc-favorites-empty p {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.vc-favorites-empty .vc-btn {
+  margin-top: 12px;
+}
+

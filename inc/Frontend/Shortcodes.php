@@ -32,6 +32,8 @@ class Shortcodes {
         wp_enqueue_script( 'vemcomer-front' );
         wp_enqueue_style( 'vemcomer-product-modal' );
         wp_enqueue_script( 'vemcomer-product-modal' );
+        wp_enqueue_style( 'vemcomer-favorites' );
+        wp_enqueue_script( 'vemcomer-favorites' );
         wp_localize_script( 'vemcomer-front', 'VemComer', [
             'rest'  => [ 'base' => esc_url_raw( rest_url( 'vemcomer/v1' ) ) ],
             'nonce' => wp_create_nonce( 'wp_rest' ),
@@ -58,7 +60,10 @@ class Shortcodes {
             $rating = Rating_Helper::get_rating( $rid );
             $is_open = \VC\Utils\Schedule_Helper::is_open( $rid );
             $next_open_time = $is_open ? null : \VC\Utils\Schedule_Helper::get_next_open_time( $rid );
-            echo '<div class="vc-card">';
+            echo '<div class="vc-card" style="position: relative;">';
+            echo '<div class="vc-card__favorite">';
+            echo '<button class="vc-favorite-btn" data-restaurant-id="' . esc_attr( (string) $rid ) . '" aria-label="' . esc_attr__( 'Adicionar aos favoritos', 'vemcomer' ) . '">🤍</button>';
+            echo '</div>';
             echo get_the_post_thumbnail( $rid, 'medium', [ 'class' => 'vc-thumb' ] );
             echo '<h3 class="vc-title">' . esc_html( get_the_title() ) . '</h3>';
             echo '<div class="vc-card__status">';

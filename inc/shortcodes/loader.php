@@ -35,6 +35,7 @@ require_once __DIR__ . '/restaurants-map.php';
 require_once __DIR__ . '/menu-items.php';
 require_once __DIR__ . '/filters.php';
 require_once __DIR__ . '/reviews.php';
+require_once __DIR__ . '/favorites.php';
 
 // Defaults/Fallbacks de atributos (usar query string quando faltarem)
 if ( file_exists( __DIR__ . '/defaults.php' ) ) {
