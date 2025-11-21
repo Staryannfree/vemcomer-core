@@ -66,6 +66,84 @@ class CPT_MenuItem {
             'hierarchical' => false,
             'show_in_rest' => true,
         ] );
+
+        // Adicionar campos customizados à taxonomia
+        add_action( self::TAX_CATEGORY . '_add_form_fields', [ $this, 'add_category_fields' ] );
+        add_action( self::TAX_CATEGORY . '_edit_form_fields', [ $this, 'edit_category_fields' ] );
+        add_action( 'created_' . self::TAX_CATEGORY, [ $this, 'save_category_fields' ] );
+        add_action( 'edited_' . self::TAX_CATEGORY, [ $this, 'save_category_fields' ] );
+    }
+
+    /**
+     * Adiciona campos ao formulário de nova categoria.
+     */
+    public function add_category_fields(): void {
+        ?>
+        <div class="form-field">
+            <label for="vc_category_order"><?php echo esc_html__( 'Ordem', 'vemcomer' ); ?></label>
+            <input type="number" id="vc_category_order" name="vc_category_order" value="0" min="0" />
+            <p class="description"><?php echo esc_html__( 'Ordem de exibição (menor número aparece primeiro).', 'vemcomer' ); ?></p>
+        </div>
+        <div class="form-field">
+            <label for="vc_category_image"><?php echo esc_html__( 'Imagem da Categoria', 'vemcomer' ); ?></label>
+            <input type="hidden" id="vc_category_image" name="vc_category_image" value="" />
+            <button type="button" class="button vc-upload-image-button"><?php echo esc_html__( 'Selecionar Imagem', 'vemcomer' ); ?></button>
+            <div id="vc_category_image_preview" style="margin-top: 10px;"></div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Adiciona campos ao formulário de edição de categoria.
+     */
+    public function edit_category_fields( $term ): void {
+        $order = (int) get_term_meta( $term->term_id, '_vc_category_order', true );
+        $image_id = (int) get_term_meta( $term->term_id, '_vc_category_image', true );
+        ?>
+        <tr class="form-field">
+            <th scope="row">
+                <label for="vc_category_order"><?php echo esc_html__( 'Ordem', 'vemcomer' ); ?></label>
+            </th>
+            <td>
+                <input type="number" id="vc_category_order" name="vc_category_order" value="<?php echo esc_attr( $order ); ?>" min="0" />
+                <p class="description"><?php echo esc_html__( 'Ordem de exibição (menor número aparece primeiro).', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr class="form-field">
+            <th scope="row">
+                <label for="vc_category_image"><?php echo esc_html__( 'Imagem da Categoria', 'vemcomer' ); ?></label>
+            </th>
+            <td>
+                <input type="hidden" id="vc_category_image" name="vc_category_image" value="<?php echo esc_attr( $image_id ); ?>" />
+                <button type="button" class="button vc-upload-image-button"><?php echo esc_html__( 'Selecionar Imagem', 'vemcomer' ); ?></button>
+                <button type="button" class="button vc-remove-image-button" style="<?php echo $image_id ? '' : 'display:none;'; ?>"><?php echo esc_html__( 'Remover Imagem', 'vemcomer' ); ?></button>
+                <div id="vc_category_image_preview" style="margin-top: 10px;">
+                    <?php if ( $image_id ) : ?>
+                        <?php echo wp_get_attachment_image( $image_id, 'thumbnail' ); ?>
+                    <?php endif; ?>
+                </div>
+            </td>
+        </tr>
+        <?php
+    }
+
+    /**
+     * Salva campos customizados da categoria.
+     */
+    public function save_category_fields( int $term_id ): void {
+        if ( isset( $_POST['vc_category_order'] ) ) {
+            $order = (int) $_POST['vc_category_order'];
+            update_term_meta( $term_id, '_vc_category_order', $order );
+        }
+
+        if ( isset( $_POST['vc_category_image'] ) ) {
+            $image_id = (int) $_POST['vc_category_image'];
+            if ( $image_id > 0 ) {
+                update_term_meta( $term_id, '_vc_category_image', $image_id );
+            } else {
+                delete_term_meta( $term_id, '_vc_category_image' );
+            }
+        }
     }
 
     public function register_metaboxes(): void {
