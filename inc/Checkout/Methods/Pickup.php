@@ -69,7 +69,7 @@ class Pickup implements FulfillmentMethod {
 	 * @param array $order Dados do pedido.
 	 * @return string|null ETA em formato "X min" ou null.
 	 */
-	public function get_eta( array $order ) {
+	public function get_eta( array $order ): ?string {
 		$restaurant_id = (int) ( $order['restaurant_id'] ?? 0 );
 		if ( ! $restaurant_id ) {
 			return null;
