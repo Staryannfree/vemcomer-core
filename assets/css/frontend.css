@@ -53,6 +53,12 @@
 .vc-qtd{display:flex;align-items:center;gap:4px}
 .vc-status-banner{background:#111;color:#fff;padding:8px 12px;border-radius:8px;margin-top:8px;display:inline-block}
 .vc-discount{margin-top:4px}
+.vc-order-result{margin-top:16px;padding:12px;border-radius:8px}
+.vc-loading{color:#6b7280;font-style:italic;margin:0}
+.vc-error{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:12px;border-radius:8px}
+.vc-error p{margin:4px 0}
+.vc-success{background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;padding:12px;border-radius:8px}
+.vc-success p{margin:4px 0}
 .vc-btn--ghost{background:#fff;color:var(--vc-green);border:1px solid var(--vc-green)}
 .vc-single{background:linear-gradient(135deg,#e9f9ef 0%,#f8fff0 60%,#fff 100%);padding:48px 0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 .vc-single__wrap{max-width:1160px;margin:0 auto;padding:0 24px}

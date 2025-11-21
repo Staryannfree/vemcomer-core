@@ -61,24 +61,45 @@
     const has = cart.length>0; const place = root.querySelector('.vc-place-order'); if(place) {place.disabled = !has;}
   }
 
-  // ===== Cupom simples =====
+  // ===== Cupom via REST API =====
   const COUPON_KEY = 'vc_coupon_v1';
-  function applyCoupon(code, subtotal){
+  async function applyCoupon(code, restaurantId, subtotal){
     code = (code||'').trim().toUpperCase();
     if(!code) {return {ok:false, msg:'Cupom vazio.'};}
-    // Regras simples (poderá vir de REST no futuro)
-    const rules = {
-      'DESC10': { type:'percent', value:10 },
-      'DESC5':  { type:'money', value:5.00 },
-      'FRETEGRATIS': { type:'freight', value:1 }
-    };
-    const r = rules[code];
-    if(!r) {return {ok:false, msg:'Cupom inválido.'};}
-    let discount = 0, freightFree = false;
-    if(r.type==='percent') {discount = subtotal * (r.value/100);}
-    if(r.type==='money') {discount = r.value;}
-    if(r.type==='freight') {freightFree = true;}
-    return {ok:true, code, discount, freightFree};
+    
+    try {
+      const url = `${VemComer.rest.base}/coupons/validate?code=${encodeURIComponent(code)}&restaurant_id=${restaurantId}&subtotal=${subtotal}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': VemComer.nonce },
+      });
+      
+      if(!res.ok) {
+        const error = await res.json();
+        return {ok:false, msg: error.message || 'Cupom inválido.'};
+      }
+      
+      const data = await res.json();
+      if(data.valid) {
+        let discount = 0;
+        let freightFree = false;
+        
+        if(data.type === 'percent') {
+          discount = subtotal * (data.value / 100);
+        } else if(data.type === 'money') {
+          discount = data.value;
+        } else if(data.type === 'freight') {
+          freightFree = true;
+        }
+        
+        return {ok:true, code, discount, freightFree, data};
+      } else {
+        return {ok:false, msg: data.message || 'Cupom inválido.'};
+      }
+    } catch(err) {
+      console.error('Erro ao validar cupom:', err);
+      return {ok:false, msg:'Erro ao validar cupom. Tente novamente.'};
+    }
   }
 
   // ===== Eventos globais =====
@@ -192,7 +213,7 @@
     if(subtotal<=0){ alert('Adicione itens ao carrinho antes de calcular o frete.'); return; }
 
     const coupon = (root.querySelector('.vc-coupon')?.value||'').trim().toUpperCase();
-    const c = coupon ? applyCoupon(coupon, subtotal) : {ok:false};
+    const c = coupon ? await applyCoupon(coupon, rid, subtotal) : {ok:false};
     const url = `${VemComer.rest.base}/shipping/quote?restaurant_id=${rid}&subtotal=${subtotal}`;
     let shipData = null;
     try {
@@ -239,7 +260,7 @@
 
   document.addEventListener('click', async function(e){
     const btn = e.target.closest('.vc-place-order');
-    if(!btn) {return;}
+    if(!btn || btn.disabled) {return;}
     const root = btn.closest('.vc-checkout');
     const restaurantId = Number(root.dataset.restaurant||0);
     if(!restaurantId){ alert('Selecione um restaurante antes de finalizar.'); return; }
@@ -250,32 +271,123 @@
     const fulfillmentMethod = root.dataset.fulfillmentMethod || '';
     if(!fulfillmentMethod){ alert('Calcule o frete e escolha um método de entrega antes de finalizar.'); return; }
 
-    const itens = cart.map(i=>({ produto_id: i.id, qtd: i.qtd }));
-    const payload = {
-      restaurant_id: restaurantId,
-      itens,
-      subtotal: floatToBR(subtotal),
-      fulfillment: {
-        method: fulfillmentMethod,
-        ship_total: floatToBR(ship)
-      }
-    };
-    const res = await fetch(`${VemComer.rest.base}/pedidos`,{
-      method:'POST', headers:{'Content-Type':'application/json','X-WP-Nonce': VemComer.nonce}, body: JSON.stringify(payload)
+    // Desabilitar botão durante processamento
+    btn.disabled = true;
+    btn.textContent = 'Processando...';
+    const resultBox = root.querySelector('.vc-order-result');
+    resultBox.innerHTML = '<p class="vc-loading">Validando pedido...</p>';
+
+    // Preparar dados do pedido
+    const items = cart.map(i => {
+      const itemPrice = currencyToFloat(i.price);
+      const modifiers = (i.modifiers || []).map(m => ({
+        id: m.id,
+        title: m.title,
+        price: m.price || 0,
+      }));
+      
+      return {
+        id: i.id,
+        name: i.title,
+        quantity: i.qtd,
+        price: itemPrice,
+        modifiers: modifiers,
+      };
     });
-    const data = await res.json();
-    if(data && data.id){
-      const fulfillmentLabel = data.fulfillment && data.fulfillment.label ? data.fulfillment.label : '';
-      const etaInfo = data.fulfillment && data.fulfillment.eta ? ` ETA: ${data.fulfillment.eta}` : '';
-      root.querySelector('.vc-order-result').innerHTML = `Pedido criado #${data.id}. Frete ${fulfillmentLabel}.${etaInfo} <button class="vc-btn vc-track" data-id="${data.id}">Acompanhar</button>`;
-      cart.length = 0; saveCart(); renderCart(root);
-      root.querySelector('.vc-freight').innerHTML='';
-      root.querySelector('.vc-total').innerHTML='';
-      root.querySelector('.vc-quote-result').innerHTML='';
-      root.querySelector('.vc-discount').innerHTML='';
-      root.querySelector('.vc-place-order').disabled = true;
-    } else {
-      alert('Falha ao criar pedido');
+
+    // Obter dados do cliente (se disponíveis)
+    const customerName = root.dataset.customerName || '';
+    const customerPhone = root.dataset.customerPhone || '';
+    const customerAddress = root.dataset.customerAddress || '';
+    const customerLat = root.dataset.customerLat ? Number(root.dataset.customerLat) : null;
+    const customerLng = root.dataset.customerLng ? Number(root.dataset.customerLng) : null;
+
+    // 1. Validar pedido
+    const validatePayload = {
+      restaurant_id: restaurantId,
+      items: items,
+      fulfillment: {
+        type: fulfillmentMethod.includes('pickup') ? 'pickup' : 'delivery',
+        fee: ship,
+      },
+      customer_lat: customerLat,
+      customer_lng: customerLng,
+    };
+
+    try {
+      const validateRes = await fetch(`${VemComer.rest.base}/orders/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': VemComer.nonce },
+        body: JSON.stringify(validatePayload),
+      });
+
+      const validateData = await validateRes.json();
+
+      if(!validateData.valid) {
+        const errors = validateData.errors || ['Erro ao validar pedido.'];
+        resultBox.innerHTML = '<div class="vc-error">' + errors.map(e => `<p>${e}</p>`).join('') + '</div>';
+        btn.disabled = false;
+        btn.textContent = 'Finalizar pedido';
+        return;
+      }
+
+      // 2. Gerar mensagem WhatsApp
+      resultBox.innerHTML = '<p class="vc-loading">Gerando mensagem...</p>';
+
+      const whatsappPayload = {
+        restaurant_id: restaurantId,
+        items: items,
+        customer: {
+          name: customerName,
+          phone: customerPhone,
+          address: customerAddress,
+        },
+        fulfillment: {
+          type: fulfillmentMethod.includes('pickup') ? 'pickup' : 'delivery',
+          fee: ship,
+        },
+      };
+
+      const whatsappRes = await fetch(`${VemComer.rest.base}/orders/prepare-whatsapp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': VemComer.nonce },
+        body: JSON.stringify(whatsappPayload),
+      });
+
+      if(!whatsappRes.ok) {
+        const error = await whatsappRes.json();
+        resultBox.innerHTML = '<div class="vc-error"><p>' + (error.message || 'Erro ao gerar mensagem WhatsApp.') + '</p></div>';
+        btn.disabled = false;
+        btn.textContent = 'Finalizar pedido';
+        return;
+      }
+
+      const whatsappData = await whatsappRes.json();
+
+      // 3. Abrir WhatsApp
+      if(whatsappData.whatsapp_url) {
+        window.open(whatsappData.whatsapp_url, '_blank');
+        resultBox.innerHTML = '<div class="vc-success"><p>Mensagem gerada! Abra o WhatsApp para enviar o pedido.</p></div>';
+        
+        // Limpar carrinho após sucesso
+        cart.length = 0;
+        saveCart();
+        renderCart(root);
+        root.querySelector('.vc-freight').innerHTML='';
+        root.querySelector('.vc-total').innerHTML='';
+        root.querySelector('.vc-quote-result').innerHTML='';
+        root.querySelector('.vc-discount').innerHTML='';
+        root.querySelector('.vc-place-order').disabled = true;
+      } else {
+        resultBox.innerHTML = '<div class="vc-error"><p>Erro ao gerar link do WhatsApp.</p></div>';
+        btn.disabled = false;
+        btn.textContent = 'Finalizar pedido';
+      }
+    } catch(err) {
+      console.error('Erro ao processar pedido:', err);
+      resultBox.innerHTML = '<div class="vc-error"><p>Erro ao processar pedido. Tente novamente.</p></div>';
+      btn.disabled = false;
+      btn.textContent = 'Finalizar pedido';
     }
   });
 
