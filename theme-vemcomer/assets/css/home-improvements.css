@@ -396,6 +396,7 @@
 .welcome-popup.is-open {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .welcome-popup__dialog {
@@ -409,6 +410,7 @@
     transform: scale(0.9) translateY(20px);
     transition: transform 0.3s;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
 }
 
 .welcome-popup.is-open .welcome-popup__dialog {
@@ -473,6 +475,8 @@
 .welcome-popup__actions .btn {
     width: 100%;
     justify-content: center;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .welcome-popup__actions .btn-icon {
@@ -505,6 +509,8 @@
     justify-content: center;
     transition: all 0.2s;
     line-height: 1;
+    pointer-events: auto;
+    z-index: 1;
 }
 
 .welcome-popup__close:hover {

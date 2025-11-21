@@ -383,59 +383,56 @@
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
-        // Por enquanto, mostrar sempre (remover verificação de cookie/localização)
         // Verificar se já tem localização aceita para mostrar botão
         const savedLocation = localStorage.getItem('vc_user_location');
         const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
         
         if (savedLocation && locationAccepted) {
-            // Se já tem localização aceita, mostrar botão no hero
-            showHeroLocationButton();
+            // Se já tem localização aceita, atualizar título
             updateHeroTitleFromLocation();
         }
 
-        // Mostrar popup sempre (por enquanto)
-        setTimeout(() => {
-            popup.classList.add('is-open');
-        }, 1500);
+        // Verificar se popup já foi visto
+        const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
+        
+        // Mostrar popup apenas se não foi visto antes
+        if (!popupSeen) {
+            setTimeout(() => {
+                popup.classList.add('is-open');
+            }, 1500);
+        }
 
         const closeBtn = popup.querySelector('.welcome-popup__close');
         const locationBtn = popup.querySelector('#welcome-popup-location-btn');
         const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
-        const heroLocationActions = document.getElementById('hero-location-actions');
 
-        function closePopup() {
+        function closePopup(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             popup.classList.remove('is-open');
             // Salvar cookie (expira em 30 dias)
             document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
-            // NÃO mostrar botão se apenas fechou
         }
 
-        function showHeroLocationButton() {
-            if (heroLocationActions) {
-                heroLocationActions.style.display = 'block';
-                // Animar entrada
-                setTimeout(() => {
-                    heroLocationActions.style.opacity = '0';
-                    heroLocationActions.style.transform = 'translateY(-10px)';
-                    heroLocationActions.style.transition = 'opacity 0.3s, transform 0.3s';
-                    setTimeout(() => {
-                        heroLocationActions.style.opacity = '1';
-                        heroLocationActions.style.transform = 'translateY(0)';
-                    }, 10);
-                }, 100);
-            }
-        }
-
+        // Garantir que os event listeners sejam anexados
         if (closeBtn) {
             closeBtn.addEventListener('click', closePopup);
+            closeBtn.style.cursor = 'pointer';
+        } else {
+            console.warn('Botão de fechar do popup não encontrado');
         }
 
         if (skipBtn) {
             skipBtn.addEventListener('click', closePopup);
+            skipBtn.style.cursor = 'pointer';
+        } else {
+            console.warn('Botão "Pular" do popup não encontrado');
         }
 
         if (locationBtn) {
+            locationBtn.style.cursor = 'pointer';
             locationBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -463,9 +460,6 @@
                                 
                                 // Fechar popup
                                 closePopup();
-                                
-                                // Mostrar botão no hero
-                                showHeroLocationButton();
                                 
                                 // Ativar botão
                                 const heroLocationBtn = document.getElementById('vc-use-location');
@@ -528,9 +522,6 @@
                                 
                                 // Fechar popup
                                 closePopup();
-                                
-                                // Mostrar botão no hero
-                                showHeroLocationButton();
                                 
                                 // Ativar botão
                                 const heroLocationBtn = document.getElementById('vc-use-location');
@@ -629,29 +620,11 @@
         const savedLocation = localStorage.getItem('vc_user_location');
         
         if (locationAccepted && savedLocation) {
-            showHeroLocationButton();
             updateHeroTitleFromLocation();
             const heroLocationBtn = document.getElementById('vc-use-location');
             if (heroLocationBtn) {
                 heroLocationBtn.classList.add('is-active');
             }
-        }
-    }
-    
-    function showHeroLocationButton() {
-        const heroLocationActions = document.getElementById('hero-location-actions');
-        if (heroLocationActions) {
-            heroLocationActions.style.display = 'block';
-            // Animar entrada
-            setTimeout(() => {
-                heroLocationActions.style.opacity = '0';
-                heroLocationActions.style.transform = 'translateY(-10px)';
-                heroLocationActions.style.transition = 'opacity 0.3s, transform 0.3s';
-                setTimeout(() => {
-                    heroLocationActions.style.opacity = '1';
-                    heroLocationActions.style.transform = 'translateY(0)';
-                }, 10);
-            }, 100);
         }
     }
 
@@ -738,7 +711,10 @@
         initBottomNav();
         initDarkMode();
         initPromoBar();
-        initWelcomePopup();
+        // Inicializar popup com um pequeno delay para garantir que o DOM esteja pronto
+        setTimeout(() => {
+            initWelcomePopup();
+        }, 100);
         checkHeroLocationButton();
     });
 
