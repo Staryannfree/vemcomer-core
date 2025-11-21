@@ -8,6 +8,9 @@
 namespace VC\REST;
 
 use VC_CPT_Pedido;
+use VC\Model\CPT_Restaurant;
+use VC\Utils\Schedule_Helper;
+use VC\WhatsApp\Message_Formatter;
 use WP_Error;
 use WP_Query;
 use WP_REST_Request;
@@ -82,6 +85,13 @@ class Orders_Controller {
                     'sanitize_callback' => 'absint',
                 ],
             ],
+        ] );
+
+        // POST: Preparar mensagem WhatsApp
+        register_rest_route( 'vemcomer/v1', '/orders/prepare-whatsapp', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'prepare_whatsapp' ],
+            'permission_callback' => [ $this, 'check_authenticated' ],
         ] );
     }
 
@@ -276,5 +286,89 @@ class Orders_Controller {
         }
 
         return $response;
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/orders/prepare-whatsapp
+     * Prepara mensagem WhatsApp formatada para o pedido
+     */
+    public function prepare_whatsapp( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $restaurant_id = (int) $request->get_param( 'restaurant_id' );
+        $items         = $request->get_param( 'items' );
+        $customer_data = $request->get_param( 'customer' );
+        $fulfillment   = $request->get_param( 'fulfillment' );
+
+        if ( ! $restaurant_id || ! is_array( $items ) || empty( $items ) ) {
+            return new WP_Error( 'vc_invalid_params', __( 'Parâmetros inválidos.', 'vemcomer' ), [ 'status' => 400 ] );
+        }
+
+        // Verificar se restaurante existe e está aberto
+        $restaurant = get_post( $restaurant_id );
+        if ( ! $restaurant || CPT_Restaurant::SLUG !== $restaurant->post_type ) {
+            return new WP_Error( 'vc_restaurant_not_found', __( 'Restaurante não encontrado.', 'vemcomer' ), [ 'status' => 404 ] );
+        }
+
+        if ( ! Schedule_Helper::is_open( $restaurant_id ) ) {
+            return new WP_Error( 'vc_restaurant_closed', __( 'Restaurante está fechado no momento.', 'vemcomer' ), [ 'status' => 403 ] );
+        }
+
+        // Calcular totais
+        $subtotal = 0.0;
+        $clean_items = [];
+        foreach ( $items as $item ) {
+            $item_price = (float) ( $item['price'] ?? 0 );
+            $quantity = (int) ( $item['quantity'] ?? 1 );
+            $subtotal += $item_price * $quantity;
+
+            $clean_items[] = [
+                'name'      => sanitize_text_field( $item['name'] ?? '' ),
+                'quantity'  => $quantity,
+                'price'     => $item_price,
+                'modifiers' => $item['modifiers'] ?? [],
+            ];
+        }
+
+        $delivery_fee = (float) ( $fulfillment['fee'] ?? 0 );
+        $total = $subtotal + $delivery_fee;
+
+        // Preparar dados
+        $order_data = [
+            'items'           => $clean_items,
+            'subtotal'        => $subtotal,
+            'delivery_fee'    => $delivery_fee,
+            'total'           => $total,
+            'fulfillment_type' => $fulfillment['type'] ?? 'delivery',
+        ];
+
+        $customer_name = sanitize_text_field( $customer_data['name'] ?? '' );
+        $customer_phone = sanitize_text_field( $customer_data['phone'] ?? '' );
+        $customer_address = sanitize_text_field( $customer_data['address'] ?? '' );
+
+        $restaurant_whatsapp = get_post_meta( $restaurant_id, 'vc_restaurant_whatsapp', true );
+
+        if ( empty( $restaurant_whatsapp ) ) {
+            return new WP_Error( 'vc_no_whatsapp', __( 'Restaurante não possui WhatsApp configurado.', 'vemcomer' ), [ 'status' => 400 ] );
+        }
+
+        // Formatar mensagem
+        $message = Message_Formatter::format_order(
+            $order_data,
+            [
+                'name'    => $customer_name,
+                'phone'   => $customer_phone,
+                'address' => $customer_address,
+            ],
+            [
+                'name' => get_the_title( $restaurant ),
+            ]
+        );
+
+        // Gerar URL
+        $whatsapp_url = Message_Formatter::generate_whatsapp_url( $restaurant_whatsapp, $message );
+
+        return new WP_REST_Response( [
+            'message'      => $message,
+            'whatsapp_url' => $whatsapp_url,
+        ], 200 );
     }
 }

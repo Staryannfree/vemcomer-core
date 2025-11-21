@@ -105,6 +105,10 @@ wp vc seed
 
 * **GET** `/wp-json/vemcomer/v1/restaurants/{id}/analytics?period={today|week|month|custom}&date_from={opcional}&date_to={opcional}` - Métricas de analytics do restaurante (requer autenticação, apenas dono ou admin)
 
+### WhatsApp
+
+* **POST** `/wp-json/vemcomer/v1/orders/prepare-whatsapp` - Gera mensagem formatada para WhatsApp (body: `restaurant_id`, `items`, `customer`, `fulfillment`)
+
 ### Pedidos
 
 * **POST** `/wp-json/vemcomer/v1/pedidos`
@@ -202,6 +206,25 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.27 - Sistema de Geração de Mensagem WhatsApp (10.1 + 10.2 + 10.3)
+
+**Novas funcionalidades:**
+- **Classe `Message_Formatter`**: Formatador de mensagens WhatsApp
+  - Template configurável via filtro `vemcomer/whatsapp_message_template`
+  - Suporte a itens com modificadores
+  - Formatação de valores monetários
+  - Geração de URL do WhatsApp (`wa.me`)
+- **Endpoint REST**: `POST /orders/prepare-whatsapp`
+  - Valida: restaurante existe, está aberto, tem WhatsApp configurado
+  - Retorna: mensagem formatada e URL do WhatsApp
+  - Suporta: delivery e pickup, modificadores, cálculo de totais
+
+**Arquivos novos:**
+- `inc/WhatsApp/Message_Formatter.php` - Formatador de mensagens
+
+**Arquivos modificados:**
+- `inc/REST/Orders_Controller.php` - Adicionado endpoint prepare-whatsapp
 
 ### v0.26 - Sistema de Banners da Home (8.1 + 8.2)
 
