@@ -73,6 +73,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Model\\CPT_MenuItem' ) )        { ( new \VC\Model\CPT_MenuItem() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_ProductModifier' ) ) { ( new \VC\Model\CPT_ProductModifier() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_Review' ) ) { ( new \VC\Model\CPT_Review() )->init(); }
+    if ( class_exists( '\\VC\\Model\\CPT_AnalyticsEvent' ) ) { ( new \VC\Model\CPT_AnalyticsEvent() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); }

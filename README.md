@@ -199,6 +199,24 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.23 - Sistema de Analytics - Tracking de Eventos (7.1)
+
+**Novas funcionalidades:**
+- **CPT `vc_analytics_event`**: Custom Post Type para armazenar eventos de analytics
+  - Tipos de eventos: view_restaurant, view_menu, click_whatsapp, add_to_cart, checkout_start
+  - Meta fields: `_vc_event_type`, `_vc_restaurant_id`, `_vc_customer_id` (opcional), `_vc_event_metadata` (JSON), `_vc_event_timestamp`
+- **Classe `Event_Logger`**: Sistema de logging assíncrono
+  - Métodos helper: `log_view_restaurant()`, `log_view_menu()`, `log_click_whatsapp()`, `log_add_to_cart()`, `log_checkout_start()`
+  - Processamento assíncrono via shutdown hook (não bloqueia requisições)
+  - Validação de tipos de eventos
+
+**Arquivos novos:**
+- `inc/Model/CPT_AnalyticsEvent.php` - CPT para eventos
+- `inc/Analytics/Event_Logger.php` - Sistema de logging assíncrono
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro do CPT_AnalyticsEvent
+
 ### v0.22 - Sistema de Histórico de Pedidos - REST API (6.2)
 
 **Novas funcionalidades:**
@@ -541,6 +559,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
 - ✅ Sistema de Favoritos (5.1 + 5.2 - Completo)
 - ✅ Sistema de Histórico de Pedidos para Clientes (6.1 + 6.2 - Completo)
+- 🔄 Sistema de Analytics/Cliques para Restaurantes (7.1 - Tracking implementado)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
