@@ -17,6 +17,7 @@ namespace VC\REST;
 use VC\Model\CPT_MenuItem;
 use VC\Model\CPT_Restaurant;
 use VC\Utils\Availability_Helper;
+use VC\Utils\Delivery_Time_Calculator;
 use VC\Utils\Schedule_Helper;
 use WP_Error;
 use WP_Query;
@@ -121,6 +122,42 @@ class Restaurant_Controller {
                         return is_bool( filter_var( $param, FILTER_VALIDATE_BOOLEAN ) );
                     },
                     'sanitize_callback' => 'rest_sanitize_boolean',
+                ],
+            ],
+        ] );
+
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/estimated-delivery', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_estimated_delivery' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'id'     => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+                'lat'    => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'floatval',
+                ],
+                'lng'    => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'floatval',
+                ],
+                'items'  => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_array( $param );
+                    },
+                    'sanitize_callback' => function( $param ) {
+                       	return array_map( 'absint', (array) $param );
+                    },
                 ],
             ],
         ] );
