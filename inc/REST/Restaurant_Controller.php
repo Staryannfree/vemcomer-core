@@ -16,6 +16,7 @@ namespace VC\REST;
 
 use VC\Model\CPT_MenuItem;
 use VC\Model\CPT_Restaurant;
+use VC\Utils\Availability_Helper;
 use VC\Utils\Schedule_Helper;
 use WP_Error;
 use WP_Query;
@@ -73,6 +74,40 @@ class Restaurant_Controller {
                         return is_numeric( $param );
                     },
                     'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/availability', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_availability' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'id'       => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+                'lat'      => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'floatval',
+                ],
+                'lng'      => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'floatval',
+                ],
+                'delivery' => [
+                    'required'          => false,
+                    'validate_callback' => function( $param ) {
+                        return is_bool( filter_var( $param, FILTER_VALIDATE_BOOLEAN ) );
+                    },
+                    'sanitize_callback' => 'rest_sanitize_boolean',
                 ],
             ],
         ] );
@@ -252,6 +287,53 @@ class Restaurant_Controller {
             'restaurant_id' => $restaurant_id,
             'is_open'       => $is_open,
             'timestamp'     => $timestamp,
+        ], 'debug' );
+
+        return new WP_REST_Response( $response, 200 );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/restaurants/{id}/availability
+     * Retorna status de disponibilidade do restaurante
+     */
+    public function get_availability( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $restaurant_id = (int) $request->get_param( 'id' );
+        $lat           = $request->get_param( 'lat' );
+        $lng           = $request->get_param( 'lng' );
+        $delivery      = $request->get_param( 'delivery' );
+
+        // Verificar se restaurante existe
+        $restaurant = get_post( $restaurant_id );
+        if ( ! $restaurant || CPT_Restaurant::SLUG !== $restaurant->post_type ) {
+            return new WP_Error(
+                'vc_restaurant_not_found',
+                __( 'Restaurante não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        $context = [];
+        if ( null !== $lat && null !== $lng ) {
+            $context['lat'] = (float) $lat;
+            $context['lng'] = (float) $lng;
+        }
+        if ( null !== $delivery ) {
+            $context['delivery'] = (bool) $delivery;
+        }
+
+        $availability = Availability_Helper::check_availability( $restaurant_id, $context );
+
+        $response = [
+            'restaurant_id' => $restaurant_id,
+            'available'     => $availability['available'],
+            'reason'        => $availability['reason'],
+            'details'       => $availability['details'],
+        ];
+
+        log_event( 'REST availability checked', [
+            'restaurant_id' => $restaurant_id,
+            'available'     => $availability['available'],
+            'reason'        => $availability['reason'],
         ], 'debug' );
 
         return new WP_REST_Response( $response, 200 );
