@@ -15,8 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 class Shipping {
     public function init(): void { /* reservado para futuras integrações */ }
 
-    public static function quote( int $restaurant_id, float $subtotal ): array {
-        $order   = [ 'restaurant_id' => $restaurant_id, 'subtotal' => $subtotal ];
+    public static function quote( int $restaurant_id, float $subtotal, array $order_data = [] ): array {
+        $order = array_merge(
+            [
+                'restaurant_id' => $restaurant_id,
+                'subtotal'      => $subtotal,
+            ],
+            $order_data
+        );
         $methods = FulfillmentRegistry::get_quotes( $order );
 
         return [

@@ -170,6 +170,27 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.12 - REST API de Cotação Expandida (2.3)
+
+**Novas funcionalidades:**
+- **Endpoint de cotação expandido**: `GET /wp-json/vemcomer/v1/shipping/quote` agora aceita parâmetros adicionais
+  - `lat` (opcional) - Latitude do cliente
+  - `lng` (opcional) - Longitude do cliente
+  - `address` (opcional) - Endereço completo do cliente
+  - `neighborhood` (opcional) - Bairro do cliente
+- **Resposta expandida**: Retorna informações adicionais
+  - `distance` - Distância calculada em km (se coordenadas fornecidas)
+  - `within_radius` - Se está dentro do raio de entrega
+  - `radius` - Raio máximo configurado
+  - `is_open` - Se restaurante está aberto no momento
+  - Detalhes de cada método de fulfillment (incluindo distância e erros)
+- **Validações**: Verifica se restaurante existe, está publicado e está aberto
+- **Integração completa**: Passa coordenadas e endereço para métodos de fulfillment (DistanceBasedDelivery)
+
+**Arquivos modificados:**
+- `inc/REST/Shipping_Controller.php` - Expandido para aceitar coordenadas e retornar informações adicionais
+- `inc/Frontend/Shipping.php` - Modificado para aceitar dados adicionais do pedido
+
 ### v0.11 - Sistema de Frete por Distância (2.2)
 
 **Novas funcionalidades:**
@@ -301,7 +322,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 
 **Fase 1 - Core Essencial:**
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
-- ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 - Configuração e Método implementados)
+- ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
