@@ -194,6 +194,21 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.21 - Sistema de Histórico de Pedidos - Estrutura de Dados (6.1)
+
+**Novas funcionalidades:**
+- **Expansão do CPT `vc_pedido`**: Novos campos para rastreamento de cliente
+  - Meta `_vc_customer_id`: ID do cliente que fez o pedido
+  - Meta `_vc_customer_address`: Endereço de entrega completo
+  - Meta `_vc_customer_phone`: Telefone de contato do cliente
+- **Metabox atualizado**: Interface admin para gerenciar dados do cliente no pedido
+  - Campo de seleção de cliente (dropdown com usuários)
+  - Campos de texto para endereço e telefone
+  - Validação e sanitização de dados
+
+**Arquivos modificados:**
+- `inc/class-vc-cpt-pedido.php` - Adicionados campos de cliente no metabox e save_meta
+
 ### v0.20 - Sistema de Favoritos - REST API (5.2)
 
 **Novas funcionalidades:**
@@ -506,6 +521,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
 - ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
 - ✅ Sistema de Favoritos (5.1 + 5.2 - Completo)
+- 🔄 Sistema de Histórico de Pedidos para Clientes (6.1 - Estrutura de Dados implementada)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
