@@ -92,6 +92,42 @@ class Installer {
                 'shortcode' => '[vemcomer_customer_signup]',
                 'needs'     => [],
             ],
+            'vc_restaurants_map' => [
+                'title'     => __( 'Mapa de Restaurantes (VC)', 'vemcomer' ),
+                'desc'      => __( 'Mapa público com todos os restaurantes e botão "Perto de mim".', 'vemcomer' ),
+                'shortcode' => '[vc_restaurants_map]',
+                'needs'     => [],
+            ],
+            'vc_reviews' => [
+                'title'     => __( 'Avaliações e Reviews (VC)', 'vemcomer' ),
+                'desc'      => __( 'Exibe avaliações de um restaurante e permite criar nova avaliação (aceita ?restaurant_id=ID).', 'vemcomer' ),
+                'shortcode' => '', // construído dinamicamente
+                'needs'     => [ 'restaurant_id' ],
+            ],
+            'vc_favorites' => [
+                'title'     => __( 'Meus Favoritos (VC)', 'vemcomer' ),
+                'desc'      => __( 'Lista restaurantes e itens favoritos do usuário logado.', 'vemcomer' ),
+                'shortcode' => '[vc_favorites]',
+                'needs'     => [],
+            ],
+            'vc_banners' => [
+                'title'     => __( 'Banners da Home (VC)', 'vemcomer' ),
+                'desc'      => __( 'Exibe banners ativos da plataforma.', 'vemcomer' ),
+                'shortcode' => '[vc_banners]',
+                'needs'     => [],
+            ],
+            'vc_notifications' => [
+                'title'     => __( 'Notificações (VC)', 'vemcomer' ),
+                'desc'      => __( 'Lista notificações do usuário logado.', 'vemcomer' ),
+                'shortcode' => '[vc_notifications]',
+                'needs'     => [],
+            ],
+            'vc_orders_history' => [
+                'title'     => __( 'Histórico de Pedidos (VC)', 'vemcomer' ),
+                'desc'      => __( 'Lista histórico de pedidos do usuário logado.', 'vemcomer' ),
+                'shortcode' => '[vc_orders_history]',
+                'needs'     => [],
+            ],
         ];
     }
 
@@ -127,6 +163,8 @@ class Installer {
                 $sc = '[vc_restaurant id="123"] (ou sem id, usando ?restaurant_id=)';
             } elseif ( $key === 'vc_menu_items' ) {
                 $sc = '[vc_menu_items restaurant="123"] (ou sem restaurant, usando ?restaurant_id=)';
+            } elseif ( $key === 'vc_reviews' ) {
+                $sc = '[vc_reviews restaurant_id="123"] (ou sem restaurant_id, usando ?restaurant_id=)';
             }
 
             echo '<tr>';
@@ -143,7 +181,11 @@ class Installer {
                 echo '<label>' . esc_html__( 'ID do restaurante (opcional)', 'vemcomer' ) . ' ';
                 echo '<input type="number" name="restaurant_id" min="1" style="width:120px" placeholder="123" />';
                 echo '</label>';
-                echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página funcionará com ?restaurant_id= na URL.', 'vemcomer' ) . '</p>';
+                if ( $key === 'vc_reviews' ) {
+                    echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página funcionará com ?restaurant_id= na URL ou no contexto da página do restaurante.', 'vemcomer' ) . '</p>';
+                } else {
+                    echo '<p style="margin:4px 0 0;font-size:12px;color:#555">' . esc_html__( 'Se vazio, a página funcionará com ?restaurant_id= na URL.', 'vemcomer' ) . '</p>';
+                }
             }
 
             wp_nonce_field( 'vc_install_' . $key, 'vc_install_nonce' );
@@ -235,10 +277,24 @@ class Installer {
                 return $restaurant_id > 0
                     ? '[vc_menu_items restaurant="' . $restaurant_id . '"]'
                     : '[vc_menu_items]';
+            case 'vc_reviews':
+                return $restaurant_id > 0
+                    ? '[vc_reviews restaurant_id="' . $restaurant_id . '"]'
+                    : '[vc_reviews]';
             case 'vc_restaurants':
                 return "[vc_filters]\n\n[vc_restaurants]";
             case 'vc_filters':
                 return '[vc_filters]';
+            case 'vc_restaurants_map':
+                return '[vc_restaurants_map]';
+            case 'vc_favorites':
+                return '[vc_favorites]';
+            case 'vc_banners':
+                return '[vc_banners]';
+            case 'vc_notifications':
+                return '[vc_notifications]';
+            case 'vc_orders_history':
+                return '[vc_orders_history]';
             case 'vemcomer_restaurants':
                 return '[vemcomer_restaurants]';
             case 'vemcomer_menu':
