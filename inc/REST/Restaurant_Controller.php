@@ -137,19 +137,56 @@ class Restaurant_Controller {
             'post_status'    => 'publish',
         ];
 
-        // Busca livre
+        // Busca livre (full-text)
         $search = (string) $request->get_param( 'search' );
-        if ( $search ) { $args['s'] = $search; }
+        if ( $search ) {
+            $args['s'] = $search;
+            // Buscar também em itens do cardápio
+            $menu_items = get_posts( [
+                'post_type'      => CPT_MenuItem::SLUG,
+                'posts_per_page' => -1,
+                'post_status'    => 'publish',
+                's'              => $search,
+                'fields'         => 'ids',
+            ] );
+            if ( ! empty( $menu_items ) ) {
+                $restaurant_ids_from_items = [];
+                foreach ( $menu_items as $item_id ) {
+                    $rest_id = (int) get_post_meta( $item_id, '_vc_restaurant_id', true );
+                    if ( $rest_id > 0 ) {
+                        $restaurant_ids_from_items[] = $rest_id;
+                    }
+                }
+                if ( ! empty( $restaurant_ids_from_items ) ) {
+                    // Combinar busca: restaurantes que correspondem OU têm itens que correspondem
+                    $args['meta_query']['relation'] = 'OR';
+                    $args['meta_query'][] = [
+                        'key'     => '_vc_restaurant_id',
+                        'value'   => array_unique( $restaurant_ids_from_items ),
+                        'compare' => 'IN',
+                    ];
+                }
+            }
+        }
 
         // Ordenação
         $orderby = (string) $request->get_param( 'orderby' );
         $order   = strtoupper( (string) $request->get_param( 'order' ) );
-        if ( in_array( $orderby, [ 'title', 'date' ], true ) ) { $args['orderby'] = $orderby; }
+        if ( in_array( $orderby, [ 'title', 'date', 'rating' ], true ) ) {
+            $args['orderby'] = $orderby;
+            if ( 'rating' === $orderby ) {
+                $args['orderby'] = 'meta_value_num';
+                $args['meta_key'] = '_vc_restaurant_rating_avg';
+            }
+        }
         if ( in_array( $order, [ 'ASC', 'DESC' ], true ) ) { $args['order'] = $order; }
 
         // Taxonomia: cozinha
         $cuisine = (string) $request->get_param( 'cuisine' );
         if ( $cuisine ) {
+            if ( ! isset( $args['tax_query'] ) ) {
+                $args['tax_query'] = [];
+            }
             $args['tax_query'][] = [
                 'taxonomy' => CPT_Restaurant::TAX_CUISINE,
                 'field'    => 'slug',
@@ -157,7 +194,7 @@ class Restaurant_Controller {
             ];
         }
 
-        // Metas: delivery / is_open
+        // Metas: delivery / is_open / min_rating / price_range
         $meta = [];
         $delivery = $request->get_param( 'delivery' );
         if ( null !== $delivery ) {
@@ -167,7 +204,34 @@ class Restaurant_Controller {
         if ( null !== $is_open ) {
             $meta[] = [ 'key' => '_vc_is_open', 'value' => ( filter_var( $is_open, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
         }
-        if ( $meta ) { $args['meta_query'] = $meta; }
+        $is_open_now = $request->get_param( 'is_open_now' );
+        if ( null !== $is_open_now && filter_var( $is_open_now, FILTER_VALIDATE_BOOLEAN ) ) {
+            // Filtrar por restaurantes abertos agora (usar Schedule_Helper)
+            // Isso será filtrado após a query
+        }
+        $min_rating = $request->get_param( 'min_rating' );
+        if ( null !== $min_rating && is_numeric( $min_rating ) ) {
+            $meta[] = [
+                'key'     => '_vc_restaurant_rating_avg',
+                'value'   => (float) $min_rating,
+                'compare' => '>=',
+                'type'    => 'DECIMAL(10,2)',
+            ];
+        }
+        $has_delivery = $request->get_param( 'has_delivery' );
+        if ( null !== $has_delivery ) {
+            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $has_delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
+        }
+        if ( $meta ) {
+            if ( ! isset( $args['meta_query'] ) ) {
+                $args['meta_query'] = [];
+            }
+            if ( isset( $args['meta_query']['relation'] ) ) {
+                $args['meta_query'][] = $meta;
+            } else {
+                $args['meta_query'] = array_merge( $args['meta_query'] ?? [], $meta );
+            }
+        }
 
         log_event( 'REST restaurants query', [ 'args' => $args ], 'debug' );
 
@@ -175,15 +239,28 @@ class Restaurant_Controller {
 
         $items = [];
         foreach ( $q->posts as $p ) {
+            // Filtrar por is_open_now se solicitado
+            if ( isset( $is_open_now ) && filter_var( $is_open_now, FILTER_VALIDATE_BOOLEAN ) ) {
+                if ( ! Schedule_Helper::is_open( $p->ID ) ) {
+                    continue;
+                }
+            }
+
             $terms = wp_get_object_terms( $p->ID, CPT_Restaurant::TAX_CUISINE, [ 'fields' => 'slugs' ] );
+            $rating = \VC\Utils\Rating_Helper::get_rating( $p->ID );
+
             $items[] = [
-                'id'        => $p->ID,
-                'title'     => get_the_title( $p ),
-                'address'   => (string) get_post_meta( $p->ID, '_vc_address', true ),
-                'phone'     => (string) get_post_meta( $p->ID, '_vc_phone', true ),
+                'id'          => $p->ID,
+                'title'       => get_the_title( $p ),
+                'address'     => (string) get_post_meta( $p->ID, '_vc_address', true ),
+                'phone'       => (string) get_post_meta( $p->ID, '_vc_phone', true ),
                 'has_delivery' => (bool) get_post_meta( $p->ID, '_vc_has_delivery', true ),
-                'is_open'   => (bool) get_post_meta( $p->ID, '_vc_is_open', true ),
-                'cuisines'  => array_values( array_map( 'strval', (array) $terms ) ),
+                'is_open'     => Schedule_Helper::is_open( $p->ID ),
+                'cuisines'    => array_values( array_map( 'strval', (array) $terms ) ),
+                'rating'      => [
+                    'average' => $rating['avg'],
+                    'count'   => $rating['count'],
+                ],
             ];
         }
 
