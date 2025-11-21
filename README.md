@@ -98,6 +98,11 @@ wp vc seed
 
 ### Pedidos
 
+* **GET** `/wp-json/vemcomer/v1/orders?status={opcional}&data_inicio={opcional}&data_fim={opcional}&restaurant_id={opcional}&per_page={opcional}&page={opcional}` - Lista pedidos do usuário autenticado com filtros
+* **GET** `/wp-json/vemcomer/v1/orders/{id}` - Detalhes completos de um pedido (requer autenticação, apenas dono ou admin)
+
+### Pedidos
+
 * **POST** `/wp-json/vemcomer/v1/pedidos`
 
 * Body: `{ "restaurant_id": 123, "itens": [ {"produto_id": 123, "qtd": 2} ], "subtotal": "49,90", "fulfillment": { "method": "flat_rate_delivery", "ship_total": "9,90" } }`
@@ -193,6 +198,20 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.22 - Sistema de Histórico de Pedidos - REST API (6.2)
+
+**Novas funcionalidades:**
+- **Endpoints REST expandidos para pedidos**:
+  - `GET /orders` - Lista pedidos do usuário autenticado com paginação
+  - `GET /orders/{id}` - Detalhes completos de um pedido (expandido)
+- **Filtros avançados**: status, data_inicio, data_fim, restaurant_id
+- **Controle de acesso**: Usuários só veem seus próprios pedidos (admins veem todos)
+- **Resposta detalhada**: Inclui dados do cliente, endereço, telefone e restaurante
+- **Paginação**: Suporte a per_page e page
+
+**Arquivos modificados:**
+- `inc/REST/Orders_Controller.php` - Expandido com listagem, filtros e controle de acesso
 
 ### v0.21 - Sistema de Histórico de Pedidos - Estrutura de Dados (6.1)
 
@@ -521,7 +540,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
 - ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
 - ✅ Sistema de Favoritos (5.1 + 5.2 - Completo)
-- 🔄 Sistema de Histórico de Pedidos para Clientes (6.1 - Estrutura de Dados implementada)
+- ✅ Sistema de Histórico de Pedidos para Clientes (6.1 + 6.2 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
