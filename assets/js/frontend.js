@@ -39,10 +39,14 @@
           <span>${i.qtd}</span>
           <button class="vc-qbtn vc-inc" data-id="${i.id}" data-modifiers="${i.modifiers ? JSON.stringify(i.modifiers).replace(/"/g, '&quot;') : ''}">+</button>
         </div>
-        <div>R$ ${floatToBR(i.qtd*currencyToFloat(i.price))}</div>
+        <div>R$ ${floatToBR(totalWithModifiers)}</div>
       </div>`;
     }).join('');
-    const subtotal = cart.reduce((s,i)=> s + i.qtd*currencyToFloat(i.price), 0);
+    const subtotal = cart.reduce((s,i)=> {
+      const itemTotal = i.qtd * currencyToFloat(i.price);
+      const modifiersTotal = (i.modifiers || []).reduce((sum, m) => sum + (m.price || 0), 0) * i.qtd;
+      return s + itemTotal + modifiersTotal;
+    }, 0);
     root.querySelector('.vc-cart').innerHTML = list || '<div class="vc-empty">Carrinho vazio</div>';
     root.querySelector('.vc-subtotal').innerHTML = `Subtotal: <strong>R$ ${floatToBR(subtotal)}</strong>`;
     root.dataset.subtotal = String(subtotal);
