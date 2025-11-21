@@ -213,6 +213,36 @@ Quando um restaurante é aprovado:
 - `inc/Frontend/AccessValidation.php` - Nova classe para página de validação
 - `vemcomer-core.php` - Registro da nova classe AccessValidation
 
+## Recursos Backend Planejados
+
+Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo, foi criado um documento detalhado com **25 recursos backend** necessários, organizados por prioridade e fases de implementação.
+
+**Documentação completa**: [`docs/RECURSOS_BACKEND.md`](docs/RECURSOS_BACKEND.md)
+
+### Principais recursos planejados:
+
+**Fase 1 - Core Essencial:**
+- Sistema de Complementos/Modificadores de Produtos
+- Sistema de Frete por Distância e Bairro
+- Sistema de Horários Estruturados
+- Sistema de Geração de Mensagem WhatsApp
+- Sistema de Validação de Pedido
+
+**Fase 2 - UX e Engajamento:**
+- Sistema de Avaliações e Ratings
+- Sistema de Favoritos
+- Sistema de Histórico de Pedidos
+- Sistema de Endereços de Entrega
+- Sistema de Disponibilidade em Tempo Real
+
+**Fase 3 - Analytics e SaaS:**
+- Sistema de Analytics/Cliques
+- Sistema de Planos/Assinaturas SaaS
+- Sistema de Relatórios Avançados
+- Sistema de Gestão de Usuários (Super Admin)
+
+E mais 11 recursos adicionais para completar a plataforma.
+
 ## Desenvolvimento
 
 * PHP ≥ 8.0, WP ≥ 6.0.
