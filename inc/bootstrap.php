@@ -61,6 +61,7 @@ if (!function_exists('vc_register_front_assets')) {
 
         // Scripts
         wp_register_script('vemcomer-front', $base_url . 'assets/js/frontend.js', [], $ver, true);
+        wp_register_script('vemcomer-reverse-geocoding', $base_url . 'assets/js/reverse-geocoding.js', [], $ver, true);
         wp_register_script('leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', [], '1.9.4', true);
         wp_register_script('vemcomer-checkout', $base_url . 'assets/js/checkout.js', [], $ver, true);
         wp_register_script('vemcomer-checkout-geo', $base_url . 'assets/checkout-geo.js', ['jquery'], $ver, true);

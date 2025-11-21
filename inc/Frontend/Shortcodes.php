@@ -202,6 +202,12 @@ class Shortcodes {
                     </div>
                 <?php endif; ?>
                 <div style="display: grid; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <button type="button" class="vc-btn vc-btn--ghost vc-btn--small" id="vc-use-location-checkout" style="display: flex; align-items: center; gap: 6px;">
+                            <span>📍</span>
+                            <span><?php echo esc_html__( 'Usar minha localização', 'vemcomer' ); ?></span>
+                        </button>
+                    </div>
                     <label>
                         <?php echo esc_html__( 'CEP', 'vemcomer' ); ?>
                         <input type="text" class="vc-zip" placeholder="00000-000" />
