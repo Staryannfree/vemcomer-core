@@ -6,13 +6,49 @@
 
 namespace VC\Frontend;
 
+use WP_Post;
+use WP_Theme;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 class Home_Template {
     public function init(): void {
+        add_filter( 'theme_page_templates', [ $this, 'register_page_template' ], 10, 4 );
+        add_filter( 'template_include', [ $this, 'maybe_use_home_template' ], 99 );
         add_action( 'template_include', [ $this, 'maybe_enqueue_home_assets' ], 99 );
+    }
+
+    /**
+     * Registra o template da Home na lista de templates disponíveis
+     */
+    public function register_page_template( array $post_templates, WP_Theme $theme, WP_Post $post, string $post_type ): array {
+        $template_path = 'templates/page-home.php';
+        $template_file = VEMCOMER_CORE_DIR . $template_path;
+        
+        if ( file_exists( $template_file ) ) {
+            $post_templates[ $template_path ] = __( 'Home VemComer', 'vemcomer' );
+        }
+        
+        return $post_templates;
+    }
+
+    /**
+     * Carrega o template da Home quando selecionado
+     */
+    public function maybe_use_home_template( string $template ): string {
+        if ( is_page() ) {
+            $page_template = get_page_template_slug();
+            if ( $page_template === 'templates/page-home.php' ) {
+                $template_file = VEMCOMER_CORE_DIR . $page_template;
+                if ( file_exists( $template_file ) ) {
+                    return $template_file;
+                }
+            }
+        }
+        
+        return $template;
     }
 
     /**
