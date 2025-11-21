@@ -61,5 +61,42 @@ class Pickup implements FulfillmentMethod {
 			],
 		];
 	}
+
+	/**
+	 * Retorna ETA (tempo estimado) para retirada.
+	 * Para pickup, o ETA é baseado apenas no tempo de preparo dos itens.
+	 *
+	 * @param array $order Dados do pedido.
+	 * @return string|null ETA em formato "X min" ou null.
+	 */
+	public function get_eta( array $order ): ?string {
+		$restaurant_id = (int) ( $order['restaurant_id'] ?? 0 );
+		if ( ! $restaurant_id ) {
+			return null;
+		}
+
+		// Para retirada, o ETA é baseado apenas no tempo de preparo
+		// Se houver itens no pedido, calcular tempo máximo de preparo
+		$items = $order['items'] ?? [];
+		if ( ! empty( $items ) && is_array( $items ) ) {
+			$max_prep_time = 0;
+			foreach ( $items as $item ) {
+				$item_id = is_array( $item ) ? ( $item['id'] ?? 0 ) : (int) $item;
+				if ( $item_id > 0 ) {
+					$prep_time = (int) get_post_meta( $item_id, '_vc_prep_time', true );
+					if ( $prep_time > $max_prep_time ) {
+						$max_prep_time = $prep_time;
+					}
+				}
+			}
+
+			if ( $max_prep_time > 0 ) {
+				return sprintf( __( '%d min', 'vemcomer' ), $max_prep_time );
+			}
+		}
+
+		// Se não houver itens ou tempo de preparo, retornar padrão de 20 minutos
+		return __( '20 min', 'vemcomer' );
+	}
 }
 
