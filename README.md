@@ -170,6 +170,22 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.10 - Sistema de Frete por Distância (2.1)
+
+**Novas funcionalidades:**
+- **Configuração de Frete por Restaurante**: Campos no metabox do restaurante para configurar frete baseado em distância
+  - Raio máximo de entrega (km)
+  - Taxa base de entrega (R$)
+  - Preço por quilômetro (R$)
+  - Frete grátis acima de (R$)
+  - Pedido mínimo (R$)
+  - Preços por bairro (JSON) - permite configurar preços especiais por bairro com prioridade sobre cálculo por distância
+- **Validação de JSON**: Validação automática do formato JSON para preços por bairro
+- **Meta fields**: `_vc_delivery_radius`, `_vc_delivery_price_per_km`, `_vc_delivery_base_price`, `_vc_delivery_free_above`, `_vc_delivery_min_order`, `_vc_delivery_neighborhoods`
+
+**Arquivos modificados:**
+- `inc/meta-restaurants.php` - Adicionados campos de configuração de frete por distância no metabox
+
 ### v0.9 - Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3)
 
 **Novas funcionalidades:**
@@ -265,8 +281,8 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 ### Principais recursos planejados:
 
 **Fase 1 - Core Essencial:**
-- ✅ Sistema de Complementos/Modificadores de Produtos (1.1 - Estrutura de Dados implementada)
-- Sistema de Frete por Distância e Bairro
+- ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
+- ✅ Sistema de Frete por Distância e Bairro (2.1 - Configuração de Frete implementada)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido
