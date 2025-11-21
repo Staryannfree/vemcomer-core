@@ -153,3 +153,15 @@ function vemcomer_get_template_path( $path = '' ) {
     return get_template_directory() . ( $path ? '/' . ltrim( $path, '/' ) : '' );
 }
 
+/**
+ * Menu padrão quando nenhum menu está atribuído
+ */
+function vemcomer_default_menu() {
+    echo '<ul id="primary-menu" class="menu">';
+    echo '<li><a href="' . esc_url( home_url( '/' ) ) . '">' . esc_html__( 'Início', 'vemcomer' ) . '</a></li>';
+    if ( vemcomer_is_plugin_active() ) {
+        echo '<li><a href="' . esc_url( home_url( '/restaurantes/' ) ) . '">' . esc_html__( 'Restaurantes', 'vemcomer' ) . '</a></li>';
+    }
+    echo '</ul>';
+}
+
