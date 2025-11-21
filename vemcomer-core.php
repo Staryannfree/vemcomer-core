@@ -76,6 +76,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Model\\CPT_AnalyticsEvent' ) ) { ( new \VC\Model\CPT_AnalyticsEvent() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_Banner' ) ) { ( new \VC\Model\CPT_Banner() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_SubscriptionPlan' ) ) { ( new \VC\Model\CPT_SubscriptionPlan() )->init(); }
+    if ( class_exists( '\\VC\\Subscription\\Limits_Validator' ) ) { ( new \VC\Subscription\Limits_Validator() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); }
