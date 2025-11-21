@@ -86,6 +86,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Subscription_Controller' ) ) { ( new \VC\REST\Subscription_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Addresses_Controller' ) ) { ( new \VC\REST\Addresses_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Notifications_Controller' ) ) { ( new \VC\REST\Notifications_Controller() )->init(); }
+    if ( class_exists( '\\VC\\Utils\\Image_Optimizer' ) ) { ( new \VC\Utils\Image_Optimizer() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Analytics_Controller' ) ) { ( new \VC\Analytics\Analytics_Controller() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Tracking_Middleware' ) ) { ( new \VC\Analytics\Tracking_Middleware() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Tracking_Controller' ) ) { ( new \VC\Analytics\Tracking_Controller() )->init(); }
