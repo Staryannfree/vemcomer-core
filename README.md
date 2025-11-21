@@ -81,6 +81,12 @@ wp vc seed
 * **PATCH** `/wp-json/vemcomer/v1/modifiers/{id}` - Atualizar modificador (admin)
 * **DELETE** `/wp-json/vemcomer/v1/modifiers/{id}` - Deletar modificador (admin)
 
+### Avaliações e Ratings
+
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/reviews?per_page={opcional}&page={opcional}` - Lista avaliações aprovadas de um restaurante (público)
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/rating` - Retorna rating agregado (média e total) de um restaurante (público)
+* **POST** `/wp-json/vemcomer/v1/reviews` - Criar avaliação (requer autenticação, body: `restaurant_id`, `rating` (1-5), `comment` (opcional), `order_id` (opcional))
+
 ### Pedidos
 
 * **POST** `/wp-json/vemcomer/v1/pedidos`
@@ -178,6 +184,23 @@ Quando um restaurante é aprovado:
 **Configuração**: Em **VemComer ▸ Configurações**, configure as URLs dos webhooks SMClick para cada evento. O token `access_url` aparece automaticamente no metabox do restaurante após aprovação.
 
 ## Changelog
+
+### v0.18 - Sistema de Avaliações - REST API (4.3)
+
+**Novas funcionalidades:**
+- **Endpoints REST para avaliações**:
+  - `GET /restaurants/{id}/reviews` - Lista avaliações aprovadas com paginação
+  - `GET /restaurants/{id}/rating` - Retorna rating agregado (média, total, formato)
+  - `POST /reviews` - Criar avaliação (requer autenticação)
+- **Validações**: Verifica se restaurante existe, se usuário já avaliou, rating válido (1-5)
+- **Status automático**: Novas avaliações criadas como "pending" (aguardando aprovação)
+- **Integração completa**: Usa `Rating_Helper` para cálculos e cache
+
+**Arquivos novos:**
+- `inc/REST/Reviews_Controller.php` - Controller REST para avaliações
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro do Reviews_Controller
 
 ### v0.17 - Sistema de Avaliações - Cálculo de Rating Agregado (4.2)
 
@@ -433,7 +456,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
 - ✅ Sistema de Horários Estruturados (3.1 + 3.2 + 3.3 - Completo)
-- 🔄 Sistema de Avaliações e Ratings (4.1 + 4.2 - Estrutura e Cálculo implementados)
+- ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

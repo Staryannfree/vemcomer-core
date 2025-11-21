@@ -76,6 +76,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Reviews_Controller' ) ) { ( new \VC\REST\Reviews_Controller() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Modifiers_Metabox' ) ) { ( new \VC\Admin\Modifiers_Metabox() )->init(); }
 
     // Utils
