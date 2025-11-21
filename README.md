@@ -234,6 +234,117 @@ Quando um restaurante é aprovado:
 **Total de endpoints REST adicionados:** 30+ endpoints
 **Todas as funcionalidades críticas e importantes implementadas!**
 
+### v0.44 - Frontend Completo - Integração Total com Backend
+
+**Implementação completa do frontend cobrindo todas as funcionalidades backend:**
+
+#### Fase 1: Core do Checkout
+- ✅ **Modal de Produto com Modificadores** (Fase 1.1)
+  - Modal responsivo (bottom sheet no mobile, centralizado no desktop)
+  - Carrega modificadores via REST API `/menu-items/{id}/modifiers`
+  - Valida modificadores obrigatórios e min/max
+  - Adiciona itens com modificadores ao carrinho
+  - Cálculo correto de preços incluindo modificadores
+
+- ✅ **Checkout Completo com WhatsApp** (Fase 1.2)
+  - Validação de pedido antes de finalizar (`/orders/validate`)
+  - Geração de mensagem WhatsApp formatada (`/orders/prepare-whatsapp`)
+  - Coleta dados do cliente (nome, telefone, endereço)
+  - Abre WhatsApp automaticamente com mensagem pronta
+  - Remove criação de pedido direto (usa validação + WhatsApp)
+
+- ✅ **Múltiplos Métodos de Fulfillment** (Fase 1.3)
+  - UI de seleção entre Delivery e Pickup
+  - Exibe preço e ETA de cada método
+  - Atualiza cálculo de frete baseado na escolha
+
+#### Fase 2: Social Proof
+- ✅ **Ratings nos Cards** (Fase 2.1)
+  - Exibe estrelas e avaliação média nos cards de restaurante
+  - Integrado com `Rating_Helper`
+  - Formatação visual consistente
+
+- ✅ **Seção de Reviews** (Fase 2.2)
+  - Shortcode `[vc_reviews]` integrado no template single
+  - Carrega reviews via REST API
+  - Formulário para criar nova avaliação
+  - Paginação de resultados
+
+#### Fase 3: Disponibilidade
+- ✅ **Status Aberto/Fechado** (Fase 3.1)
+  - Badges visuais nos cards (Aberto/Fechado)
+  - Mostra próximo horário de abertura se fechado
+  - Bloqueia checkout se restaurante fechado
+  - Verificação em tempo real via `Schedule_Helper`
+
+- ✅ **Horários Estruturados** (Fase 3.2)
+  - Migração de campo texto para JSON estruturado
+  - Suporta múltiplos períodos por dia
+  - Formatação legível nos shortcodes
+  - Fallback para campo legado
+
+#### Fase 4: Engajamento
+- ✅ **Sistema de Favoritos** (Fase 4.1)
+  - Botões de favorito nos cards de restaurante e itens
+  - Shortcode `[vc_favorites]` para listar favoritos
+  - Integração com REST API `/favorites/*`
+  - Atualização visual em tempo real
+
+- ✅ **Endereços de Entrega** (Fase 4.2)
+  - Interface para gerenciar endereços salvos
+  - Seleção de endereço no checkout
+  - Preenchimento automático de campos
+  - Suporta criar, editar, deletar e definir principal
+
+#### Fase 5: Descoberta
+- ✅ **Busca Avançada** (Fase 5.1)
+  - Filtros: min_rating, is_open_now, has_delivery, price_range
+  - Busca full-text em restaurantes e itens
+  - UI organizada e responsiva
+
+- ✅ **Filtros Combinados** (Fase 5.2)
+  - Suporta múltiplos filtros simultâneos
+  - Filtros aplicados no shortcode `[vc_restaurants]`
+  - Botão para limpar filtros
+
+#### Fase 6: Funcionalidades Extras
+- ✅ **Banners** (Fase 6.1)
+  - Shortcode `[vc_banners]` para exibir banners
+  - Layout responsivo com grid
+  - Suporta links e imagens
+  - Filtro por restaurante
+
+- ✅ **Notificações** (Fase 6.2)
+  - Shortcode `[vc_notifications]` para exibir notificações
+  - Badge com contador de não lidas
+  - Marcar como lida e marcar todas como lidas
+  - Formatação de data relativa
+
+- ✅ **Histórico de Pedidos** (Fase 6.3)
+  - Shortcode `[vc_orders_history]` para listar pedidos
+  - Filtro por status
+  - Paginação de resultados
+  - Exibe detalhes completos (itens, total, frete, desconto)
+
+#### Fase 7: Melhorias e Otimizações
+- ✅ **Cálculo Correto de Preços**
+  - Inclui modificadores no cálculo do subtotal
+  - Exibe preço total por item no carrinho
+  - Cálculo correto no checkout
+
+**Arquivos criados:**
+- `assets/css/product-modal.css`, `assets/js/product-modal.js`
+- `assets/css/favorites.css`, `assets/js/favorites.js`
+- `assets/css/addresses.css`, `assets/js/addresses.js`, `assets/js/checkout-addresses.js`
+- `assets/css/banners.css`
+- `assets/css/notifications.css`, `assets/js/notifications.js`
+- `assets/css/orders-history.css`, `assets/js/orders-history.js`
+- `inc/shortcodes/favorites.php`, `inc/shortcodes/banners.php`
+- `inc/shortcodes/notifications.php`, `inc/shortcodes/orders-history.php`
+
+**Total de funcionalidades frontend implementadas:** 15 fases completas
+**Cobertura do backend:** 100% das funcionalidades críticas e importantes integradas
+
 ### v0.27 - Sistema de Geração de Mensagem WhatsApp (10.1 + 10.2 + 10.3)
 
 **Novas funcionalidades:**
