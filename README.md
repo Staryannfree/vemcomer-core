@@ -177,6 +177,32 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.14 - Validação de Horários (3.2)
+
+**Novas funcionalidades:**
+- **Função `vc_restaurant_is_open()`**: Verifica se restaurante está aberto em um timestamp específico
+  - Verifica dia da semana e horário atual
+  - Considera timezone do WordPress
+  - Suporta períodos que cruzam a meia-noite (ex: 22:00 - 02:00)
+  - Considera feriados configurados (meta `_vc_restaurant_holidays`)
+  - Fallback para campo legado `_vc_is_open` se schedule não estiver configurado
+- **Campo de Feriados**: Interface admin para adicionar datas de fechamento
+  - Meta field: `_vc_restaurant_holidays` (JSON array de datas YYYY-MM-DD)
+  - Botões para adicionar/remover feriados dinamicamente
+  - Validação de formato de data
+- **Funções auxiliares**: `Schedule_Helper` com métodos para:
+  - `is_open()` - Verificar se está aberto
+  - `is_holiday()` - Verificar se é feriado
+  - `get_schedule()` - Obter horários estruturados
+  - `get_next_open_time()` - Obter próximo horário de abertura
+
+**Arquivos novos:**
+- `inc/Utils/Schedule_Helper.php` - Classe helper para validação de horários
+
+**Arquivos modificados:**
+- `inc/meta-restaurants.php` - Adicionado campo de feriados e JavaScript para gerenciamento
+- `vemcomer-core.php` - Registro da classe Schedule_Helper
+
 ### v0.13 - Sistema de Horários Estruturados (3.1)
 
 **Novas funcionalidades:**
@@ -347,7 +373,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 **Fase 1 - Core Essencial:**
 - ✅ Sistema de Complementos/Modificadores de Produtos (1.1 + 1.2 + 1.3 - Completo)
 - ✅ Sistema de Frete por Distância e Bairro (2.1 + 2.2 + 2.3 - Completo)
-- ✅ Sistema de Horários Estruturados (3.1 - Estrutura de Dados implementada)
+- ✅ Sistema de Horários Estruturados (3.1 + 3.2 - Estrutura e Validação implementadas)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

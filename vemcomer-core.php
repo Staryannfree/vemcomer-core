@@ -77,6 +77,11 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Modifiers_Metabox' ) ) { ( new \VC\Admin\Modifiers_Metabox() )->init(); }
 
+    // Utils
+    if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+        // Classe já está disponível via autoload, função helper global registrada
+    }
+
     if ( class_exists( '\\VC\\Admin\\Settings' ) )            { ( new \VC\Admin\Settings() )->init(); }
     if ( class_exists( '\\VC\\Order\\Statuses' ) )            { ( new \VC\Order\Statuses() )->init(); }
     if ( class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); }

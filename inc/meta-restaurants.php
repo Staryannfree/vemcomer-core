@@ -80,6 +80,22 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
                     periodsContainer.find(".vc-remove-period").hide();
                 }
             });
+
+            // Adicionar feriado
+            $(document).on("click", ".vc-add-holiday", function(e) {
+                e.preventDefault();
+                var newHoliday = $("<div class=\"vc-holiday-item\" style=\"display: flex; align-items: center; gap: 10px; margin-bottom: 8px;\">" +
+                    "<input type=\"date\" name=\"vc_holidays[]\" value=\"\" class=\"regular-text\" />" +
+                    "<button type=\"button\" class=\"button button-small vc-remove-holiday\">Remover</button>" +
+                    "</div>");
+                $("#vc-holidays-list").append(newHoliday);
+            });
+
+            // Remover feriado
+            $(document).on("click", ".vc-remove-holiday", function(e) {
+                e.preventDefault();
+                $(this).closest(".vc-holiday-item").remove();
+            });
         });
     ' );
 });
@@ -161,6 +177,30 @@ function vc_render_restaurant_metabox( $post ) {
             <td>
                 <textarea id="vc_restaurant_open_hours" name="vc_restaurant_open_hours" class="large-text" rows="3" placeholder="<?php echo esc_attr__( 'Ex: Seg-Dom 11:00–23:00', 'vemcomer' ); ?>"><?php echo esc_textarea( $values['open_hours'] ); ?></textarea>
                 <p class="description"><?php echo esc_html__( 'Campo legado para compatibilidade. Use a configuração estruturada acima para melhor controle.', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_holidays"><?php echo esc_html__( 'Feriados (datas fechadas)', 'vemcomer' ); ?></label></th>
+            <td>
+                <?php
+                $holidays_json = get_post_meta( $post->ID, '_vc_restaurant_holidays', true );
+                $holidays = $holidays_json ? json_decode( $holidays_json, true ) : [];
+                $holidays = is_array( $holidays ) ? $holidays : [];
+                ?>
+                <div id="vc-holidays-manager">
+                    <div id="vc-holidays-list">
+                        <?php foreach ( $holidays as $holiday_date ) : ?>
+                            <div class="vc-holiday-item" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <input type="date" name="vc_holidays[]" value="<?php echo esc_attr( $holiday_date ); ?>" class="regular-text" />
+                                <button type="button" class="button button-small vc-remove-holiday"><?php echo esc_html__( 'Remover', 'vemcomer' ); ?></button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="button button-small vc-add-holiday" style="margin-top: 10px;"><?php echo esc_html__( '+ Adicionar feriado', 'vemcomer' ); ?></button>
+                </div>
+                <p class="description">
+                    <?php echo esc_html__( 'Adicione datas em que o restaurante estará fechado (feriados, manutenção, etc.). Formato: YYYY-MM-DD', 'vemcomer' ); ?>
+                </p>
             </td>
         </tr>
         <tr>
@@ -315,6 +355,25 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
         ];
     }
     update_post_meta( $post_id, '_vc_restaurant_schedule', wp_json_encode( $schedule_clean ) );
+
+    // Salvar feriados
+    $holidays = isset( $_POST['vc_holidays'] ) && is_array( $_POST['vc_holidays'] ) ? $_POST['vc_holidays'] : [];
+    $holidays_clean = [];
+    foreach ( $holidays as $holiday ) {
+        $holiday = sanitize_text_field( $holiday );
+        // Validar formato YYYY-MM-DD
+        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $holiday ) ) {
+            $holidays_clean[] = $holiday;
+        }
+    }
+    $holidays_clean = array_unique( $holidays_clean );
+    sort( $holidays_clean );
+    if ( ! empty( $holidays_clean ) ) {
+        update_post_meta( $post_id, '_vc_restaurant_holidays', wp_json_encode( $holidays_clean ) );
+    } else {
+        delete_post_meta( $post_id, '_vc_restaurant_holidays' );
+    }
+
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery'], isset( $_POST['vc_restaurant_delivery'] ) ? '1' : '0' );
     $lat = sanitize_text_field( $_POST['vc_restaurant_lat'] ?? '' );
     $lng = sanitize_text_field( $_POST['vc_restaurant_lng'] ?? '' );
