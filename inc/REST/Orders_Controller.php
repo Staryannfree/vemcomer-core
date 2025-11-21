@@ -9,6 +9,7 @@ namespace VC\REST;
 
 use VC_CPT_Pedido;
 use VC\Model\CPT_Restaurant;
+use VC\Order\Order_Validator;
 use VC\Utils\Schedule_Helper;
 use VC\WhatsApp\Message_Formatter;
 use WP_Error;
@@ -92,6 +93,13 @@ class Orders_Controller {
             'methods'             => 'POST',
             'callback'            => [ $this, 'prepare_whatsapp' ],
             'permission_callback' => [ $this, 'check_authenticated' ],
+        ] );
+
+        // POST: Validar pedido
+        register_rest_route( 'vemcomer/v1', '/orders/validate', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'validate_order' ],
+            'permission_callback' => '__return_true',
         ] );
     }
 
@@ -370,5 +378,21 @@ class Orders_Controller {
             'message'      => $message,
             'whatsapp_url' => $whatsapp_url,
         ], 200 );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/orders/validate
+     * Valida pedido antes de gerar mensagem WhatsApp
+     */
+    public function validate_order( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $order_data = $request->get_json_params();
+
+        if ( ! is_array( $order_data ) ) {
+            return new WP_Error( 'vc_invalid_params', __( 'Dados do pedido inválidos.', 'vemcomer' ), [ 'status' => 400 ] );
+        }
+
+        $result = Order_Validator::validate( $order_data );
+
+        return new WP_REST_Response( $result, $result['valid'] ? 200 : 400 );
     }
 }
