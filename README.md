@@ -665,6 +665,8 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 
 **Documentação completa**: [`docs/RECURSOS_BACKEND.md`](docs/RECURSOS_BACKEND.md)
 
+**Análise de Integração Shortcodes ↔ Backend**: [`docs/ANALISE_INTEGRACAO_SHORTCODES.md`](docs/ANALISE_INTEGRACAO_SHORTCODES.md) - Documento detalhado identificando lacunas entre funcionalidades do backend e integração nos shortcodes/frontend.
+
 ### Principais recursos planejados:
 
 **Fase 1 - Core Essencial:**
