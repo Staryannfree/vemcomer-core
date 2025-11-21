@@ -203,6 +203,28 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.25 - Sistema de Analytics - Middleware de Tracking (7.3)
+
+**Novas funcionalidades:**
+- **Tracking automático de eventos**:
+  - Visualização de restaurante: hook em `template_redirect` para single de restaurante
+  - Visualização de cardápio: hook em `template_redirect` quando há `restaurant_id` na URL
+  - Tracking via REST API: hooks em `rest_prepare_*` para visualizações via API
+- **JavaScript de tracking**: Script inline no footer para eventos do lado do cliente
+  - Cliques no WhatsApp: detecta links `wa.me`, `whatsapp.com`, `api.whatsapp.com`
+  - Adições ao carrinho: detecta botões com `data-action="add-to-cart"`
+  - Início de checkout: detecta botões com `data-action="checkout"`
+  - Usa `navigator.sendBeacon` para não bloquear navegação
+- **Endpoint REST para tracking**: `POST /analytics/track` para receber eventos via JavaScript
+- **Processamento assíncrono**: Todos os eventos são logados via shutdown hook (não bloqueiam requisições)
+
+**Arquivos novos:**
+- `inc/Analytics/Tracking_Middleware.php` - Hooks automáticos para tracking
+- `inc/Analytics/Tracking_Controller.php` - Endpoint REST para tracking via JS
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Registro dos novos controllers
+
 ### v0.24 - Sistema de Analytics - Dashboard (7.2)
 
 **Novas funcionalidades:**
@@ -581,7 +603,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Avaliações e Ratings (4.1 + 4.2 + 4.3 - Completo)
 - ✅ Sistema de Favoritos (5.1 + 5.2 - Completo)
 - ✅ Sistema de Histórico de Pedidos para Clientes (6.1 + 6.2 - Completo)
-- 🔄 Sistema de Analytics/Cliques para Restaurantes (7.1 - Tracking implementado)
+- ✅ Sistema de Analytics/Cliques para Restaurantes (7.1 + 7.2 + 7.3 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

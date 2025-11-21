@@ -80,6 +80,8 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Reviews_Controller' ) ) { ( new \VC\REST\Reviews_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Favorites_Controller' ) ) { ( new \VC\REST\Favorites_Controller() )->init(); }
     if ( class_exists( '\\VC\\Analytics\\Analytics_Controller' ) ) { ( new \VC\Analytics\Analytics_Controller() )->init(); }
+    if ( class_exists( '\\VC\\Analytics\\Tracking_Middleware' ) ) { ( new \VC\Analytics\Tracking_Middleware() )->init(); }
+    if ( class_exists( '\\VC\\Analytics\\Tracking_Controller' ) ) { ( new \VC\Analytics\Tracking_Controller() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Modifiers_Metabox' ) ) { ( new \VC\Admin\Modifiers_Metabox() )->init(); }
 
     // Utils
