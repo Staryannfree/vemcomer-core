@@ -21,7 +21,49 @@ get_header();
 			$delivery_status = '1' === $delivery_raw ? __( 'Sim', 'vemcomer' ) : __( 'Não', 'vemcomer' );
 			$address         = get_post_meta( get_the_ID(), 'vc_restaurant_address', true );
 			$whatsapp        = get_post_meta( get_the_ID(), 'vc_restaurant_whatsapp', true );
-			$hours           = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
+			// Usar horários estruturados se disponível
+			$schedule = [];
+			$hours = '';
+			if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+				$schedule = \VC\Utils\Schedule_Helper::get_schedule( get_the_ID() );
+				if ( empty( $schedule ) ) {
+					// Fallback para campo texto legado
+					$hours = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
+				} else {
+					// Formatar horários estruturados para exibição
+					$day_names_pt = [
+						'monday'    => __( 'Segunda-feira', 'vemcomer' ),
+						'tuesday'   => __( 'Terça-feira', 'vemcomer' ),
+						'wednesday' => __( 'Quarta-feira', 'vemcomer' ),
+						'thursday'  => __( 'Quinta-feira', 'vemcomer' ),
+						'friday'    => __( 'Sexta-feira', 'vemcomer' ),
+						'saturday'  => __( 'Sábado', 'vemcomer' ),
+						'sunday'    => __( 'Domingo', 'vemcomer' ),
+					];
+					$hours_parts = [];
+					foreach ( $schedule as $day => $day_data ) {
+						if ( ! empty( $day_data['enabled'] ) && ! empty( $day_data['periods'] ) ) {
+							$periods_str = [];
+							foreach ( $day_data['periods'] as $period ) {
+								$open = $period['open'] ?? '';
+								$close = $period['close'] ?? '';
+								if ( $open && $close ) {
+									$periods_str[] = $open . ' às ' . $close;
+								}
+							}
+							if ( ! empty( $periods_str ) ) {
+								$day_label = $day_names_pt[ $day ] ?? ucfirst( $day );
+								$hours_parts[] = $day_label . ': ' . implode( ', ', $periods_str );
+							}
+						}
+					}
+					if ( ! empty( $hours_parts ) ) {
+						$hours = implode( "\n", $hours_parts );
+					}
+				}
+			} else {
+				$hours = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
+			}
 			$lat             = (float) get_post_meta( get_the_ID(), 'vc_restaurant_lat', true );
 			$lng             = (float) get_post_meta( get_the_ID(), 'vc_restaurant_lng', true );
 			$excerpt         = has_excerpt() ? get_the_excerpt() : '';
@@ -133,7 +175,7 @@ get_header();
 							<?php if ( $hours ) : ?>
 								<li>
 									<span><?php echo esc_html__( 'Horário', 'vemcomer' ); ?></span>
-									<strong><?php echo esc_html( $hours ); ?></strong>
+									<strong style="white-space: pre-line;"><?php echo esc_html( $hours ); ?></strong>
 								</li>
 							<?php endif; ?>
 							<li>

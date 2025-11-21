@@ -25,7 +25,18 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
     if ( ! $pid || 'vc_restaurant' !== get_post_type( $pid ) ) { return ''; }
 
     $address  = get_post_meta( $pid, 'vc_restaurant_address', true );
-    $hours    = get_post_meta( $pid, 'vc_restaurant_open_hours', true );
+    // Usar horários estruturados se disponível, senão fallback para texto
+    $schedule = [];
+    $hours_text = '';
+    if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+        $schedule = \VC\Utils\Schedule_Helper::get_schedule( $pid );
+        if ( empty( $schedule ) ) {
+            // Fallback para campo texto legado
+            $hours_text = get_post_meta( $pid, 'vc_restaurant_open_hours', true );
+        }
+    } else {
+        $hours_text = get_post_meta( $pid, 'vc_restaurant_open_hours', true );
+    }
     $delivery = get_post_meta( $pid, 'vc_restaurant_delivery', true ) === '1';
     $cuisines = wp_get_post_terms( $pid, 'vc_cuisine', [ 'fields' => 'names' ] );
     $locs     = wp_get_post_terms( $pid, 'vc_location', [ 'fields' => 'names' ] );
@@ -102,7 +113,43 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
             </div>
           <?php endif; ?>
           <?php if ( $address ) : ?><p class="vc-card__line"><?php echo esc_html( $address ); ?></p><?php endif; ?>
-          <?php if ( $hours )   : ?><p class="vc-card__line"><?php echo esc_html( $hours ); ?></p><?php endif; ?>
+          <?php if ( ! empty( $schedule ) ) : ?>
+            <p class="vc-card__line vc-card__hours">
+              <?php
+              $day_names_pt = [
+                  'monday'    => __( 'Seg', 'vemcomer' ),
+                  'tuesday'   => __( 'Ter', 'vemcomer' ),
+                  'wednesday' => __( 'Qua', 'vemcomer' ),
+                  'thursday'  => __( 'Qui', 'vemcomer' ),
+                  'friday'    => __( 'Sex', 'vemcomer' ),
+                  'saturday'  => __( 'Sáb', 'vemcomer' ),
+                  'sunday'    => __( 'Dom', 'vemcomer' ),
+              ];
+              $hours_parts = [];
+              foreach ( $schedule as $day => $day_data ) {
+                  if ( ! empty( $day_data['enabled'] ) && ! empty( $day_data['periods'] ) ) {
+                      $periods_str = [];
+                      foreach ( $day_data['periods'] as $period ) {
+                          $open = $period['open'] ?? '';
+                          $close = $period['close'] ?? '';
+                          if ( $open && $close ) {
+                              $periods_str[] = $open . ' - ' . $close;
+                          }
+                      }
+                      if ( ! empty( $periods_str ) ) {
+                          $day_label = $day_names_pt[ $day ] ?? ucfirst( $day );
+                          $hours_parts[] = $day_label . ': ' . implode( ', ', $periods_str );
+                      }
+                  }
+              }
+              if ( ! empty( $hours_parts ) ) {
+                  echo esc_html( implode( ' | ', $hours_parts ) );
+              }
+              ?>
+            </p>
+          <?php elseif ( $hours_text ) : ?>
+            <p class="vc-card__line"><?php echo esc_html( $hours_text ); ?></p>
+          <?php endif; ?>
           <p class="vc-card__tags">
             <?php if ( ! empty( $cuisines ) ) : ?>
               <span class="vc-tag"><?php echo esc_html( implode( ', ', $cuisines ) ); ?></span>
