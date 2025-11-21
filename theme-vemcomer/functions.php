@@ -52,16 +52,38 @@ function vemcomer_theme_scripts() {
     // Estilos
     wp_enqueue_style( 'vemcomer-theme-style', get_stylesheet_uri(), [], $theme_version );
     wp_enqueue_style( 'vemcomer-theme-main', get_template_directory_uri() . '/assets/css/main.css', [], $theme_version );
+    if ( is_front_page() ) {
+        wp_enqueue_style( 'vemcomer-home-improvements', get_template_directory_uri() . '/assets/css/home-improvements.css', [], $theme_version );
+    }
     
     // Scripts
     wp_enqueue_script( 'vemcomer-theme-main', get_template_directory_uri() . '/assets/js/main.js', [], $theme_version, true );
+    if ( is_front_page() ) {
+        wp_enqueue_script( 'vemcomer-home-improvements', get_template_directory_uri() . '/assets/js/home-improvements.js', ['vemcomer-theme-main'], $theme_version, true );
+    }
     
     // Localizar script com dados do REST API
     wp_localize_script( 'vemcomer-theme-main', 'vemcomerTheme', [
         'restUrl' => rest_url( 'vemcomer/v1/' ),
         'nonce'   => wp_create_nonce( 'wp_rest' ),
         'isLoggedIn' => is_user_logged_in(),
+        'homeUrl' => home_url( '/' ),
     ] );
+    
+    // Localizar script de melhorias da home
+    if ( is_front_page() ) {
+        wp_localize_script( 'vemcomer-home-improvements', 'vemcomerTheme', [
+            'restUrl' => rest_url( 'vemcomer/v1/' ),
+            'nonce'   => wp_create_nonce( 'wp_rest' ),
+            'isLoggedIn' => is_user_logged_in(),
+            'homeUrl' => home_url( '/' ),
+        ] );
+    }
+    
+    // Carregar helpers de restaurante
+    if ( file_exists( get_template_directory() . '/inc/restaurant-helpers.php' ) ) {
+        require_once get_template_directory() . '/inc/restaurant-helpers.php';
+    }
     
     // Se o plugin vemcomer-core estiver ativo, carregar seus assets também
     if ( class_exists( 'VC\Frontend\Shortcodes' ) ) {

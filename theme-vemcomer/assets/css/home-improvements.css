@@ -1,0 +1,568 @@
+/**
+ * Estilos para melhorias da Home
+ * @package VemComer
+ */
+
+/* Filtros Rápidos (Chips) */
+.home-quick-filters {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-bg-light);
+    border-radius: 12px;
+}
+
+.home-quick-filters__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 24px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    border-color: var(--color-primary);
+    background: #f0fdf4;
+    transform: translateY(-1px);
+}
+
+.filter-chip.is-active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.filter-chip__icon {
+    font-size: 1.1rem;
+}
+
+.home-quick-filters__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.home-quick-filters__count {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+/* Categorias Populares */
+.home-categories {
+    padding: var(--spacing-xl) 0;
+    background: var(--color-bg-light);
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: all 0.2s;
+}
+
+.category-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.category-card__icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.category-card__name {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.category-card__count {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+/* Restaurantes em Destaque */
+.home-featured {
+    padding: var(--spacing-xl) 0;
+    background: #fff;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.featured-carousel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.featured-card {
+    scroll-snap-align: start;
+    min-width: 300px;
+}
+
+/* Geolocalização */
+.btn-geolocation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: var(--spacing-sm);
+}
+
+.btn-geolocation:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-geolocation.is-loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.btn-geolocation.is-active {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-primary);
+}
+
+.btn-geolocation__icon {
+    font-size: 1.2rem;
+}
+
+/* Busca com Autocomplete */
+.search-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+}
+
+.search-autocomplete__item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.2s;
+}
+
+.search-autocomplete__item:hover,
+.search-autocomplete__item.is-selected {
+    background: var(--color-bg-light);
+}
+
+.search-autocomplete__item:last-child {
+    border-bottom: none;
+}
+
+.search-autocomplete__icon {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.search-autocomplete__title {
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 2px;
+}
+
+.search-autocomplete__subtitle {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+/* Skeleton Loading */
+.skeleton-loading {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.skeleton-card {
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 70%;
+    margin: 16px 16px 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-line {
+    height: 16px;
+    width: 90%;
+    margin: 8px 16px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-line:last-child {
+    width: 60%;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Cards Melhorados */
+.vc-restaurant-card-enhanced {
+    position: relative;
+}
+
+.restaurant-card__badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
+}
+
+.restaurant-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.restaurant-badge--new {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.restaurant-badge--popular {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.restaurant-badge--free-shipping {
+    background: #10b981;
+    color: #fff;
+}
+
+.restaurant-badge--closest {
+    background: #8b5cf6;
+    color: #fff;
+}
+
+.restaurant-card__info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+.restaurant-card__info-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.restaurant-card__distance {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Barra de Promoção Fixa */
+.promo-bar {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: var(--color-primary);
+    color: #fff;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.promo-bar__close {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.promo-bar__close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Popup Primeira Visita */
+.welcome-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.welcome-popup.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.welcome-popup__dialog {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    padding: var(--spacing-lg);
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.welcome-popup.is-open .welcome-popup__dialog {
+    transform: scale(1);
+}
+
+.welcome-popup__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.welcome-popup__text {
+    color: var(--color-text-light);
+    margin: 0 0 var(--spacing-md);
+}
+
+.welcome-popup__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.welcome-popup__input {
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.welcome-popup__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* Bottom Navigation Mobile */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid var(--color-border);
+    display: none;
+    z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-nav__items {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.bottom-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--color-text-light);
+    font-size: 0.75rem;
+    transition: color 0.2s;
+}
+
+.bottom-nav__item.is-active {
+    color: var(--color-primary);
+}
+
+.bottom-nav__icon {
+    font-size: 1.5rem;
+}
+
+/* Sticky Header Compacto */
+.site-header.is-compact {
+    padding: 8px 0;
+}
+
+.site-header.is-compact .site-header__branding .site-title {
+    font-size: 1.2rem;
+}
+
+.site-header.is-compact .main-navigation {
+    display: none;
+}
+
+/* Modo Escuro */
+body.dark-mode {
+    --color-bg: #111827;
+    --color-bg-light: #1f2937;
+    --color-text: #f9fafb;
+    --color-text-light: #d1d5db;
+    --color-border: #374151;
+}
+
+.dark-mode-toggle {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+
+.dark-mode-toggle:hover {
+    background: var(--color-bg-light);
+}
+
+/* Animações */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .bottom-nav {
+        display: block;
+    }
+    
+    .home-quick-filters__chips {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .filter-chip {
+        flex-shrink: 0;
+    }
+    
+    .categories-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+    
+    .featured-carousel {
+        grid-template-columns: 1fr;
+    }
+}
+

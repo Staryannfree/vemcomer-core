@@ -17,18 +17,29 @@ get_header();
             <h1 class="home-hero__title"><?php echo esc_html__( 'Peça dos melhores restaurantes da sua cidade', 'vemcomer' ); ?></h1>
             <p class="home-hero__subtitle"><?php echo esc_html__( 'Entrega, retirada e cardápios atualizados em tempo real', 'vemcomer' ); ?></p>
             <div class="home-hero__search">
-                <form method="get" action="#restaurants-list" class="home-hero__search-form">
-                    <input 
-                        type="text" 
-                        name="s" 
-                        placeholder="<?php echo esc_attr__( 'Buscar restaurantes, pratos...', 'vemcomer' ); ?>" 
-                        class="home-hero__search-input"
-                        value="<?php echo esc_attr( get_query_var( 's' ) ); ?>"
-                    />
+                <form method="get" action="#restaurants-list" class="home-hero__search-form" id="hero-search-form">
+                    <div class="search-wrapper">
+                        <input 
+                            type="text" 
+                            name="s" 
+                            id="hero-search-input"
+                            placeholder="<?php echo esc_attr__( 'Buscar restaurantes, pratos...', 'vemcomer' ); ?>" 
+                            class="home-hero__search-input"
+                            value="<?php echo esc_attr( get_query_var( 's' ) ); ?>"
+                            autocomplete="off"
+                        />
+                        <div class="search-autocomplete" id="search-autocomplete" style="display: none;"></div>
+                    </div>
                     <button type="submit" class="home-hero__search-btn">
                         <?php echo esc_html__( 'Buscar', 'vemcomer' ); ?>
                     </button>
                 </form>
+                <div class="home-hero__quick-actions">
+                    <button class="btn-geolocation" id="vc-use-location" type="button">
+                        <span class="btn-geolocation__icon">📍</span>
+                        <span class="btn-geolocation__text"><?php esc_html_e( 'Usar minha localização', 'vemcomer' ); ?></span>
+                    </button>
+                </div>
             </div>
             <a href="#restaurants-list" class="btn btn--primary btn--large home-hero__cta">
                 <?php echo esc_html__( 'Explorar restaurantes', 'vemcomer' ); ?>
@@ -50,13 +61,48 @@ if ( vemcomer_is_plugin_active() ) :
 <?php endif; ?>
 
 <?php
+// Seção 2.5: Categorias Populares
+if ( vemcomer_is_plugin_active() ) {
+    require_once get_template_directory() . '/inc/home-improvements.php';
+    echo vemcomer_home_popular_categories(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+}
+?>
+
+<?php
+// Seção 2.6: Restaurantes em Destaque
+if ( vemcomer_is_plugin_active() ) {
+    echo vemcomer_home_featured_restaurants(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+}
+?>
+
+<?php
 // Seção 3: Listagem de Restaurantes
 if ( vemcomer_is_plugin_active() ) :
 ?>
 <section class="home-restaurants" id="restaurants-list">
     <div class="container">
         <h2 class="section-title"><?php echo esc_html__( 'Restaurantes', 'vemcomer' ); ?></h2>
-        <?php echo do_shortcode( '[vemcomer_restaurants]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+        <?php
+        // Filtros rápidos
+        if ( function_exists( 'vemcomer_home_quick_filters' ) ) {
+            echo vemcomer_home_quick_filters(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        }
+        ?>
+        <div id="restaurants-container" class="restaurants-container">
+            <div class="skeleton-loading" id="skeleton-loading">
+                <?php for ( $i = 0; $i < 6; $i++ ) : ?>
+                    <div class="skeleton-card">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+            <div id="restaurants-content" style="display: none;">
+                <?php echo do_shortcode( '[vemcomer_restaurants]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </div>
+        </div>
     </div>
 </section>
 <?php endif; ?>
