@@ -391,6 +391,7 @@
     visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
     padding: var(--spacing-md);
+    pointer-events: none;
 }
 
 .welcome-popup.is-open {
@@ -411,6 +412,7 @@
     transition: transform 0.3s;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     pointer-events: auto;
+    z-index: 100000;
 }
 
 .welcome-popup.is-open .welcome-popup__dialog {
@@ -475,13 +477,25 @@
 .welcome-popup__actions .btn {
     width: 100%;
     justify-content: center;
-    pointer-events: auto;
-    cursor: pointer;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+}
+
+.welcome-popup__actions .btn * {
+    pointer-events: none;
 }
 
 .welcome-popup__actions .btn-icon {
     margin-right: 8px;
     font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.welcome-popup__actions .btn-icon img {
+    pointer-events: none;
+    user-select: none;
 }
 
 .welcome-popup__privacy {

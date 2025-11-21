@@ -34,12 +34,12 @@ get_header();
                         <?php echo esc_html__( 'Buscar', 'vemcomer' ); ?>
                     </button>
                 </form>
-                <div class="home-hero__quick-actions" id="hero-location-actions">
-                    <button class="btn-geolocation" id="vc-use-location" type="button">
-                        <span class="btn-geolocation__icon">📍</span>
-                        <span class="btn-geolocation__text"><?php esc_html_e( 'Usar minha localização', 'vemcomer' ); ?></span>
-                    </button>
-                </div>
+            </div>
+            <div class="home-hero__quick-actions" id="hero-location-actions">
+                <button class="btn-geolocation" id="vc-use-location" type="button">
+                    <span class="btn-geolocation__icon">📍</span>
+                    <span class="btn-geolocation__text"><?php esc_html_e( 'Usar minha localização', 'vemcomer' ); ?></span>
+                </button>
             </div>
             <a href="#restaurants-list" class="btn btn--primary btn--large home-hero__cta">
                 <?php echo esc_html__( 'Explorar restaurantes', 'vemcomer' ); ?>

@@ -418,21 +418,26 @@
 
         // Garantir que os event listeners sejam anexados
         if (closeBtn) {
-            closeBtn.addEventListener('click', closePopup);
+            closeBtn.addEventListener('click', closePopup, true);
+            closeBtn.addEventListener('mousedown', closePopup, true);
             closeBtn.style.cursor = 'pointer';
+            closeBtn.style.pointerEvents = 'auto';
         } else {
             console.warn('Botão de fechar do popup não encontrado');
         }
 
         if (skipBtn) {
-            skipBtn.addEventListener('click', closePopup);
+            skipBtn.addEventListener('click', closePopup, true);
+            skipBtn.addEventListener('mousedown', closePopup, true);
             skipBtn.style.cursor = 'pointer';
+            skipBtn.style.pointerEvents = 'auto';
         } else {
             console.warn('Botão "Pular" do popup não encontrado');
         }
 
         if (locationBtn) {
             locationBtn.style.cursor = 'pointer';
+            locationBtn.style.pointerEvents = 'auto';
             locationBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -580,7 +585,16 @@
             if (e.target === popup) {
                 closePopup();
             }
-        });
+        }, true);
+
+        // Garantir que o dialog seja clicável
+        const dialog = popup.querySelector('.welcome-popup__dialog');
+        if (dialog) {
+            dialog.style.pointerEvents = 'auto';
+            dialog.addEventListener('click', (e) => {
+                e.stopPropagation();
+            }, true);
+        }
     }
     
     // Atualizar título do hero com nome da cidade
