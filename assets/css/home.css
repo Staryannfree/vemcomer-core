@@ -1,0 +1,325 @@
+/**
+ * Estilos para a Home do VemComer
+ * @package VemComerCore
+ */
+
+/* Container principal */
+.vc-home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Seção Hero */
+.vc-home-hero {
+  background: linear-gradient(135deg, #2f9e44 0%, #1e7e34 100%);
+  color: #fff;
+  padding: 80px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.vc-home-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+  opacity: 0.3;
+}
+
+.vc-home-hero__content {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.vc-home-hero__title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  line-height: 1.2;
+}
+
+.vc-home-hero__subtitle {
+  font-size: 1.25rem;
+  margin: 0 0 32px;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.vc-home-hero__search {
+  margin-bottom: 32px;
+}
+
+.vc-home-hero__search-form {
+  display: flex;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.vc-home-hero__search-input {
+  flex: 1;
+  border: none;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  outline: none;
+}
+
+.vc-home-hero__search-btn {
+  background: #2f9e44;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.vc-home-hero__search-btn:hover {
+  background: #1e7e34;
+}
+
+.vc-home-hero__cta {
+  display: inline-block;
+  background: #fff;
+  color: #2f9e44;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.vc-home-hero__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Títulos de seção */
+.vc-home-section__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #111827;
+  text-align: center;
+}
+
+.vc-home-section__desc {
+  text-align: center;
+  color: #6b7280;
+  margin: 0 0 32px;
+  font-size: 1.1rem;
+}
+
+/* Seção Banners */
+.vc-home-banners {
+  padding: 60px 0;
+  background: #f9fafb;
+}
+
+/* Seção Restaurantes */
+.vc-home-restaurants {
+  padding: 60px 0;
+  background: #fff;
+}
+
+/* Seção Mapa */
+.vc-home-map {
+  padding: 60px 0;
+  background: #f9fafb;
+}
+
+/* Seção Para Você */
+.vc-home-for-you {
+  padding: 60px 0;
+  background: #fff;
+}
+
+.vc-home-for-you__tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.vc-home-tab {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.vc-home-tab:hover {
+  color: #2f9e44;
+}
+
+.vc-home-tab--active {
+  color: #2f9e44;
+  border-bottom-color: #2f9e44;
+}
+
+.vc-home-tab-content {
+  display: none;
+}
+
+.vc-home-tab-content--active {
+  display: block;
+}
+
+/* Seção CTA */
+.vc-home-cta {
+  padding: 80px 0;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.vc-home-cta__content {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.vc-home-cta__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #111827;
+}
+
+.vc-home-cta__text {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.vc-home-cta__btn {
+  display: inline-block;
+  background: #2f9e44;
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(47, 158, 68, 0.3);
+}
+
+.vc-home-cta__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(47, 158, 68, 0.4);
+}
+
+/* Rodapé */
+.vc-home-footer {
+  padding: 40px 0;
+  background: #111827;
+  color: #9ca3af;
+}
+
+.vc-home-footer__content {
+  text-align: center;
+}
+
+.vc-home-footer__links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.vc-home-footer__links a {
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.vc-home-footer__links a:hover {
+  color: #fff;
+}
+
+.vc-home-footer__copyright {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .vc-home-hero {
+    padding: 60px 20px;
+  }
+
+  .vc-home-hero__title {
+    font-size: 2rem;
+  }
+
+  .vc-home-hero__subtitle {
+    font-size: 1.1rem;
+  }
+
+  .vc-home-hero__search-form {
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .vc-home-hero__search-input {
+    width: 100%;
+  }
+
+  .vc-home-hero__search-btn {
+    width: 100%;
+  }
+
+  .vc-home-section__title {
+    font-size: 1.75rem;
+  }
+
+  .vc-home-for-you__tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .vc-home-tab {
+    width: 100%;
+    text-align: center;
+  }
+
+  .vc-home-footer__links {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .vc-home-cta {
+    padding: 60px 0;
+  }
+
+  .vc-home-cta__title {
+    font-size: 1.75rem;
+  }
+}
+
