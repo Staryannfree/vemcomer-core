@@ -165,6 +165,8 @@ class Shortcodes {
     /** Checkout simples */
     public function sc_checkout( $atts = [] ): string {
         $this->ensure_assets();
+        // Carregar reverse geocoding no checkout
+        wp_enqueue_script('vemcomer-reverse-geocoding');
         $rid = isset( $_GET['restaurant_id'] ) ? (int) $_GET['restaurant_id'] : 0;
         
         // Obter dados do usuário logado se disponível
