@@ -1,0 +1,201 @@
+<?php
+/**
+ * CPT_Banner — Custom Post Type "Banner" (Banners da Home)
+ * @package VemComerCore
+ */
+
+namespace VC\Model;
+
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+class CPT_Banner {
+	public const SLUG = 'vc_banner';
+
+	public function init(): void {
+		add_action( 'init', [ $this, 'register_cpt' ] );
+		add_action( 'add_meta_boxes', [ $this, 'register_metaboxes' ] );
+		add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
+		add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
+		add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
+	}
+
+	public function register_cpt(): void {
+		$labels = [
+			'name'                  => __( 'Banners', 'vemcomer' ),
+			'singular_name'         => __( 'Banner', 'vemcomer' ),
+			'menu_name'             => __( 'Banners', 'vemcomer' ),
+			'name_admin_bar'        => __( 'Banner', 'vemcomer' ),
+			'add_new'               => __( 'Adicionar novo', 'vemcomer' ),
+			'add_new_item'          => __( 'Adicionar novo banner', 'vemcomer' ),
+			'new_item'              => __( 'Novo banner', 'vemcomer' ),
+			'edit_item'             => __( 'Editar banner', 'vemcomer' ),
+			'view_item'             => __( 'Ver banner', 'vemcomer' ),
+			'all_items'             => __( 'Todos os banners', 'vemcomer' ),
+			'search_items'          => __( 'Buscar banners', 'vemcomer' ),
+			'not_found'             => __( 'Nenhum banner encontrado.', 'vemcomer' ),
+			'not_found_in_trash'    => __( 'Nenhum banner na lixeira.', 'vemcomer' ),
+		];
+
+		$args = [
+			'labels'          => $labels,
+			'public'          => false,
+			'show_ui'         => true,
+			'show_in_menu'    => false,
+			'show_in_rest'    => true,
+			'supports'        => [ 'title', 'thumbnail' ],
+			'capability_type' => 'post',
+		];
+		register_post_type( self::SLUG, $args );
+	}
+
+	public function register_metaboxes(): void {
+		add_meta_box(
+			'vc_banner_meta',
+			__( 'Dados do Banner', 'vemcomer' ),
+			[ $this, 'metabox' ],
+			self::SLUG,
+			'normal',
+			'high'
+		);
+	}
+
+	public function metabox( $post ): void {
+		wp_nonce_field( 'vc_banner_meta_nonce', 'vc_banner_meta_nonce_field' );
+
+		$link            = (string) get_post_meta( $post->ID, '_vc_banner_link', true );
+		$restaurant_id   = (int) get_post_meta( $post->ID, '_vc_banner_restaurant_id', true );
+		$order           = (int) get_post_meta( $post->ID, '_vc_banner_order', true );
+		$active          = (bool) get_post_meta( $post->ID, '_vc_banner_active', true );
+
+		?>
+		<table class="form-table">
+			<tr>
+				<th><label for="vc_banner_link"><?php echo esc_html__( 'Link', 'vemcomer' ); ?></label></th>
+				<td>
+					<input type="url" id="vc_banner_link" name="vc_banner_link" class="regular-text" value="<?php echo esc_attr( $link ); ?>" />
+					<p class="description"><?php echo esc_html__( 'URL de destino ao clicar no banner.', 'vemcomer' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="vc_banner_restaurant_id"><?php echo esc_html__( 'Restaurante (opcional)', 'vemcomer' ); ?></label></th>
+				<td>
+					<?php
+					$restaurants = get_posts( [
+						'post_type'      => 'vc_restaurant',
+						'posts_per_page' => -1,
+						'post_status'    => 'publish',
+						'orderby'        => 'title',
+						'order'          => 'ASC',
+					] );
+					?>
+					<select id="vc_banner_restaurant_id" name="vc_banner_restaurant_id" class="regular-text">
+						<option value=""><?php echo esc_html__( '— Nenhum —', 'vemcomer' ); ?></option>
+						<?php foreach ( $restaurants as $restaurant ) : ?>
+							<option value="<?php echo esc_attr( (string) $restaurant->ID ); ?>" <?php selected( $restaurant_id, $restaurant->ID ); ?>>
+								<?php echo esc_html( $restaurant->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+					<p class="description"><?php echo esc_html__( 'Se selecionado, o banner será vinculado a este restaurante.', 'vemcomer' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="vc_banner_order"><?php echo esc_html__( 'Ordem', 'vemcomer' ); ?></label></th>
+				<td>
+					<input type="number" id="vc_banner_order" name="vc_banner_order" class="small-text" value="<?php echo esc_attr( $order > 0 ? (string) $order : '0' ); ?>" min="0" />
+					<p class="description"><?php echo esc_html__( 'Ordem de exibição (menor número aparece primeiro).', 'vemcomer' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="vc_banner_active"><?php echo esc_html__( 'Ativo', 'vemcomer' ); ?></label></th>
+				<td>
+					<label>
+						<input type="checkbox" id="vc_banner_active" name="vc_banner_active" value="1" <?php checked( $active ); ?> />
+						<?php echo esc_html__( 'Banner está ativo e será exibido', 'vemcomer' ); ?>
+					</label>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	public function save_meta( int $post_id ): void {
+		if ( ! isset( $_POST['vc_banner_meta_nonce_field'] ) || ! wp_verify_nonce( $_POST['vc_banner_meta_nonce_field'], 'vc_banner_meta_nonce' ) ) {
+			return;
+		}
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		$link = isset( $_POST['vc_banner_link'] ) ? esc_url_raw( wp_unslash( $_POST['vc_banner_link'] ) ) : '';
+		update_post_meta( $post_id, '_vc_banner_link', $link );
+
+		$restaurant_id = isset( $_POST['vc_banner_restaurant_id'] ) ? (int) $_POST['vc_banner_restaurant_id'] : 0;
+		if ( $restaurant_id > 0 ) {
+			update_post_meta( $post_id, '_vc_banner_restaurant_id', $restaurant_id );
+		} else {
+			delete_post_meta( $post_id, '_vc_banner_restaurant_id' );
+		}
+
+		$order = isset( $_POST['vc_banner_order'] ) ? (int) $_POST['vc_banner_order'] : 0;
+		update_post_meta( $post_id, '_vc_banner_order', $order );
+
+		$active = isset( $_POST['vc_banner_active'] ) && '1' === $_POST['vc_banner_active'];
+		update_post_meta( $post_id, '_vc_banner_active', $active ? '1' : '0' );
+	}
+
+	public function admin_columns( array $columns ): array {
+		$before = [
+			'cb'    => $columns['cb'] ?? '',
+			'title' => $columns['title'] ?? __( 'Título', 'vemcomer' ),
+		];
+		$extra  = [
+			'vc_image'      => __( 'Imagem', 'vemcomer' ),
+			'vc_link'       => __( 'Link', 'vemcomer' ),
+			'vc_restaurant' => __( 'Restaurante', 'vemcomer' ),
+			'vc_order'      => __( 'Ordem', 'vemcomer' ),
+			'vc_active'     => __( 'Ativo', 'vemcomer' ),
+		];
+		$rest   = $columns;
+		unset( $rest['cb'], $rest['title'] );
+		return array_merge( $before, $extra, $rest );
+	}
+
+	public function admin_column_values( string $column, int $post_id ): void {
+		switch ( $column ) {
+			case 'vc_image':
+				$thumbnail = get_the_post_thumbnail( $post_id, 'thumbnail' );
+				echo $thumbnail ? $thumbnail : '—';
+				break;
+
+			case 'vc_link':
+				$link = (string) get_post_meta( $post_id, '_vc_banner_link', true );
+				echo $link ? '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html( $link ) . '</a>' : '—';
+				break;
+
+			case 'vc_restaurant':
+				$restaurant_id = (int) get_post_meta( $post_id, '_vc_banner_restaurant_id', true );
+				if ( $restaurant_id > 0 ) {
+					$restaurant = get_post( $restaurant_id );
+					echo esc_html( $restaurant ? $restaurant->post_title : '—' );
+				} else {
+					echo '—';
+				}
+				break;
+
+			case 'vc_order':
+				$order = (int) get_post_meta( $post_id, '_vc_banner_order', true );
+				echo esc_html( (string) $order );
+				break;
+
+			case 'vc_active':
+				$active = (bool) get_post_meta( $post_id, '_vc_banner_active', true );
+				echo $active ? '<span style="color: green;">✓</span>' : '<span style="color: red;">✗</span>';
+				break;
+		}
+	}
+}
+

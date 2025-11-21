@@ -203,6 +203,27 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.26 - Sistema de Banners da Home (8.1 + 8.2)
+
+**Novas funcionalidades:**
+- **CPT `vc_banner`**: Custom Post Type para banners da home
+  - Campos: imagem (thumbnail), título, link, restaurante_id (opcional), ordem, ativo
+  - Meta fields: `_vc_banner_link`, `_vc_banner_restaurant_id`, `_vc_banner_order`, `_vc_banner_active`
+- **REST API completa**:
+  - `GET /banners` - Lista banners ativos (público, ordenados)
+  - `POST /banners` - Criar banner (admin)
+  - `PATCH /banners/{id}` - Atualizar banner (admin)
+  - `DELETE /banners/{id}` - Deletar banner (admin)
+- **Interface admin**: Metabox completo e colunas customizadas
+
+**Arquivos novos:**
+- `inc/Model/CPT_Banner.php` - CPT de banners
+- `inc/REST/Banners_Controller.php` - Controller REST
+
+**Arquivos modificados:**
+- `inc/Admin/Menu_Restaurant.php` - Adicionado submenu "Banners"
+- `vemcomer-core.php` - Registro do CPT e controller
+
 ### v0.25 - Sistema de Analytics - Middleware de Tracking (7.3)
 
 **Novas funcionalidades:**
@@ -604,6 +625,7 @@ Para transformar o VemComer Core em um Marketplace de Delivery Híbrido completo
 - ✅ Sistema de Favoritos (5.1 + 5.2 - Completo)
 - ✅ Sistema de Histórico de Pedidos para Clientes (6.1 + 6.2 - Completo)
 - ✅ Sistema de Analytics/Cliques para Restaurantes (7.1 + 7.2 + 7.3 - Completo)
+- ✅ Sistema de Banners da Home (8.1 + 8.2 - Completo)
 - Sistema de Horários Estruturados
 - Sistema de Geração de Mensagem WhatsApp
 - Sistema de Validação de Pedido

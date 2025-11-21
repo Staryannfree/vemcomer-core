@@ -68,5 +68,15 @@ class Menu_Restaurant {
                 'edit.php?post_type=' . \VC\Model\CPT_Review::SLUG
             );
         }
+
+        if ( class_exists( '\\VC\\Model\\CPT_Banner' ) ) {
+            add_submenu_page(
+                'vemcomer-root',
+                __( 'Banners', 'vemcomer' ),
+                __( 'Banners', 'vemcomer' ),
+                'edit_posts',
+                'edit.php?post_type=' . \VC\Model\CPT_Banner::SLUG
+            );
+        }
     }
 }
