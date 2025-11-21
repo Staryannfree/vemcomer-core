@@ -34,6 +34,9 @@ class Shortcodes {
         wp_enqueue_script( 'vemcomer-product-modal' );
         wp_enqueue_style( 'vemcomer-favorites' );
         wp_enqueue_script( 'vemcomer-favorites' );
+        wp_enqueue_style( 'vemcomer-addresses' );
+        wp_enqueue_script( 'vemcomer-addresses' );
+        wp_enqueue_script( 'vemcomer-checkout-addresses' );
         wp_localize_script( 'vemcomer-front', 'VemComer', [
             'rest'  => [ 'base' => esc_url_raw( rest_url( 'vemcomer/v1' ) ) ],
             'nonce' => wp_create_nonce( 'wp_rest' ),
@@ -191,6 +194,13 @@ class Shortcodes {
             
             <div class="vc-shipping" style="margin-top: 20px;">
                 <h4 style="margin: 0 0 12px; font-size: 1rem;"><?php echo esc_html__( 'Endereço de entrega', 'vemcomer' ); ?></h4>
+                <?php if ( is_user_logged_in() ) : ?>
+                    <div class="vc-addresses-selector" style="margin-bottom: 16px;">
+                        <button class="vc-btn vc-btn--ghost vc-btn--small" id="vc-load-addresses"><?php echo esc_html__( 'Usar endereço salvo', 'vemcomer' ); ?></button>
+                        <button class="vc-btn vc-btn--ghost vc-btn--small" id="vc-add-address"><?php echo esc_html__( 'Adicionar novo endereço', 'vemcomer' ); ?></button>
+                        <div class="vc-addresses-list-container" style="margin-top: 12px; display: none;"></div>
+                    </div>
+                <?php endif; ?>
                 <div style="display: grid; gap: 12px;">
                     <label>
                         <?php echo esc_html__( 'CEP', 'vemcomer' ); ?>

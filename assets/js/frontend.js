@@ -346,16 +346,17 @@
       };
     });
 
-    // Obter dados do cliente dos campos do formulário
+    // Obter dados do cliente dos campos do formulário ou endereço selecionado
     const customerNameInput = root.querySelector('.vc-customer-name');
     const customerPhoneInput = root.querySelector('.vc-customer-phone');
     const customerAddressInput = root.querySelector('.vc-customer-address');
+    const selectedAddress = root.dataset.selectedAddress ? JSON.parse(root.dataset.selectedAddress) : null;
     
-    const customerName = customerNameInput ? customerNameInput.value.trim() : '';
+    const customerName = customerNameInput ? customerNameInput.value.trim() : (selectedAddress?.name || '');
     const customerPhone = customerPhoneInput ? customerPhoneInput.value.trim() : '';
-    const customerAddress = customerAddressInput ? customerAddressInput.value.trim() : '';
-    const customerLat = root.dataset.customerLat ? Number(root.dataset.customerLat) : null;
-    const customerLng = root.dataset.customerLng ? Number(root.dataset.customerLng) : null;
+    const customerAddress = customerAddressInput ? customerAddressInput.value.trim() : (selectedAddress ? `${selectedAddress.street || ''}, ${selectedAddress.number || ''}${selectedAddress.complement ? ' - ' + selectedAddress.complement : ''} - ${selectedAddress.neighborhood || ''}, ${selectedAddress.city || ''} - CEP: ${selectedAddress.postcode || ''}` : '');
+    const customerLat = root.dataset.customerLat ? Number(root.dataset.customerLat) : (selectedAddress?.lat || null);
+    const customerLng = root.dataset.customerLng ? Number(root.dataset.customerLng) : (selectedAddress?.lng || null);
     
     // Validar dados obrigatórios
     if(!customerName) {
