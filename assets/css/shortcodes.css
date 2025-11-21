@@ -17,6 +17,13 @@
 .vc-star--half{color:#fbbf24;opacity:0.5}
 .vc-star--empty{color:#e5e7eb}
 .vc-rating-text{font-size:0.9rem;color:#6b7280;font-weight:500}
+.vc-card__status{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap}
+.vc-badge--open{background:#d1fae5;color:#065f46;display:inline-flex;align-items:center;gap:6px}
+.vc-badge--closed{background:#fee2e2;color:#991b1b;display:inline-flex;align-items:center;gap:6px}
+.vc-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.vc-status-dot--open{background:#059669}
+.vc-status-dot--closed{background:#dc2626}
+.vc-next-open{font-size:0.85rem;color:#6b7280}
 
 /* Menu */
 .vc-list{list-style:none;margin:0;padding:0}

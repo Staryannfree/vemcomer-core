@@ -37,6 +37,18 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
     } elseif ( class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
         $rating = \VC\Utils\Rating_Helper::get_rating( $pid );
     }
+    
+    // Verificar se está aberto
+    $is_open = false;
+    $next_open_time = null;
+    if ( function_exists( 'vc_restaurant_is_open' ) ) {
+        $is_open = vc_restaurant_is_open( $pid );
+    } elseif ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+        $is_open = \VC\Utils\Schedule_Helper::is_open( $pid );
+        if ( ! $is_open ) {
+            $next_open_time = \VC\Utils\Schedule_Helper::get_next_open_time( $pid );
+        }
+    }
 
     ob_start();
     ?>
@@ -47,6 +59,22 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
         </div>
         <div class="vc-card__body">
           <h3 class="vc-card__title"><?php echo esc_html( get_the_title( $pid ) ); ?></h3>
+          <div class="vc-card__status">
+            <?php if ( $is_open ) : ?>
+              <span class="vc-badge vc-badge--open" aria-label="<?php echo esc_attr__( 'Restaurante aberto', 'vemcomer' ); ?>">
+                <span class="vc-status-dot vc-status-dot--open"></span>
+                <?php echo esc_html__( 'Aberto', 'vemcomer' ); ?>
+              </span>
+            <?php else : ?>
+              <span class="vc-badge vc-badge--closed" aria-label="<?php echo esc_attr__( 'Restaurante fechado', 'vemcomer' ); ?>">
+                <span class="vc-status-dot vc-status-dot--closed"></span>
+                <?php echo esc_html__( 'Fechado', 'vemcomer' ); ?>
+              </span>
+              <?php if ( $next_open_time && isset( $next_open_time['time'] ) ) : ?>
+                <span class="vc-next-open"><?php echo esc_html( sprintf( __( 'Abre às %s', 'vemcomer' ), $next_open_time['time'] ) ); ?></span>
+              <?php endif; ?>
+            <?php endif; ?>
+          </div>
           <?php if ( ! empty( $rating ) && $rating['count'] > 0 ) : ?>
             <div class="vc-card__rating">
               <div class="vc-rating-stars" aria-label="<?php echo esc_attr( sprintf( __( 'Avaliação: %.1f de 5 estrelas', 'vemcomer' ), $rating['avg'] ) ); ?>">

@@ -9,6 +9,7 @@ namespace VC\Frontend;
 use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
 use VC\Utils\Rating_Helper;
+use VC\Utils\Schedule_Helper;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -55,9 +56,21 @@ class Shortcodes {
             $rid = get_the_ID();
             $addr = get_post_meta( $rid, '_vc_address', true );
             $rating = Rating_Helper::get_rating( $rid );
+            $is_open = \VC\Utils\Schedule_Helper::is_open( $rid );
+            $next_open_time = $is_open ? null : \VC\Utils\Schedule_Helper::get_next_open_time( $rid );
             echo '<div class="vc-card">';
             echo get_the_post_thumbnail( $rid, 'medium', [ 'class' => 'vc-thumb' ] );
             echo '<h3 class="vc-title">' . esc_html( get_the_title() ) . '</h3>';
+            echo '<div class="vc-card__status">';
+            if ( $is_open ) {
+                echo '<span class="vc-badge vc-badge--open"><span class="vc-status-dot vc-status-dot--open"></span>' . esc_html__( 'Aberto', 'vemcomer' ) . '</span>';
+            } else {
+                echo '<span class="vc-badge vc-badge--closed"><span class="vc-status-dot vc-status-dot--closed"></span>' . esc_html__( 'Fechado', 'vemcomer' ) . '</span>';
+                if ( $next_open_time && isset( $next_open_time['time'] ) ) {
+                    echo '<span class="vc-next-open">' . esc_html( sprintf( __( 'Abre às %s', 'vemcomer' ), $next_open_time['time'] ) ) . '</span>';
+                }
+            }
+            echo '</div>';
             if ( $rating['count'] > 0 ) {
                 $avg_rounded = round( $rating['avg'] * 2 ) / 2;
                 $full_stars = floor( $avg_rounded );

@@ -306,6 +306,22 @@
     const fulfillmentMethod = root.dataset.fulfillmentMethod || '';
     if(!fulfillmentMethod){ alert('Calcule o frete e escolha um método de entrega antes de finalizar.'); return; }
 
+    // Verificar se restaurante está aberto antes de validar
+    try {
+      const isOpenRes = await fetch(`${VemComer.rest.base}/restaurants/${restaurantId}/is-open`);
+      if(isOpenRes.ok) {
+        const isOpenData = await isOpenRes.json();
+        if(!isOpenData.is_open) {
+          const nextOpen = isOpenData.next_open_time || '';
+          const message = nextOpen ? `Restaurante está fechado. Próxima abertura: ${nextOpen}` : 'Restaurante está fechado no momento.';
+          alert(message);
+          return;
+        }
+      }
+    } catch(err) {
+      console.warn('Não foi possível verificar status do restaurante:', err);
+    }
+
     // Desabilitar botão durante processamento
     btn.disabled = true;
     btn.textContent = 'Processando...';
