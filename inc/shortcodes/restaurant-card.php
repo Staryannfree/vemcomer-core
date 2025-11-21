@@ -6,6 +6,11 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+// Carregar helper de rating
+if ( ! function_exists( 'vc_restaurant_get_rating' ) && class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
+    require_once VEMCOMER_CORE_DIR . 'inc/Utils/Rating_Helper.php';
+}
+
 add_shortcode( 'vc_restaurant', function( $atts = [] ) {
     vc_sc_mark_used();
 
@@ -21,6 +26,14 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
     $delivery = get_post_meta( $pid, 'vc_restaurant_delivery', true ) === '1';
     $cuisines = wp_get_post_terms( $pid, 'vc_cuisine', [ 'fields' => 'names' ] );
     $locs     = wp_get_post_terms( $pid, 'vc_location', [ 'fields' => 'names' ] );
+    
+    // Obter rating
+    $rating = [];
+    if ( function_exists( 'vc_restaurant_get_rating' ) ) {
+        $rating = vc_restaurant_get_rating( $pid );
+    } elseif ( class_exists( '\\VC\\Utils\\Rating_Helper' ) ) {
+        $rating = \VC\Utils\Rating_Helper::get_rating( $pid );
+    }
 
     ob_start();
     ?>
@@ -31,6 +44,32 @@ add_shortcode( 'vc_restaurant', function( $atts = [] ) {
         </div>
         <div class="vc-card__body">
           <h3 class="vc-card__title"><?php echo esc_html( get_the_title( $pid ) ); ?></h3>
+          <?php if ( ! empty( $rating ) && $rating['count'] > 0 ) : ?>
+            <div class="vc-card__rating">
+              <div class="vc-rating-stars" aria-label="<?php echo esc_attr( sprintf( __( 'Avaliação: %.1f de 5 estrelas', 'vemcomer' ), $rating['avg'] ) ); ?>">
+                <?php
+                $avg_rounded = round( $rating['avg'] * 2 ) / 2; // Arredondar para 0.5
+                $full_stars = floor( $avg_rounded );
+                $half_star = ( $avg_rounded - $full_stars ) >= 0.5;
+                $empty_stars = 5 - $full_stars - ( $half_star ? 1 : 0 );
+                
+                // Estrelas cheias
+                for ( $i = 0; $i < $full_stars; $i++ ) {
+                    echo '<span class="vc-star vc-star--full">★</span>';
+                }
+                // Meia estrela
+                if ( $half_star ) {
+                    echo '<span class="vc-star vc-star--half">★</span>';
+                }
+                // Estrelas vazias
+                for ( $i = 0; $i < $empty_stars; $i++ ) {
+                    echo '<span class="vc-star vc-star--empty">☆</span>';
+                }
+                ?>
+              </div>
+              <span class="vc-rating-text"><?php echo esc_html( $rating['formatted'] ); ?></span>
+            </div>
+          <?php endif; ?>
           <?php if ( $address ) : ?><p class="vc-card__line"><?php echo esc_html( $address ); ?></p><?php endif; ?>
           <?php if ( $hours )   : ?><p class="vc-card__line"><?php echo esc_html( $hours ); ?></p><?php endif; ?>
           <p class="vc-card__tags">

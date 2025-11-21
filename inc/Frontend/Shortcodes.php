@@ -8,6 +8,7 @@ namespace VC\Frontend;
 
 use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
+use VC\Utils\Rating_Helper;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -53,9 +54,30 @@ class Shortcodes {
         while ( $q->have_posts() ) { $q->the_post();
             $rid = get_the_ID();
             $addr = get_post_meta( $rid, '_vc_address', true );
+            $rating = Rating_Helper::get_rating( $rid );
             echo '<div class="vc-card">';
             echo get_the_post_thumbnail( $rid, 'medium', [ 'class' => 'vc-thumb' ] );
             echo '<h3 class="vc-title">' . esc_html( get_the_title() ) . '</h3>';
+            if ( $rating['count'] > 0 ) {
+                $avg_rounded = round( $rating['avg'] * 2 ) / 2;
+                $full_stars = floor( $avg_rounded );
+                $half_star = ( $avg_rounded - $full_stars ) >= 0.5;
+                $empty_stars = 5 - $full_stars - ( $half_star ? 1 : 0 );
+                echo '<div class="vc-card__rating">';
+                echo '<div class="vc-rating-stars" aria-label="' . esc_attr( sprintf( __( 'Avaliação: %.1f de 5 estrelas', 'vemcomer' ), $rating['avg'] ) ) . '">';
+                for ( $i = 0; $i < $full_stars; $i++ ) {
+                    echo '<span class="vc-star vc-star--full">★</span>';
+                }
+                if ( $half_star ) {
+                    echo '<span class="vc-star vc-star--half">★</span>';
+                }
+                for ( $i = 0; $i < $empty_stars; $i++ ) {
+                    echo '<span class="vc-star vc-star--empty">☆</span>';
+                }
+                echo '</div>';
+                echo '<span class="vc-rating-text">' . esc_html( $rating['formatted'] ) . '</span>';
+                echo '</div>';
+            }
             echo '<div class="vc-meta">' . esc_html( $addr ) . '</div>';
             echo '<a class="vc-btn" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink() ) ) . '#vc-menu">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
             echo '</div>';

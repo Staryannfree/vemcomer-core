@@ -10,6 +10,13 @@
 .vc-tag--muted{opacity:.8}
 .vc-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px}
 .vc-badge--ok{background:#e6f7ed;color:#0a8a3a}
+.vc-card__rating{display:flex;align-items:center;gap:8px;margin:8px 0}
+.vc-rating-stars{display:flex;gap:2px;font-size:1rem;line-height:1}
+.vc-star{color:#fbbf24;font-size:1.1rem}
+.vc-star--full{color:#fbbf24}
+.vc-star--half{color:#fbbf24;opacity:0.5}
+.vc-star--empty{color:#e5e7eb}
+.vc-rating-text{font-size:0.9rem;color:#6b7280;font-weight:500}
 
 /* Menu */
 .vc-list{list-style:none;margin:0;padding:0}
