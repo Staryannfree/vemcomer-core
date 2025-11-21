@@ -53,8 +53,8 @@ spl_autoload_register( function ( $class ) {
 } );
 
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
-// Temporariamente desativado para testes
-// require_once VEMCOMER_CORE_DIR . 'inc/checkout.php';
+// Para desativar checkout temporariamente, comente a linha abaixo:
+// define( 'VEMCOMER_DISABLE_CHECKOUT', true ); // Adicione no wp-config.php ou descomente aqui
 if ( ! defined( 'VEMCOMER_DISABLE_CHECKOUT' ) || ! VEMCOMER_DISABLE_CHECKOUT ) {
     require_once VEMCOMER_CORE_DIR . 'inc/checkout.php';
 }
