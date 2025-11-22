@@ -382,13 +382,58 @@
 
     // ===== Popup Boas-Vindas - Geolocalização =====
     function initWelcomePopup() {
-        console.log('initWelcomePopup chamada');
+        console.log('initWelcomePopup chamada - MÉTODO ALTERNATIVO');
         const popup = document.getElementById('welcome-popup');
         if (!popup) {
             console.warn('Popup não encontrado no DOM!');
             return;
         }
         console.log('Popup encontrado:', popup);
+        
+        // MÉTODO ALTERNATIVO: Usar event delegation no document
+        // Isso garante que funcione mesmo se os elementos forem criados depois
+        // Usar uma função nomeada para poder remover depois se necessário
+        function handlePopupClick(e) {
+            const target = e.target;
+            const popupEl = document.getElementById('welcome-popup');
+            if (!popupEl || !popupEl.classList.contains('is-open')) {
+                return; // Popup não está aberto, ignorar
+            }
+            
+            // Botão de fechar
+            if (target.closest('.welcome-popup__close')) {
+                console.log('Clique no botão fechar (delegation)');
+                e.preventDefault();
+                e.stopPropagation();
+                popupEl.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+                return;
+            }
+            
+            // Botão pular
+            const skipBtn = target.closest('#welcome-popup-skip-btn');
+            if (skipBtn) {
+                console.log('Clique no botão pular (delegation)');
+                e.preventDefault();
+                e.stopPropagation();
+                popupEl.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+                return;
+            }
+            
+            // Botão de localização
+            const locationBtn = target.closest('#welcome-popup-location-btn');
+            if (locationBtn) {
+                console.log('Clique no botão localização (delegation)');
+                e.preventDefault();
+                e.stopPropagation();
+                handleLocationButtonClick(locationBtn, popupEl);
+                return;
+            }
+        }
+        
+        // Adicionar listener no document com capture phase
+        document.addEventListener('click', handlePopupClick, true);
 
         // Verificar se já tem localização aceita para mostrar botão
         const savedLocation = localStorage.getItem('vc_user_location');
@@ -537,6 +582,96 @@
             attachPopupListeners();
         }
 
+        // Função para lidar com o clique no botão de localização
+        function handleLocationButtonClick(btn, popupElement) {
+            if (!navigator.geolocation) {
+                alert('Geolocalização não suportada pelo seu navegador.');
+                return;
+            }
+
+            btn.classList.add('is-loading');
+            btn.disabled = true;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span>Obtendo localização...</span>';
+
+            // Usar exatamente a mesma lógica do botão da home que funciona
+            if (window.VemComerReverseGeocode) {
+                window.VemComerReverseGeocode.getLocationAndFill({
+                    fillCheckout: false,
+                    onSuccess: (address, coordinates) => {
+                        localStorage.setItem('vc_location_accepted', 'true');
+                        updateHeroTitle(address.city || address.displayName);
+                        
+                        btn.classList.remove('is-loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        
+                        popupElement.classList.remove('is-open');
+                        document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+                        
+                        const heroLocationBtn = document.getElementById('vc-use-location');
+                        if (heroLocationBtn) {
+                            heroLocationBtn.classList.add('is-active');
+                        }
+                        
+                        loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
+                        showNotification('Localização atualizada!', 'success');
+                        
+                        setTimeout(() => {
+                            const restaurantsSection = document.getElementById('restaurants-list');
+                            if (restaurantsSection) {
+                                restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }, 500);
+                    },
+                    onError: (error) => {
+                        btn.classList.remove('is-loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+                    }
+                });
+            } else {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                        localStorage.setItem('vc_location_accepted', 'true');
+                        
+                        btn.classList.remove('is-loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        
+                        popupElement.classList.remove('is-open');
+                        document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+                        
+                        const heroLocationBtn = document.getElementById('vc-use-location');
+                        if (heroLocationBtn) {
+                            heroLocationBtn.classList.add('is-active');
+                        }
+                        
+                        loadRestaurantsWithLocation(lat, lng);
+                        showNotification('Localização atualizada!', 'success');
+                        
+                        setTimeout(() => {
+                            const restaurantsSection = document.getElementById('restaurants-list');
+                            if (restaurantsSection) {
+                                restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }, 500);
+                    },
+                    (error) => {
+                        btn.classList.remove('is-loading');
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+                    }
+                );
+            }
+        }
+        
         function closePopup(e) {
             if (e) {
                 e.preventDefault();
