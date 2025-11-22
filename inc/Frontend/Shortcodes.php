@@ -67,6 +67,8 @@ class Shortcodes {
             echo '<div class="vc-card__favorite">';
             echo '<button class="vc-favorite-btn" data-restaurant-id="' . esc_attr( (string) $rid ) . '" aria-label="' . esc_attr__( 'Adicionar aos favoritos', 'vemcomer' ) . '">🤍</button>';
             echo '</div>';
+            // Link envolvendo todo o card para abrir a página do restaurante
+            echo '<a class="vc-card__link" href="' . esc_url( get_permalink( $rid ) ) . '" style="display: block; text-decoration: none; color: inherit;">';
             echo get_the_post_thumbnail( $rid, 'medium', [ 'class' => 'vc-thumb' ] );
             echo '<h3 class="vc-title">' . esc_html( get_the_title() ) . '</h3>';
             echo '<div class="vc-card__status">';
@@ -100,7 +102,10 @@ class Shortcodes {
                 echo '</div>';
             }
             echo '<div class="vc-meta">' . esc_html( $addr ) . '</div>';
-            echo '<a class="vc-btn" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink() ) ) . '#vc-menu">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
+            // Botão "Ver cardápio" dentro do link, mas com evento para prevenir comportamento padrão
+            echo '<a class="vc-btn vc-btn--menu" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink( $rid ) ) ) . '#vc-menu" onclick="event.stopPropagation();" style="position: relative; z-index: 10; display: inline-block; margin-top: 8px;">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
+            // Fechar link do card
+            echo '</a>';
             echo '</div>';
         }
         echo '</div>';

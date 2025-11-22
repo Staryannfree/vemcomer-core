@@ -1,7 +1,8 @@
 /* Grid e cards */
 .vc-sc.vc-restaurants .vc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 .vc-card{position:relative;border:1px solid #eee;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer}
-.vc-card__link{display:block;color:inherit;text-decoration:none;position:relative;z-index:1;pointer-events:auto}
+.vc-card__link{display:block;color:inherit;text-decoration:none;position:relative;z-index:1;pointer-events:auto;width:100%}
+.vc-card__link:hover{opacity:0.95}
 .vc-card__thumb img{display:block;width:100%;height:auto}
 .vc-card__body{padding:12px}
 .vc-card__title{margin:0 0 6px;font-size:18px;line-height:1.3}
@@ -45,6 +46,8 @@
 .vc-filters__price-input{width:80px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem}
 .vc-filters__actions{display:flex;gap:8px;margin-top:4px}
 .vc-filters button,.vc-filters .vc-btn{padding:10px 20px;border:1px solid #111;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:0.95rem;text-decoration:none;display:inline-block}
+.vc-btn{position:relative;z-index:10;pointer-events:auto}
+.vc-btn--menu{position:relative;z-index:15}
 .vc-filters .vc-btn--ghost{background:#fff;color:#2f9e44;border-color:#2f9e44}
 .vc-filters .vc-btn--ghost:hover{background:#f0fdf4}
 
