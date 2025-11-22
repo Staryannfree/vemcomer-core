@@ -41,8 +41,15 @@
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao adicionar favorito');
+        // Verificar se a resposta é JSON antes de tentar fazer parse
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao adicionar favorito');
+        } else {
+          // Se não for JSON, provavelmente é HTML (página de erro)
+          throw new Error('Erro no servidor. Tente novamente mais tarde.');
+        }
       }
 
       return true;
@@ -70,7 +77,14 @@
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao remover favorito');
+        // Verificar se a resposta é JSON antes de tentar fazer parse
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao remover favorito');
+        } else {
+          throw new Error('Erro no servidor. Tente novamente mais tarde.');
+        }
       }
 
       return true;
@@ -96,6 +110,13 @@
       });
 
       if (!response.ok) {
+        return false;
+      }
+
+      // Verificar se a resposta é JSON antes de tentar fazer parse
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Resposta não é JSON:', contentType);
         return false;
       }
 
@@ -126,8 +147,14 @@
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao adicionar favorito');
+        // Verificar se a resposta é JSON antes de tentar fazer parse
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao adicionar favorito');
+        } else {
+          throw new Error('Erro no servidor. Tente novamente mais tarde.');
+        }
       }
 
       return true;
@@ -155,7 +182,14 @@
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao remover favorito');
+        // Verificar se a resposta é JSON antes de tentar fazer parse
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          throw new Error(error.message || 'Erro ao remover favorito');
+        } else {
+          throw new Error('Erro no servidor. Tente novamente mais tarde.');
+        }
       }
 
       return true;
@@ -200,6 +234,13 @@
 
       if (!response.ok) {
         throw new Error('Erro ao carregar favoritos');
+      }
+
+      // Verificar se a resposta é JSON antes de tentar fazer parse
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Resposta não é JSON ao carregar favoritos:', contentType);
+        throw new Error('Erro no servidor. A resposta não é válida.');
       }
 
       const data = await response.json();
