@@ -418,6 +418,88 @@ function padronizacao_modo_escuro_e_cadastro() {
             background: var(--color-bg) !important;
         }
         
+        /* Título "Restaurantes" no modo escuro */
+        body.dark-mode .section-title,
+        body.dark-mode h2.section-title,
+        body.dark-mode .home-restaurants h2,
+        body.dark-mode .home-featured h2 {
+            color: var(--color-text) !important;
+        }
+        
+        /* Filtros rápidos no modo escuro - FORÇADO */
+        body.dark-mode .home-quick-filters {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+        }
+        body.dark-mode .home-quick-filters__count {
+            color: var(--color-text-light) !important;
+        }
+        body.dark-mode .filter-chip {
+            background: var(--color-bg) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .filter-chip:hover {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-primary) !important;
+        }
+        body.dark-mode .filter-chip.is-active {
+            background: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+            color: #fff !important;
+        }
+        
+        /* Botão "Limpar filtros" no modo escuro */
+        body.dark-mode .btn--ghost,
+        body.dark-mode #clear-filters {
+            background: var(--color-bg) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .btn--ghost:hover,
+        body.dark-mode #clear-filters:hover {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-primary) !important;
+        }
+        
+        /* Autocomplete no modo escuro */
+        body.dark-mode .search-autocomplete {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+        }
+        body.dark-mode .search-autocomplete__item {
+            border-bottom-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .search-autocomplete__item:hover,
+        body.dark-mode .search-autocomplete__item.is-selected {
+            background: var(--color-bg) !important;
+        }
+        body.dark-mode .search-autocomplete__title {
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .search-autocomplete__subtitle {
+            color: var(--color-text-light) !important;
+        }
+        
+        /* Skeleton loading no modo escuro */
+        body.dark-mode .skeleton-card {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+        }
+        body.dark-mode .skeleton-image,
+        body.dark-mode .skeleton-title,
+        body.dark-mode .skeleton-line {
+            background: linear-gradient(90deg, var(--color-bg) 25%, var(--color-bg-light) 50%, var(--color-bg) 75%) !important;
+        }
+        
+        /* Notificação no modo escuro */
+        body.dark-mode .notification {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        
         /* Dark mode toggle no modo escuro */
         body.dark-mode .dark-mode-toggle {
             color: var(--color-text) !important;
