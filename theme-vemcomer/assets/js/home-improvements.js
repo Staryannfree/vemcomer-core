@@ -646,15 +646,20 @@
                             heroLocationBtn.classList.add('is-active');
                         }
                         
-                        loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
-                        showNotification('Localização atualizada!', 'success');
+                        // Salvar localização no localStorage
+                        localStorage.setItem('vc_user_location', JSON.stringify({ lat: coordinates.lat, lng: coordinates.lng }));
                         
-                        setTimeout(() => {
-                            const restaurantsSection = document.getElementById('restaurants-list');
-                            if (restaurantsSection) {
-                                restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                        }, 500);
+                        // Redirecionar para home com coordenadas na URL
+                        // Formato: seusite.com/?lat=-16.68&lng=-49.26
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('lat', coordinates.lat.toFixed(6));
+                        url.searchParams.set('lng', coordinates.lng.toFixed(6));
+                        
+                        // Remover âncora se existir e adicionar #restaurants-list
+                        url.hash = 'restaurants-list';
+                        
+                        // Redirecionar
+                        window.location.href = url.toString();
                     },
                     onError: (error) => {
                         btn.classList.remove('is-loading');
@@ -684,15 +689,17 @@
                             heroLocationBtn.classList.add('is-active');
                         }
                         
-                        loadRestaurantsWithLocation(lat, lng);
-                        showNotification('Localização atualizada!', 'success');
+                        // Redirecionar para home com coordenadas na URL
+                        // Formato: seusite.com/?lat=-16.68&lng=-49.26
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('lat', lat.toFixed(6));
+                        url.searchParams.set('lng', lng.toFixed(6));
                         
-                        setTimeout(() => {
-                            const restaurantsSection = document.getElementById('restaurants-list');
-                            if (restaurantsSection) {
-                                restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                        }, 500);
+                        // Remover âncora se existir e adicionar #restaurants-list
+                        url.hash = 'restaurants-list';
+                        
+                        // Redirecionar
+                        window.location.href = url.toString();
                     },
                     (error) => {
                         btn.classList.remove('is-loading');
