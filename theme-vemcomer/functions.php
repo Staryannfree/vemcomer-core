@@ -395,6 +395,39 @@ function padronizacao_modo_escuro_e_cadastro() {
             color: var(--color-text) !important;
         }
         
+        /* Títulos de seções no modo escuro */
+        body.dark-mode .section-title {
+            color: var(--color-text) !important;
+        }
+        
+        /* Categorias no modo escuro */
+        body.dark-mode .home-categories {
+            background: var(--color-bg) !important;
+        }
+        body.dark-mode .category-card {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .category-card__name {
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .category-card__count {
+            color: var(--color-text-light) !important;
+        }
+        body.dark-mode .category-card:hover {
+            background: var(--color-bg) !important;
+            border-color: var(--color-primary) !important;
+        }
+        
+        /* Seção de restaurantes no modo escuro */
+        body.dark-mode .home-restaurants {
+            background: var(--color-bg) !important;
+        }
+        body.dark-mode .home-featured {
+            background: var(--color-bg) !important;
+        }
+        
         /* Dark mode toggle no modo escuro */
         body.dark-mode .dark-mode-toggle {
             color: var(--color-text) !important;
