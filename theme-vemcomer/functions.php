@@ -230,14 +230,67 @@ function popup_boas_vindas_independente() {
                         console.log('POPUP: Sucesso!', lat, lng);
                         btn.innerText = '🔄 Atualizando...';
 
-                        // Fecha o popup
-                        document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
-                        popup.classList.remove('is-open');
+                        // Salvar localização no localStorage
+                        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
 
-                        // TRUQUE FINAL: Redireciona enviando os dados na URL
-                        // Isso força o WordPress a reconhecer a localização
-                        const separator = window.location.href.includes('?') ? '&' : '?';
-                        window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
+                        // Obter nome da cidade via reverse geocoding
+                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
+                            .then(response => response.json())
+                            .then(data => {
+                                const cityName = data.address?.city || 
+                                                data.address?.town || 
+                                                data.address?.municipality || 
+                                                data.address?.county || 
+                                                data.display_name?.split(',')[0] || 
+                                                'Localização desconhecida';
+                                
+                                // Salvar cidade no localStorage
+                                localStorage.setItem('vc_user_city', cityName);
+                                
+                                // Atualizar título do hero se existir
+                                const heroTitle = document.getElementById('hero-title');
+                                if (heroTitle) {
+                                    heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
+                                }
+                                
+                                // Atualizar subtítulo com número de restaurantes se a função existir
+                                if (window.updateHeroSubtitleWithRestaurantCount) {
+                                    window.updateHeroSubtitleWithRestaurantCount(cityName);
+                                }
+                                
+                                // Filtrar restaurantes por cidade se a função existir
+                                if (window.filterRestaurantsByCity) {
+                                    window.filterRestaurantsByCity(cityName);
+                                } else if (window.loadRestaurantsWithLocation) {
+                                    window.loadRestaurantsWithLocation(lat, lng);
+                                }
+                                
+                                // Fecha o popup após processar
+                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                                popup.classList.remove('is-open');
+                                
+                                // Restaurar texto do botão
+                                btn.innerText = '✅ Localização confirmada!';
+                                setTimeout(() => {
+                                    btn.style.opacity = '1';
+                                }, 500);
+                            })
+                            .catch(error => {
+                                console.error('Erro ao obter nome da cidade:', error);
+                                
+                                // Mesmo sem cidade, salva a localização
+                                localStorage.setItem('vc_user_city', 'Localização obtida');
+                                
+                                // Fecha o popup
+                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                                popup.classList.remove('is-open');
+                                
+                                // Restaurar texto do botão
+                                btn.innerText = '✅ Localização confirmada!';
+                                setTimeout(() => {
+                                    btn.style.opacity = '1';
+                                }, 500);
+                            });
                     },
                     (error) => {
                         console.error('POPUP: Erro GPS', error);
