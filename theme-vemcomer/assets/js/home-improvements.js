@@ -728,6 +728,12 @@
             if (heroLocationBtn) {
                 heroLocationBtn.classList.add('is-active');
             }
+            
+            // Atualizar subtítulo se já tiver cidade salva
+            const savedCity = localStorage.getItem('vc_user_city');
+            if (savedCity && window.updateHeroSubtitleWithRestaurantCount) {
+                window.updateHeroSubtitleWithRestaurantCount(savedCity);
+            }
         }
     }
 
