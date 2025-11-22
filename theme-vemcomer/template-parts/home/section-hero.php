@@ -17,9 +17,7 @@ $subtitulo = $args['subtitulo'] ?? __( 'Delivery, reservas, avaliações, evento
 
 <style>
 .home-hero-marketplace {
-    background: linear-gradient(135deg, rgba(47, 158, 68, 0.85) 0%, rgba(30, 126, 52, 0.85) 100%), 
-                url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
-    background-blend-mode: overlay;
+    background: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
     padding: 80px 0 100px 0;
     color: #fff;
     text-align: center;
@@ -34,13 +32,28 @@ $subtitulo = $args['subtitulo'] ?? __( 'Delivery, reservas, avaliações, evento
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(1px);
 }
 
 .home-hero-marketplace .container {
     position: relative;
     z-index: 1;
+}
+
+/* Garantir que o popup tenha prioridade sobre o hero */
+#welcome-popup {
+    z-index: 2147483647 !important;
+}
+
+#welcome-popup .welcome-popup__dialog {
+    z-index: 2147483648 !important;
+    pointer-events: auto !important;
+}
+
+#welcome-popup .welcome-popup__dialog button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
 }
 
 .home-hero-marketplace__title {

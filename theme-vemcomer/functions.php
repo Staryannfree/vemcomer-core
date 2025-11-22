@@ -156,9 +156,6 @@ add_action( 'wp_enqueue_scripts', 'vemcomer_theme_scripts' );
  * Prioridade alta para carregar depois de tudo
  */
 function popup_boas_vindas_independente() {
-    if ( ! is_front_page() ) {
-        return;
-    }
     ?>
     <style>
         /* CSS FORÇADO - Mantido */
@@ -192,86 +189,15 @@ function popup_boas_vindas_independente() {
             z-index: 2147483648 !important;
         }
     </style>
-    <style>
-        /* Mensagem de localização */
-        .location-message {
-            position: fixed !important;
-            top: 20px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            background: #2f9e44 !important;
-            color: #fff !important;
-            padding: 1rem 2rem !important;
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-            z-index: 2147483649 !important;
-            font-size: 1.1rem !important;
-            font-weight: 600 !important;
-            animation: slideDown 0.3s ease-out !important;
-            max-width: 90% !important;
-            text-align: center !important;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        
-        body.dark-mode .location-message {
-            background: #1e7e34 !important;
-        }
-    </style>
+
     <script>
-    // Função para mostrar mensagem de localização
-    function showLocationMessage(message) {
-        // Remove mensagem anterior se existir
-        const existing = document.querySelector('.location-message');
-        if (existing) {
-            existing.remove();
-        }
-        
-        // Cria nova mensagem
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'location-message';
-        msgDiv.textContent = message;
-        document.body.appendChild(msgDiv);
-        
-        // Remove após 3 segundos
-        setTimeout(() => {
-            msgDiv.style.animation = 'slideDown 0.3s ease-out reverse';
-            setTimeout(() => {
-                if (msgDiv.parentNode) {
-                    msgDiv.remove();
-                }
-            }, 300);
-        }, 3000);
-    }
-    
     document.addEventListener('DOMContentLoaded', function() {
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
-        // Verificar se deve mostrar o popup:
-        // 1. Se já tem localização salva, não mostrar
-        const savedLocation = localStorage.getItem('vc_user_location');
-        if (savedLocation) {
-            return; // Já tem localização, não precisa mostrar popup
-        }
+        console.log('POPUP: Script Independente Iniciado.');
 
-        // 2. Verificar se popup já foi visto (cookie)
-        const cookies = document.cookie.split(';');
-        const popupSeen = cookies.some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
-        if (popupSeen) {
-            return; // Já foi visto antes, não mostrar novamente
-        }
-
-        // 3. Se chegou aqui, mostrar popup (primeira visita e sem localização)
+        // 1. Abre o popup após 1s
         setTimeout(() => {
             popup.classList.add('is-open');
         }, 1000);
@@ -287,6 +213,8 @@ function popup_boas_vindas_independente() {
                 // Feedback visual
                 btn.innerText = '📍 Obtendo GPS...';
                 btn.style.opacity = '0.8';
+                
+                console.log('POPUP: Solicitando GPS ao navegador...');
 
                 if (!navigator.geolocation) {
                     alert('Seu navegador não suporta geolocalização.');
@@ -299,64 +227,17 @@ function popup_boas_vindas_independente() {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
                         
+                        console.log('POPUP: Sucesso!', lat, lng);
                         btn.innerText = '🔄 Atualizando...';
 
                         // Fecha o popup
                         document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
                         popup.classList.remove('is-open');
 
-                        // Obter nome da cidade via reverse geocoding
-                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
-                            .then(response => response.json())
-                            .then(data => {
-                                const cityName = data.address?.city || 
-                                                data.address?.town || 
-                                                data.address?.municipality || 
-                                                data.address?.county || 
-                                                data.display_name?.split(',')[0] || 
-                                                'Localização desconhecida';
-                                
-                                // Atualizar título do hero
-                                const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
-                                if (heroTitle) {
-                                    heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
-                                }
-                                
-                                // Atualizar subtítulo com número de restaurantes
-                                if (window.updateHeroSubtitleWithRestaurantCount) {
-                                    window.updateHeroSubtitleWithRestaurantCount(cityName);
-                                }
-                                
-                                // Mostrar mensagem na tela
-                                showLocationMessage('Você está em: ' + cityName);
-                                
-                                // Salvar no localStorage
-                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                                localStorage.setItem('vc_user_city', cityName);
-                                
-                                // Fecha o popup
-                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
-                                popup.classList.remove('is-open');
-                                
-                                // Filtrar restaurantes por cidade sem redirecionar
-                                if (window.filterRestaurantsByCity) {
-                                    window.filterRestaurantsByCity(cityName);
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Erro ao obter nome da cidade:', error);
-                                showLocationMessage('Você está em: Localização obtida (cidade não identificada)');
-                                
-                                // Mesmo sem cidade, salva e atualiza
-                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
-                                popup.classList.remove('is-open');
-                                
-                                // Tentar filtrar mesmo sem cidade identificada
-                                if (window.filterRestaurantsByCity) {
-                                    window.filterRestaurantsByCity('Localização obtida');
-                                }
-                            });
+                        // TRUQUE FINAL: Redireciona enviando os dados na URL
+                        // Isso força o WordPress a reconhecer a localização
+                        const separator = window.location.href.includes('?') ? '&' : '?';
+                        window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
                     },
                     (error) => {
                         console.error('POPUP: Erro GPS', error);
