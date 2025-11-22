@@ -1243,3 +1243,18 @@ function vemcomer_default_menu() {
     echo '</ul>';
 }
 
+/**
+ * Carrega o sistema de configurações da Home
+ */
+function vemcomer_load_home_settings() {
+    $home_settings_file = get_template_directory() . '/inc/Admin/Home_Settings.php';
+    if ( file_exists( $home_settings_file ) ) {
+        require_once $home_settings_file;
+        if ( class_exists( 'VemComer_Home_Settings' ) ) {
+            $home_settings = new VemComer_Home_Settings();
+            $home_settings->init();
+        }
+    }
+}
+add_action( 'after_setup_theme', 'vemcomer_load_home_settings' );
+
