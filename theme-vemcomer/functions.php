@@ -847,13 +847,11 @@ function mensagem_localizacao_botao_home() {
                             btnHomeLocation.disabled = false;
                             btnHomeLocation.classList.add('is-active');
                             
-                            // Se existe função de carregar restaurantes, usar
-                            if (window.loadRestaurantsWithLocation) {
+                            // Filtrar restaurantes por cidade sem redirecionar
+                            if (window.filterRestaurantsByCity) {
+                                window.filterRestaurantsByCity(cityName);
+                            } else if (window.loadRestaurantsWithLocation) {
                                 window.loadRestaurantsWithLocation(lat, lng);
-                            } else {
-                                // Redirecionar com coordenadas
-                                const separator = window.location.href.includes('?') ? '&' : '?';
-                                window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
                             }
                         },
                         (error) => {
