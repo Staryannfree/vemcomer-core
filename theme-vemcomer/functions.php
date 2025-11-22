@@ -230,6 +230,293 @@ function popup_boas_vindas_independente() {
 add_action('wp_footer', 'popup_boas_vindas_independente', 9999);
 
 /**
+ * Padronização de modo escuro e popup de cadastro - Solução inline forçada
+ * Prioridade alta para carregar depois de tudo
+ */
+function padronizacao_modo_escuro_e_cadastro() {
+    ?>
+    <style>
+        /* ===== MODO ESCURO PADRONIZADO - FORÇADO ===== */
+        body.dark-mode {
+            --color-bg: #111827 !important;
+            --color-bg-light: #1f2937 !important;
+            --color-bg-dark: #0f172a !important;
+            --color-text: #f9fafb !important;
+            --color-text-light: #d1d5db !important;
+            --color-border: #374151 !important;
+            --color-primary: #2f9e44 !important;
+            --color-primary-dark: #1e7e34 !important;
+            --color-secondary: #f9fafb !important;
+        }
+        
+        /* Header no modo escuro */
+        body.dark-mode .site-header {
+            background: var(--color-bg) !important;
+            border-bottom-color: var(--color-border) !important;
+        }
+        
+        /* Botões no modo escuro */
+        body.dark-mode .btn--ghost {
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .btn--ghost:hover {
+            background: var(--color-bg-light) !important;
+        }
+        
+        /* Menu mobile no modo escuro */
+        body.dark-mode .main-navigation > ul {
+            background: var(--color-bg) !important;
+        }
+        body.dark-mode .main-navigation a {
+            color: var(--color-text) !important;
+        }
+        
+        /* User menu no modo escuro */
+        body.dark-mode .user-menu__dropdown {
+            background: var(--color-bg) !important;
+            border-color: var(--color-border) !important;
+        }
+        body.dark-mode .user-menu__dropdown a {
+            color: var(--color-text) !important;
+        }
+        
+        /* Cards no modo escuro */
+        body.dark-mode .vc-card {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+        }
+        body.dark-mode .vc-card__title,
+        body.dark-mode .vc-title {
+            color: var(--color-text) !important;
+        }
+        
+        /* Dark mode toggle no modo escuro */
+        body.dark-mode .dark-mode-toggle {
+            color: var(--color-text) !important;
+            border-color: var(--color-border) !important;
+        }
+        body.dark-mode .dark-mode-toggle:hover {
+            background: var(--color-bg-light) !important;
+        }
+        
+        /* ===== POPUP DE CADASTRO - FORÇADO ===== */
+        #signup-popup {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 99998 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.3s, visibility 0.3s !important;
+            pointer-events: none !important;
+        }
+        
+        #signup-popup.is-open {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        
+        #signup-popup .signup-popup__overlay {
+            position: absolute !important;
+            inset: 0 !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(4px) !important;
+        }
+        
+        #signup-popup .signup-popup__dialog {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            background: #fff !important;
+            border-radius: 16px !important;
+            padding: 2rem !important;
+            max-width: 600px !important;
+            width: 90% !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+            z-index: 1 !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__dialog {
+            background: var(--color-bg) !important;
+            color: var(--color-text) !important;
+        }
+        
+        #signup-popup .signup-popup__close {
+            position: absolute !important;
+            top: 1rem !important;
+            right: 1rem !important;
+            background: none !important;
+            border: none !important;
+            font-size: 2rem !important;
+            line-height: 1 !important;
+            color: #6b7280 !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            width: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__close {
+            color: var(--color-text-light) !important;
+        }
+        
+        #signup-popup .signup-popup__title {
+            font-size: 1.75rem !important;
+            font-weight: 700 !important;
+            margin: 0 0 1.5rem 0 !important;
+            text-align: center !important;
+            color: #111827 !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__title {
+            color: var(--color-text) !important;
+        }
+        
+        #signup-popup .signup-popup__options {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+            gap: 1rem !important;
+        }
+        
+        #signup-popup .signup-popup__option {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            padding: 1.5rem !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            text-decoration: none !important;
+            color: inherit !important;
+            transition: all 0.3s !important;
+            cursor: pointer !important;
+            background: #fff !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__option {
+            background: var(--color-bg-light) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+        
+        #signup-popup .signup-popup__option:hover {
+            border-color: #2f9e44 !important;
+            background: #f9fafb !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__option:hover {
+            background: var(--color-bg) !important;
+            border-color: var(--color-primary) !important;
+        }
+        
+        #signup-popup .signup-popup__icon {
+            font-size: 3rem !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        #signup-popup .signup-popup__option-title {
+            font-size: 1.25rem !important;
+            font-weight: 600 !important;
+            margin: 0 0 0.5rem 0 !important;
+            color: #111827 !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__option-title {
+            color: var(--color-text) !important;
+        }
+        
+        #signup-popup .signup-popup__option-text {
+            font-size: 0.95rem !important;
+            color: #6b7280 !important;
+            margin: 0 !important;
+        }
+        
+        body.dark-mode #signup-popup .signup-popup__option-text {
+            color: var(--color-text-light) !important;
+        }
+        
+        @media (max-width: 768px) {
+            #signup-popup .signup-popup__options {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+    <script>
+    (function() {
+        'use strict';
+        
+        console.log('🔧 Padronização Modo Escuro e Cadastro carregado!');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // ===== POPUP DE CADASTRO =====
+            const btnCadastro = document.getElementById('btn-cadastro');
+            const btnCadastroHome = document.getElementById('btn-cadastro-home');
+            const signupPopup = document.getElementById('signup-popup');
+            
+            function openSignupPopup(e) {
+                if (e) {
+                    e.preventDefault();
+                }
+                if (signupPopup) {
+                    signupPopup.classList.add('is-open');
+                    document.body.style.overflow = 'hidden';
+                    console.log('✅ Popup de cadastro aberto');
+                }
+            }
+            
+            function closeSignupPopup() {
+                if (signupPopup) {
+                    signupPopup.classList.remove('is-open');
+                    document.body.style.overflow = '';
+                    console.log('✅ Popup de cadastro fechado');
+                }
+            }
+            
+            // Botão do header
+            if (btnCadastro) {
+                btnCadastro.addEventListener('click', openSignupPopup);
+            }
+            
+            // Botão da home
+            if (btnCadastroHome) {
+                btnCadastroHome.addEventListener('click', openSignupPopup);
+            }
+            
+            // Fechar popup
+            const signupClose = signupPopup?.querySelector('.signup-popup__close');
+            const signupOverlay = signupPopup?.querySelector('.signup-popup__overlay');
+            
+            if (signupClose) {
+                signupClose.addEventListener('click', closeSignupPopup);
+            }
+            
+            if (signupOverlay) {
+                signupOverlay.addEventListener('click', closeSignupPopup);
+            }
+            
+            // Fechar com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && signupPopup?.classList.contains('is-open')) {
+                    closeSignupPopup();
+                }
+            });
+        });
+    })();
+    </script>
+    <?php
+}
+add_action('wp_footer', 'padronizacao_modo_escuro_e_cadastro', 9999);
+
+/**
  * Registra áreas de widgets
  */
 function vemcomer_theme_widgets_init() {
