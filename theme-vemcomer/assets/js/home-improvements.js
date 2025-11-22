@@ -382,8 +382,13 @@
 
     // ===== Popup Boas-Vindas - Geolocalização =====
     function initWelcomePopup() {
+        console.log('initWelcomePopup chamada');
         const popup = document.getElementById('welcome-popup');
-        if (!popup) return;
+        if (!popup) {
+            console.warn('Popup não encontrado no DOM!');
+            return;
+        }
+        console.log('Popup encontrado:', popup);
 
         // Verificar se já tem localização aceita para mostrar botão
         const savedLocation = localStorage.getItem('vc_user_location');
@@ -755,6 +760,7 @@
 
     // ===== Inicializar tudo =====
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded - Inicializando home-improvements...');
         initQuickFilters();
         initGeolocation();
         initSearchAutocomplete();
@@ -766,6 +772,7 @@
         initPromoBar();
         // Inicializar popup com um pequeno delay para garantir que o DOM esteja pronto
         setTimeout(() => {
+            console.log('Inicializando popup...');
             initWelcomePopup();
         }, 100);
         checkHeroLocationButton();
