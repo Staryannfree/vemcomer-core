@@ -5,6 +5,8 @@
 
 (function() {
     'use strict';
+    
+    console.log('home-improvements.js carregado!');
 
     const REST_BASE = window.vemcomerTheme?.restUrl || '/wp-json/vemcomer/v1/';
     const NONCE = window.vemcomerTheme?.nonce || '';
