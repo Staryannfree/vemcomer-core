@@ -381,28 +381,98 @@
     }
 
     // ===== Popup Boas-Vindas - Geolocalização =====
-    function initWelcomePopup() {
-        console.log('initWelcomePopup chamada - MÉTODO ALTERNATIVO');
+    // MÚLTIPLAS ABORDAGENS PARA GARANTIR FUNCIONAMENTO
+    
+    // Função global para lidar com cliques no popup (pode ser chamada de qualquer lugar)
+    window.handleWelcomePopupClick = function(btnId) {
+        console.log('handleWelcomePopupClick chamada para:', btnId);
         const popup = document.getElementById('welcome-popup');
         if (!popup) {
-            console.warn('Popup não encontrado no DOM!');
+            console.warn('Popup não encontrado!');
             return;
         }
-        console.log('Popup encontrado:', popup);
         
-        // MÉTODO ALTERNATIVO: Usar event delegation no document
-        // Isso garante que funcione mesmo se os elementos forem criados depois
-        // Usar uma função nomeada para poder remover depois se necessário
+        if (btnId === 'close' || btnId === 'skip') {
+            popup.classList.remove('is-open');
+            document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+        } else if (btnId === 'location') {
+            const locationBtn = document.getElementById('welcome-popup-location-btn');
+            if (locationBtn) {
+                handleLocationButtonClick(locationBtn, popup);
+            }
+        }
+    };
+    
+    function initWelcomePopup() {
+        console.log('initWelcomePopup chamada - MÚLTIPLAS ABORDAGENS');
+        
+        // ABORDAGEM 1: Tentar encontrar popup imediatamente
+        let popup = document.getElementById('welcome-popup');
+        if (!popup) {
+            console.warn('Popup não encontrado imediatamente, tentando novamente...');
+            // ABORDAGEM 2: Tentar novamente após um delay
+            setTimeout(() => {
+                popup = document.getElementById('welcome-popup');
+                if (popup) {
+                    console.log('Popup encontrado no segundo try!');
+                    setupPopupListeners(popup);
+                } else {
+                    console.error('Popup ainda não encontrado após delay!');
+                }
+            }, 500);
+            
+            // ABORDAGEM 3: Usar MutationObserver para detectar quando popup é adicionado
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                            const foundPopup = node.id === 'welcome-popup' ? node : node.querySelector('#welcome-popup');
+                            if (foundPopup) {
+                                console.log('Popup detectado via MutationObserver!');
+                                setupPopupListeners(foundPopup);
+                                observer.disconnect();
+                            }
+                        }
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            // ABORDAGEM 4: Verificar periodicamente
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                popup = document.getElementById('welcome-popup');
+                if (popup) {
+                    console.log('Popup encontrado via setInterval (tentativa ' + attempts + ')!');
+                    setupPopupListeners(popup);
+                    clearInterval(checkInterval);
+                } else if (attempts > 20) {
+                    console.error('Popup não encontrado após 20 tentativas!');
+                    clearInterval(checkInterval);
+                }
+            }, 200);
+            
+            return;
+        }
+        
+        console.log('Popup encontrado imediatamente:', popup);
+        setupPopupListeners(popup);
+    }
+    
+    function setupPopupListeners(popup) {
+        console.log('setupPopupListeners chamada para popup:', popup);
+        
+        // ABORDAGEM 1: Event delegation no document (capture phase)
         function handlePopupClick(e) {
             const target = e.target;
             const popupEl = document.getElementById('welcome-popup');
             if (!popupEl || !popupEl.classList.contains('is-open')) {
-                return; // Popup não está aberto, ignorar
+                return;
             }
             
-            // Botão de fechar
             if (target.closest('.welcome-popup__close')) {
-                console.log('Clique no botão fechar (delegation)');
+                console.log('Clique fechar (delegation)');
                 e.preventDefault();
                 e.stopPropagation();
                 popupEl.classList.remove('is-open');
@@ -410,10 +480,9 @@
                 return;
             }
             
-            // Botão pular
             const skipBtn = target.closest('#welcome-popup-skip-btn');
             if (skipBtn) {
-                console.log('Clique no botão pular (delegation)');
+                console.log('Clique pular (delegation)');
                 e.preventDefault();
                 e.stopPropagation();
                 popupEl.classList.remove('is-open');
@@ -421,19 +490,86 @@
                 return;
             }
             
-            // Botão de localização
             const locationBtn = target.closest('#welcome-popup-location-btn');
             if (locationBtn) {
-                console.log('Clique no botão localização (delegation)');
+                console.log('Clique localização (delegation)');
                 e.preventDefault();
                 e.stopPropagation();
                 handleLocationButtonClick(locationBtn, popupEl);
                 return;
             }
         }
-        
-        // Adicionar listener no document com capture phase
         document.addEventListener('click', handlePopupClick, true);
+        
+        // ABORDAGEM 2: Listeners diretos nos botões
+        const closeBtn = popup.querySelector('.welcome-popup__close');
+        const locationBtn = popup.querySelector('#welcome-popup-location-btn');
+        const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
+        
+        if (closeBtn) {
+            closeBtn.onclick = function(e) {
+                console.log('Clique fechar (onclick direto)');
+                e.preventDefault();
+                e.stopPropagation();
+                popup.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+            };
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.style.pointerEvents = 'auto';
+        }
+        
+        if (skipBtn) {
+            skipBtn.onclick = function(e) {
+                console.log('Clique pular (onclick direto)');
+                e.preventDefault();
+                e.stopPropagation();
+                popup.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+            };
+            skipBtn.style.cursor = 'pointer';
+            skipBtn.style.pointerEvents = 'auto';
+        }
+        
+        if (locationBtn) {
+            locationBtn.onclick = function(e) {
+                console.log('Clique localização (onclick direto)');
+                e.preventDefault();
+                e.stopPropagation();
+                handleLocationButtonClick(locationBtn, popup);
+            };
+            locationBtn.style.cursor = 'pointer';
+            locationBtn.style.pointerEvents = 'auto';
+        }
+        
+        // ABORDAGEM 3: Adicionar também addEventListener como backup
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                console.log('Clique fechar (addEventListener)');
+                e.preventDefault();
+                e.stopPropagation();
+                popup.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+            }, true);
+        }
+        
+        if (skipBtn) {
+            skipBtn.addEventListener('click', function(e) {
+                console.log('Clique pular (addEventListener)');
+                e.preventDefault();
+                e.stopPropagation();
+                popup.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+            }, true);
+        }
+        
+        if (locationBtn) {
+            locationBtn.addEventListener('click', function(e) {
+                console.log('Clique localização (addEventListener)');
+                e.preventDefault();
+                e.stopPropagation();
+                handleLocationButtonClick(locationBtn, popup);
+            }, true);
+        }
 
         // Verificar se já tem localização aceita para mostrar botão
         const savedLocation = localStorage.getItem('vc_user_location');
@@ -677,8 +813,8 @@
     }
 
     // ===== Inicializar tudo =====
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOMContentLoaded - Inicializando home-improvements...');
+    function initAll() {
+        console.log('Inicializando home-improvements...');
         initQuickFilters();
         initGeolocation();
         initSearchAutocomplete();
@@ -688,13 +824,32 @@
         initBottomNav();
         initDarkMode();
         initPromoBar();
-        // Inicializar popup com um pequeno delay para garantir que o DOM esteja pronto
-        setTimeout(() => {
-            console.log('Inicializando popup...');
-            initWelcomePopup();
-        }, 100);
         checkHeroLocationButton();
+        
+        // Inicializar popup com múltiplas tentativas
+        console.log('Tentando inicializar popup...');
+        initWelcomePopup();
+    }
+    
+    // Tentar quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAll);
+    } else {
+        // DOM já está pronto
+        initAll();
+    }
+    
+    // Também tentar quando window estiver completamente carregado
+    window.addEventListener('load', () => {
+        console.log('Window load - tentando inicializar popup novamente...');
+        initWelcomePopup();
     });
+    
+    // Tentar novamente após um delay maior
+    setTimeout(() => {
+        console.log('Delay adicional - tentando inicializar popup...');
+        initWelcomePopup();
+    }, 2000);
 
 })();
 
