@@ -821,15 +821,21 @@
         initWelcomePopup();
     }, 2000);
     
-    // Última tentativa após 5 segundos
+    // Última tentativa após 5 segundos (apenas se necessário)
     setTimeout(() => {
         const popup = document.getElementById('welcome-popup');
         if (popup) {
             setupPopupListeners(popup);
-            // Forçar exibição
-            setTimeout(() => {
-                popup.classList.add('is-open');
-            }, 500);
+            
+            // Verificar novamente se deve mostrar
+            const savedLocation = localStorage.getItem('vc_user_location');
+            const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
+            
+            if (!savedLocation && !popupSeen) {
+                setTimeout(() => {
+                    popup.classList.add('is-open');
+                }, 500);
+            }
         }
     }, 5000);
 
