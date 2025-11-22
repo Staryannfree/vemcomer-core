@@ -480,11 +480,18 @@
     pointer-events: auto !important;
     cursor: pointer !important;
     position: relative;
-    z-index: 10;
+    z-index: 1000 !important;
 }
 
 .welcome-popup__actions .btn * {
     pointer-events: none;
+}
+
+#welcome-popup-location-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 1000 !important;
+    position: relative;
 }
 
 .welcome-popup__actions .btn-icon {

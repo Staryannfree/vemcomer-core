@@ -436,10 +436,15 @@
         }
 
         if (locationBtn) {
+            console.log('Botão do popup encontrado:', locationBtn);
             locationBtn.style.cursor = 'pointer';
             locationBtn.style.pointerEvents = 'auto';
+            locationBtn.style.position = 'relative';
+            locationBtn.style.zIndex = '1000';
+            
             // Usar exatamente a mesma lógica do botão da home que funciona
             locationBtn.addEventListener('click', async () => {
+                console.log('Clique no botão do popup detectado!');
                 if (!navigator.geolocation) {
                     alert('Geolocalização não suportada pelo seu navegador.');
                     return;
@@ -542,6 +547,8 @@
                     alert('Erro ao processar localização.');
                 }
             });
+        } else {
+            console.warn('Botão do popup não encontrado!');
         }
 
         // Fechar ao clicar fora
