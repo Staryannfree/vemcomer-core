@@ -673,6 +673,154 @@ section {
     overflow: hidden;
 }
 
+/* Modo Escuro - Padronização Completa */
+body.dark-mode {
+    --color-bg: #111827;
+    --color-bg-light: #1f2937;
+    --color-bg-dark: #0f172a;
+    --color-text: #f9fafb;
+    --color-text-light: #d1d5db;
+    --color-border: #374151;
+    --color-primary: #2f9e44;
+    --color-primary-dark: #1e7e34;
+    --color-secondary: #f9fafb;
+}
+
+/* Header no modo escuro */
+body.dark-mode .site-header {
+    background: var(--color-bg);
+    border-bottom-color: var(--color-border);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Botões no modo escuro */
+body.dark-mode .btn--ghost {
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode .btn--ghost:hover {
+    background: var(--color-bg-light);
+    border-color: var(--color-border);
+}
+
+/* Menu mobile no modo escuro */
+body.dark-mode .main-navigation > ul {
+    background: var(--color-bg);
+    border-left: 1px solid var(--color-border);
+}
+
+body.dark-mode .main-navigation li {
+    border-bottom-color: var(--color-border);
+}
+
+body.dark-mode .main-navigation a {
+    color: var(--color-text);
+}
+
+body.dark-mode .main-navigation a:hover {
+    color: var(--color-primary);
+    background: var(--color-bg-light);
+}
+
+/* User menu dropdown no modo escuro */
+body.dark-mode .user-menu__dropdown {
+    background: var(--color-bg);
+    border-color: var(--color-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .user-menu__dropdown a {
+    color: var(--color-text);
+}
+
+body.dark-mode .user-menu__dropdown a:hover {
+    background: var(--color-bg-light);
+}
+
+body.dark-mode .user-menu__toggle:hover {
+    background: var(--color-bg-light);
+}
+
+/* Menu toggle icon no modo escuro */
+body.dark-mode .menu-toggle__icon,
+body.dark-mode .menu-toggle__icon::before,
+body.dark-mode .menu-toggle__icon::after {
+    background: var(--color-text);
+}
+
+/* Popup de cadastro no modo escuro */
+body.dark-mode .signup-popup__dialog {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+body.dark-mode .signup-popup__option {
+    background: var(--color-bg-light);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode .signup-popup__option:hover {
+    background: var(--color-bg);
+    border-color: var(--color-primary);
+}
+
+body.dark-mode .signup-popup__close {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .signup-popup__close:hover {
+    color: var(--color-text);
+}
+
+/* Tabs no modo escuro */
+body.dark-mode .tabs {
+    border-bottom-color: var(--color-border);
+}
+
+body.dark-mode .tab {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .tab:hover {
+    color: var(--color-primary);
+}
+
+body.dark-mode .tab--active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* Footer no modo escuro - mantém escuro mas ajusta cores */
+body.dark-mode .site-footer {
+    background: var(--color-bg-dark);
+    color: var(--color-text-light);
+}
+
+body.dark-mode .site-footer__bottom {
+    border-top-color: var(--color-border);
+}
+
+body.dark-mode .site-footer__menu a {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .site-footer__menu a:hover {
+    color: var(--color-text);
+}
+
+/* Dark mode toggle no modo escuro */
+body.dark-mode .dark-mode-toggle {
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+    background: var(--color-bg-light);
+    border-color: var(--color-border);
+}
+
 /* Popup de Seleção de Cadastro */
 .signup-popup {
     position: fixed;

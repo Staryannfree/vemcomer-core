@@ -593,13 +593,150 @@
     display: none;
 }
 
-/* Modo Escuro */
+/* Modo Escuro - Variáveis (já definidas no main.css, mas mantidas aqui para compatibilidade) */
 body.dark-mode {
     --color-bg: #111827;
     --color-bg-light: #1f2937;
     --color-text: #f9fafb;
     --color-text-light: #d1d5db;
     --color-border: #374151;
+}
+
+/* Filtros rápidos no modo escuro */
+body.dark-mode .home-quick-filters {
+    background: var(--color-bg-light);
+}
+
+body.dark-mode .filter-chip {
+    background: var(--color-bg);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode .filter-chip:hover {
+    background: var(--color-bg-light);
+    border-color: var(--color-primary);
+}
+
+body.dark-mode .filter-chip.is-active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+/* Categorias no modo escuro */
+body.dark-mode .home-categories {
+    background: var(--color-bg);
+}
+
+body.dark-mode .category-card {
+    background: var(--color-bg-light);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode .category-card:hover {
+    background: var(--color-bg);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Cards de restaurantes no modo escuro */
+body.dark-mode .vc-card {
+    background: var(--color-bg-light);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode .vc-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .vc-card__title,
+body.dark-mode .vc-title {
+    color: var(--color-text);
+}
+
+body.dark-mode .vc-card__meta,
+body.dark-mode .vc-meta {
+    color: var(--color-text-light);
+}
+
+/* Promo bar no modo escuro */
+body.dark-mode .promo-bar {
+    background: var(--color-bg-light);
+    border-bottom-color: var(--color-border);
+    color: var(--color-text);
+}
+
+body.dark-mode .promo-bar__close {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .promo-bar__close:hover {
+    color: var(--color-text);
+}
+
+/* Home CTA no modo escuro */
+body.dark-mode .home-cta {
+    background: var(--color-bg-light);
+}
+
+body.dark-mode .home-cta__title,
+body.dark-mode .home-cta__text {
+    color: var(--color-text);
+}
+
+/* Bottom nav no modo escuro */
+body.dark-mode .bottom-nav {
+    background: var(--color-bg);
+    border-top-color: var(--color-border);
+}
+
+body.dark-mode .bottom-nav__item {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .bottom-nav__item.is-active {
+    color: var(--color-primary);
+}
+
+/* Breadcrumbs no modo escuro */
+body.dark-mode .breadcrumbs {
+    background: var(--color-bg-light);
+}
+
+body.dark-mode .breadcrumbs a {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .breadcrumbs a:hover {
+    color: var(--color-primary);
+}
+
+/* Popup de boas-vindas no modo escuro */
+body.dark-mode .welcome-popup__dialog {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+body.dark-mode .welcome-popup__title {
+    color: var(--color-text);
+}
+
+body.dark-mode .welcome-popup__text,
+body.dark-mode .welcome-popup__subtext {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .welcome-popup__close {
+    color: var(--color-text-light);
+}
+
+body.dark-mode .welcome-popup__close:hover {
+    color: var(--color-text);
+    background: var(--color-bg-light);
 }
 
 .dark-mode-toggle {
