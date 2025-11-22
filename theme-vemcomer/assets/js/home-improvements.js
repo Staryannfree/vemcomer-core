@@ -608,6 +608,11 @@
                             heroLocationBtn.classList.add('is-active');
                         }
                         
+                        // Atualizar subtítulo com número de restaurantes
+                        if (window.updateHeroSubtitleWithRestaurantCount) {
+                            window.updateHeroSubtitleWithRestaurantCount(address.city || address.displayName);
+                        }
+                        
                         // Filtrar restaurantes por cidade
                         if (window.filterRestaurantsByCity) {
                             window.filterRestaurantsByCity(address.city || address.displayName);
