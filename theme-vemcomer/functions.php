@@ -151,7 +151,67 @@ function popup_boas_vindas_independente() {
             z-index: 2147483648 !important;
         }
     </style>
+    <style>
+        /* Mensagem de localização */
+        .location-message {
+            position: fixed !important;
+            top: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            background: #2f9e44 !important;
+            color: #fff !important;
+            padding: 1rem 2rem !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            z-index: 2147483649 !important;
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            animation: slideDown 0.3s ease-out !important;
+            max-width: 90% !important;
+            text-align: center !important;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        body.dark-mode .location-message {
+            background: #1e7e34 !important;
+        }
+    </style>
     <script>
+    // Função para mostrar mensagem de localização
+    function showLocationMessage(message) {
+        // Remove mensagem anterior se existir
+        const existing = document.querySelector('.location-message');
+        if (existing) {
+            existing.remove();
+        }
+        
+        // Cria nova mensagem
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'location-message';
+        msgDiv.textContent = message;
+        document.body.appendChild(msgDiv);
+        
+        // Remove após 3 segundos
+        setTimeout(() => {
+            msgDiv.style.animation = 'slideDown 0.3s ease-out reverse';
+            setTimeout(() => {
+                if (msgDiv.parentNode) {
+                    msgDiv.remove();
+                }
+            }, 300);
+        }, 3000);
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
@@ -195,10 +255,48 @@ function popup_boas_vindas_independente() {
                         document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
                         popup.classList.remove('is-open');
 
-                        // TRUQUE FINAL: Redireciona enviando os dados na URL
-                        // Isso força o WordPress a reconhecer a localização
-                        const separator = window.location.href.includes('?') ? '&' : '?';
-                        window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
+                        // Obter nome da cidade via reverse geocoding
+                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
+                            .then(response => response.json())
+                            .then(data => {
+                                const cityName = data.address?.city || 
+                                                data.address?.town || 
+                                                data.address?.municipality || 
+                                                data.address?.county || 
+                                                data.display_name?.split(',')[0] || 
+                                                'Localização desconhecida';
+                                
+                                // Mostrar mensagem na tela
+                                showLocationMessage('Você está em: ' + cityName);
+                                
+                                // Salvar no localStorage
+                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                                localStorage.setItem('vc_user_city', cityName);
+                                
+                                // Fecha o popup
+                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                                popup.classList.remove('is-open');
+                                
+                                // Redireciona após 2 segundos (tempo para ver a mensagem)
+                                setTimeout(() => {
+                                    const separator = window.location.href.includes('?') ? '&' : '?';
+                                    window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
+                                }, 2000);
+                            })
+                            .catch(error => {
+                                console.error('Erro ao obter nome da cidade:', error);
+                                showLocationMessage('Você está em: Localização obtida (cidade não identificada)');
+                                
+                                // Mesmo sem cidade, salva e redireciona
+                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                                popup.classList.remove('is-open');
+                                
+                                setTimeout(() => {
+                                    const separator = window.location.href.includes('?') ? '&' : '?';
+                                    window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
+                                }, 2000);
+                            });
                     },
                     (error) => {
                         console.error('POPUP: Erro GPS', error);
@@ -515,6 +613,130 @@ function padronizacao_modo_escuro_e_cadastro() {
     <?php
 }
 add_action('wp_footer', 'padronizacao_modo_escuro_e_cadastro', 9999);
+
+/**
+ * Mensagem de localização e botão da home - Solução inline forçada
+ * Prioridade alta para carregar depois de tudo
+ */
+function mensagem_localizacao_botao_home() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <script>
+    (function() {
+        'use strict';
+        
+        // Função global para mostrar mensagem de localização
+        window.showLocationMessage = function(message) {
+            // Remove mensagem anterior se existir
+            const existing = document.querySelector('.location-message');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // Cria nova mensagem
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'location-message';
+            msgDiv.textContent = message;
+            document.body.appendChild(msgDiv);
+            
+            // Remove após 3 segundos
+            setTimeout(() => {
+                msgDiv.style.animation = 'slideDown 0.3s ease-out reverse';
+                setTimeout(() => {
+                    if (msgDiv.parentNode) {
+                        msgDiv.remove();
+                    }
+                }, 300);
+            }, 3000);
+        };
+        
+        // Função para obter nome da cidade
+        function getCityName(lat, lng) {
+            return fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
+                .then(response => response.json())
+                .then(data => {
+                    return data.address?.city || 
+                           data.address?.town || 
+                           data.address?.municipality || 
+                           data.address?.county || 
+                           data.display_name?.split(',')[0] || 
+                           'Localização desconhecida';
+                })
+                .catch(error => {
+                    console.error('Erro ao obter nome da cidade:', error);
+                    return 'Localização obtida';
+                });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Botão "Usar minha localização" da home
+            const btnHomeLocation = document.getElementById('vc-use-location');
+            
+            if (btnHomeLocation) {
+                btnHomeLocation.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (!navigator.geolocation) {
+                        alert('Seu navegador não suporta geolocalização.');
+                        return;
+                    }
+                    
+                    // Feedback visual
+                    const originalText = btnHomeLocation.innerHTML;
+                    btnHomeLocation.innerHTML = '<span class="btn-geolocation__icon">📍</span><span class="btn-geolocation__text">Obtendo GPS...</span>';
+                    btnHomeLocation.disabled = true;
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            
+                            console.log('GPS obtido:', lat, lng);
+                            
+                            // Obter nome da cidade
+                            const cityName = await getCityName(lat, lng);
+                            
+                            // Mostrar mensagem na tela
+                            window.showLocationMessage('Você está em: ' + cityName);
+                            
+                            // Salvar no localStorage
+                            localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                            localStorage.setItem('vc_user_city', cityName);
+                            
+                            // Restaurar botão
+                            btnHomeLocation.innerHTML = originalText;
+                            btnHomeLocation.disabled = false;
+                            btnHomeLocation.classList.add('is-active');
+                            
+                            // Se existe função de carregar restaurantes, usar
+                            if (window.loadRestaurantsWithLocation) {
+                                window.loadRestaurantsWithLocation(lat, lng);
+                            } else {
+                                // Redirecionar com coordenadas
+                                const separator = window.location.href.includes('?') ? '&' : '?';
+                                window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
+                            }
+                        },
+                        (error) => {
+                            console.error('Erro GPS:', error);
+                            let msg = 'Erro ao obter localização.';
+                            if(error.code === 1) msg = 'Por favor, permita o acesso à sua localização no navegador.';
+                            alert(msg);
+                            btnHomeLocation.innerHTML = originalText;
+                            btnHomeLocation.disabled = false;
+                        },
+                        { timeout: 10000, enableHighAccuracy: true }
+                    );
+                });
+            }
+        });
+    })();
+    </script>
+    <?php
+}
+add_action('wp_footer', 'mensagem_localizacao_botao_home', 9999);
 
 /**
  * Registra áreas de widgets
