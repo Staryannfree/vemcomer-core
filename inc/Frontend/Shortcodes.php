@@ -105,7 +105,9 @@ class Shortcodes {
             // Fechar link do card antes do botão
             echo '</a>';
             // Botão "Ver cardápio" FORA do link, com z-index maior para ficar acima
-            echo '<a class="vc-btn vc-btn--menu" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink( $rid ) ) ) . '#vc-menu" style="position: relative; z-index: 15; display: inline-block; margin-top: 8px; pointer-events: auto;">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
+            echo '<div style="padding: 8px 12px 12px; position: relative; z-index: 15;">';
+            echo '<a class="vc-btn vc-btn--menu" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink( $rid ) ) ) . '#vc-menu" style="position: relative; z-index: 15; display: inline-block; pointer-events: auto;">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
+            echo '</div>';
             echo '</div>';
         }
         echo '</div>';
