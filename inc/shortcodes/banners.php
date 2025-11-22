@@ -66,8 +66,13 @@ add_shortcode( 'vc_banners', function( $atts = [] ) {
                 $link = get_post_meta( $banner_id, '_vc_banner_link', true );
                 $title = get_the_title();
                 $restaurant_id_banner = (int) get_post_meta( $banner_id, '_vc_banner_restaurant_id', true );
+                $size = (string) get_post_meta( $banner_id, '_vc_banner_size', true );
+                if ( empty( $size ) ) {
+                    $size = 'medium'; // Tamanho padrão
+                }
+                $size_class = 'vc-banner-item--' . esc_attr( $size );
                 ?>
-                <div class="vc-banner-item">
+                <div class="vc-banner-item <?php echo esc_attr( $size_class ); ?>">
                     <?php if ( $link ) : ?>
                         <a href="<?php echo esc_url( $link ); ?>" class="vc-banner-item__link">
                     <?php endif; ?>

@@ -19,6 +19,37 @@
   min-height: 200px;
 }
 
+/* Tamanhos de banner */
+.vc-banner-item--small {
+  grid-column: span 1;
+  min-height: 150px;
+}
+
+.vc-banner-item--medium {
+  grid-column: span 2;
+  min-height: 200px;
+}
+
+.vc-banner-item--large {
+  grid-column: span 3;
+  min-height: 250px;
+}
+
+.vc-banner-item--full {
+  grid-column: 1 / -1;
+  min-height: 300px;
+}
+
+/* Responsividade para tamanhos */
+@media (max-width: 768px) {
+  .vc-banner-item--small,
+  .vc-banner-item--medium,
+  .vc-banner-item--large,
+  .vc-banner-item--full {
+    grid-column: 1 / -1;
+  }
+}
+
 .vc-banner-item:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);

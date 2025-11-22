@@ -66,6 +66,10 @@ class CPT_Banner {
 		$restaurant_id   = (int) get_post_meta( $post->ID, '_vc_banner_restaurant_id', true );
 		$order           = (int) get_post_meta( $post->ID, '_vc_banner_order', true );
 		$active          = (bool) get_post_meta( $post->ID, '_vc_banner_active', true );
+		$size            = (string) get_post_meta( $post->ID, '_vc_banner_size', true );
+		if ( empty( $size ) ) {
+			$size = 'medium'; // Tamanho padrão
+		}
 
 		?>
 		<table class="form-table">
@@ -107,6 +111,18 @@ class CPT_Banner {
 				</td>
 			</tr>
 			<tr>
+				<th><label for="vc_banner_size"><?php echo esc_html__( 'Tamanho do Banner', 'vemcomer' ); ?></label></th>
+				<td>
+					<select id="vc_banner_size" name="vc_banner_size" class="regular-text">
+						<option value="small" <?php selected( $size, 'small' ); ?>><?php echo esc_html__( 'Pequeno (1/4 da largura)', 'vemcomer' ); ?></option>
+						<option value="medium" <?php selected( $size, 'medium' ); ?>><?php echo esc_html__( 'Médio (1/2 da largura)', 'vemcomer' ); ?></option>
+						<option value="large" <?php selected( $size, 'large' ); ?>><?php echo esc_html__( 'Grande (3/4 da largura)', 'vemcomer' ); ?></option>
+						<option value="full" <?php selected( $size, 'full' ); ?>><?php echo esc_html__( 'Largura Total (100%)', 'vemcomer' ); ?></option>
+					</select>
+					<p class="description"><?php echo esc_html__( 'Escolha o tamanho de exibição do banner. Isso evita banners muito grandes.', 'vemcomer' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th><label for="vc_banner_active"><?php echo esc_html__( 'Ativo', 'vemcomer' ); ?></label></th>
 				<td>
 					<label>
@@ -143,6 +159,13 @@ class CPT_Banner {
 		$order = isset( $_POST['vc_banner_order'] ) ? (int) $_POST['vc_banner_order'] : 0;
 		update_post_meta( $post_id, '_vc_banner_order', $order );
 
+		$size = isset( $_POST['vc_banner_size'] ) ? sanitize_text_field( wp_unslash( $_POST['vc_banner_size'] ) ) : 'medium';
+		$allowed_sizes = [ 'small', 'medium', 'large', 'full' ];
+		if ( ! in_array( $size, $allowed_sizes, true ) ) {
+			$size = 'medium';
+		}
+		update_post_meta( $post_id, '_vc_banner_size', $size );
+
 		$active = isset( $_POST['vc_banner_active'] ) && '1' === $_POST['vc_banner_active'];
 		update_post_meta( $post_id, '_vc_banner_active', $active ? '1' : '0' );
 	}
@@ -156,6 +179,7 @@ class CPT_Banner {
 			'vc_image'      => __( 'Imagem', 'vemcomer' ),
 			'vc_link'       => __( 'Link', 'vemcomer' ),
 			'vc_restaurant' => __( 'Restaurante', 'vemcomer' ),
+			'vc_size'       => __( 'Tamanho', 'vemcomer' ),
 			'vc_order'      => __( 'Ordem', 'vemcomer' ),
 			'vc_active'     => __( 'Ativo', 'vemcomer' ),
 		];
@@ -184,6 +208,20 @@ class CPT_Banner {
 				} else {
 					echo '—';
 				}
+				break;
+
+			case 'vc_size':
+				$size = (string) get_post_meta( $post_id, '_vc_banner_size', true );
+				if ( empty( $size ) ) {
+					$size = 'medium';
+				}
+				$size_labels = [
+					'small'  => __( 'Pequeno', 'vemcomer' ),
+					'medium' => __( 'Médio', 'vemcomer' ),
+					'large'  => __( 'Grande', 'vemcomer' ),
+					'full'   => __( 'Largura Total', 'vemcomer' ),
+				];
+				echo esc_html( $size_labels[ $size ] ?? __( 'Médio', 'vemcomer' ) );
 				break;
 
 			case 'vc_order':
