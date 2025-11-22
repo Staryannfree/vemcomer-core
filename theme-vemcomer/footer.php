@@ -82,7 +82,7 @@
     ?>
     <div class="welcome-popup" id="welcome-popup">
         <div class="welcome-popup__dialog">
-            <button class="welcome-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>" onclick="if(window.handleWelcomePopupClick){window.handleWelcomePopupClick('close');}else{const p=document.getElementById('welcome-popup');if(p){p.classList.remove('is-open');document.cookie='vc_welcome_popup_seen=1; path=/; max-age='+(30*24*60*60);}}">&times;</button>
+            <button class="welcome-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
             <div class="welcome-popup__icon">👋</div>
             <h2 class="welcome-popup__title"><?php esc_html_e( 'Bem-vindo ao VemComer!', 'vemcomer' ); ?></h2>
             <p class="welcome-popup__text">
@@ -92,11 +92,11 @@
                 <?php esc_html_e( 'Clique no botão abaixo para ver restaurantes próximos à sua localização.', 'vemcomer' ); ?>
             </p>
             <div class="welcome-popup__actions">
-                <button type="button" class="btn btn--primary btn--large" id="welcome-popup-location-btn" onclick="if(window.handleWelcomePopupClick){window.handleWelcomePopupClick('location');}else{console.error('handleWelcomePopupClick não disponível');}">
+                <button type="button" class="btn btn--primary btn--large" id="welcome-popup-location-btn">
                     <span class="btn-icon">📍</span>
                     <span><?php esc_html_e( 'Ver restaurantes perto de mim', 'vemcomer' ); ?></span>
                 </button>
-                <button type="button" class="btn btn--ghost" id="welcome-popup-skip-btn" onclick="if(window.handleWelcomePopupClick){window.handleWelcomePopupClick('skip');}else{const p=document.getElementById('welcome-popup');if(p){p.classList.remove('is-open');document.cookie='vc_welcome_popup_seen=1; path=/; max-age='+(30*24*60*60);}}">
+                <button type="button" class="btn btn--ghost" id="welcome-popup-skip-btn">
                     <?php esc_html_e( 'Pular por enquanto', 'vemcomer' ); ?>
                 </button>
             </div>

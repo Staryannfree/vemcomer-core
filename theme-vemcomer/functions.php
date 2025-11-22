@@ -80,11 +80,6 @@ function vemcomer_theme_scripts() {
         ] );
     }
     
-    // Carregar helpers de restaurante
-    if ( file_exists( get_template_directory() . '/inc/restaurant-helpers.php' ) ) {
-        require_once get_template_directory() . '/inc/restaurant-helpers.php';
-    }
-    
     // Carregar helpers de restaurante (com verificação de erro)
     $restaurant_helpers = get_template_directory() . '/inc/restaurant-helpers.php';
     if ( file_exists( $restaurant_helpers ) ) {
@@ -216,8 +211,6 @@ function popup_boas_vindas_independente() {
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
-        console.log('POPUP: Script Independente Iniciado.');
-
         // 1. Abre o popup após 1s
         setTimeout(() => {
             popup.classList.add('is-open');
@@ -234,8 +227,6 @@ function popup_boas_vindas_independente() {
                 // Feedback visual
                 btn.innerText = '📍 Obtendo GPS...';
                 btn.style.opacity = '0.8';
-                
-                console.log('POPUP: Solicitando GPS ao navegador...');
 
                 if (!navigator.geolocation) {
                     alert('Seu navegador não suporta geolocalização.');
@@ -248,7 +239,6 @@ function popup_boas_vindas_independente() {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
                         
-                        console.log('POPUP: Sucesso!', lat, lng);
                         btn.innerText = '🔄 Atualizando...';
 
                         // Fecha o popup
@@ -267,7 +257,7 @@ function popup_boas_vindas_independente() {
                                                 'Localização desconhecida';
                                 
                                 // Atualizar título do hero
-                                const heroTitle = document.getElementById('hero-title');
+                                const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
                                 if (heroTitle) {
                                     heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
                                 }
@@ -591,8 +581,6 @@ function padronizacao_modo_escuro_e_cadastro() {
     (function() {
         'use strict';
         
-        console.log('🔧 Padronização Modo Escuro e Cadastro carregado!');
-        
         document.addEventListener('DOMContentLoaded', function() {
             // ===== POPUP DE CADASTRO =====
             const btnCadastro = document.getElementById('btn-cadastro');
@@ -606,7 +594,6 @@ function padronizacao_modo_escuro_e_cadastro() {
                 if (signupPopup) {
                     signupPopup.classList.add('is-open');
                     document.body.style.overflow = 'hidden';
-                    console.log('✅ Popup de cadastro aberto');
                 }
             }
             
@@ -614,7 +601,6 @@ function padronizacao_modo_escuro_e_cadastro() {
                 if (signupPopup) {
                     signupPopup.classList.remove('is-open');
                     document.body.style.overflow = '';
-                    console.log('✅ Popup de cadastro fechado');
                 }
             }
             
@@ -732,13 +718,11 @@ function mensagem_localizacao_botao_home() {
                             const lat = position.coords.latitude;
                             const lng = position.coords.longitude;
                             
-                            console.log('GPS obtido:', lat, lng);
-                            
                             // Obter nome da cidade
                             const cityName = await getCityName(lat, lng);
                             
                             // Atualizar título do hero
-                            const heroTitle = document.getElementById('hero-title');
+                            const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
                             if (heroTitle) {
                                 heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
                             }
