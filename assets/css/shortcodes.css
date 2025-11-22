@@ -1,7 +1,7 @@
 /* Grid e cards */
 .vc-sc.vc-restaurants .vc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.vc-card{border:1px solid #eee;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.vc-card__link{display:block;color:inherit;text-decoration:none}
+.vc-card{position:relative;border:1px solid #eee;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+.vc-card__link{display:block;color:inherit;text-decoration:none;position:relative;z-index:1;pointer-events:auto}
 .vc-card__thumb img{display:block;width:100%;height:auto}
 .vc-card__body{padding:12px}
 .vc-card__title{margin:0 0 6px;font-size:18px;line-height:1.3}
