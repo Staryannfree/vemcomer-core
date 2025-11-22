@@ -100,9 +100,17 @@ class Favorites_Controller {
 
 	/**
 	 * Verifica se o usuário está autenticado.
+	 * Retorna WP_Error se não autenticado para garantir resposta JSON.
 	 */
-	public function check_authenticated(): bool {
-		return is_user_logged_in();
+	public function check_authenticated() {
+		if ( ! is_user_logged_in() ) {
+			return new WP_Error(
+				'vc_unauthorized',
+				__( 'Você precisa estar autenticado.', 'vemcomer' ),
+				[ 'status' => 401 ]
+			);
+		}
+		return true;
 	}
 
 	/**
