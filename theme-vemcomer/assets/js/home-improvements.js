@@ -395,11 +395,137 @@
         // Verificar se popup já foi visto
         const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
         
+        // Função para anexar event listeners quando popup abrir
+        const attachPopupListeners = () => {
+            const locationBtn = popup.querySelector('#welcome-popup-location-btn');
+            if (locationBtn && !locationBtn.dataset.listenerAttached) {
+                locationBtn.dataset.listenerAttached = 'true';
+                console.log('Anexando event listener ao botão do popup');
+                locationBtn.style.cursor = 'pointer';
+                locationBtn.style.pointerEvents = 'auto';
+                locationBtn.style.position = 'relative';
+                locationBtn.style.zIndex = '1000';
+                
+                // Usar exatamente a mesma lógica do botão da home que funciona
+                locationBtn.addEventListener('click', async () => {
+                    console.log('Clique no botão do popup detectado!');
+                    if (!navigator.geolocation) {
+                        alert('Geolocalização não suportada pelo seu navegador.');
+                        return;
+                    }
+
+                    locationBtn.classList.add('is-loading');
+                    locationBtn.disabled = true;
+
+                    try {
+                        // Usar reverse geocoding se disponível (mesma lógica do botão da home)
+                        if (window.VemComerReverseGeocode) {
+                            await window.VemComerReverseGeocode.getLocationAndFill({
+                                fillCheckout: false,
+                                onSuccess: (address, coordinates) => {
+                                    // Salvar que aceitou localização
+                                    localStorage.setItem('vc_location_accepted', 'true');
+                                    
+                                    // Atualizar título do hero
+                                    updateHeroTitle(address.city || address.displayName);
+                                    
+                                    // Atualizar UI do botão do popup
+                                    locationBtn.classList.remove('is-loading');
+                                    locationBtn.disabled = false;
+                                    
+                                    // Fechar popup
+                                    closePopup();
+                                    
+                                    // Ativar botão da home
+                                    const heroLocationBtn = document.getElementById('vc-use-location');
+                                    if (heroLocationBtn) {
+                                        heroLocationBtn.classList.add('is-active');
+                                    }
+                                    
+                                    // Recarregar restaurantes com distância
+                                    loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
+                                    
+                                    showNotification('Localização atualizada!', 'success');
+                                    
+                                    // Scroll suave para restaurantes
+                                    setTimeout(() => {
+                                        const restaurantsSection = document.getElementById('restaurants-list');
+                                        if (restaurantsSection) {
+                                            restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                    }, 500);
+                                },
+                                onError: (error) => {
+                                    locationBtn.classList.remove('is-loading');
+                                    locationBtn.disabled = false;
+                                    alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+                                }
+                            });
+                        } else {
+                            // Fallback sem reverse geocoding (mesma lógica do botão da home)
+                            navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                    const lat = position.coords.latitude;
+                                    const lng = position.coords.longitude;
+                                    
+                                    // Salvar no localStorage
+                                    localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                                    localStorage.setItem('vc_location_accepted', 'true');
+                                    
+                                    // Atualizar UI do botão do popup
+                                    locationBtn.classList.remove('is-loading');
+                                    locationBtn.disabled = false;
+                                    
+                                    // Fechar popup
+                                    closePopup();
+                                    
+                                    // Ativar botão da home
+                                    const heroLocationBtn = document.getElementById('vc-use-location');
+                                    if (heroLocationBtn) {
+                                        heroLocationBtn.classList.add('is-active');
+                                    }
+                                    
+                                    // Recarregar restaurantes com distância
+                                    loadRestaurantsWithLocation(lat, lng);
+                                    
+                                    showNotification('Localização atualizada!', 'success');
+                                    
+                                    // Scroll suave para restaurantes
+                                    setTimeout(() => {
+                                        const restaurantsSection = document.getElementById('restaurants-list');
+                                        if (restaurantsSection) {
+                                            restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                    }, 500);
+                                },
+                                (error) => {
+                                    locationBtn.classList.remove('is-loading');
+                                    locationBtn.disabled = false;
+                                    alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
+                                }
+                            );
+                        }
+                    } catch (error) {
+                        locationBtn.classList.remove('is-loading');
+                        locationBtn.disabled = false;
+                        alert('Erro ao processar localização.');
+                    }
+                });
+            }
+        };
+        
         // Mostrar popup apenas se não foi visto antes
         if (!popupSeen) {
             setTimeout(() => {
                 popup.classList.add('is-open');
+                // Anexar listeners quando popup abrir
+                setTimeout(() => {
+                    attachPopupListeners();
+                }, 100);
             }, 1500);
+        } else {
+            // Se popup não será mostrado, anexar listeners mesmo assim
+            attachPopupListeners();
         }
 
         const closeBtn = popup.querySelector('.welcome-popup__close');
@@ -435,121 +561,8 @@
             console.warn('Botão "Pular" do popup não encontrado');
         }
 
-        if (locationBtn) {
-            console.log('Botão do popup encontrado:', locationBtn);
-            locationBtn.style.cursor = 'pointer';
-            locationBtn.style.pointerEvents = 'auto';
-            locationBtn.style.position = 'relative';
-            locationBtn.style.zIndex = '1000';
-            
-            // Usar exatamente a mesma lógica do botão da home que funciona
-            locationBtn.addEventListener('click', async () => {
-                console.log('Clique no botão do popup detectado!');
-                if (!navigator.geolocation) {
-                    alert('Geolocalização não suportada pelo seu navegador.');
-                    return;
-                }
-
-                locationBtn.classList.add('is-loading');
-                locationBtn.disabled = true;
-
-                try {
-                    // Usar reverse geocoding se disponível (mesma lógica do botão da home)
-                    if (window.VemComerReverseGeocode) {
-                        await window.VemComerReverseGeocode.getLocationAndFill({
-                            fillCheckout: false,
-                            onSuccess: (address, coordinates) => {
-                                // Salvar que aceitou localização
-                                localStorage.setItem('vc_location_accepted', 'true');
-                                
-                                // Atualizar título do hero
-                                updateHeroTitle(address.city || address.displayName);
-                                
-                                // Atualizar UI do botão do popup
-                                locationBtn.classList.remove('is-loading');
-                                locationBtn.disabled = false;
-                                
-                                // Fechar popup
-                                closePopup();
-                                
-                                // Ativar botão da home
-                                const heroLocationBtn = document.getElementById('vc-use-location');
-                                if (heroLocationBtn) {
-                                    heroLocationBtn.classList.add('is-active');
-                                }
-                                
-                                // Recarregar restaurantes com distância
-                                loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
-                                
-                                showNotification('Localização atualizada!', 'success');
-                                
-                                // Scroll suave para restaurantes
-                                setTimeout(() => {
-                                    const restaurantsSection = document.getElementById('restaurants-list');
-                                    if (restaurantsSection) {
-                                        restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }
-                                }, 500);
-                            },
-                            onError: (error) => {
-                                locationBtn.classList.remove('is-loading');
-                                locationBtn.disabled = false;
-                                alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
-                            }
-                        });
-                    } else {
-                        // Fallback sem reverse geocoding (mesma lógica do botão da home)
-                        navigator.geolocation.getCurrentPosition(
-                            (position) => {
-                                const lat = position.coords.latitude;
-                                const lng = position.coords.longitude;
-                                
-                                // Salvar no localStorage
-                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                                localStorage.setItem('vc_location_accepted', 'true');
-                                
-                                // Atualizar UI do botão do popup
-                                locationBtn.classList.remove('is-loading');
-                                locationBtn.disabled = false;
-                                
-                                // Fechar popup
-                                closePopup();
-                                
-                                // Ativar botão da home
-                                const heroLocationBtn = document.getElementById('vc-use-location');
-                                if (heroLocationBtn) {
-                                    heroLocationBtn.classList.add('is-active');
-                                }
-                                
-                                // Recarregar restaurantes com distância
-                                loadRestaurantsWithLocation(lat, lng);
-                                
-                                showNotification('Localização atualizada!', 'success');
-                                
-                                // Scroll suave para restaurantes
-                                setTimeout(() => {
-                                    const restaurantsSection = document.getElementById('restaurants-list');
-                                    if (restaurantsSection) {
-                                        restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }
-                                }, 500);
-                            },
-                            (error) => {
-                                locationBtn.classList.remove('is-loading');
-                                locationBtn.disabled = false;
-                                alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
-                            }
-                        );
-                    }
-                } catch (error) {
-                    locationBtn.classList.remove('is-loading');
-                    locationBtn.disabled = false;
-                    alert('Erro ao processar localização.');
-                }
-            });
-        } else {
-            console.warn('Botão do popup não encontrado!');
-        }
+        // Anexar listeners iniciais (será sobrescrito quando popup abrir se necessário)
+        attachPopupListeners();
 
         // Fechar ao clicar fora
         popup.addEventListener('click', (e) => {
