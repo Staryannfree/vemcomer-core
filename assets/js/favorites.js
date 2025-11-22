@@ -269,13 +269,16 @@
       favorites.forEach((restaurant) => {
         const image = restaurant.image || '';
         const address = restaurant.address || '';
+        const restaurantId = restaurant.id || '';
+        const restaurantTitle = restaurant.title || restaurant.name || '';
+        const restaurantUrl = restaurant.url || (restaurantId ? `/restaurante/?restaurant_id=${restaurantId}` : '#');
         html += `
           <div class="vc-card">
-            ${image ? `<div class="vc-card__thumb"><img src="${image}" alt="${restaurant.name || ''}" loading="lazy" /></div>` : ''}
+            ${image ? `<div class="vc-card__thumb"><img src="${image}" alt="${restaurantTitle}" loading="lazy" /></div>` : ''}
             <div class="vc-card__body">
-              <h3 class="vc-card__title">${restaurant.name || ''}</h3>
+              <h3 class="vc-card__title">${restaurantTitle}</h3>
               ${address ? `<p class="vc-card__line">${address}</p>` : ''}
-              <a href="${restaurant.url || '#'}" class="vc-btn">Ver cardápio</a>
+              <a href="${restaurantUrl}" class="vc-btn">Ver cardápio</a>
             </div>
           </div>
         `;
