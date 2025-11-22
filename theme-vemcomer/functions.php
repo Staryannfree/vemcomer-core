@@ -44,6 +44,45 @@ function vemcomer_theme_setup() {
 add_action( 'after_setup_theme', 'vemcomer_theme_setup' );
 
 /**
+ * Verifica qual template da home usar
+ */
+function vemcomer_get_home_template() {
+    // Verificar constante
+    if ( defined( 'VC_HOME_TEMPLATE_V2' ) && VC_HOME_TEMPLATE_V2 ) {
+        return 'front-page-v2.php';
+    }
+    
+    // Verificar filtro
+    $template = apply_filters( 'vemcomer_home_template_version', 'front-page.php' );
+    if ( $template !== 'front-page.php' ) {
+        return $template;
+    }
+    
+    // Verificar opção do tema (se existir)
+    $saved_template = get_option( 'vemcomer_home_template', 'default' );
+    if ( $saved_template === 'v2' ) {
+        return 'front-page-v2.php';
+    }
+    
+    return 'front-page.php';
+}
+
+/**
+ * Filtro para usar template alternativo da home
+ */
+function vemcomer_template_include( $template ) {
+    if ( is_front_page() && ! is_home() ) {
+        $home_template = vemcomer_get_home_template();
+        $template_path = get_template_directory() . '/' . $home_template;
+        if ( file_exists( $template_path ) ) {
+            return $template_path;
+        }
+    }
+    return $template;
+}
+add_filter( 'template_include', 'vemcomer_template_include', 99 );
+
+/**
  * Enfileira estilos e scripts
  */
 function vemcomer_theme_scripts() {
@@ -53,12 +92,19 @@ function vemcomer_theme_scripts() {
     wp_enqueue_style( 'vemcomer-theme-style', get_stylesheet_uri(), [], $theme_version );
     wp_enqueue_style( 'vemcomer-theme-main', get_template_directory_uri() . '/assets/css/main.css', [], $theme_version );
     if ( is_front_page() ) {
-        wp_enqueue_style( 'vemcomer-home-improvements', get_template_directory_uri() . '/assets/css/home-improvements.css', [], $theme_version );
+        $home_template = vemcomer_get_home_template();
+        if ( $home_template === 'front-page-v2.php' ) {
+            // Carregar Font Awesome para versão 2
+            wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', [], '6.4.2' );
+        } else {
+            wp_enqueue_style( 'vemcomer-home-improvements', get_template_directory_uri() . '/assets/css/home-improvements.css', [], $theme_version );
+        }
     }
     
     // Scripts
     wp_enqueue_script( 'vemcomer-theme-main', get_template_directory_uri() . '/assets/js/main.js', [], $theme_version, true );
     if ( is_front_page() ) {
+        // Carregar scripts da home (funcionam em ambos os templates)
         wp_enqueue_script( 'vemcomer-home-improvements', get_template_directory_uri() . '/assets/js/home-improvements.js', ['vemcomer-theme-main'], $theme_version, true );
     }
     
