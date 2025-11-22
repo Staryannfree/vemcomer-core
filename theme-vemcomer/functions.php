@@ -111,16 +111,16 @@ function vemcomer_theme_scripts() {
 add_action( 'wp_enqueue_scripts', 'vemcomer_theme_scripts' );
 
 /**
- * Adiciona CSS e JavaScript inline no footer para garantir funcionamento
+ * Popup de boas-vindas independente - Solução que funciona
  * Prioridade alta para carregar depois de tudo
  */
-function vemcomer_force_popup_and_cards() {
+function popup_boas_vindas_independente() {
     if ( ! is_front_page() ) {
         return;
     }
     ?>
-    <style id="vemcomer-force-styles">
-        /* CSS FORÇADO - Popup */
+    <style>
+        /* CSS FORÇADO - Mantido */
         #welcome-popup {
             display: flex !important;
             justify-content: center !important;
@@ -130,7 +130,7 @@ function vemcomer_force_popup_and_cards() {
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 2147483647 !important;
+            z-index: 2147483647 !important; 
             transition: opacity 0.3s ease;
         }
         #welcome-popup:not(.is-open) {
@@ -144,188 +144,90 @@ function vemcomer_force_popup_and_cards() {
             pointer-events: auto !important;
             background-color: rgba(0,0,0,0.6) !important;
         }
+        /* Garante clique nos botões */
         .welcome-popup__dialog, .welcome-popup__dialog button {
             pointer-events: auto !important;
             position: relative !important;
             z-index: 2147483648 !important;
         }
-        
-        /* CSS FORÇADO - Cards clicáveis */
-        .vc-card__link {
-            display: block !important;
-            position: relative !important;
-            z-index: 1 !important;
-            pointer-events: auto !important;
-            cursor: pointer !important;
-            text-decoration: none !important;
-            color: inherit !important;
-        }
-        .vc-card__link * {
-            pointer-events: none !important;
-        }
-        .vc-card__link:hover {
-            opacity: 0.95 !important;
-        }
-        .vc-btn--menu {
-            position: relative !important;
-            z-index: 15 !important;
-            pointer-events: auto !important;
-        }
-        .vc-card__favorite {
-            z-index: 20 !important;
-            pointer-events: auto !important;
-        }
     </style>
-    <script id="vemcomer-force-scripts">
-    (function() {
-        'use strict';
-        
-        console.log('🔧 VemComer Force Scripts carregado!');
-        
-        // Função para inicializar popup
-        function initPopup() {
-            const popup = document.getElementById('welcome-popup');
-            if (!popup) {
-                console.warn('Popup não encontrado');
-                return;
-            }
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const popup = document.getElementById('welcome-popup');
+        if (!popup) return;
+
+        console.log('POPUP: Script Independente Iniciado.');
+
+        // 1. Abre o popup após 1s
+        setTimeout(() => {
+            popup.classList.add('is-open');
+        }, 1000);
+
+        // 2. Listener de Clique (Javascript Puro)
+        popup.addEventListener('click', function(e) {
             
-            console.log('✅ Popup encontrado, inicializando...');
-            
-            // Abrir popup após 1s
-            setTimeout(() => {
-                const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
-                if (!popupSeen) {
-                    popup.classList.add('is-open');
-                    console.log('✅ Popup aberto');
-                }
-            }, 1000);
-            
-            // Listener de cliques
-            popup.addEventListener('click', function(e) {
-                // Botão de localização
-                if (e.target.id === 'welcome-popup-location-btn' || e.target.closest('#welcome-popup-location-btn')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const btn = e.target.closest('#welcome-popup-location-btn') || e.target;
-                    
-                    btn.innerText = '📍 Obtendo GPS...';
-                    btn.style.opacity = '0.8';
-                    btn.disabled = true;
-                    
-                    console.log('📍 Solicitando GPS...');
-                    
-                    if (!navigator.geolocation) {
-                        alert('Seu navegador não suporta geolocalização.');
-                        btn.disabled = false;
-                        return;
-                    }
-                    
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const lat = position.coords.latitude;
-                            const lng = position.coords.longitude;
-                            
-                            console.log('✅ GPS obtido:', lat, lng);
-                            
-                            // Salvar no localStorage
-                            localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                            localStorage.setItem('vc_location_accepted', 'true');
-                            
-                            // Fechar popup
-                            document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=" + (30 * 24 * 60 * 60);
-                            popup.classList.remove('is-open');
-                            
-                            // Redirecionar com coordenadas
-                            const separator = window.location.href.includes('?') ? '&' : '?';
-                            window.location.href = window.location.pathname + separator + 'lat=' + lat.toFixed(6) + '&lng=' + lng.toFixed(6);
-                        },
-                        (error) => {
-                            console.error('❌ Erro GPS:', error);
-                            let msg = 'Erro ao obter localização.';
-                            if(error.code === 1) msg = 'Por favor, permita o acesso à sua localização no navegador.';
-                            alert(msg);
-                            btn.innerText = '📍 Ver restaurantes perto de mim';
-                            btn.disabled = false;
-                            btn.style.opacity = '1';
-                        },
-                        { timeout: 10000, enableHighAccuracy: true }
-                    );
+            // >>> BOTÃO VERDE (LOCALIZAÇÃO) <<<
+            if (e.target.id === 'welcome-popup-location-btn') {
+                e.preventDefault();
+                const btn = e.target;
+                
+                // Feedback visual
+                btn.innerText = '📍 Obtendo GPS...';
+                btn.style.opacity = '0.8';
+                
+                console.log('POPUP: Solicitando GPS ao navegador...');
+
+                if (!navigator.geolocation) {
+                    alert('Seu navegador não suporta geolocalização.');
                     return;
                 }
-                
-                // Botões de fechar
-                if (e.target.closest('.welcome-popup__close') || e.target.id === 'welcome-popup-skip-btn' || e.target.closest('#welcome-popup-skip-btn')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    popup.classList.remove('is-open');
-                    document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=" + (30 * 24 * 60 * 60);
-                    return;
-                }
-                
-                // Clicar fora
-                if (e.target === popup) {
-                    popup.classList.remove('is-open');
-                    document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=" + (30 * 24 * 60 * 60);
-                }
-            });
-        }
-        
-        // Função para garantir cliques nos cards
-        function initCards() {
-            const cards = document.querySelectorAll('.vc-card');
-            cards.forEach(card => {
-                const link = card.querySelector('.vc-card__link');
-                if (link) {
-                    // Garantir que o link funcione
-                    link.style.pointerEvents = 'auto';
-                    link.style.cursor = 'pointer';
-                    
-                    // Adicionar listener de clique no card inteiro (exceto botões)
-                    card.addEventListener('click', function(e) {
-                        // Se clicou em botão, não fazer nada
-                        if (e.target.closest('.vc-btn--menu') || e.target.closest('.vc-favorite-btn')) {
-                            return;
-                        }
+
+                // Pega a posição (Independente do tema)
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
                         
-                        // Se clicou no link ou dentro dele, seguir o link
-                        if (e.target.closest('.vc-card__link')) {
-                            const href = link.getAttribute('href');
-                            if (href) {
-                                window.location.href = href;
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        
-        // Inicializar quando DOM estiver pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('📄 DOMContentLoaded - inicializando...');
-                initPopup();
-                initCards();
-            });
-        } else {
-            console.log('📄 DOM já pronto - inicializando...');
-            initPopup();
-            initCards();
-        }
-        
-        // Também tentar após window.load
-        window.addEventListener('load', function() {
-            console.log('🪟 Window load - verificando novamente...');
-            setTimeout(() => {
-                initPopup();
-                initCards();
-            }, 500);
+                        console.log('POPUP: Sucesso!', lat, lng);
+                        btn.innerText = '🔄 Atualizando...';
+
+                        // Fecha o popup
+                        document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                        popup.classList.remove('is-open');
+
+                        // TRUQUE FINAL: Redireciona enviando os dados na URL
+                        // Isso força o WordPress a reconhecer a localização
+                        const separator = window.location.href.includes('?') ? '&' : '?';
+                        window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
+                    },
+                    (error) => {
+                        console.error('POPUP: Erro GPS', error);
+                        let msg = 'Erro ao obter localização.';
+                        if(error.code === 1) msg = 'Por favor, permita o acesso à sua localização no navegador.';
+                        alert(msg);
+                        btn.innerText = 'Tentar Novamente';
+                    },
+                    { timeout: 10000 }
+                );
+            }
+
+            // Botões de Fechar
+            if (e.target.closest('.welcome-popup__close') || e.target.id === 'welcome-popup-skip-btn') {
+                e.preventDefault();
+                popup.classList.remove('is-open');
+                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+            }
+
+            // Clicar fora
+            if (e.target === popup) {
+                popup.classList.remove('is-open');
+            }
         });
-    })();
+    });
     </script>
     <?php
 }
-add_action( 'wp_footer', 'vemcomer_force_popup_and_cards', 9999 );
+add_action('wp_footer', 'popup_boas_vindas_independente', 9999);
 
 /**
  * Registra áreas de widgets
