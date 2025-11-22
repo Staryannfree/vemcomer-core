@@ -287,25 +287,24 @@ function popup_boas_vindas_independente() {
                                 document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
                                 popup.classList.remove('is-open');
                                 
-                                // Redireciona após 2 segundos (tempo para ver a mensagem)
-                                setTimeout(() => {
-                                    const separator = window.location.href.includes('?') ? '&' : '?';
-                                    window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
-                                }, 2000);
+                                // Filtrar restaurantes por cidade sem redirecionar
+                                if (window.filterRestaurantsByCity) {
+                                    window.filterRestaurantsByCity(cityName);
+                                }
                             })
                             .catch(error => {
                                 console.error('Erro ao obter nome da cidade:', error);
                                 showLocationMessage('Você está em: Localização obtida (cidade não identificada)');
                                 
-                                // Mesmo sem cidade, salva e redireciona
+                                // Mesmo sem cidade, salva e atualiza
                                 localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                                 document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
                                 popup.classList.remove('is-open');
                                 
-                                setTimeout(() => {
-                                    const separator = window.location.href.includes('?') ? '&' : '?';
-                                    window.location.href = window.location.pathname + separator + 'lat=' + lat + '&lng=' + lng;
-                                }, 2000);
+                                // Tentar filtrar mesmo sem cidade identificada
+                                if (window.filterRestaurantsByCity) {
+                                    window.filterRestaurantsByCity('Localização obtida');
+                                }
                             });
                     },
                     (error) => {

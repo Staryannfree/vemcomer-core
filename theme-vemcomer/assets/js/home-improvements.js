@@ -608,7 +608,12 @@
                             heroLocationBtn.classList.add('is-active');
                         }
                         
-                        loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
+                        // Filtrar restaurantes por cidade
+                        if (window.filterRestaurantsByCity) {
+                            window.filterRestaurantsByCity(address.city || address.displayName);
+                        } else {
+                            loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
+                        }
                         showNotification('Localização atualizada!', 'success');
                         
                         setTimeout(() => {
@@ -791,6 +796,150 @@
             // Calcular distância (simplificado - usar API real)
             // Por enquanto, apenas adicionar badge "Mais próximo" no primeiro
         });
+    }
+    
+    // Função global para filtrar restaurantes por cidade
+    window.filterRestaurantsByCity = function(cityName) {
+        if (!cityName) {
+            console.error('Nome da cidade não fornecido');
+            return;
+        }
+        
+        const container = document.getElementById('restaurants-content') || document.querySelector('.vc-restaurants') || document.querySelector('.vc-grid');
+        if (!container) {
+            console.error('Container de restaurantes não encontrado');
+            return;
+        }
+        
+        // Mostrar skeleton loading
+        const skeleton = document.getElementById('skeleton-loading');
+        if (skeleton) {
+            skeleton.style.display = 'grid';
+        }
+        container.style.display = 'none';
+        
+        // Buscar restaurantes filtrados por cidade
+        const REST_BASE = window.vemcomerTheme?.restUrl || '/wp-json/vemcomer/v1/';
+        const NONCE = window.vemcomerTheme?.nonce || '';
+        
+        // Extrair nome da cidade (remover informações extras)
+        const cleanCityName = cityName.split(',')[0].trim();
+        
+        fetch(`${REST_BASE}restaurants?city=${encodeURIComponent(cleanCityName)}&per_page=50`, {
+            headers: {
+                'X-WP-Nonce': NONCE,
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Se não encontrou restaurantes, tentar buscar todos e filtrar no frontend
+            if (!data || data.length === 0) {
+                return fetch(`${REST_BASE}restaurants?per_page=100`, {
+                    headers: {
+                        'X-WP-Nonce': NONCE,
+                    },
+                }).then(res => res.json());
+            }
+            return data;
+        })
+        .then(restaurants => {
+            // Filtrar por cidade no frontend se necessário
+            if (restaurants && restaurants.length > 0) {
+                const filtered = restaurants.filter(rest => {
+                    const address = rest.address || '';
+                    return address.toLowerCase().includes(cleanCityName.toLowerCase());
+                });
+                
+                // Se encontrou restaurantes filtrados, atualizar a lista
+                if (filtered.length > 0) {
+                    updateRestaurantsList(filtered, container);
+                } else {
+                    // Mostrar mensagem se não encontrou
+                    container.innerHTML = `<div class="vc-empty"><p>Nenhum restaurante encontrado em ${cleanCityName}.</p></div>`;
+                    container.style.display = 'block';
+                }
+            } else {
+                container.innerHTML = `<div class="vc-empty"><p>Nenhum restaurante encontrado em ${cleanCityName}.</p></div>`;
+                container.style.display = 'block';
+            }
+            
+            if (skeleton) {
+                skeleton.style.display = 'none';
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao filtrar restaurantes:', err);
+            if (skeleton) {
+                skeleton.style.display = 'none';
+            }
+            container.style.display = 'block';
+        });
+    };
+    
+    // Função para atualizar a lista de restaurantes
+    function updateRestaurantsList(restaurants, container) {
+        // Se o container já tem cards renderizados, substituir
+        if (container.classList.contains('vc-restaurants') || container.classList.contains('vc-grid')) {
+            // Limpar container
+            container.innerHTML = '';
+            
+            // Renderizar novos cards
+            restaurants.forEach(rest => {
+                const card = createRestaurantCard(rest);
+                container.appendChild(card);
+            });
+        } else {
+            // Se não é o container de cards, procurar pelo container correto
+            const cardsContainer = document.querySelector('.vc-restaurants') || document.querySelector('.vc-grid');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '';
+                restaurants.forEach(rest => {
+                    const card = createRestaurantCard(rest);
+                    cardsContainer.appendChild(card);
+                });
+            }
+        }
+        
+        container.style.display = 'block';
+    }
+    
+    // Função para criar um card de restaurante
+    function createRestaurantCard(rest) {
+        const card = document.createElement('div');
+        card.className = 'vc-card';
+        card.dataset.id = rest.id;
+        
+        const isOpen = rest.is_open ? 'Aberto' : 'Fechado';
+        const rating = rest.rating?.average || 0;
+        const ratingCount = rest.rating?.count || 0;
+        
+        card.innerHTML = `
+            <div class="vc-card__favorite">
+                <button class="vc-favorite-btn" data-restaurant-id="${rest.id}" aria-label="Adicionar aos favoritos">🤍</button>
+            </div>
+            <a class="vc-card__link" href="/restaurante/?restaurant_id=${rest.id}">
+                <div class="vc-card__thumb">
+                    <img src="${rest.image || ''}" alt="${rest.title}" loading="lazy" />
+                </div>
+                <div class="vc-card__body">
+                    <h3 class="vc-card__title">${rest.title}</h3>
+                    <div class="vc-card__status">
+                        <span class="vc-badge vc-badge--${rest.is_open ? 'open' : 'closed'}">
+                            ${isOpen}
+                        </span>
+                    </div>
+                    ${rest.address ? `<p class="vc-card__line">${rest.address}</p>` : ''}
+                    ${rating > 0 ? `
+                        <div class="vc-card__rating">
+                            <span class="vc-rating-stars">${'⭐'.repeat(Math.floor(rating))}</span>
+                            <span class="vc-rating-text">${rating.toFixed(1)} (${ratingCount})</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </a>
+        `;
+        
+        return card;
     }
 
     function renderRestaurants(restaurants) {

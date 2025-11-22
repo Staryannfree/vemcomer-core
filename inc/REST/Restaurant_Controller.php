@@ -174,6 +174,19 @@ class Restaurant_Controller {
             'post_status'    => 'publish',
         ];
 
+        // Filtro por cidade (busca no endereço)
+        $city = (string) $request->get_param( 'city' );
+        if ( $city ) {
+            if ( ! isset( $args['meta_query'] ) ) {
+                $args['meta_query'] = [];
+            }
+            $args['meta_query'][] = [
+                'key'     => '_vc_address',
+                'value'   => sanitize_text_field( $city ),
+                'compare' => 'LIKE',
+            ];
+        }
+
         // Busca livre (full-text)
         $search = (string) $request->get_param( 'search' );
         if ( $search ) {
