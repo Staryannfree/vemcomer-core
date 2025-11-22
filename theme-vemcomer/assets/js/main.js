@@ -109,16 +109,27 @@
 
         // Popup de Seleção de Cadastro
         const btnCadastro = document.getElementById('btn-cadastro');
+        const btnCadastroHome = document.getElementById('btn-cadastro-home');
         const signupPopup = document.getElementById('signup-popup');
         const signupClose = signupPopup?.querySelector('.signup-popup__close');
         const signupOverlay = signupPopup?.querySelector('.signup-popup__overlay');
         
-        if (btnCadastro && signupPopup) {
-            btnCadastro.addEventListener('click', (e) => {
+        function openSignupPopup(e) {
+            if (e) {
                 e.preventDefault();
+            }
+            if (signupPopup) {
                 signupPopup.classList.add('is-open');
                 document.body.style.overflow = 'hidden';
-            });
+            }
+        }
+        
+        if (btnCadastro && signupPopup) {
+            btnCadastro.addEventListener('click', openSignupPopup);
+        }
+        
+        if (btnCadastroHome && signupPopup) {
+            btnCadastroHome.addEventListener('click', openSignupPopup);
         }
         
         function closeSignupPopup() {

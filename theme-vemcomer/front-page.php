@@ -180,7 +180,7 @@ if ( is_user_logged_in() && function_exists( 'vemcomer_is_plugin_active' ) && ve
                 ? get_permalink( $signup_page[0]->ID ) 
                 : home_url( '/cadastre-seu-restaurante/' );
             ?>
-            <a href="<?php echo esc_url( $signup_url ); ?>" class="btn btn--primary btn--large">
+            <a href="<?php echo esc_url( $signup_url ); ?>" class="btn btn--primary btn--large" id="btn-cadastro-home">
                 <?php echo esc_html__( 'Cadastrar meu restaurante', 'vemcomer' ); ?>
             </a>
         </div>
