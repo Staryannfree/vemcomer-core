@@ -106,6 +106,42 @@
                 }
             });
         });
+
+        // Popup de Seleção de Cadastro
+        const btnCadastro = document.getElementById('btn-cadastro');
+        const signupPopup = document.getElementById('signup-popup');
+        const signupClose = signupPopup?.querySelector('.signup-popup__close');
+        const signupOverlay = signupPopup?.querySelector('.signup-popup__overlay');
+        
+        if (btnCadastro && signupPopup) {
+            btnCadastro.addEventListener('click', (e) => {
+                e.preventDefault();
+                signupPopup.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+        
+        function closeSignupPopup() {
+            if (signupPopup) {
+                signupPopup.classList.remove('is-open');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        if (signupClose) {
+            signupClose.addEventListener('click', closeSignupPopup);
+        }
+        
+        if (signupOverlay) {
+            signupOverlay.addEventListener('click', closeSignupPopup);
+        }
+        
+        // Fechar popup com ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && signupPopup?.classList.contains('is-open')) {
+                closeSignupPopup();
+            }
+        });
     });
 
 })();

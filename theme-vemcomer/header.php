@@ -84,7 +84,7 @@
                     </div>
                 <?php else : ?>
                     <a href="<?php echo esc_url( wp_login_url() ); ?>" class="btn btn--ghost"><?php esc_html_e( 'Entrar', 'vemcomer' ); ?></a>
-                    <a href="<?php echo esc_url( home_url( '/cadastro/' ) ); ?>" class="btn btn--primary"><?php esc_html_e( 'Cadastrar', 'vemcomer' ); ?></a>
+                    <a href="<?php echo esc_url( home_url( '/cadastro/' ) ); ?>" class="btn btn--primary" id="btn-cadastro"><?php esc_html_e( 'Cadastrar', 'vemcomer' ); ?></a>
                 <?php endif; ?>
             </div>
         </div>

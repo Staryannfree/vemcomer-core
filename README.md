@@ -818,3 +818,33 @@ E mais 11 recursos adicionais para completar a plataforma.
 ## Troubleshooting
 
 - **WP Pusher em PHP 8.2**: se o log mostrar `Creation of dynamic property Pusher\Log\Logger::$file` ou `Cannot declare class Elementor\Element_Column` (mesmo que o Elementor não esteja instalado), execute o script `bin/fix-wppusher-php82.php` descrito em [`docs/troubleshooting/wp-pusher.md`](docs/troubleshooting/wp-pusher.md).
+
+### Problema do Popup de Boas-Vindas e Solução
+
+**Problema identificado:**
+O popup de boas-vindas na home page não aparecia e os botões não eram clicáveis, mesmo com o HTML presente no DOM. Isso ocorria devido a:
+
+1. **Conflitos de CSS**: Estilos externos (plugins, tema) sobrescreviam os estilos do popup, especialmente `z-index`, `display`, `pointer-events` e `visibility`.
+2. **Problemas de timing**: O JavaScript do tema executava antes do popup estar completamente renderizado no DOM, causando falhas na inicialização.
+3. **Ordem de carregamento**: Scripts externos carregavam depois do script do tema, interferindo nos event listeners.
+
+**Solução implementada:**
+Foi criada uma função `vemcomer_force_popup_and_cards()` em `theme-vemcomer/functions.php` que:
+
+1. **CSS inline no footer** (prioridade 9999): CSS com `!important` para sobrescrever estilos conflitantes, garantindo que o popup tenha `z-index` alto (2147483647) e `pointer-events` corretos.
+2. **JavaScript inline no footer**: Executa imediatamente no `DOMContentLoaded`, sem depender de outros scripts, garantindo que:
+   - O popup seja inicializado corretamente
+   - Os event listeners sejam anexados aos botões
+   - Múltiplas tentativas de inicialização (imediatamente, após 2s e após 5s)
+3. **Event delegation**: Usa event delegation no `document` para capturar cliques mesmo se elementos forem re-renderizados.
+
+**Arquivos modificados:**
+- `theme-vemcomer/functions.php` - Função `vemcomer_force_popup_and_cards()` adicionada
+- `theme-vemcomer/assets/js/home-improvements.js` - Múltiplas abordagens de detecção e inicialização
+- `theme-vemcomer/assets/css/home-improvements.css` - Estilos com `!important` para garantir exibição
+
+**Resultado:**
+O popup agora funciona corretamente, aparecendo após 1 segundo na home page e permitindo que os usuários:
+- Cliquem em "Ver restaurantes perto de mim" para obter localização GPS
+- Cliquem em "Pular por enquanto" para fechar o popup
+- Vejam o popup novamente apenas após limpar o cookie `vc_welcome_popup_seen`

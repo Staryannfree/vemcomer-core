@@ -108,6 +108,51 @@
     <?php
     endif; // is_front_page
     ?>
+    
+    <?php
+    // Popup de Seleção de Cadastro
+    if ( ! is_user_logged_in() ) :
+        // Buscar URLs de cadastro
+        $customer_signup_pages = get_posts([
+            'post_type' => 'page',
+            's' => 'cadastro cliente',
+            'posts_per_page' => 1,
+        ]);
+        $restaurant_signup_pages = get_posts([
+            'post_type' => 'page',
+            's' => 'cadastro restaurante',
+            'posts_per_page' => 1,
+        ]);
+        
+        $customer_url = ! empty( $customer_signup_pages ) 
+            ? get_permalink( $customer_signup_pages[0]->ID ) 
+            : home_url( '/cadastro-cliente/' );
+        $restaurant_url = ! empty( $restaurant_signup_pages ) 
+            ? get_permalink( $restaurant_signup_pages[0]->ID ) 
+            : home_url( '/cadastro-restaurante/' );
+    ?>
+    <div class="signup-popup" id="signup-popup">
+        <div class="signup-popup__overlay"></div>
+        <div class="signup-popup__dialog">
+            <button class="signup-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
+            <h2 class="signup-popup__title"><?php esc_html_e( 'Você é cliente ou restaurante?', 'vemcomer' ); ?></h2>
+            <div class="signup-popup__options">
+                <a href="<?php echo esc_url( $customer_url ); ?>" class="signup-popup__option signup-popup__option--customer">
+                    <div class="signup-popup__icon">👤</div>
+                    <h3 class="signup-popup__option-title"><?php esc_html_e( 'Sou Cliente', 'vemcomer' ); ?></h3>
+                    <p class="signup-popup__option-text"><?php esc_html_e( 'Quero pedir comida e descobrir restaurantes', 'vemcomer' ); ?></p>
+                </a>
+                <a href="<?php echo esc_url( $restaurant_url ); ?>" class="signup-popup__option signup-popup__option--restaurant">
+                    <div class="signup-popup__icon">🍽️</div>
+                    <h3 class="signup-popup__option-title"><?php esc_html_e( 'Sou Restaurante', 'vemcomer' ); ?></h3>
+                    <p class="signup-popup__option-text"><?php esc_html_e( 'Quero vender meus pratos e receber pedidos', 'vemcomer' ); ?></p>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php
+    endif; // ! is_user_logged_in
+    ?>
 </div><!-- #page -->
 
 <?php wp_footer(); ?>

@@ -673,3 +673,148 @@ section {
     overflow: hidden;
 }
 
+/* Popup de Seleção de Cadastro */
+.signup-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    pointer-events: none;
+}
+
+.signup-popup.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.signup-popup__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.signup-popup__dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 16px;
+    padding: var(--spacing-xl);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.signup-popup__close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--color-text-light);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.signup-popup__close:hover {
+    color: var(--color-text);
+}
+
+.signup-popup__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-lg) 0;
+    text-align: center;
+    color: var(--color-text);
+}
+
+.signup-popup__options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.signup-popup__option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.signup-popup__option:hover {
+    border-color: var(--color-primary);
+    background: var(--color-bg-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.signup-popup__option--customer:hover {
+    border-color: #3b82f6;
+}
+
+.signup-popup__option--restaurant:hover {
+    border-color: var(--color-primary);
+}
+
+.signup-popup__icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.signup-popup__option-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--color-text);
+}
+
+.signup-popup__option-text {
+    font-size: 0.95rem;
+    color: var(--color-text-light);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Mobile - Popup de Cadastro */
+@media (max-width: 768px) {
+    .signup-popup__dialog {
+        padding: var(--spacing-lg);
+        width: 95%;
+    }
+    
+    .signup-popup__title {
+        font-size: 1.5rem;
+    }
+    
+    .signup-popup__options {
+        grid-template-columns: 1fr;
+    }
+    
+    .signup-popup__icon {
+        font-size: 2.5rem;
+    }
+}
+
