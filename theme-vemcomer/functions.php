@@ -784,6 +784,225 @@ function mensagem_localizacao_botao_home() {
 add_action('wp_footer', 'mensagem_localizacao_botao_home', 9999);
 
 /**
+ * Popup de login/cadastro para ações que requerem autenticação
+ * Prioridade alta para carregar depois de tudo
+ */
+function popup_login_cadastro_acoes() {
+    if ( is_user_logged_in() ) {
+        return; // Não precisa mostrar se já está logado
+    }
+    
+    // Buscar URLs de cadastro
+    $customer_signup_pages = get_posts([
+        'post_type' => 'page',
+        's' => 'cadastro cliente',
+        'posts_per_page' => 1,
+    ]);
+    $customer_url = ! empty( $customer_signup_pages ) 
+        ? get_permalink( $customer_signup_pages[0]->ID ) 
+        : home_url( '/cadastro-cliente/' );
+    $login_url = wp_login_url( get_permalink() );
+    ?>
+    <div class="login-required-popup" id="login-required-popup">
+        <div class="login-required-popup__overlay"></div>
+        <div class="login-required-popup__dialog">
+            <button class="login-required-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
+            <div class="login-required-popup__icon">🔒</div>
+            <h2 class="login-required-popup__title"><?php esc_html_e( 'Login necessário', 'vemcomer' ); ?></h2>
+            <p class="login-required-popup__text">
+                <?php esc_html_e( 'Você precisa estar logado para realizar esta ação.', 'vemcomer' ); ?>
+            </p>
+            <div class="login-required-popup__actions">
+                <a href="<?php echo esc_url( $login_url ); ?>" class="btn btn--primary btn--large">
+                    <?php esc_html_e( 'Fazer Login', 'vemcomer' ); ?>
+                </a>
+                <a href="<?php echo esc_url( $customer_url ); ?>" class="btn btn--ghost">
+                    <?php esc_html_e( 'Criar Conta', 'vemcomer' ); ?>
+                </a>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* Popup de Login/Cadastro - FORÇADO */
+        #login-required-popup {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 99997 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.3s, visibility 0.3s !important;
+            pointer-events: none !important;
+        }
+        
+        #login-required-popup.is-open {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        
+        #login-required-popup .login-required-popup__overlay {
+            position: absolute !important;
+            inset: 0 !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(4px) !important;
+        }
+        
+        #login-required-popup .login-required-popup__dialog {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            background: #fff !important;
+            border-radius: 16px !important;
+            padding: 2rem !important;
+            max-width: 450px !important;
+            width: 90% !important;
+            text-align: center !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+            z-index: 1 !important;
+        }
+        
+        body.dark-mode #login-required-popup .login-required-popup__dialog {
+            background: var(--color-bg) !important;
+            color: var(--color-text) !important;
+        }
+        
+        #login-required-popup .login-required-popup__close {
+            position: absolute !important;
+            top: 1rem !important;
+            right: 1rem !important;
+            background: none !important;
+            border: none !important;
+            font-size: 2rem !important;
+            line-height: 1 !important;
+            color: #6b7280 !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            width: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        body.dark-mode #login-required-popup .login-required-popup__close {
+            color: var(--color-text-light) !important;
+        }
+        
+        #login-required-popup .login-required-popup__icon {
+            font-size: 4rem !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        #login-required-popup .login-required-popup__title {
+            font-size: 1.75rem !important;
+            font-weight: 700 !important;
+            margin: 0 0 1rem 0 !important;
+            color: #111827 !important;
+        }
+        
+        body.dark-mode #login-required-popup .login-required-popup__title {
+            color: var(--color-text) !important;
+        }
+        
+        #login-required-popup .login-required-popup__text {
+            font-size: 1rem !important;
+            color: #6b7280 !important;
+            margin: 0 0 1.5rem 0 !important;
+            line-height: 1.5 !important;
+        }
+        
+        body.dark-mode #login-required-popup .login-required-popup__text {
+            color: var(--color-text-light) !important;
+        }
+        
+        #login-required-popup .login-required-popup__actions {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.75rem !important;
+        }
+        
+        #login-required-popup .login-required-popup__actions .btn {
+            width: 100% !important;
+            text-align: center !important;
+        }
+    </style>
+    <script>
+    (function() {
+        'use strict';
+        
+        // Função global para mostrar popup de login
+        window.showLoginRequiredPopup = function() {
+            const popup = document.getElementById('login-required-popup');
+            if (popup) {
+                popup.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+        
+        // Função para fechar popup
+        function closeLoginPopup() {
+            const popup = document.getElementById('login-required-popup');
+            if (popup) {
+                popup.classList.remove('is-open');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const popup = document.getElementById('login-required-popup');
+            if (!popup) return;
+            
+            // Verificar se usuário está logado
+            const isLoggedIn = <?php echo is_user_logged_in() ? 'true' : 'false'; ?>;
+            if (isLoggedIn) return;
+            
+            // Fechar popup
+            const closeBtn = popup.querySelector('.login-required-popup__close');
+            const overlay = popup.querySelector('.login-required-popup__overlay');
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeLoginPopup);
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', closeLoginPopup);
+            }
+            
+            // Fechar com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && popup.classList.contains('is-open')) {
+                    closeLoginPopup();
+                }
+            });
+            
+            // Interceptar cliques em favoritos
+            document.addEventListener('click', function(e) {
+                const favoriteBtn = e.target.closest('.vc-favorite-btn');
+                if (favoriteBtn && !isLoggedIn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.showLoginRequiredPopup();
+                }
+            }, true); // Capture phase para pegar antes de outros handlers
+            
+            // Interceptar adicionar ao carrinho
+            document.addEventListener('click', function(e) {
+                const addBtn = e.target.closest('.vc-add, .vc-menu-item__add, [data-action="add-to-cart"]');
+                if (addBtn && !isLoggedIn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.showLoginRequiredPopup();
+                }
+            }, true); // Capture phase
+        });
+    })();
+    </script>
+    <?php
+}
+add_action('wp_footer', 'popup_login_cadastro_acoes', 9999);
+
+/**
  * Registra áreas de widgets
  */
 function vemcomer_theme_widgets_init() {
