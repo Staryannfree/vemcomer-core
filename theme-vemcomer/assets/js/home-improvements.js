@@ -447,139 +447,11 @@
         // Verificar se popup já foi visto
         const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
         
-        // Função para anexar event listeners quando popup abrir
-        const attachPopupListeners = () => {
-            // Primeiro anexar todos os listeners básicos
-            const { locationBtn } = attachAllPopupListeners();
-            
-            if (locationBtn && !locationBtn.dataset.listenerAttached) {
-                locationBtn.dataset.listenerAttached = 'true';
-                console.log('Anexando event listener ao botão de localização do popup');
-                locationBtn.style.cursor = 'pointer';
-                locationBtn.style.pointerEvents = 'auto';
-                locationBtn.style.position = 'relative';
-                locationBtn.style.zIndex = '1001';
-                
-                // Usar exatamente a mesma lógica do botão da home que funciona
-                locationBtn.addEventListener('click', async () => {
-                    console.log('Clique no botão do popup detectado!');
-                    if (!navigator.geolocation) {
-                        alert('Geolocalização não suportada pelo seu navegador.');
-                        return;
-                    }
-
-                    locationBtn.classList.add('is-loading');
-                    locationBtn.disabled = true;
-
-                    try {
-                        // Usar reverse geocoding se disponível (mesma lógica do botão da home)
-                        if (window.VemComerReverseGeocode) {
-                            await window.VemComerReverseGeocode.getLocationAndFill({
-                                fillCheckout: false,
-                                onSuccess: (address, coordinates) => {
-                                    // Salvar que aceitou localização
-                                    localStorage.setItem('vc_location_accepted', 'true');
-                                    
-                                    // Atualizar título do hero
-                                    updateHeroTitle(address.city || address.displayName);
-                                    
-                                    // Atualizar UI do botão do popup
-                                    locationBtn.classList.remove('is-loading');
-                                    locationBtn.disabled = false;
-                                    
-                                    // Fechar popup
-                                    closePopup();
-                                    
-                                    // Ativar botão da home
-                                    const heroLocationBtn = document.getElementById('vc-use-location');
-                                    if (heroLocationBtn) {
-                                        heroLocationBtn.classList.add('is-active');
-                                    }
-                                    
-                                    // Recarregar restaurantes com distância
-                                    loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
-                                    
-                                    showNotification('Localização atualizada!', 'success');
-                                    
-                                    // Scroll suave para restaurantes
-                                    setTimeout(() => {
-                                        const restaurantsSection = document.getElementById('restaurants-list');
-                                        if (restaurantsSection) {
-                                            restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }
-                                    }, 500);
-                                },
-                                onError: (error) => {
-                                    locationBtn.classList.remove('is-loading');
-                                    locationBtn.disabled = false;
-                                    alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
-                                }
-                            });
-                        } else {
-                            // Fallback sem reverse geocoding (mesma lógica do botão da home)
-                            navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                    const lat = position.coords.latitude;
-                                    const lng = position.coords.longitude;
-                                    
-                                    // Salvar no localStorage
-                                    localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                                    localStorage.setItem('vc_location_accepted', 'true');
-                                    
-                                    // Atualizar UI do botão do popup
-                                    locationBtn.classList.remove('is-loading');
-                                    locationBtn.disabled = false;
-                                    
-                                    // Fechar popup
-                                    closePopup();
-                                    
-                                    // Ativar botão da home
-                                    const heroLocationBtn = document.getElementById('vc-use-location');
-                                    if (heroLocationBtn) {
-                                        heroLocationBtn.classList.add('is-active');
-                                    }
-                                    
-                                    // Recarregar restaurantes com distância
-                                    loadRestaurantsWithLocation(lat, lng);
-                                    
-                                    showNotification('Localização atualizada!', 'success');
-                                    
-                                    // Scroll suave para restaurantes
-                                    setTimeout(() => {
-                                        const restaurantsSection = document.getElementById('restaurants-list');
-                                        if (restaurantsSection) {
-                                            restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }
-                                    }, 500);
-                                },
-                                (error) => {
-                                    locationBtn.classList.remove('is-loading');
-                                    locationBtn.disabled = false;
-                                    alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
-                                }
-                            );
-                        }
-                    } catch (error) {
-                        locationBtn.classList.remove('is-loading');
-                        locationBtn.disabled = false;
-                        alert('Erro ao processar localização.');
-                    }
-                });
-            }
-        };
-        
         // Mostrar popup apenas se não foi visto antes
         if (!popupSeen) {
             setTimeout(() => {
                 popup.classList.add('is-open');
-                // Anexar listeners quando popup abrir
-                setTimeout(() => {
-                    attachPopupListeners();
-                }, 100);
             }, 1500);
-        } else {
-            // Se popup não será mostrado, anexar listeners mesmo assim
-            attachPopupListeners();
         }
 
         // Função para lidar com o clique no botão de localização
@@ -672,102 +544,13 @@
             }
         }
         
-        function closePopup(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            console.log('Fechando popup...');
-            popup.classList.remove('is-open');
-            // Salvar cookie (expira em 30 dias)
-            document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
-        }
-
-        // Função para anexar todos os listeners do popup
-        const attachAllPopupListeners = () => {
-            const closeBtn = popup.querySelector('.welcome-popup__close');
-            const locationBtn = popup.querySelector('#welcome-popup-location-btn');
-            const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
-            
-            console.log('=== DEBUG POPUP ===');
-            console.log('Popup encontrado:', popup);
-            console.log('Botão fechar encontrado:', closeBtn);
-            console.log('Botão localização encontrado:', locationBtn);
-            console.log('Botão pular encontrado:', skipBtn);
-            console.log('Popup está aberto?', popup.classList.contains('is-open'));
-            console.log('==================');
-
-            // Botão de fechar
-            if (closeBtn) {
-                closeBtn.style.cursor = 'pointer';
-                closeBtn.style.pointerEvents = 'auto';
-                closeBtn.style.zIndex = '1001';
-                // Remover listeners anteriores
-                const newCloseBtn = closeBtn.cloneNode(true);
-                closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-                newCloseBtn.addEventListener('click', (e) => {
-                    console.log('Clique no botão fechar detectado!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    closePopup(e);
-                });
-                newCloseBtn.addEventListener('mousedown', (e) => {
-                    console.log('Mousedown no botão fechar detectado!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    closePopup(e);
-                });
-            } else {
-                console.warn('Botão de fechar do popup não encontrado');
-            }
-
-            // Botão pular
-            if (skipBtn) {
-                skipBtn.style.cursor = 'pointer';
-                skipBtn.style.pointerEvents = 'auto';
-                skipBtn.style.zIndex = '1001';
-                skipBtn.style.position = 'relative';
-                // Remover listeners anteriores
-                const newSkipBtn = skipBtn.cloneNode(true);
-                skipBtn.parentNode.replaceChild(newSkipBtn, skipBtn);
-                newSkipBtn.addEventListener('click', (e) => {
-                    console.log('Clique no botão pular detectado!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    closePopup(e);
-                });
-                newSkipBtn.addEventListener('mousedown', (e) => {
-                    console.log('Mousedown no botão pular detectado!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    closePopup(e);
-                });
-            } else {
-                console.warn('Botão "Pular" do popup não encontrado');
-            }
-            
-            return { locationBtn, skipBtn: skipBtn || popup.querySelector('#welcome-popup-skip-btn') };
-        };
-
-        // Anexar listeners iniciais
-        attachAllPopupListeners();
-        attachPopupListeners();
-
-        // Fechar ao clicar fora
+        // Fechar ao clicar fora do dialog
         popup.addEventListener('click', (e) => {
             if (e.target === popup) {
-                closePopup();
+                popup.classList.remove('is-open');
+                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
             }
         }, true);
-
-        // Garantir que o dialog seja clicável
-        const dialog = popup.querySelector('.welcome-popup__dialog');
-        if (dialog) {
-            dialog.style.pointerEvents = 'auto';
-            dialog.addEventListener('click', (e) => {
-                e.stopPropagation();
-            }, true);
-        }
     }
     
     // Atualizar título do hero com nome da cidade
