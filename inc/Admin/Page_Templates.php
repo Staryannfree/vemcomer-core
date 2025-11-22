@@ -423,32 +423,46 @@ class Page_Templates {
 .marketplace-complete .menu { list-style: none; display: flex; gap: 26px;}
 .marketplace-complete .menu li { display: inline;}
 .marketplace-complete .menu a { color: #fff; text-decoration: none; font-weight: 500; transition: color 0.3s;}
-.marketplace-complete .menu a:hover { color: #F4972E;}
+.marketplace-complete .menu a:hover { color: #2f9e44;}
 .marketplace-complete .account { display: flex; gap: 10px;}
-.marketplace-complete .account-btn { background: #F4972E; color: #fff; padding: 10px 23px; border-radius: 25px; text-decoration: none; font-weight: 500; border: none; transition: .2s; cursor: pointer; display: inline-block;}
-.marketplace-complete .account-btn:hover { background: #c85d1b;}
-.marketplace-complete .hero { background: linear-gradient(0deg,rgba(38,38,38,0.51)0%,rgba(38,38,38,0.23)100%),url(\'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=80\')center/cover no-repeat; padding: 98px 0 120px 0; color: #fff; text-align: center;}
+.marketplace-complete .account-btn { background: #2f9e44; color: #fff; padding: 10px 23px; border-radius: 25px; text-decoration: none; font-weight: 500; border: none; transition: .2s; cursor: pointer; display: inline-block;}
+.marketplace-complete .account-btn:hover { background: #1e7e34;}
+.marketplace-complete .hero { background: linear-gradient(135deg, #2f9e44 0%, #1e7e34 100%),url(\'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=80\')center/cover no-repeat; background-blend-mode: overlay; padding: 98px 0 120px 0; color: #fff; text-align: center;}
 .marketplace-complete .hero h1 { font-size: 3.3rem; margin-bottom: 19px;}
 .marketplace-complete .hero p { font-size: 1.6rem; margin-bottom: 36px;}
-.marketplace-complete .search-bar { margin: auto; width: 54%; display: flex; background: #fff; border-radius: 50px; overflow: hidden; box-shadow: 0 4px 14px #0003;}
+.marketplace-complete .search-bar { margin: auto; width: 54%; display: flex; background: #fff; border-radius: 50px; overflow: hidden; box-shadow: 0 4px 14px #0003; position: relative;}
 .marketplace-complete .search-bar input { flex: 1; border: none; padding: 19px 27px; font-size: 1.22rem;}
-.marketplace-complete .search-bar button { background: #F4972E; color: #fff; border: none; padding: 0 34px; font-size: 1.29rem; cursor: pointer;}
-.marketplace-complete .search-bar button:hover { background: #c85d1b;}
+.marketplace-complete .search-bar button { background: #2f9e44; color: #fff; border: none; padding: 0 34px; font-size: 1.29rem; cursor: pointer;}
+.marketplace-complete .search-bar button:hover { background: #1e7e34;}
+.marketplace-complete .search-autocomplete { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 8px; box-shadow: 0 4px 14px #0003; z-index: 1000; max-height: 300px; overflow-y: auto; margin-top: 5px; display: none;}
+.marketplace-complete .search-autocomplete-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #e5e7eb;}
+.marketplace-complete .search-autocomplete-item:hover { background: #f9fafb;}
+.marketplace-complete .btn-geolocation { background: rgba(255,255,255,0.2); color: #fff; border: 2px solid rgba(255,255,255,0.3); border-radius: 25px; padding: 10px 20px; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; margin: 10px 0;}
+.marketplace-complete .btn-geolocation:hover { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.5);}
+.marketplace-complete .btn-geolocation.is-loading { opacity: 0.7; cursor: wait;}
 .marketplace-complete .quick-filters { display: flex; gap: 19px; justify-content: center; margin: 29px 0; flex-wrap: wrap;}
-.marketplace-complete .quick-filters button { background: #fff; color: #F4972E; border: 1px solid #F4972E; border-radius: 22px; padding: 8px 19px; cursor: pointer; transition: all 0.3s;}
-.marketplace-complete .quick-filters button:hover { background: #F4972E; color: #fff;}
+.marketplace-complete .quick-filters button { background: #fff; color: #2f9e44; border: 1px solid #2f9e44; border-radius: 22px; padding: 8px 19px; cursor: pointer; transition: all 0.3s;}
+.marketplace-complete .quick-filters button:hover { background: #2f9e44; color: #fff;}
+.marketplace-complete .filter-chip { background: #fff; color: #2f9e44; border: 1px solid #2f9e44; border-radius: 22px; padding: 8px 19px; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px;}
+.marketplace-complete .filter-chip:hover, .marketplace-complete .filter-chip.is-active { background: #2f9e44; color: #fff;}
 .marketplace-complete .section-title { font-size: 2.1rem; color: #262626; margin: 36px 0 26px 0; text-align: center; letter-spacing: .6px;}
 .marketplace-complete section { margin: 38px 0;}
 .marketplace-complete .categories { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 32px; justify-content: flex-start; padding-bottom: 10px; padding-left: 4vw;}
 .marketplace-complete .category-card { min-width: 200px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 24px; text-align: center; flex: 0 0 auto; margin-bottom: 0;}
-.marketplace-complete .category-card i { font-size: 2.5rem; margin-bottom: 10px; color: #F4972E;}
+.marketplace-complete .category-card i { font-size: 2.5rem; margin-bottom: 10px; color: #2f9e44;}
 .marketplace-complete .featured, .marketplace-complete .reviews, .marketplace-complete .faq, .marketplace-complete .partners, .marketplace-complete .blog, .marketplace-complete .app-promo, .marketplace-complete .newsletter, .marketplace-complete .destaques-do-dia, .marketplace-complete .delivery-stats, .marketplace-complete .user-actions, .marketplace-complete .admin-area, .marketplace-complete .map-area, .marketplace-complete .calendar, .marketplace-complete .benefits { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; width: 100%;}
 .marketplace-complete .restaurant-card, .marketplace-complete .review-card, .marketplace-complete .faq-card, .marketplace-complete .partner-card, .marketplace-complete .blog-card, .marketplace-complete .destaque-card, .marketplace-complete .stat-card, .marketplace-complete .user-card, .marketplace-complete .admin-card, .marketplace-complete .map-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 24px; width: 220px; text-align: center;}
 .marketplace-complete .restaurant-img, .marketplace-complete .partner-img, .marketplace-complete .blog-img, .marketplace-complete .destaque-img, .marketplace-complete .map-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px;}
 .marketplace-complete .restaurant-card h3 { margin-top: 10px; margin-bottom: 3px;}
 .marketplace-complete .restaurant-card p { font-size: .98rem; color: #555;}
 .marketplace-complete .restaurant-card .tags span, .marketplace-complete .destaque-card .tags span { background: #f6f6f6; color: #333; border-radius: 20px; padding: 3px 12px; font-size: .79rem; margin: 2px; display: inline-block;}
-.marketplace-complete .restaurant-card .rating, .marketplace-complete .destaque-card .rating { color: #F4972E; font-weight: 600; margin-top: 8px;}
+.marketplace-complete .restaurant-card .rating, .marketplace-complete .destaque-card .rating { color: #2f9e44; font-weight: 600; margin-top: 8px;}
+.marketplace-complete .skeleton-loading { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; margin: 20px 0;}
+.marketplace-complete .skeleton-card { background: #fff; border-radius: 12px; padding: 24px; animation: pulse 1.5s ease-in-out infinite;}
+.marketplace-complete .skeleton-image { width: 100%; height: 130px; background: #e5e7eb; border-radius: 8px; margin-bottom: 12px;}
+.marketplace-complete .skeleton-title { width: 70%; height: 20px; background: #e5e7eb; border-radius: 4px; margin-bottom: 8px;}
+.marketplace-complete .skeleton-line { width: 100%; height: 14px; background: #e5e7eb; border-radius: 4px; margin-bottom: 6px;}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 .marketplace-complete .review-card { width: 310px;}
 .marketplace-complete .review-header { display: flex; align-items: center; gap: 15px; justify-content: center; margin-bottom: 8px;}
 .marketplace-complete .avatar { width: 53px; height: 53px; border-radius: 50%; object-fit: cover;}
@@ -461,7 +475,7 @@ class Page_Templates {
 .marketplace-complete .blog-card p { font-size: .98rem; margin-bottom: 7px;}
 .marketplace-complete .delivery-stats { gap: 16px;}
 .marketplace-complete .stat-card { width: 170px;}
-.marketplace-complete .stat-card i { font-size: 2.2rem; color: #F4972E;}
+.marketplace-complete .stat-card i { font-size: 2.2rem; color: #2f9e44;}
 .marketplace-complete .stat-card span { display: block; font-size: 1.22rem; font-weight: 600;}
 .marketplace-complete .user-actions { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px #0001; width: 320px; padding: 22px; flex-direction: column;}
 .marketplace-complete .user-card { width: 100%; background: #eef; border: none;}
@@ -475,19 +489,23 @@ class Page_Templates {
 .marketplace-complete .map-card { width: 100%; background: transparent; padding: 3px;}
 .marketplace-complete .map-img { height: 180px;}
 .marketplace-complete .benefits-list { margin-top: 13px; display: flex; gap: 38px; justify-content: center;}
-.marketplace-complete .benefit-item { background: #F4972E; color: #fff; font-size: 1.3rem; border-radius: 60px; padding: 32px 22px; width: 182px;}
+.marketplace-complete .benefit-item { background: #2f9e44; color: #fff; font-size: 1.3rem; border-radius: 60px; padding: 32px 22px; width: 182px;}
 .marketplace-complete .app-promo { margin-top: 12px; align-items: center; display: flex; gap: 29px; justify-content: center;}
 .marketplace-complete .app-promo img { width: 148px; height: 148px; border-radius: 18px;}
 .marketplace-complete .newsletter { background: #262626; color: #fff; border-radius: 12px; width: 96%; margin: auto; padding: 35px 0; text-align: center;}
 .marketplace-complete .newsletter input, .marketplace-complete .newsletter button { border: none; border-radius: 22px; padding: 13px 26px; margin: 6px;}
 .marketplace-complete .newsletter input { width: 310px;}
-.marketplace-complete .newsletter button { background: #F4972E; color: #fff; font-weight: 700; cursor: pointer;}
-.marketplace-complete .newsletter button:hover { background: #c85d1b;}
+.marketplace-complete .newsletter button { background: #2f9e44; color: #fff; font-weight: 700; cursor: pointer;}
+.marketplace-complete .newsletter button:hover { background: #1e7e34;}
 .marketplace-complete .calendar { background: #fff; border-radius: 12px; width: 98%; margin: auto; box-shadow: 0 2px 8px #0001; padding: 24px; text-align: center;}
 .marketplace-complete .calendar-title { font-size: 1.35rem; color: #262626; margin-bottom: 6px;}
 .marketplace-complete .calendar-list { margin-top: 18px; list-style: none; padding: 0;}
 .marketplace-complete .calendar-list li { list-style: none; padding: 10px 0;}
-.marketplace-complete .footer-social a { margin: 0 12px; color: #F4972E; text-decoration: none; font-size: 1.4rem;}
+.marketplace-complete .footer-social a { margin: 0 12px; color: #2f9e44; text-decoration: none; font-size: 1.4rem;}
+.marketplace-complete .home-quick-filters { margin: 30px 0; padding: 0 4vw;}
+.marketplace-complete .home-quick-filters__chips { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;}
+.marketplace-complete .home-quick-filters__actions { display: flex; align-items: center; gap: 15px;}
+.marketplace-complete .home-quick-filters__count { color: #2f9e44; font-size: 0.9rem;}
 .marketplace-complete footer { background: #262626; color: #fff; text-align: center; padding: 36px 0 22px 0; font-size: 1.09rem; margin-top: 50px;}
 @media (max-width: 900px) { .marketplace-complete .container { width: 100%; } .marketplace-complete .search-bar { width: 100%; } .marketplace-complete nav { padding: 0 2vw;} }
 @media (max-width: 720px) { .marketplace-complete .categories { gap: 18px; padding-bottom: 10px;} .marketplace-complete .category-card { min-width: 150px; padding: 15px;} .marketplace-complete .featured, .marketplace-complete .reviews, .marketplace-complete .faq, .marketplace-complete .partners, .marketplace-complete .blog, .marketplace-complete .app-promo, .marketplace-complete .newsletter, .marketplace-complete .delivery-stats, .marketplace-complete .user-actions, .marketplace-complete .admin-area, .marketplace-complete .map-area, .marketplace-complete .calendar, .marketplace-complete .benefits-list { flex-direction: column; gap: 18px;} .marketplace-complete .faq-card, .marketplace-complete .blog-card, .marketplace-complete .calendar, .marketplace-complete .benefit-item { width: 100%;} .marketplace-complete nav { flex-direction: column; gap: 14px;} }
@@ -516,26 +534,25 @@ class Page_Templates {
 </header>
 <section class="hero">
     <div class="container">
-        <h1>' . esc_html__( 'Descubra, compare e peça dos melhores restaurantes, bares e deliverys da sua cidade', 'vemcomer' ) . '</h1>
-        <p>' . esc_html__( 'Delivery, reservas, avaliações, eventos, promoções, blog, mapa e muito mais!', 'vemcomer' ) . '</p>
-        <form class="search-bar" method="get" action="' . esc_url( $restaurants_url ) . '">
-            <input type="text" name="s" placeholder="' . esc_attr__( 'Busque por restaurante, prato, bairro, evento ou promo...', 'vemcomer' ) . '">
+        <h1 id="hero-title">' . esc_html__( 'Peça dos melhores restaurantes da sua cidade', 'vemcomer' ) . '</h1>
+        <p id="hero-subtitle">' . esc_html__( 'Entrega, retirada e cardápios atualizados em tempo real', 'vemcomer' ) . '</p>
+        <form class="search-bar" method="get" action="#restaurants-list" id="hero-search-form">
+            <div style="position: relative; flex: 1;">
+                <input type="text" name="s" id="hero-search-input" placeholder="' . esc_attr__( 'Buscar restaurantes, pratos...', 'vemcomer' ) . '" value="' . esc_attr( get_query_var( 's' ) ) . '" autocomplete="off">
+                <div class="search-autocomplete" id="search-autocomplete" style="display: none;"></div>
+            </div>
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
-        <div class="quick-filters">
-            <button><i class="fas fa-clock"></i> ' . esc_html__( 'Aberto agora', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-star"></i> ' . esc_html__( 'Mais avaliados', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-shipping-fast"></i> ' . esc_html__( 'Frete grátis', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-percent"></i> ' . esc_html__( 'Promoção', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-child"></i> ' . esc_html__( 'Kids', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-birthday-cake"></i> ' . esc_html__( 'Eventos', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-leaf"></i> ' . esc_html__( 'Saudável', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-paw"></i> ' . esc_html__( 'Pet Friendly', 'vemcomer' ) . '</button>
-            <button><i class="fas fa-glass-cheers"></i> ' . esc_html__( 'Bares', 'vemcomer' ) . '</button>
+        <div id="hero-location-actions" style="margin: 20px 0;">
+            <button class="btn-geolocation" id="vc-use-location" type="button">
+                <span class="btn-geolocation__icon">📍</span>
+                <span class="btn-geolocation__text">' . esc_html__( 'Usar minha localização', 'vemcomer' ) . '</span>
+            </button>
         </div>
+        <a href="#restaurants-list" class="account-btn" style="margin-top: 10px;">' . esc_html__( 'Explorar restaurantes', 'vemcomer' ) . '</a>
     </div>
 </section>
-<section>
+' . ( function_exists( 'vemcomer_home_popular_categories' ) ? vemcomer_home_popular_categories() : '<section>
     <div class="section-title">' . esc_html__( 'Categorias Populares', 'vemcomer' ) . '</div>
     <div class="categories">
         <div class="category-card"><i class="fas fa-pizza-slice"></i><br>' . esc_html__( 'Pizza', 'vemcomer' ) . '</div>
@@ -552,17 +569,29 @@ class Page_Templates {
         <div class="category-card"><i class="fas fa-glass-martini"></i><br>' . esc_html__( 'Drinks', 'vemcomer' ) . '</div>
         <div class="category-card"><i class="fas fa-coffee"></i><br>' . esc_html__( 'Cafés', 'vemcomer' ) . '</div>
     </div>
-</section>
+</section>' ) . '
 <section>
-    <div class="section-title">' . esc_html__( 'Destaques do Dia', 'vemcomer' ) . '</div>
+    <div class="section-title">' . esc_html__( 'Promoções e destaques', 'vemcomer' ) . '</div>
     <div class="destaques-do-dia">
-        ' . do_shortcode( '[vc_banners limit="2"]' ) . '
+        ' . do_shortcode( '[vc_banners]' ) . '
     </div>
 </section>
-<section>
+' . ( function_exists( 'vemcomer_home_featured_restaurants' ) ? vemcomer_home_featured_restaurants() : '<section>
     <div class="section-title">' . esc_html__( 'Restaurantes em Destaque', 'vemcomer' ) . '</div>
     <div class="featured">
         ' . do_shortcode( '[vemcomer_restaurants per_page="3"]' ) . '
+    </div>
+</section>' ) . '
+<section id="restaurants-list">
+    <div class="section-title">' . esc_html__( 'Restaurantes', 'vemcomer' ) . '</div>
+    ' . ( function_exists( 'vemcomer_home_quick_filters' ) ? vemcomer_home_quick_filters() : '' ) . '
+    <div id="restaurants-container" style="padding: 0 4vw;">
+        <div class="skeleton-loading" id="skeleton-loading">
+            ' . str_repeat( '<div class="skeleton-card"><div class="skeleton-image"></div><div class="skeleton-title"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>', 6 ) . '
+        </div>
+        <div id="restaurants-content" style="display: none;">
+            ' . do_shortcode( '[vemcomer_restaurants]' ) . '
+        </div>
     </div>
 </section>
 <section>
@@ -692,14 +721,14 @@ class Page_Templates {
             <div class="blog-title">' . esc_html__( 'Como escolher o restaurante ideal?', 'vemcomer' ) . '</div>
             <div class="blog-author"><i class="fas fa-user"></i> ' . esc_html__( 'Equipe Marketplace', 'vemcomer' ) . '</div>
             <p>' . esc_html__( 'Dicas para garantir bons momentos com família, casal ou trabalho!', 'vemcomer' ) . '</p>
-            <a href="#" style="color:#F4972E;text-decoration:underline;">' . esc_html__( 'Leia mais', 'vemcomer' ) . '</a>
+            <a href="#" style="color:#2f9e44;text-decoration:underline;">' . esc_html__( 'Leia mais', 'vemcomer' ) . '</a>
         </div>
         <div class="blog-card">
             <img src="https://images.unsplash.com/photo-1464306076886-debede5e0038?auto=format&fit=crop&w=330&q=80" class="blog-img" alt="Blog">
             <div class="blog-title">' . esc_html__( 'Restaurantes com desconto este mês', 'vemcomer' ) . '</div>
             <div class="blog-author"><i class="fas fa-user"></i> ' . esc_html__( 'Equipe Marketplace', 'vemcomer' ) . '</div>
             <p>' . esc_html__( 'Aproveite ofertas e promoções imperdíveis na sua cidade!', 'vemcomer' ) . '</p>
-            <a href="#" style="color:#F4972E;text-decoration:underline;">' . esc_html__( 'Leia mais', 'vemcomer' ) . '</a>
+            <a href="#" style="color:#2f9e44;text-decoration:underline;">' . esc_html__( 'Leia mais', 'vemcomer' ) . '</a>
         </div>
     </div>
 </section>
@@ -724,13 +753,91 @@ class Page_Templates {
             <a href="#"><i class="fab fa-twitter"></i></a>
         </div>
         <span>
-            <a href="#" style="color:#F4972E; text-decoration:underline;">' . esc_html__( 'Política de Privacidade', 'vemcomer' ) . '</a> |
-            <a href="#" style="color:#F4972E; text-decoration:underline;">' . esc_html__( 'Termos de Uso', 'vemcomer' ) . '</a> |
-            <a href="#" style="color:#F4972E; text-decoration:underline;">' . esc_html__( 'Contato', 'vemcomer' ) . '</a>
+            <a href="#" style="color:#2f9e44; text-decoration:underline;">' . esc_html__( 'Política de Privacidade', 'vemcomer' ) . '</a> |
+            <a href="#" style="color:#2f9e44; text-decoration:underline;">' . esc_html__( 'Termos de Uso', 'vemcomer' ) . '</a> |
+            <a href="#" style="color:#2f9e44; text-decoration:underline;">' . esc_html__( 'Contato', 'vemcomer' ) . '</a>
         </span>
     </div>
 </footer>
 </div>
+<script>
+(function() {
+    // Carregar scripts da home se disponíveis
+    if (typeof window.vemcomerTheme !== \'undefined\') {
+        // Inicializar funcionalidades quando DOM estiver pronto
+        if (document.readyState === \'loading\') {
+            document.addEventListener(\'DOMContentLoaded\', initMarketplaceFeatures);
+        } else {
+            initMarketplaceFeatures();
+        }
+    }
+    
+    function initMarketplaceFeatures() {
+        // Inicializar geolocalização
+        const locationBtn = document.getElementById(\'vc-use-location\');
+        if (locationBtn && typeof window.VemComerReverseGeocode !== \'undefined\') {
+            locationBtn.addEventListener(\'click\', function() {
+                if (!navigator.geolocation) {
+                    alert(\'Geolocalização não suportada pelo seu navegador.\');
+                    return;
+                }
+                locationBtn.classList.add(\'is-loading\');
+                locationBtn.disabled = true;
+                
+                window.VemComerReverseGeocode.getLocationAndFill({
+                    fillCheckout: false,
+                    onSuccess: function(address, coordinates) {
+                        const heroTitle = document.getElementById(\'hero-title\');
+                        const heroSubtitle = document.getElementById(\'hero-subtitle\');
+                        if (heroTitle && address.city) {
+                            heroTitle.textContent = \'Peça dos melhores restaurantes de \' + address.city;
+                        }
+                        if (window.updateHeroSubtitleWithRestaurantCount && address.city) {
+                            window.updateHeroSubtitleWithRestaurantCount(address.city);
+                        }
+                        if (window.filterRestaurantsByCity && address.city) {
+                            window.filterRestaurantsByCity(address.city);
+                        }
+                        locationBtn.classList.remove(\'is-loading\');
+                        locationBtn.disabled = false;
+                    },
+                    onError: function(error) {
+                        locationBtn.classList.remove(\'is-loading\');
+                        locationBtn.disabled = false;
+                        alert(\'Não foi possível obter sua localização.\');
+                    }
+                });
+            });
+        }
+        
+        // Inicializar busca com autocomplete
+        const searchInput = document.getElementById(\'hero-search-input\');
+        const autocomplete = document.getElementById(\'search-autocomplete\');
+        if (searchInput && autocomplete && typeof window.initSearchAutocomplete === \'function\') {
+            window.initSearchAutocomplete(searchInput, autocomplete);
+        }
+        
+        // Inicializar skeleton loading
+        const skeleton = document.getElementById(\'skeleton-loading\');
+        const restaurantsContent = document.getElementById(\'restaurants-content\');
+        if (skeleton && restaurantsContent) {
+            setTimeout(function() {
+                skeleton.style.display = \'none\';
+                restaurantsContent.style.display = \'block\';
+            }, 1000);
+        }
+        
+        // Verificar se já tem localização salva
+        const savedCity = localStorage.getItem(\'vc_user_city\');
+        if (savedCity) {
+            const heroTitle = document.getElementById(\'hero-title\');
+            if (heroTitle) {
+                heroTitle.textContent = \'Peça dos melhores restaurantes de \' + savedCity;
+            }
+        }
+    }
+})();
+</script>
 <!-- /wp:html -->';
     }
     
