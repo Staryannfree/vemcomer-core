@@ -630,6 +630,12 @@
     
     // Verificar se deve mostrar botão no hero ao carregar
     function checkHeroLocationButton() {
+        // Garantir que o botão sempre apareça
+        const heroLocationActions = document.getElementById('hero-location-actions');
+        if (heroLocationActions) {
+            heroLocationActions.style.display = 'block';
+        }
+        
         const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
         const savedLocation = localStorage.getItem('vc_user_location');
         
