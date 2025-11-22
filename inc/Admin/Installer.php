@@ -28,6 +28,15 @@ class Installer {
             'vemcomer-installer',
             [ $this, 'render' ]
         );
+        
+        add_submenu_page(
+            'vemcomer-root',
+            __( 'Importar Páginas', 'vemcomer' ),
+            __( 'Importar Páginas', 'vemcomer' ),
+            'manage_options',
+            'vemcomer-import-pages',
+            [ $this, 'render_import' ]
+        );
     }
 
     private function pages_map(): array {
@@ -336,5 +345,142 @@ class Installer {
             return (int) $id;
         }
         return 0;
+    }
+    
+    /**
+     * Renderiza a página de importação de templates
+     */
+    public function render_import(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( __( 'Sem permissão.', 'vemcomer' ) );
+        }
+        
+        // Processar importação
+        if ( isset( $_POST['vc_import_pages'] ) && check_admin_referer( 'vc_import_pages', 'vc_import_pages_nonce' ) ) {
+            $templates_to_import = isset( $_POST['templates'] ) ? array_map( 'sanitize_key', (array) $_POST['templates'] ) : [];
+            
+            if ( ! empty( $templates_to_import ) ) {
+                require_once VEMCOMER_CORE_DIR . 'inc/Admin/Page_Templates.php';
+                $results = \VC\Admin\Page_Templates::import_pages( $templates_to_import );
+                
+                $success_count = count( array_filter( $results, fn( $r ) => $r['success'] ) );
+                $error_count = count( $results ) - $success_count;
+                
+                echo '<div class="notice notice-success is-dismissible"><p>';
+                printf(
+                    esc_html__( '%d página(s) importada(s) com sucesso. %d erro(s).', 'vemcomer' ),
+                    $success_count,
+                    $error_count
+                );
+                echo '</p></div>';
+            }
+        }
+        
+        require_once VEMCOMER_CORE_DIR . 'inc/Admin/Page_Templates.php';
+        $templates = \VC\Admin\Page_Templates::get_templates();
+        
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html__( 'Importar Páginas Pré-configuradas', 'vemcomer' ); ?></h1>
+            <p class="description">
+                <?php echo esc_html__( 'Selecione as páginas que deseja importar. Páginas já existentes serão atualizadas.', 'vemcomer' ); ?>
+            </p>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field( 'vc_import_pages', 'vc_import_pages_nonce' ); ?>
+                
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;">
+                                <input type="checkbox" id="select-all-templates" />
+                            </th>
+                            <th><?php echo esc_html__( 'Página', 'vemcomer' ); ?></th>
+                            <th><?php echo esc_html__( 'Descrição', 'vemcomer' ); ?></th>
+                            <th><?php echo esc_html__( 'Slug', 'vemcomer' ); ?></th>
+                            <th><?php echo esc_html__( 'Status', 'vemcomer' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ( $templates as $key => $template ) : ?>
+                            <?php
+                            $existing = get_page_by_path( $template['slug'] );
+                            $is_featured = ! empty( $template['featured'] );
+                            ?>
+                            <tr class="<?php echo $is_featured ? 'featured' : ''; ?>">
+                                <td>
+                                    <input 
+                                        type="checkbox" 
+                                        name="templates[]" 
+                                        value="<?php echo esc_attr( $key ); ?>"
+                                        class="template-checkbox"
+                                        <?php checked( $is_featured ); ?>
+                                    />
+                                </td>
+                                <td>
+                                    <strong><?php echo esc_html( $template['title'] ); ?></strong>
+                                    <?php if ( $is_featured ) : ?>
+                                        <span class="dashicons dashicons-star-filled" style="color: #f0b849; margin-left: 5px;" title="<?php esc_attr_e( 'Recomendado', 'vemcomer' ); ?>"></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo esc_html( $template['description'] ); ?></td>
+                                <td><code><?php echo esc_html( $template['slug'] ); ?></code></td>
+                                <td>
+                                    <?php if ( $existing ) : ?>
+                                        <span class="dashicons dashicons-yes" style="color:#46b450"></span>
+                                        <a href="<?php echo esc_url( get_permalink( $existing->ID ) ); ?>" target="_blank">
+                                            <?php echo esc_html__( 'Ver página', 'vemcomer' ); ?>
+                                        </a>
+                                    <?php else : ?>
+                                        <span class="dashicons dashicons-minus"></span>
+                                        <?php echo esc_html__( 'Não criada', 'vemcomer' ); ?>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                
+                <p style="margin-top: 20px;">
+                    <button type="button" class="button" id="select-featured"><?php echo esc_html__( 'Selecionar Recomendadas', 'vemcomer' ); ?></button>
+                    <button type="button" class="button" id="deselect-all"><?php echo esc_html__( 'Desmarcar Todas', 'vemcomer' ); ?></button>
+                </p>
+                
+                <p style="margin-top: 20px;">
+                    <?php submit_button( __( 'Importar Páginas Selecionadas', 'vemcomer' ), 'primary', 'vc_import_pages', false ); ?>
+                    <a class="button" href="<?php echo esc_url( admin_url( 'edit.php?post_type=page' ) ); ?>">
+                        <?php echo esc_html__( 'Ir para Páginas', 'vemcomer' ); ?>
+                    </a>
+                </p>
+            </form>
+        </div>
+        
+        <style>
+            .wp-list-table .featured {
+                background-color: #fff9e5;
+            }
+            .wp-list-table .featured:hover {
+                background-color: #fff4cc;
+            }
+        </style>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            $('#select-all-templates').on('change', function() {
+                $('.template-checkbox').prop('checked', $(this).prop('checked'));
+            });
+            
+            $('#select-featured').on('click', function() {
+                $('.template-checkbox').prop('checked', false);
+                $('.featured .template-checkbox').prop('checked', true);
+            });
+            
+            $('#deselect-all').on('click', function() {
+                $('.template-checkbox').prop('checked', false);
+                $('#select-all-templates').prop('checked', false);
+            });
+        });
+        </script>
+        <?php
     }
 }
