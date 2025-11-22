@@ -404,12 +404,16 @@
     };
     
     function initWelcomePopup() {
-        console.log('initWelcomePopup chamada - MÚLTIPLAS ABORDAGENS');
+        console.log('=== initWelcomePopup chamada - MÚLTIPLAS ABORDAGENS ===');
+        console.log('Document ready state:', document.readyState);
+        console.log('Window loaded:', window.performance.timing.loadEventEnd > 0);
         
         // ABORDAGEM 1: Tentar encontrar popup imediatamente
         let popup = document.getElementById('welcome-popup');
+        console.log('Tentativa 1 - Popup encontrado?', !!popup);
         if (!popup) {
-            console.warn('Popup não encontrado imediatamente, tentando novamente...');
+            console.warn('❌ Popup não encontrado imediatamente, tentando novamente...');
+            console.log('Todos os elementos com ID:', Array.from(document.querySelectorAll('[id]')).map(el => el.id));
             // ABORDAGEM 2: Tentar novamente após um delay
             setTimeout(() => {
                 popup = document.getElementById('welcome-popup');
@@ -456,12 +460,24 @@
             return;
         }
         
-        console.log('Popup encontrado imediatamente:', popup);
+        console.log('✅ Popup encontrado imediatamente!', popup);
+        console.log('Popup classes:', popup.className);
+        console.log('Popup parent:', popup.parentElement);
+        console.log('Popup no DOM?', document.body.contains(popup));
         setupPopupListeners(popup);
     }
     
     function setupPopupListeners(popup) {
-        console.log('setupPopupListeners chamada para popup:', popup);
+        console.log('=== setupPopupListeners chamada ===');
+        console.log('Popup recebido:', popup);
+        console.log('Popup ID:', popup.id);
+        console.log('Popup classes:', popup.className);
+        console.log('Popup no DOM?', document.body.contains(popup));
+        
+        if (!popup) {
+            console.error('❌ Popup é null ou undefined!');
+            return;
+        }
         
         // ABORDAGEM 1: Event delegation no document (capture phase)
         function handlePopupClick(e) {
@@ -582,13 +598,21 @@
 
         // Verificar se popup já foi visto
         const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
+        console.log('Cookie popup visto:', popupSeen);
+        console.log('Cookies atuais:', document.cookie);
         
-        // Mostrar popup apenas se não foi visto antes
-        if (!popupSeen) {
-            setTimeout(() => {
-                popup.classList.add('is-open');
-            }, 1500);
-        }
+        // TEMPORÁRIO: Forçar exibição do popup para debug (remover depois)
+        // Mostrar popup sempre, ignorando cookie por enquanto
+        console.log('Forçando exibição do popup...');
+        setTimeout(() => {
+            popup.classList.add('is-open');
+            console.log('Popup deve estar visível agora. Classe is-open adicionada:', popup.classList.contains('is-open'));
+            console.log('Popup element:', popup);
+            console.log('Popup display:', window.getComputedStyle(popup).display);
+            console.log('Popup opacity:', window.getComputedStyle(popup).opacity);
+            console.log('Popup visibility:', window.getComputedStyle(popup).visibility);
+            console.log('Popup z-index:', window.getComputedStyle(popup).zIndex);
+        }, 1500);
 
         // Função para lidar com o clique no botão de localização
         function handleLocationButtonClick(btn, popupElement) {
@@ -847,9 +871,27 @@
     
     // Tentar novamente após um delay maior
     setTimeout(() => {
-        console.log('Delay adicional - tentando inicializar popup...');
+        console.log('Delay adicional (2s) - tentando inicializar popup...');
         initWelcomePopup();
     }, 2000);
+    
+    // Última tentativa após 5 segundos
+    setTimeout(() => {
+        console.log('Última tentativa (5s) - tentando inicializar popup...');
+        const popup = document.getElementById('welcome-popup');
+        if (popup) {
+            console.log('✅ Popup encontrado na última tentativa!');
+            setupPopupListeners(popup);
+            // Forçar exibição
+            setTimeout(() => {
+                popup.classList.add('is-open');
+                console.log('Popup forçado a aparecer na última tentativa');
+            }, 500);
+        } else {
+            console.error('❌ Popup AINDA não encontrado após 5 segundos!');
+            console.log('Todos os elementos no body:', Array.from(document.body.children).map(el => el.tagName + (el.id ? '#' + el.id : '')));
+        }
+    }, 5000);
 
 })();
 

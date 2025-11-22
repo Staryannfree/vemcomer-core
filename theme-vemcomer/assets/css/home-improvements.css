@@ -379,14 +379,14 @@
 
 /* Popup Primeira Visita */
 .welcome-popup {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     backdrop-filter: blur(4px);
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    z-index: 99999;
+    z-index: 99999 !important;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
@@ -395,9 +395,10 @@
 }
 
 .welcome-popup.is-open {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    display: flex !important;
 }
 
 .welcome-popup__dialog {
