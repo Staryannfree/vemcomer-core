@@ -276,6 +276,11 @@ function popup_boas_vindas_independente() {
                                     heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
                                 }
                                 
+                                // Atualizar subtítulo com número de restaurantes
+                                if (window.updateHeroSubtitleWithRestaurantCount) {
+                                    window.updateHeroSubtitleWithRestaurantCount(cityName);
+                                }
+                                
                                 // Mostrar mensagem na tela
                                 showLocationMessage('Você está em: ' + cityName);
                                 

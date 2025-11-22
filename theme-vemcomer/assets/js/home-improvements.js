@@ -798,12 +798,70 @@
         });
     }
     
+    // Função global para atualizar subtítulo com número de restaurantes
+    window.updateHeroSubtitleWithRestaurantCount = function(cityName) {
+        const subtitle = document.getElementById('hero-subtitle');
+        if (!subtitle) return;
+        
+        const REST_BASE = window.vemcomerTheme?.restUrl || '/wp-json/vemcomer/v1/';
+        const NONCE = window.vemcomerTheme?.nonce || '';
+        const cleanCityName = cityName.split(',')[0].trim();
+        
+        // Buscar restaurantes da cidade
+        fetch(`${REST_BASE}restaurants?city=${encodeURIComponent(cleanCityName)}&per_page=100`, {
+            headers: {
+                'X-WP-Nonce': NONCE,
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            let restaurants = data || [];
+            
+            // Se não encontrou via API, buscar todos e filtrar no frontend
+            if (restaurants.length === 0) {
+                return fetch(`${REST_BASE}restaurants?per_page=100`, {
+                    headers: {
+                        'X-WP-Nonce': NONCE,
+                    },
+                }).then(res => res.json());
+            }
+            return restaurants;
+        })
+        .then(restaurants => {
+            // Filtrar por cidade no frontend se necessário
+            if (restaurants && restaurants.length > 0) {
+                const filtered = restaurants.filter(rest => {
+                    const address = rest.address || '';
+                    return address.toLowerCase().includes(cleanCityName.toLowerCase());
+                });
+                
+                const count = filtered.length;
+                
+                // Atualizar subtítulo
+                if (count > 0) {
+                    subtitle.textContent = `${count} ${count === 1 ? 'restaurante cadastrado' : 'restaurantes cadastrados'} na sua região`;
+                } else {
+                    subtitle.textContent = 'Nenhum restaurante encontrado na sua região no momento';
+                }
+            } else {
+                subtitle.textContent = 'Nenhum restaurante encontrado na sua região no momento';
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao buscar contagem de restaurantes:', err);
+            // Manter subtítulo original em caso de erro
+        });
+    };
+    
     // Função global para filtrar restaurantes por cidade
     window.filterRestaurantsByCity = function(cityName) {
         if (!cityName) {
             console.error('Nome da cidade não fornecido');
             return;
         }
+        
+        // Atualizar subtítulo com número de restaurantes
+        updateHeroSubtitleWithRestaurantCount(cityName);
         
         const container = document.getElementById('restaurants-content') || document.querySelector('.vc-restaurants') || document.querySelector('.vc-grid');
         if (!container) {

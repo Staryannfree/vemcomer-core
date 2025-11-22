@@ -15,7 +15,7 @@ get_header();
     <div class="container">
         <div class="home-hero__content">
             <h1 class="home-hero__title" id="hero-title"><?php echo esc_html__( 'Peça dos melhores restaurantes da sua cidade', 'vemcomer' ); ?></h1>
-            <p class="home-hero__subtitle"><?php echo esc_html__( 'Entrega, retirada e cardápios atualizados em tempo real', 'vemcomer' ); ?></p>
+            <p class="home-hero__subtitle" id="hero-subtitle"><?php echo esc_html__( 'Entrega, retirada e cardápios atualizados em tempo real', 'vemcomer' ); ?></p>
             <div class="home-hero__search">
                 <form method="get" action="#restaurants-list" class="home-hero__search-form" id="hero-search-form">
                     <div class="search-wrapper">
