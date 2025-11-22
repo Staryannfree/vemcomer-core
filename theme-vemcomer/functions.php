@@ -266,6 +266,12 @@ function popup_boas_vindas_independente() {
                                                 data.display_name?.split(',')[0] || 
                                                 'Localização desconhecida';
                                 
+                                // Atualizar título do hero
+                                const heroTitle = document.getElementById('hero-title');
+                                if (heroTitle) {
+                                    heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
+                                }
+                                
                                 // Mostrar mensagem na tela
                                 showLocationMessage('Você está em: ' + cityName);
                                 
@@ -697,6 +703,12 @@ function mensagem_localizacao_botao_home() {
                             
                             // Obter nome da cidade
                             const cityName = await getCityName(lat, lng);
+                            
+                            // Atualizar título do hero
+                            const heroTitle = document.getElementById('hero-title');
+                            if (heroTitle) {
+                                heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
+                            }
                             
                             // Mostrar mensagem na tela
                             window.showLocationMessage('Você está em: ' + cityName);
