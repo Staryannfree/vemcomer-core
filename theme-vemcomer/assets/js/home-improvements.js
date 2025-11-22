@@ -397,14 +397,16 @@
         
         // Função para anexar event listeners quando popup abrir
         const attachPopupListeners = () => {
-            const locationBtn = popup.querySelector('#welcome-popup-location-btn');
+            // Primeiro anexar todos os listeners básicos
+            const { locationBtn } = attachAllPopupListeners();
+            
             if (locationBtn && !locationBtn.dataset.listenerAttached) {
                 locationBtn.dataset.listenerAttached = 'true';
-                console.log('Anexando event listener ao botão do popup');
+                console.log('Anexando event listener ao botão de localização do popup');
                 locationBtn.style.cursor = 'pointer';
                 locationBtn.style.pointerEvents = 'auto';
                 locationBtn.style.position = 'relative';
-                locationBtn.style.zIndex = '1000';
+                locationBtn.style.zIndex = '1001';
                 
                 // Usar exatamente a mesma lógica do botão da home que funciona
                 locationBtn.addEventListener('click', async () => {
@@ -528,40 +530,85 @@
             attachPopupListeners();
         }
 
-        const closeBtn = popup.querySelector('.welcome-popup__close');
-        const locationBtn = popup.querySelector('#welcome-popup-location-btn');
-        const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
-
         function closePopup(e) {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
+            console.log('Fechando popup...');
             popup.classList.remove('is-open');
             // Salvar cookie (expira em 30 dias)
             document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
         }
 
-        // Garantir que os event listeners sejam anexados
-        if (closeBtn) {
-            closeBtn.addEventListener('click', closePopup, true);
-            closeBtn.addEventListener('mousedown', closePopup, true);
-            closeBtn.style.cursor = 'pointer';
-            closeBtn.style.pointerEvents = 'auto';
-        } else {
-            console.warn('Botão de fechar do popup não encontrado');
-        }
+        // Função para anexar todos os listeners do popup
+        const attachAllPopupListeners = () => {
+            const closeBtn = popup.querySelector('.welcome-popup__close');
+            const locationBtn = popup.querySelector('#welcome-popup-location-btn');
+            const skipBtn = popup.querySelector('#welcome-popup-skip-btn');
+            
+            console.log('=== DEBUG POPUP ===');
+            console.log('Popup encontrado:', popup);
+            console.log('Botão fechar encontrado:', closeBtn);
+            console.log('Botão localização encontrado:', locationBtn);
+            console.log('Botão pular encontrado:', skipBtn);
+            console.log('Popup está aberto?', popup.classList.contains('is-open'));
+            console.log('==================');
 
-        if (skipBtn) {
-            skipBtn.addEventListener('click', closePopup, true);
-            skipBtn.addEventListener('mousedown', closePopup, true);
-            skipBtn.style.cursor = 'pointer';
-            skipBtn.style.pointerEvents = 'auto';
-        } else {
-            console.warn('Botão "Pular" do popup não encontrado');
-        }
+            // Botão de fechar
+            if (closeBtn) {
+                closeBtn.style.cursor = 'pointer';
+                closeBtn.style.pointerEvents = 'auto';
+                closeBtn.style.zIndex = '1001';
+                // Remover listeners anteriores
+                const newCloseBtn = closeBtn.cloneNode(true);
+                closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+                newCloseBtn.addEventListener('click', (e) => {
+                    console.log('Clique no botão fechar detectado!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closePopup(e);
+                });
+                newCloseBtn.addEventListener('mousedown', (e) => {
+                    console.log('Mousedown no botão fechar detectado!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closePopup(e);
+                });
+            } else {
+                console.warn('Botão de fechar do popup não encontrado');
+            }
 
-        // Anexar listeners iniciais (será sobrescrito quando popup abrir se necessário)
+            // Botão pular
+            if (skipBtn) {
+                skipBtn.style.cursor = 'pointer';
+                skipBtn.style.pointerEvents = 'auto';
+                skipBtn.style.zIndex = '1001';
+                skipBtn.style.position = 'relative';
+                // Remover listeners anteriores
+                const newSkipBtn = skipBtn.cloneNode(true);
+                skipBtn.parentNode.replaceChild(newSkipBtn, skipBtn);
+                newSkipBtn.addEventListener('click', (e) => {
+                    console.log('Clique no botão pular detectado!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closePopup(e);
+                });
+                newSkipBtn.addEventListener('mousedown', (e) => {
+                    console.log('Mousedown no botão pular detectado!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closePopup(e);
+                });
+            } else {
+                console.warn('Botão "Pular" do popup não encontrado');
+            }
+            
+            return { locationBtn, skipBtn: skipBtn || popup.querySelector('#welcome-popup-skip-btn') };
+        };
+
+        // Anexar listeners iniciais
+        attachAllPopupListeners();
         attachPopupListeners();
 
         // Fechar ao clicar fora
