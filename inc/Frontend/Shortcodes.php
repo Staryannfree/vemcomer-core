@@ -102,10 +102,10 @@ class Shortcodes {
                 echo '</div>';
             }
             echo '<div class="vc-meta">' . esc_html( $addr ) . '</div>';
-            // Botão "Ver cardápio" dentro do link, mas com evento para prevenir comportamento padrão
-            echo '<a class="vc-btn vc-btn--menu" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink( $rid ) ) ) . '#vc-menu" onclick="event.stopPropagation();" style="position: relative; z-index: 10; display: inline-block; margin-top: 8px;">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
-            // Fechar link do card
+            // Fechar link do card antes do botão
             echo '</a>';
+            // Botão "Ver cardápio" FORA do link, com z-index maior para ficar acima
+            echo '<a class="vc-btn vc-btn--menu" href="' . esc_url( add_query_arg( [ 'restaurant_id' => $rid ], get_permalink( $rid ) ) ) . '#vc-menu" style="position: relative; z-index: 15; display: inline-block; margin-top: 8px; pointer-events: auto;">' . esc_html__( 'Ver cardápio', 'vemcomer' ) . '</a>';
             echo '</div>';
         }
         echo '</div>';
