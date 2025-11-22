@@ -211,7 +211,21 @@ function popup_boas_vindas_independente() {
         const popup = document.getElementById('welcome-popup');
         if (!popup) return;
 
-        // 1. Abre o popup após 1s
+        // Verificar se deve mostrar o popup:
+        // 1. Se já tem localização salva, não mostrar
+        const savedLocation = localStorage.getItem('vc_user_location');
+        if (savedLocation) {
+            return; // Já tem localização, não precisa mostrar popup
+        }
+
+        // 2. Verificar se popup já foi visto (cookie)
+        const cookies = document.cookie.split(';');
+        const popupSeen = cookies.some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
+        if (popupSeen) {
+            return; // Já foi visto antes, não mostrar novamente
+        }
+
+        // 3. Se chegou aqui, mostrar popup (primeira visita e sem localização)
         setTimeout(() => {
             popup.classList.add('is-open');
         }, 1000);
@@ -447,6 +461,19 @@ function padronizacao_modo_escuro_e_cadastro() {
             background: var(--color-primary) !important;
             border-color: var(--color-primary) !important;
             color: #fff !important;
+        }
+        /* Labels e ícones dos filter-chip no modo escuro */
+        body.dark-mode .filter-chip .filter-chip__label,
+        body.dark-mode .filter-chip .filter-chip__icon {
+            color: var(--color-text) !important;
+        }
+        body.dark-mode .filter-chip.is-active .filter-chip__label,
+        body.dark-mode .filter-chip.is-active .filter-chip__icon {
+            color: #fff !important;
+        }
+        body.dark-mode .filter-chip:hover .filter-chip__label,
+        body.dark-mode .filter-chip:hover .filter-chip__icon {
+            color: var(--color-text) !important;
         }
         
         /* Botão "Limpar filtros" no modo escuro */
