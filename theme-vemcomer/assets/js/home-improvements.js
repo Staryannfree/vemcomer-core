@@ -438,21 +438,18 @@
         if (locationBtn) {
             locationBtn.style.cursor = 'pointer';
             locationBtn.style.pointerEvents = 'auto';
-            locationBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
+            // Usar exatamente a mesma lógica do botão da home que funciona
+            locationBtn.addEventListener('click', async () => {
                 if (!navigator.geolocation) {
                     alert('Geolocalização não suportada pelo seu navegador.');
                     return;
                 }
 
-                locationBtn.disabled = true;
                 locationBtn.classList.add('is-loading');
-                locationBtn.innerHTML = '<span>Obtendo localização...</span>';
+                locationBtn.disabled = true;
 
                 try {
-                    // Usar função de reverse geocoding se disponível
+                    // Usar reverse geocoding se disponível (mesma lógica do botão da home)
                     if (window.VemComerReverseGeocode) {
                         await window.VemComerReverseGeocode.getLocationAndFill({
                             fillCheckout: false,
@@ -460,13 +457,17 @@
                                 // Salvar que aceitou localização
                                 localStorage.setItem('vc_location_accepted', 'true');
                                 
-                                // Atualizar título do hero com nome da cidade
+                                // Atualizar título do hero
                                 updateHeroTitle(address.city || address.displayName);
+                                
+                                // Atualizar UI do botão do popup
+                                locationBtn.classList.remove('is-loading');
+                                locationBtn.disabled = false;
                                 
                                 // Fechar popup
                                 closePopup();
                                 
-                                // Ativar botão
+                                // Ativar botão da home
                                 const heroLocationBtn = document.getElementById('vc-use-location');
                                 if (heroLocationBtn) {
                                     heroLocationBtn.classList.add('is-active');
@@ -475,8 +476,7 @@
                                 // Recarregar restaurantes com distância
                                 loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
                                 
-                                // Mostrar mensagem de sucesso
-                                showNotification('Mostrando restaurantes próximos a você!', 'success');
+                                showNotification('Localização atualizada!', 'success');
                                 
                                 // Scroll suave para restaurantes
                                 setTimeout(() => {
@@ -487,24 +487,13 @@
                                 }, 500);
                             },
                             onError: (error) => {
-                                locationBtn.disabled = false;
                                 locationBtn.classList.remove('is-loading');
-                                locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Ver restaurantes perto de mim</span>';
-                                
-                                let errorMsg = 'Não foi possível obter sua localização.';
-                                if (error.code === error.PERMISSION_DENIED) {
-                                    errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador.';
-                                } else if (error.code === error.POSITION_UNAVAILABLE) {
-                                    errorMsg = 'Localização indisponível.';
-                                } else if (error.code === error.TIMEOUT) {
-                                    errorMsg = 'Tempo de espera esgotado. Tente novamente.';
-                                }
-                                
-                                alert(errorMsg);
+                                locationBtn.disabled = false;
+                                alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
                             }
                         });
                     } else {
-                        // Fallback se reverse geocoding não estiver disponível
+                        // Fallback sem reverse geocoding (mesma lógica do botão da home)
                         navigator.geolocation.getCurrentPosition(
                             (position) => {
                                 const lat = position.coords.latitude;
@@ -514,21 +503,14 @@
                                 localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                                 localStorage.setItem('vc_location_accepted', 'true');
                                 
-                                // Fazer reverse geocoding para obter cidade
-                                if (window.VemComerReverseGeocode) {
-                                    window.VemComerReverseGeocode.reverseGeocode(lat, lng)
-                                        .then(address => {
-                                            updateHeroTitle(address.city || address.displayName);
-                                        })
-                                        .catch(() => {
-                                            // Se falhar, manter título padrão
-                                        });
-                                }
+                                // Atualizar UI do botão do popup
+                                locationBtn.classList.remove('is-loading');
+                                locationBtn.disabled = false;
                                 
                                 // Fechar popup
                                 closePopup();
                                 
-                                // Ativar botão
+                                // Ativar botão da home
                                 const heroLocationBtn = document.getElementById('vc-use-location');
                                 if (heroLocationBtn) {
                                     heroLocationBtn.classList.add('is-active');
@@ -537,8 +519,7 @@
                                 // Recarregar restaurantes com distância
                                 loadRestaurantsWithLocation(lat, lng);
                                 
-                                // Mostrar mensagem de sucesso
-                                showNotification('Mostrando restaurantes próximos a você!', 'success');
+                                showNotification('Localização atualizada!', 'success');
                                 
                                 // Scroll suave para restaurantes
                                 setTimeout(() => {
@@ -549,33 +530,16 @@
                                 }, 500);
                             },
                             (error) => {
-                                locationBtn.disabled = false;
                                 locationBtn.classList.remove('is-loading');
-                                locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Ver restaurantes perto de mim</span>';
-                                
-                                let errorMsg = 'Não foi possível obter sua localização.';
-                                if (error.code === error.PERMISSION_DENIED) {
-                                    errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador.';
-                                } else if (error.code === error.POSITION_UNAVAILABLE) {
-                                    errorMsg = 'Localização indisponível.';
-                                } else if (error.code === error.TIMEOUT) {
-                                    errorMsg = 'Tempo de espera esgotado. Tente novamente.';
-                                }
-                                
-                                alert(errorMsg);
-                            },
-                            {
-                                enableHighAccuracy: true,
-                                timeout: 10000,
-                                maximumAge: 0
+                                locationBtn.disabled = false;
+                                alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
                             }
                         );
                     }
                 } catch (error) {
-                    locationBtn.disabled = false;
                     locationBtn.classList.remove('is-loading');
-                    locationBtn.innerHTML = '<span class="btn-icon">📍</span><span>Ver restaurantes perto de mim</span>';
-                    alert('Erro ao processar localização. Tente novamente.');
+                    locationBtn.disabled = false;
+                    alert('Erro ao processar localização.');
                 }
             });
         }
