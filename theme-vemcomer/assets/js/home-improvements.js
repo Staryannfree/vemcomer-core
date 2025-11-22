@@ -559,7 +559,19 @@
             updateHeroTitleFromLocation();
         }
 
-        // Mostrar popup após delay
+        // Verificar se deve mostrar o popup:
+        // 1. Se já tem localização salva, não mostrar
+        if (savedLocation) {
+            return; // Já tem localização, não precisa mostrar popup
+        }
+
+        // 2. Verificar se popup já foi visto (cookie)
+        const popupSeen = document.cookie.split(';').some(c => c.trim().startsWith('vc_welcome_popup_seen=1'));
+        if (popupSeen) {
+            return; // Já foi visto antes, não mostrar novamente
+        }
+
+        // 3. Se chegou aqui, mostrar popup (primeira visita e sem localização)
         setTimeout(() => {
             popup.classList.add('is-open');
         }, 1500);
