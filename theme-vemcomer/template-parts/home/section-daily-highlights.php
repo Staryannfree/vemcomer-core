@@ -21,13 +21,54 @@ if ( is_string( $menu_items_ids ) && ! empty( $menu_items_ids ) ) {
     $menu_items_ids = array_filter( $menu_items_ids );
 }
 
+// Se não houver itens selecionados, buscar produtos recentes como fallback
+// (igual às categorias - sempre tentar mostrar algo)
+if ( empty( $menu_items_ids ) ) {
+    // Verificar se o post type existe
+    if ( ! post_type_exists( 'vc_menu_item' ) ) {
+        return; // Se o post type não existir, não exibir
+    }
+    
+    // Fallback: buscar produtos recentes de qualquer restaurante
+    $fallback_query = new WP_Query([
+        'post_type'      => 'vc_menu_item',
+        'posts_per_page' => $quantidade,
+        'post_status'    => 'publish',
+        'meta_query'     => [
+            [
+                'key'   => '_vc_is_available',
+                'value' => '1',
+            ],
+        ],
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    ]);
+    
+    if ( $fallback_query->have_posts() ) {
+        $menu_items_ids = wp_list_pluck( $fallback_query->posts, 'ID' );
+        wp_reset_postdata();
+    } else {
+        // Se não houver produtos disponíveis, buscar sem filtro de disponibilidade
+        $fallback_query = new WP_Query([
+            'post_type'      => 'vc_menu_item',
+            'posts_per_page' => $quantidade,
+            'post_status'    => 'publish',
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+        ]);
+        
+        if ( $fallback_query->have_posts() ) {
+            $menu_items_ids = wp_list_pluck( $fallback_query->posts, 'ID' );
+            wp_reset_postdata();
+        } else {
+            // Se não houver produtos no banco, não exibir a seção
+            return;
+        }
+    }
+}
+
 // Limitar quantidade
 $menu_items_ids = array_slice( $menu_items_ids, 0, $quantidade );
-
-// Se não houver itens selecionados, não exibir a seção
-if ( empty( $menu_items_ids ) ) {
-    return;
-}
 
 // Buscar os menu items
 $highlights_query = new WP_Query([

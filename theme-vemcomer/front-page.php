@@ -72,10 +72,16 @@ if ( ! empty( $options['banners_section']['ativo'] ) ) {
     get_template_part( 'template-parts/home/section', 'banners', [ 'args' => $options['banners_section'] ] );
 }
 
-// Seção 4: Destaques do Dia
-if ( ! empty( $options['daily_highlights_section']['ativo'] ) ) {
-    get_template_part( 'template-parts/home/section', 'daily-highlights', [ 'args' => $options['daily_highlights_section'] ] );
+// Seção 4: Destaques do Dia - Sempre mostrar, mesmo se não estiver nas configurações
+if ( empty( $options['daily_highlights_section']['ativo'] ) ) {
+    $options['daily_highlights_section'] = [ 
+        'ativo'     => true,
+        'titulo'    => __( 'Destaques do Dia', 'vemcomer' ),
+        'menu_items' => [],
+        'quantidade' => 6,
+    ];
 }
+get_template_part( 'template-parts/home/section', 'daily-highlights', [ 'args' => $options['daily_highlights_section'] ] );
 
 // Seção 5: Restaurantes em Destaque
 if ( ! empty( $options['featured_section']['ativo'] ) ) {
