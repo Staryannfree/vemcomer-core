@@ -212,19 +212,47 @@ function popup_boas_vindas_independente() {
             document.cookie = `${name}=${value}; path=/; expires=${expires.toUTCString()}`;
         }
 
-        // Verificar se já existe localização salva em cookie
-        const savedLocation = getCookie('vc_user_location');
-        if (savedLocation) {
-            try {
-                const locationData = JSON.parse(savedLocation);
+        // Verificar se já existe localização salva em cookie OU localStorage
+        const savedLocationCookie = getCookie('vc_user_location');
+        const savedLocationStorage = localStorage.getItem('vc_user_location');
+        
+        console.log('POPUP: Verificando localização salva...');
+        console.log('POPUP: Cookie:', savedLocationCookie ? 'Encontrado' : 'Não encontrado');
+        console.log('POPUP: LocalStorage:', savedLocationStorage ? 'Encontrado' : 'Não encontrado');
+        
+        // Se tiver localização salva (cookie ou localStorage), não mostrar popup
+        if (savedLocationCookie || savedLocationStorage) {
+            let locationData = null;
+            
+            // Priorizar cookie
+            if (savedLocationCookie) {
+                try {
+                    locationData = JSON.parse(savedLocationCookie);
+                    console.log('POPUP: Localização encontrada no cookie:', locationData.lat, locationData.lng);
+                } catch (e) {
+                    console.error('POPUP: Erro ao ler cookie de localização:', e);
+                }
+            }
+            
+            // Fallback para localStorage
+            if (!locationData && savedLocationStorage) {
+                try {
+                    locationData = JSON.parse(savedLocationStorage);
+                    console.log('POPUP: Localização encontrada no localStorage:', locationData.lat, locationData.lng);
+                } catch (e) {
+                    console.error('POPUP: Erro ao ler localStorage de localização:', e);
+                }
+            }
+            
+            // Se encontrou localização, aplicar e não mostrar popup
+            if (locationData && locationData.lat && locationData.lng) {
                 const lat = locationData.lat;
                 const lng = locationData.lng;
                 const city = locationData.city || '';
 
-                console.log('POPUP: Localização encontrada no cookie:', lat, lng);
-
-                // Não mostrar popup se já tem localização
+                // IMPORTANTE: Esconder popup IMEDIATAMENTE se já tem localização
                 popup.classList.remove('is-open');
+                popup.style.display = 'none'; // Força esconder
 
                 // Esconder botão de localização
                 const heroLocationActions = document.getElementById('hero-location-actions');
@@ -251,31 +279,54 @@ function popup_boas_vindas_independente() {
                     } else if (window.loadRestaurantsWithLocation) {
                         window.loadRestaurantsWithLocation(lat, lng);
                     }
-                } else if (window.loadRestaurantsWithLocation) {
+                } else if (window.loadRestaurantsWithLocation && lat && lng) {
                     window.loadRestaurantsWithLocation(lat, lng);
                 }
 
-                // Salvar também no localStorage para compatibilidade
-                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-                if (city) {
-                    localStorage.setItem('vc_user_city', city);
+                // Sincronizar: se tinha só no localStorage, salvar no cookie também
+                if (!savedLocationCookie && savedLocationStorage) {
+                    const locationDataForCookie = {
+                        lat: lat,
+                        lng: lng,
+                        city: city
+                    };
+                    setCookie('vc_user_location', JSON.stringify(locationDataForCookie), 30);
                 }
 
-                return; // Não mostrar popup
-            } catch (e) {
-                console.error('POPUP: Erro ao ler cookie de localização:', e);
+                // Sincronizar: se tinha só no cookie, salvar no localStorage também
+                if (savedLocationCookie && !savedLocationStorage) {
+                    localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                    if (city) {
+                        localStorage.setItem('vc_user_city', city);
+                    }
+                }
+
+                console.log('POPUP: Localização já detectada, popup NÃO será exibido.');
+                return; // CRÍTICO: Não mostrar popup - para aqui
             }
         }
 
-        // Verificar se popup já foi visto (cookie antigo)
+        // Verificar se popup já foi visto (cookie antigo) - só se não tiver localização
         const popupSeen = getCookie('vc_welcome_popup_seen');
         if (popupSeen) {
             console.log('POPUP: Já foi visto anteriormente, não mostrar.');
+            popup.classList.remove('is-open');
+            popup.style.display = 'none'; // Força esconder
             return; // Não mostrar popup
         }
 
-        // 1. Abre o popup após 1s (só se não tiver localização salva)
+        // Só mostrar popup se NÃO tiver localização salva E não foi visto antes
+        console.log('POPUP: Nenhuma localização detectada, exibindo popup em 1 segundo...');
         setTimeout(() => {
+            // Verificar novamente antes de mostrar (pode ter sido salvo entre o check e o timeout)
+            const lastCheckCookie = getCookie('vc_user_location');
+            const lastCheckStorage = localStorage.getItem('vc_user_location');
+            
+            if (lastCheckCookie || lastCheckStorage) {
+                console.log('POPUP: Localização detectada durante o delay, cancelando exibição.');
+                return; // Não mostrar se localização foi detectada
+            }
+            
             popup.classList.add('is-open');
         }, 1000);
 
