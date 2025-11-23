@@ -197,7 +197,84 @@ function popup_boas_vindas_independente() {
 
         console.log('POPUP: Script Independente Iniciado.');
 
-        // 1. Abre o popup após 1s
+        // Função auxiliar para obter cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // Função auxiliar para salvar cookie
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value}; path=/; expires=${expires.toUTCString()}`;
+        }
+
+        // Verificar se já existe localização salva em cookie
+        const savedLocation = getCookie('vc_user_location');
+        if (savedLocation) {
+            try {
+                const locationData = JSON.parse(savedLocation);
+                const lat = locationData.lat;
+                const lng = locationData.lng;
+                const city = locationData.city || '';
+
+                console.log('POPUP: Localização encontrada no cookie:', lat, lng);
+
+                // Não mostrar popup se já tem localização
+                popup.classList.remove('is-open');
+
+                // Esconder botão de localização
+                const heroLocationActions = document.getElementById('hero-location-actions');
+                if (heroLocationActions) {
+                    heroLocationActions.style.display = 'none';
+                }
+
+                // Usar localização salva para filtrar dados
+                if (city) {
+                    // Atualizar título do hero se existir
+                    const heroTitle = document.getElementById('hero-title');
+                    if (heroTitle) {
+                        heroTitle.textContent = 'Peça dos melhores restaurantes de ' + city;
+                    }
+
+                    // Atualizar subtítulo com número de restaurantes se a função existir
+                    if (window.updateHeroSubtitleWithRestaurantCount) {
+                        window.updateHeroSubtitleWithRestaurantCount(city);
+                    }
+
+                    // Filtrar restaurantes por cidade se a função existir
+                    if (window.filterRestaurantsByCity) {
+                        window.filterRestaurantsByCity(city);
+                    } else if (window.loadRestaurantsWithLocation) {
+                        window.loadRestaurantsWithLocation(lat, lng);
+                    }
+                } else if (window.loadRestaurantsWithLocation) {
+                    window.loadRestaurantsWithLocation(lat, lng);
+                }
+
+                // Salvar também no localStorage para compatibilidade
+                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+                if (city) {
+                    localStorage.setItem('vc_user_city', city);
+                }
+
+                return; // Não mostrar popup
+            } catch (e) {
+                console.error('POPUP: Erro ao ler cookie de localização:', e);
+            }
+        }
+
+        // Verificar se popup já foi visto (cookie antigo)
+        const popupSeen = getCookie('vc_welcome_popup_seen');
+        if (popupSeen) {
+            console.log('POPUP: Já foi visto anteriormente, não mostrar.');
+            return; // Não mostrar popup
+        }
+
+        // 1. Abre o popup após 1s (só se não tiver localização salva)
         setTimeout(() => {
             popup.classList.add('is-open');
         }, 1000);
@@ -230,9 +307,6 @@ function popup_boas_vindas_independente() {
                         console.log('POPUP: Sucesso!', lat, lng);
                         btn.innerText = '🔄 Atualizando...';
 
-                        // Salvar localização no localStorage
-                        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
-
                         // Esconder o botão de localização após obter localização
                         const heroLocationActions = document.getElementById('hero-location-actions');
                         if (heroLocationActions) {
@@ -250,7 +324,16 @@ function popup_boas_vindas_independente() {
                                                 data.display_name?.split(',')[0] || 
                                                 'Localização desconhecida';
                                 
-                                // Salvar cidade no localStorage
+                                // Salvar localização em COOKIE (30 dias) - PRINCIPAL
+                                const locationData = {
+                                    lat: lat,
+                                    lng: lng,
+                                    city: cityName
+                                };
+                                setCookie('vc_user_location', JSON.stringify(locationData), 30);
+                                
+                                // Salvar também no localStorage para compatibilidade
+                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                                 localStorage.setItem('vc_user_city', cityName);
                                 
                                 // Atualizar título do hero se existir
@@ -272,7 +355,7 @@ function popup_boas_vindas_independente() {
                                 }
                                 
                                 // Fecha o popup após processar
-                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                                setCookie('vc_welcome_popup_seen', '1', 30);
                                 popup.classList.remove('is-open');
                                 
                                 // Restaurar texto do botão
@@ -284,11 +367,20 @@ function popup_boas_vindas_independente() {
                             .catch(error => {
                                 console.error('Erro ao obter nome da cidade:', error);
                                 
-                                // Mesmo sem cidade, salva a localização
+                                // Mesmo sem cidade, salva a localização em COOKIE
+                                const locationData = {
+                                    lat: lat,
+                                    lng: lng,
+                                    city: ''
+                                };
+                                setCookie('vc_user_location', JSON.stringify(locationData), 30);
+                                
+                                // Salvar também no localStorage para compatibilidade
+                                localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                                 localStorage.setItem('vc_user_city', 'Localização obtida');
                                 
                                 // Fecha o popup
-                                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                                setCookie('vc_welcome_popup_seen', '1', 30);
                                 popup.classList.remove('is-open');
                                 
                                 // Restaurar texto do botão
@@ -313,7 +405,8 @@ function popup_boas_vindas_independente() {
             if (e.target.closest('.welcome-popup__close') || e.target.id === 'welcome-popup-skip-btn') {
                 e.preventDefault();
                 popup.classList.remove('is-open');
-                document.cookie = "vc_welcome_popup_seen=1; path=/; max-age=3600";
+                // Salvar cookie de popup visto (30 dias)
+                setCookie('vc_welcome_popup_seen', '1', 30);
             }
 
             // Clicar fora
@@ -794,11 +887,53 @@ function mensagem_localizacao_botao_home() {
                 });
         }
         
+        // Função auxiliar para obter cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
         // Função para esconder o botão de localização se já tiver localização salva
         function hideLocationButtonIfExists() {
             const heroLocationActions = document.getElementById('hero-location-actions');
             if (!heroLocationActions) return;
             
+            // Verificar cookie primeiro (prioridade)
+            const savedLocationCookie = getCookie('vc_user_location');
+            if (savedLocationCookie) {
+                try {
+                    const locationData = JSON.parse(savedLocationCookie);
+                    heroLocationActions.style.display = 'none';
+                    
+                    // Aplicar localização salva
+                    if (locationData.city) {
+                        const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
+                        if (heroTitle) {
+                            heroTitle.textContent = 'Peça dos melhores restaurantes de ' + locationData.city;
+                        }
+                        
+                        if (window.updateHeroSubtitleWithRestaurantCount) {
+                            window.updateHeroSubtitleWithRestaurantCount(locationData.city);
+                        }
+                        
+                        if (window.filterRestaurantsByCity) {
+                            window.filterRestaurantsByCity(locationData.city);
+                        } else if (window.loadRestaurantsWithLocation && locationData.lat && locationData.lng) {
+                            window.loadRestaurantsWithLocation(locationData.lat, locationData.lng);
+                        }
+                    } else if (window.loadRestaurantsWithLocation && locationData.lat && locationData.lng) {
+                        window.loadRestaurantsWithLocation(locationData.lat, locationData.lng);
+                    }
+                    
+                    return; // Já aplicou, não precisa verificar localStorage
+                } catch (e) {
+                    console.error('Erro ao ler cookie de localização:', e);
+                }
+            }
+            
+            // Fallback: verificar localStorage
             const savedLocation = localStorage.getItem('vc_user_location');
             if (savedLocation) {
                 heroLocationActions.style.display = 'none';
@@ -848,7 +983,21 @@ function mensagem_localizacao_botao_home() {
                             // Mostrar mensagem na tela
                             window.showLocationMessage('Você está em: ' + cityName);
                             
-                            // Salvar no localStorage
+                            // Salvar em COOKIE (30 dias) - PRINCIPAL
+                            function setCookie(name, value, days) {
+                                const expires = new Date();
+                                expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+                                document.cookie = `${name}=${value}; path=/; expires=${expires.toUTCString()}`;
+                            }
+                            
+                            const locationData = {
+                                lat: lat,
+                                lng: lng,
+                                city: cityName
+                            };
+                            setCookie('vc_user_location', JSON.stringify(locationData), 30);
+                            
+                            // Salvar também no localStorage para compatibilidade
                             localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                             localStorage.setItem('vc_user_city', cityName);
                             
