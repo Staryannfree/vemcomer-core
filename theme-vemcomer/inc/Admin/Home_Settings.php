@@ -191,6 +191,46 @@ class VemComer_Home_Settings {
             ]
         );
 
+        add_settings_field(
+            'featured_titulo',
+            __( 'Título da Seção', 'vemcomer' ),
+            [ $this, 'render_text_field' ],
+            'vemcomer_home_settings',
+            'vemcomer_featured_section',
+            [
+                'option_key' => 'featured_section',
+                'field_key'  => 'titulo',
+                'default'    => __( 'Restaurantes em Destaque', 'vemcomer' ),
+            ]
+        );
+
+        add_settings_field(
+            'featured_restaurants',
+            __( 'Selecionar Restaurantes', 'vemcomer' ),
+            [ $this, 'render_restaurants_selector' ],
+            'vemcomer_home_settings',
+            'vemcomer_featured_section',
+            [
+                'option_key' => 'featured_section',
+                'field_key'  => 'restaurant_ids',
+            ]
+        );
+
+        add_settings_field(
+            'featured_quantidade',
+            __( 'Quantidade Máxima de Restaurantes', 'vemcomer' ),
+            [ $this, 'render_number_field' ],
+            'vemcomer_home_settings',
+            'vemcomer_featured_section',
+            [
+                'option_key' => 'featured_section',
+                'field_key'  => 'quantidade',
+                'default'    => 6,
+                'min'        => 1,
+                'max'        => 20,
+            ]
+        );
+
         // Seção: Listagem de Restaurantes
         add_settings_section(
             'vemcomer_restaurants_section',
@@ -402,7 +442,10 @@ class VemComer_Home_Settings {
                 'ativo' => true,
             ],
             'featured_section' => [
-                'ativo' => true,
+                'ativo'        => true,
+                'titulo'       => __( 'Restaurantes em Destaque', 'vemcomer' ),
+                'restaurant_ids' => [], // Array de IDs de restaurantes
+                'quantidade'   => 6,
             ],
             'restaurants_section' => [
                 'ativo'      => true,
@@ -456,8 +499,8 @@ class VemComer_Home_Settings {
                         $sanitized[ $section_key ][ $field_key ] = absint( $input[ $section_key ][ $field_key ] );
                     } elseif ( is_string( $default_value ) ) {
                         $sanitized[ $section_key ][ $field_key ] = sanitize_text_field( $input[ $section_key ][ $field_key ] );
-                    } elseif ( is_array( $default_value ) || $field_key === 'menu_items' ) {
-                        // Tratar array de menu items
+                    } elseif ( is_array( $default_value ) || $field_key === 'menu_items' || $field_key === 'restaurant_ids' ) {
+                        // Tratar array de menu items ou restaurant_ids
                         $value = $input[ $section_key ][ $field_key ];
                         if ( is_string( $value ) && ! empty( $value ) ) {
                             // Se vier como string separada por vírgula
@@ -818,6 +861,201 @@ class VemComer_Home_Settings {
             $(document).on('mouseenter', '.vc-search-item', function() {
                 $(this).css('background', '#f0f0f0');
             }).on('mouseleave', '.vc-search-item', function() {
+                $(this).css('background', '');
+            });
+        })(jQuery);
+        </script>
+        <?php
+    }
+
+    /**
+     * Renderiza seletor de restaurantes
+     */
+    public function render_restaurants_selector( $args ): void {
+        $options    = get_option( self::OPTION_NAME, $this->get_default_options() );
+        $option_key = $args['option_key'];
+        $field_key  = $args['field_key'];
+        $selected_ids = $options[ $option_key ][ $field_key ] ?? [];
+        if ( ! is_array( $selected_ids ) ) {
+            $selected_ids = ! empty( $selected_ids ) ? explode( ',', $selected_ids ) : [];
+        }
+        $selected_ids = array_map( 'absint', $selected_ids );
+        $selected_ids = array_filter( $selected_ids );
+
+        // Buscar todos os restaurantes
+        $all_restaurants = get_posts( [
+            'post_type'      => 'vc_restaurant',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ] );
+
+        // Buscar restaurantes selecionados
+        $selected_restaurants = [];
+        if ( ! empty( $selected_ids ) ) {
+            $selected_restaurants = get_posts( [
+                'post_type'      => 'vc_restaurant',
+                'post__in'       => $selected_ids,
+                'posts_per_page' => -1,
+                'orderby'        => 'post__in',
+            ] );
+        }
+
+        $name = self::OPTION_NAME . '[' . $option_key . '][' . $field_key . ']';
+        ?>
+        <div id="vc-featured-restaurants-selector" style="max-width: 800px;">
+            <!-- Campo oculto para armazenar IDs -->
+            <input type="hidden" name="<?php echo esc_attr( $name ); ?>" id="vc-selected-restaurants" value="<?php echo esc_attr( implode( ',', $selected_ids ) ); ?>" />
+            
+            <!-- Busca -->
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="text" 
+                    id="vc-restaurant-search" 
+                    placeholder="<?php esc_attr_e( 'Buscar restaurante...', 'vemcomer' ); ?>" 
+                    class="regular-text"
+                    style="width: 100%; padding: 8px;"
+                />
+            </div>
+
+            <!-- Lista de selecionados -->
+            <div id="vc-selected-restaurants-list" style="margin-bottom: 20px; min-height: 50px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9; border-radius: 4px;">
+                <strong><?php esc_html_e( 'Restaurantes Selecionados:', 'vemcomer' ); ?></strong>
+                <div id="vc-selected-restaurants-container" style="margin-top: 10px;">
+                    <?php if ( ! empty( $selected_restaurants ) ) : ?>
+                        <?php foreach ( $selected_restaurants as $restaurant ) : ?>
+                            <?php
+                            $rating = get_post_meta( $restaurant->ID, '_vc_restaurant_rating_avg', true );
+                            $cuisine_terms = get_the_terms( $restaurant->ID, 'vc_cuisine' );
+                            $cuisine = $cuisine_terms && ! is_wp_error( $cuisine_terms ) ? $cuisine_terms[0]->name : '';
+                            ?>
+                            <div class="vc-selected-restaurant" data-id="<?php echo esc_attr( $restaurant->ID ); ?>" style="display: inline-block; margin: 5px; padding: 8px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px;">
+                                <strong><?php echo esc_html( $restaurant->post_title ); ?></strong>
+                                <?php if ( $cuisine ) : ?>
+                                    <span style="color: #666; font-size: 0.9em;"> - <?php echo esc_html( $cuisine ); ?></span>
+                                <?php endif; ?>
+                                <?php if ( $rating ) : ?>
+                                    <span style="color: #f59e0b; font-weight: bold;"> - ⭐ <?php echo esc_html( number_format( (float) $rating, 1 ) ); ?></span>
+                                <?php endif; ?>
+                                <button type="button" class="vc-remove-restaurant" data-id="<?php echo esc_attr( $restaurant->ID ); ?>" style="margin-left: 8px; color: #dc3232; cursor: pointer; border: none; background: none;">✕</button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <p style="color: #999; font-style: italic;"><?php esc_html_e( 'Nenhum restaurante selecionado. Use a busca abaixo para adicionar.', 'vemcomer' ); ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Lista de resultados da busca -->
+            <div id="vc-restaurant-search-results" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 4px; display: none;">
+                <div id="vc-restaurant-search-results-list"></div>
+            </div>
+        </div>
+
+        <script>
+        (function($) {
+            var selectedIds = <?php echo wp_json_encode( $selected_ids ); ?>;
+            var allRestaurants = <?php echo wp_json_encode( array_map( function( $restaurant ) {
+                $rating = get_post_meta( $restaurant->ID, '_vc_restaurant_rating_avg', true );
+                $cuisine_terms = get_the_terms( $restaurant->ID, 'vc_cuisine' );
+                $cuisine = $cuisine_terms && ! is_wp_error( $cuisine_terms ) ? $cuisine_terms[0]->name : '';
+                return [
+                    'id' => $restaurant->ID,
+                    'title' => $restaurant->post_title,
+                    'cuisine' => $cuisine ? $cuisine : '',
+                    'rating' => $rating ? number_format( (float) $rating, 1 ) : '',
+                ];
+            }, $all_restaurants ) ); ?>;
+
+            function updateRestaurantsHiddenField() {
+                $('#vc-selected-restaurants').val( selectedIds.join(',') );
+            }
+
+            function renderSelectedRestaurants() {
+                var container = $('#vc-selected-restaurants-container');
+                if (selectedIds.length === 0) {
+                    container.html('<p style="color: #999; font-style: italic;"><?php esc_html_e( 'Nenhum restaurante selecionado. Use a busca abaixo para adicionar.', 'vemcomer' ); ?></p>');
+                    return;
+                }
+
+                var html = '';
+                allRestaurants.forEach(function(restaurant) {
+                    if (selectedIds.indexOf(restaurant.id) !== -1) {
+                        html += '<div class="vc-selected-restaurant" data-id="' + restaurant.id + '" style="display: inline-block; margin: 5px; padding: 8px 12px; background: #fff; border: 1px solid #ccc; border-radius: 4px;">';
+                        html += '<strong>' + restaurant.title + '</strong>';
+                        if (restaurant.cuisine) {
+                            html += '<span style="color: #666; font-size: 0.9em;"> - ' + restaurant.cuisine + '</span>';
+                        }
+                        if (restaurant.rating) {
+                            html += '<span style="color: #f59e0b; font-weight: bold;"> - ⭐ ' + restaurant.rating + '</span>';
+                        }
+                        html += '<button type="button" class="vc-remove-restaurant" data-id="' + restaurant.id + '" style="margin-left: 8px; color: #dc3232; cursor: pointer; border: none; background: none;">✕</button>';
+                        html += '</div>';
+                    }
+                });
+                container.html(html);
+            }
+
+            // Busca
+            $('#vc-restaurant-search').on('input', function() {
+                var search = $(this).val().toLowerCase();
+                if (search.length < 2) {
+                    $('#vc-restaurant-search-results').hide();
+                    return;
+                }
+
+                var results = allRestaurants.filter(function(restaurant) {
+                    return selectedIds.indexOf(restaurant.id) === -1 && 
+                           (restaurant.title.toLowerCase().indexOf(search) !== -1 || 
+                            restaurant.cuisine.toLowerCase().indexOf(search) !== -1);
+                });
+
+                if (results.length === 0) {
+                    $('#vc-restaurant-search-results-list').html('<p style="color: #999; padding: 10px;"><?php esc_html_e( 'Nenhum resultado encontrado.', 'vemcomer' ); ?></p>');
+                } else {
+                    var html = '';
+                    results.slice(0, 20).forEach(function(restaurant) {
+                        html += '<div class="vc-search-restaurant" data-id="' + restaurant.id + '" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;">';
+                        html += '<strong>' + restaurant.title + '</strong>';
+                        if (restaurant.cuisine) {
+                            html += '<span style="color: #666; font-size: 0.9em; margin-left: 10px;">(' + restaurant.cuisine + ')</span>';
+                        }
+                        if (restaurant.rating) {
+                            html += '<span style="color: #f59e0b; font-weight: bold; float: right;">⭐ ' + restaurant.rating + '</span>';
+                        }
+                        html += '</div>';
+                    });
+                    $('#vc-restaurant-search-results-list').html(html);
+                }
+                $('#vc-restaurant-search-results').show();
+            });
+
+            // Adicionar restaurante
+            $(document).on('click', '.vc-search-restaurant', function() {
+                var id = parseInt($(this).data('id'));
+                if (selectedIds.indexOf(id) === -1) {
+                    selectedIds.push(id);
+                    updateRestaurantsHiddenField();
+                    renderSelectedRestaurants();
+                    $('#vc-restaurant-search').val('').trigger('input');
+                }
+            });
+
+            // Remover restaurante
+            $(document).on('click', '.vc-remove-restaurant', function() {
+                var id = parseInt($(this).data('id'));
+                selectedIds = selectedIds.filter(function(restId) {
+                    return restId !== id;
+                });
+                updateRestaurantsHiddenField();
+                renderSelectedRestaurants();
+            });
+
+            // Hover nos resultados
+            $(document).on('mouseenter', '.vc-search-restaurant', function() {
+                $(this).css('background', '#f0f0f0');
+            }).on('mouseleave', '.vc-search-restaurant', function() {
                 $(this).css('background', '');
             });
         })(jQuery);
