@@ -61,20 +61,31 @@
     color: var(--color-text-light);
 }
 
-/* Categorias Populares */
+/* Categorias Populares - Carrossel */
 .home-categories {
     padding: var(--spacing-xl) 0;
     background: var(--color-bg-light);
 }
 
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: var(--spacing-md);
+.categories-carousel-wrapper {
+    position: relative;
     margin-top: var(--spacing-lg);
 }
 
+.categories-carousel {
+    overflow: hidden;
+    position: relative;
+}
+
+.categories-carousel__track {
+    display: flex;
+    gap: var(--spacing-md);
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
 .category-card {
+    flex: 0 0 140px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -85,6 +96,7 @@
     text-decoration: none;
     color: var(--color-text);
     transition: all 0.2s;
+    min-width: 140px;
 }
 
 .category-card:hover {
@@ -96,6 +108,7 @@
 .category-card__icon {
     font-size: 3rem;
     margin-bottom: var(--spacing-xs);
+    line-height: 1;
 }
 
 .category-card__name {
@@ -103,12 +116,82 @@
     font-size: 1rem;
     font-weight: 600;
     color: var(--color-text);
+    text-align: center;
 }
 
 .category-card__count {
     margin: 0;
     font-size: 0.85rem;
     color: var(--color-text-light);
+    text-align: center;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s;
+    color: var(--color-text);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-btn:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(47, 158, 68, 0.3);
+}
+
+.carousel-btn--prev {
+    left: -22px;
+}
+
+.carousel-btn--next {
+    right: -22px;
+}
+
+.carousel-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .category-card {
+        flex: 0 0 120px;
+        min-width: 120px;
+        padding: var(--spacing-sm);
+    }
+    
+    .category-card__icon {
+        font-size: 2.5rem;
+    }
+    
+    .category-card__name {
+        font-size: 0.9rem;
+    }
+    
+    .carousel-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .carousel-btn--prev {
+        left: -18px;
+    }
+    
+    .carousel-btn--next {
+        right: -18px;
+    }
 }
 
 /* Restaurantes em Destaque */

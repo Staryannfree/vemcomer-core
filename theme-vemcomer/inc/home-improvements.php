@@ -63,37 +63,71 @@ function vemcomer_home_quick_filters() {
 }
 
 /**
- * Adiciona seção de categorias populares
+ * Adiciona seção de categorias populares em formato carrossel
  */
 function vemcomer_home_popular_categories() {
     if ( ! function_exists( 'vemcomer_is_plugin_active' ) || ! vemcomer_is_plugin_active() ) {
         return '';
     }
 
-    $categories = [
-        ['slug' => 'pizza', 'name' => 'Pizza', 'icon' => '🍕'],
-        ['slug' => 'lanches', 'name' => 'Lanches', 'icon' => '🍔'],
-        ['slug' => 'sushi', 'name' => 'Sushi', 'icon' => '🍣'],
-        ['slug' => 'brasileira', 'name' => 'Brasileira', 'icon' => '🇧🇷'],
-        ['slug' => 'arabe', 'name' => 'Árabe', 'icon' => '🥙'],
-        ['slug' => 'doces', 'name' => 'Doces', 'icon' => '🍰'],
-        ['slug' => 'bebidas', 'name' => 'Bebidas', 'icon' => '🥤'],
+    // Mapeamento de ícones para categorias
+    $icon_map = [
+        'pizza' => '🍕',
+        'lanches' => '🍔',
+        'hamburguer' => '🍔',
+        'sushi' => '🍣',
+        'brasileira' => '🇧🇷',
+        'arabe' => '🥙',
+        'doces' => '🍰',
+        'sobremesas' => '🍰',
+        'bebidas' => '🥤',
+        'bares' => '🍺',
+        'frutos-do-mar' => '🐟',
+        'vegetariana' => '🥗',
+        'churrasco' => '🥩',
+        'cafe-da-manha' => '☕',
+        'cafe' => '☕',
+        'cafes' => '☕',
+        'saudavel' => '🥗',
+        'pet-friendly' => '🐾',
+        'drinks' => '🍹',
+        'italiana' => '🍝',
+        'japonesa' => '🍱',
+        'chinesa' => '🥟',
+        'mexicana' => '🌮',
+        'francesa' => '🥐',
+        'indiana' => '🍛',
+        'massas' => '🍝',
+        'salgados' => '🥐',
+        'acai' => '🥤',
+        'sorvete' => '🍦',
     ];
 
-    // Buscar termos reais e contar restaurantes
+    // Buscar TODAS as categorias reais do WordPress
+    $terms = get_terms( [
+        'taxonomy'   => 'vc_cuisine',
+        'hide_empty' => true,
+        'orderby'    => 'count',
+        'order'      => 'DESC',
+    ] );
+
+    if ( is_wp_error( $terms ) || empty( $terms ) ) {
+        return '';
+    }
+
+    // Preparar categorias com ícones
     $real_categories = [];
-    foreach ( $categories as $cat ) {
-        $term = get_term_by( 'slug', $cat['slug'], 'vc_cuisine' );
-        if ( $term && ! is_wp_error( $term ) ) {
-            $count = $term->count;
-            $real_categories[] = [
-                'slug' => $cat['slug'],
-                'name' => $cat['name'],
-                'icon' => $cat['icon'],
-                'count' => $count,
-                'url' => add_query_arg( 'cuisine', $cat['slug'], home_url( '/restaurantes/' ) ),
-            ];
-        }
+    foreach ( $terms as $term ) {
+        $slug = $term->slug;
+        $icon = $icon_map[ $slug ] ?? '🍽️'; // Ícone padrão se não encontrar
+        
+        $real_categories[] = [
+            'slug'  => $slug,
+            'name'  => $term->name,
+            'icon'  => $icon,
+            'count' => $term->count,
+            'url'   => add_query_arg( 'cuisine', $slug, home_url( '/restaurantes/' ) ),
+        ];
     }
 
     if ( empty( $real_categories ) ) {
@@ -105,14 +139,24 @@ function vemcomer_home_popular_categories() {
     <section class="home-categories">
         <div class="container">
             <h2 class="section-title"><?php esc_html_e( 'Categorias populares', 'vemcomer' ); ?></h2>
-            <div class="categories-grid">
-                <?php foreach ( $real_categories as $cat ) : ?>
-                    <a href="<?php echo esc_url( $cat['url'] ); ?>" class="category-card">
-                        <div class="category-card__icon"><?php echo esc_html( $cat['icon'] ); ?></div>
-                        <h3 class="category-card__name"><?php echo esc_html( $cat['name'] ); ?></h3>
-                        <p class="category-card__count"><?php echo esc_html( sprintf( _n( '%d restaurante', '%d restaurantes', $cat['count'], 'vemcomer' ), $cat['count'] ) ); ?></p>
-                    </a>
-                <?php endforeach; ?>
+            <div class="categories-carousel-wrapper">
+                <button class="carousel-btn carousel-btn--prev" aria-label="<?php esc_attr_e( 'Anterior', 'vemcomer' ); ?>">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="categories-carousel" id="categories-carousel">
+                    <div class="categories-carousel__track">
+                        <?php foreach ( $real_categories as $cat ) : ?>
+                            <a href="<?php echo esc_url( $cat['url'] ); ?>" class="category-card">
+                                <div class="category-card__icon"><?php echo esc_html( $cat['icon'] ); ?></div>
+                                <h3 class="category-card__name"><?php echo esc_html( $cat['name'] ); ?></h3>
+                                <p class="category-card__count"><?php echo esc_html( sprintf( _n( '%d restaurante', '%d restaurantes', $cat['count'], 'vemcomer' ), $cat['count'] ) ); ?></p>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-btn--next" aria-label="<?php esc_attr_e( 'Próximo', 'vemcomer' ); ?>">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
     </section>

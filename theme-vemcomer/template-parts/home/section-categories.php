@@ -23,3 +23,8 @@ if ( function_exists( 'vemcomer_home_popular_categories' ) ) {
     echo vemcomer_home_popular_categories(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 
+// Carregar Font Awesome se necessário (para os botões do carrossel)
+if ( ! wp_style_is( 'font-awesome', 'enqueued' ) ) {
+    wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', [], '6.4.2' );
+}
+
