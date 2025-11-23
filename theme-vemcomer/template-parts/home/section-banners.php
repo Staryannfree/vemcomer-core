@@ -97,7 +97,48 @@ if ( file_exists( get_template_directory() . '/../assets/css/banners.css' ) ) {
 </section>
 
 <style>
-/* Estilos adicionais para banners na home */
+/* Estilos adicionais para banners na home - Controle de tamanho */
+.home-banners .vc-banners {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 20px !important;
+    margin: 24px 0 !important;
+}
+
+.home-banners .vc-banner-item {
+    max-height: 300px !important; /* Limita altura máxima */
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+.home-banners .vc-banner-item--small {
+    max-height: 200px !important;
+    grid-column: span 1 !important;
+}
+
+.home-banners .vc-banner-item--medium {
+    max-height: 250px !important;
+    grid-column: span 1 !important;
+}
+
+.home-banners .vc-banner-item--large {
+    max-height: 300px !important;
+    grid-column: span 2 !important;
+}
+
+.home-banners .vc-banner-item--full {
+    max-height: 350px !important;
+    grid-column: 1 / -1 !important;
+}
+
+.home-banners .vc-banner-item__image {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: inherit !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
 .home-banners .vc-banner-item:hover {
     transform: translateY(-4px) !important;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
@@ -108,10 +149,12 @@ if ( file_exists( get_template_directory() . '/../assets/css/banners.css' ) ) {
         grid-template-columns: 1fr !important;
     }
     
+    .home-banners .vc-banner-item--small,
     .home-banners .vc-banner-item--medium,
     .home-banners .vc-banner-item--large,
     .home-banners .vc-banner-item--full {
         grid-column: 1 / -1 !important;
+        max-height: 250px !important; /* Altura uniforme no mobile */
     }
 }
 </style>

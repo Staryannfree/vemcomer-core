@@ -17,6 +17,8 @@ class CPT_Banner {
 		add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
 		add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
 		add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
+		add_filter( 'post_row_actions', [ $this, 'add_duplicate_action' ], 10, 2 );
+		add_action( 'admin_action_vc_duplicate_banner', [ $this, 'duplicate_banner' ] );
 	}
 
 	public function register_cpt(): void {
@@ -234,6 +236,90 @@ class CPT_Banner {
 				echo $active ? '<span style="color: green;">✓</span>' : '<span style="color: red;">✗</span>';
 				break;
 		}
+	}
+
+	/**
+	 * Adiciona ação "Duplicar" na lista de banners
+	 */
+	public function add_duplicate_action( array $actions, \WP_Post $post ): array {
+		if ( self::SLUG !== $post->post_type ) {
+			return $actions;
+		}
+
+		$duplicate_url = wp_nonce_url(
+			admin_url( 'admin.php?action=vc_duplicate_banner&post=' . $post->ID ),
+			'vc_duplicate_banner_' . $post->ID,
+			'vc_duplicate_nonce'
+		);
+
+		$actions['duplicate'] = '<a href="' . esc_url( $duplicate_url ) . '" title="' . esc_attr__( 'Duplicar este banner', 'vemcomer' ) . '">' . esc_html__( 'Duplicar', 'vemcomer' ) . '</a>';
+
+		return $actions;
+	}
+
+	/**
+	 * Duplica um banner
+	 */
+	public function duplicate_banner(): void {
+		if ( ! isset( $_GET['post'] ) || ! isset( $_GET['vc_duplicate_nonce'] ) ) {
+			wp_die( esc_html__( 'Parâmetros inválidos.', 'vemcomer' ) );
+		}
+
+		$post_id = (int) $_GET['post'];
+		$nonce = sanitize_text_field( wp_unslash( $_GET['vc_duplicate_nonce'] ) );
+
+		if ( ! wp_verify_nonce( $nonce, 'vc_duplicate_banner_' . $post_id ) ) {
+			wp_die( esc_html__( 'Verificação de segurança falhou.', 'vemcomer' ) );
+		}
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'Você não tem permissão para duplicar banners.', 'vemcomer' ) );
+		}
+
+		$original_post = get_post( $post_id );
+		if ( ! $original_post || self::SLUG !== $original_post->post_type ) {
+			wp_die( esc_html__( 'Banner não encontrado.', 'vemcomer' ) );
+		}
+
+		// Criar novo post
+		$new_post_data = [
+			'post_title'   => $original_post->post_title . ' (Cópia)',
+			'post_content' => $original_post->post_content,
+			'post_status'  => 'draft', // Criar como rascunho para revisão
+			'post_type'    => self::SLUG,
+		];
+
+		$new_post_id = wp_insert_post( $new_post_data );
+
+		if ( is_wp_error( $new_post_id ) ) {
+			wp_die( esc_html__( 'Erro ao duplicar banner.', 'vemcomer' ) );
+		}
+
+		// Copiar thumbnail
+		$thumbnail_id = get_post_thumbnail_id( $post_id );
+		if ( $thumbnail_id ) {
+			set_post_thumbnail( $new_post_id, $thumbnail_id );
+		}
+
+		// Copiar meta fields
+		$meta_keys = [
+			'_vc_banner_link',
+			'_vc_banner_restaurant_id',
+			'_vc_banner_order',
+			'_vc_banner_size',
+			'_vc_banner_active',
+		];
+
+		foreach ( $meta_keys as $meta_key ) {
+			$meta_value = get_post_meta( $post_id, $meta_key, true );
+			if ( '' !== $meta_value ) {
+				update_post_meta( $new_post_id, $meta_key, $meta_value );
+			}
+		}
+
+		// Redirecionar para edição do novo banner
+		wp_safe_redirect( admin_url( 'post.php?action=edit&post=' . $new_post_id ) );
+		exit;
 	}
 }
 
