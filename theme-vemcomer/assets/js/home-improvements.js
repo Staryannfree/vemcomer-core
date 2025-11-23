@@ -74,7 +74,7 @@
         }
     }
 
-    // ===== Carrossel de Categorias =====
+    // ===== Carrossel de Categorias (7 por linha) =====
     function initCategoriesCarousel() {
         const carousel = document.getElementById('categories-carousel');
         if (!carousel) return;
@@ -88,27 +88,37 @@
         const cards = track.querySelectorAll('.category-card');
         if (cards.length === 0) return;
 
-        const cardWidth = cards[0].offsetWidth;
-        const gap = 16; // 1rem = 16px
-        let cardsPerView = Math.floor(carousel.offsetWidth / (cardWidth + gap));
-        let maxScroll = (cards.length - cardsPerView) * (cardWidth + gap);
-        let currentPosition = 0;
+        // Calcular cards visíveis baseado na largura
+        function getCardsPerView() {
+            const carouselWidth = carousel.offsetWidth;
+            const cardWidth = cards[0].offsetWidth;
+            const gap = 16;
+            return Math.floor(carouselWidth / (cardWidth + gap));
+        }
+
+        const gap = 16;
+        let cardsPerView = getCardsPerView();
+        let currentIndex = 0;
 
         function updateButtons() {
-            prevBtn.disabled = currentPosition <= 0;
-            nextBtn.disabled = currentPosition >= maxScroll;
+            const maxIndex = Math.max(0, cards.length - cardsPerView);
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= maxIndex;
         }
 
         function scrollCarousel(direction) {
-            const scrollAmount = (cardWidth + gap) * cardsPerView;
+            const maxIndex = Math.max(0, cards.length - cardsPerView);
             
             if (direction === 'next') {
-                currentPosition = Math.min(currentPosition + scrollAmount, maxScroll);
+                currentIndex = Math.min(currentIndex + cardsPerView, maxIndex);
             } else {
-                currentPosition = Math.max(currentPosition - scrollAmount, 0);
+                currentIndex = Math.max(currentIndex - cardsPerView, 0);
             }
             
-            track.style.transform = `translateX(-${currentPosition}px)`;
+            // Calcular posição baseada no card atual
+            const cardWidth = cards[0].offsetWidth;
+            const scrollPosition = currentIndex * (cardWidth + gap);
+            track.style.transform = `translateX(-${scrollPosition}px)`;
             updateButtons();
         }
 
@@ -123,16 +133,20 @@
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                const newCardsPerView = Math.floor(carousel.offsetWidth / (cardWidth + gap));
-                const newMaxScroll = (cards.length - newCardsPerView) * (cardWidth + gap);
-                maxScroll = newMaxScroll;
-                currentPosition = Math.min(currentPosition, newMaxScroll);
-                track.style.transform = `translateX(-${currentPosition}px)`;
-                updateButtons();
+                const newCardsPerView = getCardsPerView();
+                if (newCardsPerView !== cardsPerView) {
+                    cardsPerView = newCardsPerView;
+                    const maxIndex = Math.max(0, cards.length - cardsPerView);
+                    currentIndex = Math.min(currentIndex, maxIndex);
+                    const cardWidth = cards[0].offsetWidth;
+                    const scrollPosition = currentIndex * (cardWidth + gap);
+                    track.style.transform = `translateX(-${scrollPosition}px)`;
+                    updateButtons();
+                }
             }, 250);
         });
 
-        // Suporte para scroll com mouse/touch
+        // Suporte para scroll com mouse/touch (arrastar)
         let isDown = false;
         let startX;
         let scrollLeft;
@@ -140,7 +154,7 @@
         track.addEventListener('mousedown', (e) => {
             isDown = true;
             startX = e.pageX - track.offsetLeft;
-            scrollLeft = currentPosition;
+            scrollLeft = currentIndex * (cards[0].offsetWidth + gap);
         });
 
         track.addEventListener('mouseleave', () => {
@@ -156,9 +170,33 @@
             e.preventDefault();
             const x = e.pageX - track.offsetLeft;
             const walk = (x - startX) * 2;
-            const newPosition = Math.max(0, Math.min(maxScroll, scrollLeft - walk));
-            currentPosition = newPosition;
+            const cardWidth = cards[0].offsetWidth;
+            const newPosition = Math.max(0, Math.min((cards.length - cardsPerView) * (cardWidth + gap), scrollLeft - walk));
             track.style.transform = `translateX(-${newPosition}px)`;
+            
+            // Atualizar índice baseado na posição
+            currentIndex = Math.round(newPosition / (cardWidth + gap));
+            updateButtons();
+        });
+
+        // Suporte para touch (mobile)
+        let touchStartX = 0;
+        let touchScrollLeft = 0;
+
+        track.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].pageX - track.offsetLeft;
+            touchScrollLeft = currentIndex * (cards[0].offsetWidth + gap);
+        });
+
+        track.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const x = e.touches[0].pageX - track.offsetLeft;
+            const walk = (x - touchStartX) * 2;
+            const cardWidth = cards[0].offsetWidth;
+            const newPosition = Math.max(0, Math.min((cards.length - cardsPerView) * (cardWidth + gap), touchScrollLeft - walk));
+            track.style.transform = `translateX(-${newPosition}px)`;
+            
+            currentIndex = Math.round(newPosition / (cardWidth + gap));
             updateButtons();
         });
     }
