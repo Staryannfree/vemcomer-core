@@ -60,9 +60,11 @@ if ( ! empty( $options['banners_section']['ativo'] ) ) {
 }
 
 // Seção 3: Categorias Populares
-if ( ! empty( $options['categories_section']['ativo'] ) ) {
-    get_template_part( 'template-parts/home/section', 'categories', [ 'args' => $options['categories_section'] ] );
+// Sempre mostrar, mesmo se não estiver nas configurações
+if ( empty( $options['categories_section']['ativo'] ) ) {
+    $options['categories_section'] = [ 'ativo' => true ];
 }
+get_template_part( 'template-parts/home/section', 'categories', [ 'args' => $options['categories_section'] ] );
 
 // Seção 4: Restaurantes em Destaque
 if ( ! empty( $options['featured_section']['ativo'] ) ) {

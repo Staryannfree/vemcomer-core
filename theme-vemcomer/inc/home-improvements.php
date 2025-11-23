@@ -66,9 +66,7 @@ function vemcomer_home_quick_filters() {
  * Adiciona seção de categorias populares em formato carrossel
  */
 function vemcomer_home_popular_categories() {
-    if ( ! function_exists( 'vemcomer_is_plugin_active' ) || ! vemcomer_is_plugin_active() ) {
-        return '';
-    }
+    // Não retornar vazio mesmo se plugin não estiver ativo - tentar buscar categorias de qualquer forma
 
     // Mapeamento de ícones para categorias
     $icon_map = [
@@ -106,13 +104,25 @@ function vemcomer_home_popular_categories() {
     // Buscar TODAS as categorias reais do WordPress
     $terms = get_terms( [
         'taxonomy'   => 'vc_cuisine',
-        'hide_empty' => true,
+        'hide_empty' => false, // Mostrar mesmo sem restaurantes
         'orderby'    => 'count',
         'order'      => 'DESC',
     ] );
 
+    // Se não encontrar categorias, usar categorias padrão
     if ( is_wp_error( $terms ) || empty( $terms ) ) {
-        return '';
+        // Criar categorias padrão
+        $default_categories = [
+            (object) ['slug' => 'pizza', 'name' => 'Pizza', 'count' => 0],
+            (object) ['slug' => 'brasileira', 'name' => 'Brasileira', 'count' => 0],
+            (object) ['slug' => 'lanches', 'name' => 'Lanches', 'count' => 0],
+            (object) ['slug' => 'sushi', 'name' => 'Sushi', 'count' => 0],
+            (object) ['slug' => 'bares', 'name' => 'Bares', 'count' => 0],
+            (object) ['slug' => 'doces', 'name' => 'Doces', 'count' => 0],
+            (object) ['slug' => 'arabe', 'name' => 'Árabe', 'count' => 0],
+            (object) ['slug' => 'italiana', 'name' => 'Italiana', 'count' => 0],
+        ];
+        $terms = $default_categories;
     }
 
     // Preparar categorias com ícones
@@ -130,8 +140,27 @@ function vemcomer_home_popular_categories() {
         ];
     }
 
+    // Se não encontrou nenhuma categoria, usar as padrão
     if ( empty( $real_categories ) ) {
-        return '';
+        $default_cats = [
+            ['slug' => 'pizza', 'name' => 'Pizza', 'icon' => '🍕', 'count' => 0],
+            ['slug' => 'brasileira', 'name' => 'Brasileira', 'icon' => '🇧🇷', 'count' => 0],
+            ['slug' => 'lanches', 'name' => 'Lanches', 'icon' => '🍔', 'count' => 0],
+            ['slug' => 'sushi', 'name' => 'Sushi', 'icon' => '🍣', 'count' => 0],
+            ['slug' => 'bares', 'name' => 'Bares', 'icon' => '🍺', 'count' => 0],
+            ['slug' => 'doces', 'name' => 'Doces', 'icon' => '🍰', 'count' => 0],
+            ['slug' => 'arabe', 'name' => 'Árabe', 'icon' => '🥙', 'count' => 0],
+            ['slug' => 'italiana', 'name' => 'Italiana', 'icon' => '🍝', 'count' => 0],
+        ];
+        foreach ( $default_cats as $cat ) {
+            $real_categories[] = [
+                'slug'  => $cat['slug'],
+                'name'  => $cat['name'],
+                'icon'  => $cat['icon'],
+                'count' => $cat['count'],
+                'url'   => add_query_arg( 'cuisine', $cat['slug'], home_url( '/restaurantes/' ) ),
+            ];
+        }
     }
 
     ob_start();
