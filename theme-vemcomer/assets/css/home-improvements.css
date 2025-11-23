@@ -74,33 +74,54 @@
 }
 
 .categories-carousel {
-    overflow: hidden;
+    overflow: hidden !important;
     position: relative;
     width: 100%;
+    display: block !important;
+}
+
+/* FORÇAR: Garantir que o track seja horizontal */
+.home-categories .categories-carousel__track,
+.categories-carousel__track {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
 }
 
 .categories-carousel__track {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 16px;
     transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform;
+    align-items: stretch;
 }
 
+/* FORÇAR: Cards lado a lado */
+.home-categories .category-card,
+.categories-carousel__track .category-card,
 .category-card {
-    flex: 0 0 calc((100% - 96px) / 7); /* 7 cards por linha, menos o gap total (6 gaps * 16px = 96px) */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px 12px;
-    background: #fff;
-    border: 2px solid var(--color-border);
-    border-radius: 12px;
-    text-decoration: none;
-    color: var(--color-text);
-    transition: all 0.3s ease;
-    min-width: 0; /* Permite que o flex funcione corretamente */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex: 0 0 calc((100% - 96px) / 7) !important; /* 7 cards por linha */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px 12px !important;
+    background: #fff !important;
+    border: 2px solid var(--color-border) !important;
+    border-radius: 12px !important;
+    text-decoration: none !important;
+    color: var(--color-text) !important;
+    transition: all 0.3s ease !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    margin: 0 !important;
+    float: none !important;
+    clear: none !important;
 }
 
 .category-card:hover {
@@ -1113,9 +1134,10 @@ body.dark-mode .welcome-popup__close:hover {
         flex-shrink: 0;
     }
     
-    .categories-grid {
+    /* Removido - não usado mais, agora é carrossel */
+    /* .categories-grid {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    }
+    } */
     
     .featured-carousel {
         grid-template-columns: 1fr;
