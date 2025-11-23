@@ -233,6 +233,12 @@ function popup_boas_vindas_independente() {
                         // Salvar localização no localStorage
                         localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
 
+                        // Esconder o botão de localização após obter localização
+                        const heroLocationActions = document.getElementById('hero-location-actions');
+                        if (heroLocationActions) {
+                            heroLocationActions.style.display = 'none';
+                        }
+
                         // Obter nome da cidade via reverse geocoding
                         fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
                             .then(response => response.json())
@@ -788,7 +794,21 @@ function mensagem_localizacao_botao_home() {
                 });
         }
         
+        // Função para esconder o botão de localização se já tiver localização salva
+        function hideLocationButtonIfExists() {
+            const heroLocationActions = document.getElementById('hero-location-actions');
+            if (!heroLocationActions) return;
+            
+            const savedLocation = localStorage.getItem('vc_user_location');
+            if (savedLocation) {
+                heroLocationActions.style.display = 'none';
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se já tem localização salva e esconder o botão
+            hideLocationButtonIfExists();
+            
             // Botão "Usar minha localização" da home
             const btnHomeLocation = document.getElementById('vc-use-location');
             
@@ -832,7 +852,13 @@ function mensagem_localizacao_botao_home() {
                             localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                             localStorage.setItem('vc_user_city', cityName);
                             
-                            // Restaurar botão
+                            // Esconder o botão de localização após obter localização
+                            const heroLocationActions = document.getElementById('hero-location-actions');
+                            if (heroLocationActions) {
+                                heroLocationActions.style.display = 'none';
+                            }
+                            
+                            // Restaurar botão (caso ainda esteja visível)
                             btnHomeLocation.innerHTML = originalText;
                             btnHomeLocation.disabled = false;
                             btnHomeLocation.classList.add('is-active');
