@@ -165,6 +165,53 @@ function vemcomer_home_popular_categories() {
 
     ob_start();
     ?>
+    <style>
+    /* CSS INLINE para garantir que os cards fiquem lado a lado */
+    #categories-carousel {
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+    #categories-carousel .categories-carousel__track {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 16px !important;
+        align-items: stretch !important;
+    }
+    #categories-carousel .category-card {
+        flex: 0 0 calc((100% - 96px) / 7) !important; /* 7 cards: 6 gaps de 16px = 96px */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        width: auto !important;
+        margin: 0 !important;
+        float: none !important;
+        clear: none !important;
+    }
+    @media (max-width: 1400px) {
+        #categories-carousel .category-card {
+            flex: 0 0 calc((100% - 80px) / 6) !important; /* 6 cards: 5 gaps */
+        }
+    }
+    @media (max-width: 1200px) {
+        #categories-carousel .category-card {
+            flex: 0 0 calc((100% - 64px) / 5) !important; /* 5 cards: 4 gaps */
+        }
+    }
+    @media (max-width: 992px) {
+        #categories-carousel .category-card {
+            flex: 0 0 calc((100% - 48px) / 4) !important; /* 4 cards: 3 gaps */
+        }
+    }
+    @media (max-width: 768px) {
+        #categories-carousel .category-card {
+            flex: 0 0 calc((100% - 32px) / 3) !important; /* 3 cards: 2 gaps */
+        }
+    }
+    </style>
     <section class="home-categories">
         <div class="container">
             <h2 class="section-title"><?php esc_html_e( 'Categorias populares', 'vemcomer' ); ?></h2>
