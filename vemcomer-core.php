@@ -59,11 +59,94 @@ if ( ! defined( 'VEMCOMER_DISABLE_CHECKOUT' ) || ! VEMCOMER_DISABLE_CHECKOUT ) {
     require_once VEMCOMER_CORE_DIR . 'inc/checkout.php';
 }
 
+/**
+ * Corrige automaticamente o WP Pusher para PHP 8.2+
+ */
+function vemcomer_fix_wppusher_php82() {
+    $wp_root = ABSPATH;
+    $plugin_dir = $wp_root . 'wp-content/plugins/wppusher';
+    
+    if ( ! is_dir( $plugin_dir ) ) {
+        return false;
+    }
+    
+    $targets = [
+        [
+            'file' => $plugin_dir . '/Pusher/Log/Logger.php',
+            'class' => 'Logger',
+            'property' => 'protected string $file = \'\';',
+        ],
+        [
+            'file' => $plugin_dir . '/Pusher/Dashboard.php',
+            'class' => 'Dashboard',
+            'property' => 'protected $pusher = null;',
+        ],
+    ];
+    
+    $fixed = false;
+    
+    foreach ( $targets as $target ) {
+        $file = $target['file'];
+        if ( ! file_exists( $file ) ) {
+            continue;
+        }
+        
+        $content = file_get_contents( $file );
+        if ( false === $content ) {
+            continue;
+        }
+        
+        $updated = $content;
+        
+        // Adicionar #[\AllowDynamicProperties] se não existir
+        if ( ! str_contains( $updated, '#[\\AllowDynamicProperties]' ) ) {
+            $updated = preg_replace(
+                '/(class\s+' . $target['class'] . '\b)/',
+                "#[\\AllowDynamicProperties]\n$1",
+                $updated,
+                1
+            );
+        }
+        
+        // Adicionar propriedade se não existir
+        if ( ! str_contains( $updated, $target['property'] ) && ! str_contains( $updated, '$' . explode( ' ', $target['property'] )[1] ) ) {
+            $updated = preg_replace(
+                '/(class\s+' . $target['class'] . '[^{]*\{)/',
+                "$1\n    " . $target['property'] . "\n",
+                $updated,
+                1
+            );
+        }
+        
+        if ( $updated !== $content ) {
+            file_put_contents( $file, $updated );
+            $fixed = true;
+        }
+    }
+    
+    return $fixed;
+}
+
 register_activation_hook( __FILE__, function () {
+    // Corrige WP Pusher automaticamente
+    vemcomer_fix_wppusher_php82();
+    
     if ( class_exists( '\\VC\\Admin\\Installer' ) ) {
         ( new \VC\Admin\Installer() )->install_defaults();
     }
 } );
+
+// Tentar corrigir WP Pusher automaticamente no carregamento (se necessário)
+add_action( 'plugins_loaded', function () {
+    // Verifica se há erro do WP Pusher e tenta corrigir
+    if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
+        $wppusher_fixed = get_transient( 'vemcomer_wppusher_fixed' );
+        if ( ! $wppusher_fixed ) {
+            vemcomer_fix_wppusher_php82();
+            set_transient( 'vemcomer_wppusher_fixed', true, DAY_IN_SECONDS );
+        }
+    }
+}, 1 );
 
 add_action( 'plugins_loaded', function () {
     // (carrega os módulos já existentes dos Pacotes 1..7)
