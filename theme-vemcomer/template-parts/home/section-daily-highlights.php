@@ -24,8 +24,9 @@ if ( is_string( $menu_items_ids ) && ! empty( $menu_items_ids ) ) {
 // Limitar quantidade
 $menu_items_ids = array_slice( $menu_items_ids, 0, $quantidade );
 
+// Se não houver itens selecionados, não exibir a seção
 if ( empty( $menu_items_ids ) ) {
-    return; // Não exibir se não houver itens selecionados
+    return;
 }
 
 // Buscar os menu items

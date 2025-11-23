@@ -25,6 +25,12 @@ if ( empty( $options ) ) {
             'ativo'     => true,
             'quantidade' => 5,
         ],
+        'daily_highlights_section' => [
+            'ativo'     => true,
+            'titulo'    => __( 'Destaques do Dia', 'vemcomer' ),
+            'menu_items' => [],
+            'quantidade' => 6,
+        ],
         'categories_section' => [
             'ativo' => true,
         ],
