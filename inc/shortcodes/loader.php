@@ -39,6 +39,7 @@ require_once __DIR__ . '/favorites.php';
 require_once __DIR__ . '/banners.php';
 require_once __DIR__ . '/notifications.php';
 require_once __DIR__ . '/orders-history.php';
+require_once __DIR__ . '/events.php';
 
 // Defaults/Fallbacks de atributos (usar query string quando faltarem)
 if ( file_exists( __DIR__ . '/defaults.php' ) ) {

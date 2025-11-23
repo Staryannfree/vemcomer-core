@@ -12,6 +12,7 @@ namespace VC\Admin;
 use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
 use VC\Model\CPT_ProductModifier;
+use VC\Model\CPT_Event;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -76,6 +77,16 @@ class Menu_Restaurant {
                 __( 'Banners', 'vemcomer' ),
                 'edit_posts',
                 'edit.php?post_type=' . \VC\Model\CPT_Banner::SLUG
+            );
+        }
+
+        if ( class_exists( '\\VC\\Model\\CPT_Event' ) ) {
+            add_submenu_page(
+                'vemcomer-root',
+                __( 'Eventos', 'vemcomer' ),
+                __( 'Eventos', 'vemcomer' ),
+                'edit_posts',
+                'edit.php?post_type=' . CPT_Event::SLUG
             );
         }
     }

@@ -56,6 +56,7 @@ class Plan_Manager {
 			'monthly_price'             => (float) get_post_meta( $plan_id, '_vc_plan_monthly_price', true ),
 			'max_menu_items'            => (int) get_post_meta( $plan_id, '_vc_plan_max_menu_items', true ),
 			'max_modifiers_per_item'    => (int) get_post_meta( $plan_id, '_vc_plan_max_modifiers_per_item', true ),
+			'max_events'                => (int) get_post_meta( $plan_id, '_vc_plan_max_events', true ),
 			'advanced_analytics'        => (bool) get_post_meta( $plan_id, '_vc_plan_advanced_analytics', true ),
 			'priority_support'          => (bool) get_post_meta( $plan_id, '_vc_plan_priority_support', true ),
 			'features'                  => json_decode( get_post_meta( $plan_id, '_vc_plan_features', true ), true ) ?: [],
@@ -90,6 +91,20 @@ class Plan_Manager {
 			return 0; // Sem plano = ilimitado
 		}
 		return $plan['max_modifiers_per_item'];
+	}
+
+	/**
+	 * Obtém limite de eventos do plano.
+	 *
+	 * @param int $restaurant_id ID do restaurante
+	 * @return int Limite (0 = ilimitado)
+	 */
+	public static function get_max_events( int $restaurant_id ): int {
+		$plan = self::get_restaurant_plan( $restaurant_id );
+		if ( ! $plan ) {
+			return 0; // Sem plano = ilimitado (ou pode retornar um limite padrão)
+		}
+		return (int) ( $plan['max_events'] ?? 0 );
 	}
 
 	/**

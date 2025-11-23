@@ -83,27 +83,32 @@ if ( empty( $options['daily_highlights_section']['ativo'] ) ) {
 }
 get_template_part( 'template-parts/home/section', 'daily-highlights', [ 'args' => $options['daily_highlights_section'] ] );
 
-// Seção 5: Restaurantes em Destaque
+// Seção 5: Eventos Gastronômicos
+if ( ! empty( $options['events_section']['ativo'] ) ) {
+    get_template_part( 'template-parts/home/section', 'events', [ 'args' => $options['events_section'] ] );
+}
+
+// Seção 6: Restaurantes em Destaque
 if ( ! empty( $options['featured_section']['ativo'] ) ) {
     get_template_part( 'template-parts/home/section', 'featured', [ 'args' => $options['featured_section'] ] );
 }
 
-// Seção 6: Listagem de Restaurantes
+// Seção 7: Listagem de Restaurantes
 if ( ! empty( $options['restaurants_section']['ativo'] ) ) {
     get_template_part( 'template-parts/home/section', 'restaurants', [ 'args' => $options['restaurants_section'] ] );
 }
 
-// Seção 7: Mapa
+// Seção 8: Mapa
 if ( ! empty( $options['map_section']['ativo'] ) ) {
     get_template_part( 'template-parts/home/section', 'map', [ 'args' => $options['map_section'] ] );
 }
 
-// Seção 8: Para Você (só para logados)
+// Seção 9: Para Você (só para logados)
 if ( ! empty( $options['for_you_section']['ativo'] ) ) {
     get_template_part( 'template-parts/home/section', 'for-you', [ 'args' => $options['for_you_section'] ] );
 }
 
-// Seção 9: CTA para Donos
+// Seção 10: CTA para Donos
 if ( ! empty( $options['cta_section']['ativo'] ) ) {
     get_template_part( 'template-parts/home/section', 'cta', [ 'args' => $options['cta_section'] ] );
 }

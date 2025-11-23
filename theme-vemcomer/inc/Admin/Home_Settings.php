@@ -462,6 +462,18 @@ class VemComer_Home_Settings {
             'map_section' => [
                 'ativo' => true,
             ],
+            'events_section' => [
+                'ativo'       => true,
+                'titulo'      => __( 'Eventos & Agenda Gastronômica', 'vemcomer' ),
+                'quantidade'  => 4,
+                'featured_only' => false,
+            ],
+            'events_section' => [
+                'ativo'       => true,
+                'titulo'      => __( 'Eventos & Agenda Gastronômica', 'vemcomer' ),
+                'quantidade'  => 4,
+                'featured_only' => false,
+            ],
             'for_you_section' => [
                 'ativo' => true,
             ],
@@ -659,6 +671,10 @@ class VemComer_Home_Settings {
 
     public function render_map_section_description(): void {
         echo '<p>' . esc_html__( 'Exibe um mapa interativo com a localização dos restaurantes.', 'vemcomer' ) . '</p>';
+    }
+
+    public function render_events_section_description(): void {
+        echo '<p>' . esc_html__( 'Exibe eventos gastronômicos cadastrados pelos restaurantes. Pode mostrar apenas eventos em destaque ou todos os próximos eventos.', 'vemcomer' ) . '</p>';
     }
 
     public function render_for_you_section_description(): void {
