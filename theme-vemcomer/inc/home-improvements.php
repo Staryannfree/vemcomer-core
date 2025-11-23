@@ -166,73 +166,145 @@ function vemcomer_home_popular_categories() {
     ob_start();
     ?>
     <style>
-    /* CSS INLINE para garantir que os cards fiquem lado a lado */
-    #categories-carousel {
-        overflow: hidden !important;
+    /* CSS BLINDADO - Força bruta para layout horizontal com CSS Grid */
+    .vc-force-row-container {
         width: 100% !important;
+        overflow: hidden !important;
+        padding: 20px 0 !important;
     }
-    #categories-carousel .categories-carousel__track {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 16px !important;
-        align-items: stretch !important;
+    
+    .vc-force-row-track {
+        display: grid !important;
+        grid-auto-flow: column !important; /* A MÁGICA: Força colunas infinitas (horizontal) */
+        grid-auto-columns: minmax(130px, 1fr) !important; /* Tamanho mínimo de cada card */
+        gap: 15px !important;
+        overflow-x: auto !important; /* Permite rolar para o lado */
+        padding-bottom: 15px !important; /* Espaço para scrollbar */
+        
+        /* Suavização de scroll */
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin; /* Firefox */
     }
-    #categories-carousel .category-card {
-        flex: 0 0 calc((100% - 96px) / 7) !important; /* 7 cards: 6 gaps de 16px = 96px */
+    
+    /* Estilização da barra de rolagem */
+    .vc-force-row-track::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .vc-force-row-track::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 10px;
+    }
+    
+    .vc-force-row-track::-webkit-scrollbar-track {
+        background-color: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    /* O Card Individual */
+    .vc-category-card {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        min-width: 0 !important;
+        background: #fff !important;
+        border: 1px solid #eee !important;
+        border-radius: 12px !important;
+        padding: 15px 10px !important;
+        text-decoration: none !important;
+        text-align: center !important;
+        height: 100% !important;
+        min-width: 130px !important; /* Força largura mínima */
         max-width: none !important;
         width: auto !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        transition: transform 0.2s ease !important;
         margin: 0 !important;
         float: none !important;
         clear: none !important;
     }
-    @media (max-width: 1400px) {
-        #categories-carousel .category-card {
-            flex: 0 0 calc((100% - 80px) / 6) !important; /* 6 cards: 5 gaps */
-        }
+    
+    .vc-category-card:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+        border-color: var(--color-primary, #2f9e44) !important;
     }
-    @media (max-width: 1200px) {
-        #categories-carousel .category-card {
-            flex: 0 0 calc((100% - 64px) / 5) !important; /* 5 cards: 4 gaps */
-        }
+    
+    .vc-cat-icon {
+        font-size: 28px !important;
+        margin-bottom: 10px !important;
+        display: block !important;
+        line-height: 1 !important;
     }
-    @media (max-width: 992px) {
-        #categories-carousel .category-card {
-            flex: 0 0 calc((100% - 48px) / 4) !important; /* 4 cards: 3 gaps */
-        }
+    
+    .vc-cat-name {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #333 !important;
+        margin: 0 0 5px 0 !important;
+        line-height: 1.2 !important;
     }
+    
+    .vc-cat-count {
+        font-size: 11px !important;
+        color: #888 !important;
+        margin: 0 !important;
+    }
+    
+    /* Responsivo: ajustar tamanho mínimo em telas menores */
     @media (max-width: 768px) {
-        #categories-carousel .category-card {
-            flex: 0 0 calc((100% - 32px) / 3) !important; /* 3 cards: 2 gaps */
+        .vc-force-row-track {
+            grid-auto-columns: minmax(110px, 1fr) !important;
+            gap: 12px !important;
+        }
+        
+        .vc-category-card {
+            min-width: 110px !important;
+            padding: 12px 8px !important;
+        }
+        
+        .vc-cat-icon {
+            font-size: 24px !important;
+        }
+        
+        .vc-cat-name {
+            font-size: 13px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .vc-force-row-track {
+            grid-auto-columns: minmax(100px, 1fr) !important;
+            gap: 10px !important;
+        }
+        
+        .vc-category-card {
+            min-width: 100px !important;
+            padding: 10px 6px !important;
         }
     }
     </style>
-    <section class="home-categories">
+    
+    <section class="home-categories" style="background: #fafafa;">
         <div class="container">
-            <h2 class="section-title"><?php esc_html_e( 'Categorias populares', 'vemcomer' ); ?></h2>
-            <div class="categories-carousel-wrapper">
-                <button class="carousel-btn carousel-btn--prev" aria-label="<?php esc_attr_e( 'Anterior', 'vemcomer' ); ?>">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <div class="categories-carousel" id="categories-carousel">
-                    <div class="categories-carousel__track">
-                        <?php foreach ( $real_categories as $cat ) : ?>
-                            <a href="<?php echo esc_url( $cat['url'] ); ?>" class="category-card">
-                                <div class="category-card__icon"><?php echo esc_html( $cat['icon'] ); ?></div>
-                                <h3 class="category-card__name"><?php echo esc_html( $cat['name'] ); ?></h3>
-                                <p class="category-card__count"><?php echo esc_html( sprintf( _n( '%d restaurante', '%d restaurantes', $cat['count'], 'vemcomer' ), $cat['count'] ) ); ?></p>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
+            <h2 class="section-title" style="margin-bottom: 20px; font-size: 20px; font-weight: bold;">
+                <?php esc_html_e( 'Categorias populares', 'vemcomer' ); ?>
+            </h2>
+            
+            <div class="vc-force-row-container">
+                <!-- Wrapper que usa GRID FLOW COLUMN -->
+                <div class="vc-force-row-track">
+                    <?php foreach ( $real_categories as $cat ) : ?>
+                        <a href="<?php echo esc_url( $cat['url'] ); ?>" class="vc-category-card">
+                            <span class="vc-cat-icon"><?php echo esc_html( $cat['icon'] ); ?></span>
+                            <h3 class="vc-cat-name"><?php echo esc_html( $cat['name'] ); ?></h3>
+                            <span class="vc-cat-count">
+                                <?php echo esc_html( sprintf( _n( '%d restaurante', '%d restaurantes', $cat['count'], 'vemcomer' ), $cat['count'] ) ); ?>
+                            </span>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
-                <button class="carousel-btn carousel-btn--next" aria-label="<?php esc_attr_e( 'Próximo', 'vemcomer' ); ?>">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
             </div>
         </div>
     </section>

@@ -74,131 +74,67 @@
         }
     }
 
-    // ===== Carrossel de Categorias (7 por linha) =====
+    // ===== Carrossel de Categorias (Scroll Nativo com CSS Grid) =====
     function initCategoriesCarousel() {
-        const carousel = document.getElementById('categories-carousel');
-        if (!carousel) return;
+        // Nova implementação: CSS Grid com scroll nativo
+        const track = document.querySelector('.vc-force-row-track');
+        if (!track) {
+            // Fallback para estrutura antiga (caso ainda exista)
+            const carousel = document.getElementById('categories-carousel');
+            if (!carousel) return;
+            const oldTrack = carousel.querySelector('.categories-carousel__track');
+            if (!oldTrack) return;
+            track = oldTrack;
+        }
 
-        const track = carousel.querySelector('.categories-carousel__track');
-        const prevBtn = carousel.closest('.categories-carousel-wrapper')?.querySelector('.carousel-btn--prev');
-        const nextBtn = carousel.closest('.categories-carousel-wrapper')?.querySelector('.carousel-btn--next');
+        // Com CSS Grid e scroll nativo, não precisamos de botões ou transform
+        // Apenas suporte para arrastar com mouse/touch usando scroll nativo
         
-        if (!track || !prevBtn || !nextBtn) return;
-
-        const cards = track.querySelectorAll('.category-card');
-        if (cards.length === 0) return;
-
-        // Calcular cards visíveis baseado na largura
-        function getCardsPerView() {
-            const carouselWidth = carousel.offsetWidth;
-            const cardWidth = cards[0].offsetWidth;
-            const gap = 16;
-            return Math.floor(carouselWidth / (cardWidth + gap));
-        }
-
-        const gap = 16;
-        let cardsPerView = getCardsPerView();
-        let currentIndex = 0;
-
-        function updateButtons() {
-            const maxIndex = Math.max(0, cards.length - cardsPerView);
-            prevBtn.disabled = currentIndex <= 0;
-            nextBtn.disabled = currentIndex >= maxIndex;
-        }
-
-        function scrollCarousel(direction) {
-            const maxIndex = Math.max(0, cards.length - cardsPerView);
-            
-            if (direction === 'next') {
-                currentIndex = Math.min(currentIndex + cardsPerView, maxIndex);
-            } else {
-                currentIndex = Math.max(currentIndex - cardsPerView, 0);
-            }
-            
-            // Calcular posição baseada no card atual
-            const cardWidth = cards[0].offsetWidth;
-            const scrollPosition = currentIndex * (cardWidth + gap);
-            track.style.transform = `translateX(-${scrollPosition}px)`;
-            updateButtons();
-        }
-
-        prevBtn.addEventListener('click', () => scrollCarousel('prev'));
-        nextBtn.addEventListener('click', () => scrollCarousel('next'));
-
-        // Atualizar botões no carregamento
-        updateButtons();
-
-        // Atualizar ao redimensionar
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                const newCardsPerView = getCardsPerView();
-                if (newCardsPerView !== cardsPerView) {
-                    cardsPerView = newCardsPerView;
-                    const maxIndex = Math.max(0, cards.length - cardsPerView);
-                    currentIndex = Math.min(currentIndex, maxIndex);
-                    const cardWidth = cards[0].offsetWidth;
-                    const scrollPosition = currentIndex * (cardWidth + gap);
-                    track.style.transform = `translateX(-${scrollPosition}px)`;
-                    updateButtons();
-                }
-            }, 250);
-        });
-
-        // Suporte para scroll com mouse/touch (arrastar)
         let isDown = false;
         let startX;
         let scrollLeft;
 
+        // Adicionar cursor grab ao hover
+        track.style.cursor = 'grab';
+
+        // Suporte para arrastar com mouse (desktop)
         track.addEventListener('mousedown', (e) => {
             isDown = true;
+            track.style.cursor = 'grabbing';
             startX = e.pageX - track.offsetLeft;
-            scrollLeft = currentIndex * (cards[0].offsetWidth + gap);
+            scrollLeft = track.scrollLeft;
         });
 
         track.addEventListener('mouseleave', () => {
             isDown = false;
+            track.style.cursor = 'grab';
         });
 
         track.addEventListener('mouseup', () => {
             isDown = false;
+            track.style.cursor = 'grab';
         });
 
         track.addEventListener('mousemove', (e) => {
             if (!isDown) return;
             e.preventDefault();
             const x = e.pageX - track.offsetLeft;
-            const walk = (x - startX) * 2;
-            const cardWidth = cards[0].offsetWidth;
-            const newPosition = Math.max(0, Math.min((cards.length - cardsPerView) * (cardWidth + gap), scrollLeft - walk));
-            track.style.transform = `translateX(-${newPosition}px)`;
-            
-            // Atualizar índice baseado na posição
-            currentIndex = Math.round(newPosition / (cardWidth + gap));
-            updateButtons();
+            const walk = (x - startX) * 1.5; // Velocidade do scroll
+            track.scrollLeft = scrollLeft - walk;
         });
 
-        // Suporte para touch (mobile)
+        // Suporte para touch (mobile) - scroll nativo já funciona, mas podemos melhorar
         let touchStartX = 0;
         let touchScrollLeft = 0;
 
         track.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].pageX - track.offsetLeft;
-            touchScrollLeft = currentIndex * (cards[0].offsetWidth + gap);
-        });
+            touchScrollLeft = track.scrollLeft;
+        }, { passive: true });
 
         track.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const x = e.touches[0].pageX - track.offsetLeft;
-            const walk = (x - touchStartX) * 2;
-            const cardWidth = cards[0].offsetWidth;
-            const newPosition = Math.max(0, Math.min((cards.length - cardsPerView) * (cardWidth + gap), touchScrollLeft - walk));
-            track.style.transform = `translateX(-${newPosition}px)`;
-            
-            currentIndex = Math.round(newPosition / (cardWidth + gap));
-            updateButtons();
-        });
+            // Deixar o scroll nativo funcionar normalmente
+        }, { passive: true });
     }
 
     // ===== Geolocalização =====
