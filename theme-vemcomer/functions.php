@@ -1436,3 +1436,21 @@ function vemcomer_login_header_title() {
 }
 add_filter( 'login_headertext', 'vemcomer_login_header_title' );
 
+/**
+ * Redireciona lojistas para o painel após o login
+ */
+function vemcomer_redirect_lojista_after_login( $redirect_to, $request, $user ) {
+    // Se houver erro ou não for objeto WP_User, retorna padrão
+    if ( isset( $user->errors ) || ! is_a( $user, 'WP_User' ) ) {
+        return $redirect_to;
+    }
+
+    // Verifica se o usuário tem a role 'lojista'
+    if ( in_array( 'lojista', (array) $user->roles ) ) {
+        return home_url( '/painel-do-restaurante-vemcomer/' );
+    }
+
+    return $redirect_to;
+}
+add_filter( 'login_redirect', 'vemcomer_redirect_lojista_after_login', 10, 3 );
+
