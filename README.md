@@ -207,6 +207,28 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.30 - Frontend e Dashboard para Plano Vitrine/Básico (10.1 + 10.2)
+
+**Novas funcionalidades:**
+- **Layout de Loja Pública Simplificado (Plano Vitrine)**:
+  - CSS específico para plano básico (`frontend-basic-plan.css`).
+  - Botão "Adicionar" direto (sem modal complexo).
+  - Layout de cards de itens simplificado (lista).
+  - Rodapé "Powered by VemComer" obrigatório.
+- **Painel do Restaurante Limitado**:
+  - Widget "Seu Plano: VITRINE" com barra de progresso de itens usados.
+  - Alerta visual quando o limite de itens está próximo (80%).
+  - Card de Analytics com efeito "Blur Overlay" e botão de upgrade para bloquear acesso a dados avançados.
+  - Bloqueio visual de itens de menu não permitidos no plano.
+
+**Arquivos novos:**
+- `assets/css/frontend-basic-plan.css` - Estilos para a loja pública básica
+- `assets/css/admin-panel-basic.css` - Estilos para o painel admin limitado
+
+**Arquivos modificados:**
+- `inc/Frontend/RestaurantPanel.php` - Integração de widgets de plano e restrições visuais
+- `inc/Frontend/Shortcodes.php` - Renderização condicional do layout simplificado
+
 ### v0.29 - Sistema de Planos/Assinaturas SaaS - Enforcers e Seed (9.1 + 9.2 + 9.3)
 
 **Novas funcionalidades:**
