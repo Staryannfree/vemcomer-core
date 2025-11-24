@@ -1418,3 +1418,21 @@ function vemcomer_load_home_settings() {
 }
 add_action( 'after_setup_theme', 'vemcomer_load_home_settings' );
 
+/**
+ * Customização da página de login nativa do WordPress
+ */
+function vemcomer_custom_login_styles() {
+    wp_enqueue_style( 'vemcomer-login', get_template_directory_uri() . '/assets/css/login.css' );
+}
+add_action( 'login_enqueue_scripts', 'vemcomer_custom_login_styles' );
+
+function vemcomer_login_header_url() {
+    return home_url();
+}
+add_filter( 'login_headerurl', 'vemcomer_login_header_url' );
+
+function vemcomer_login_header_title() {
+    return get_bloginfo( 'name' );
+}
+add_filter( 'login_headertext', 'vemcomer_login_header_title' );
+
