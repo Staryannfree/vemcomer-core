@@ -1454,3 +1454,30 @@ function vemcomer_redirect_lojista_after_login( $redirect_to, $request, $user ) 
 }
 add_filter( 'login_redirect', 'vemcomer_redirect_lojista_after_login', 10, 3 );
 
+/**
+ * Bloqueia acesso ao admin para lojistas e remove admin bar
+ */
+function vemcomer_block_admin_access_for_restaurant_owners() {
+    // Não fazer nada durante AJAX
+    if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+        return;
+    }
+
+    $user = wp_get_current_user();
+    
+    // Se o usuário tiver a role 'lojista'
+    if ( in_array( 'lojista', (array) $user->roles ) ) {
+        
+        // Bloquear acesso ao admin
+        if ( is_admin() ) {
+            // Redirecionar para o painel do restaurante
+            wp_redirect( home_url( '/painel-do-restaurante-vemcomer/' ) );
+            exit;
+        }
+        
+        // Remover Admin Bar
+        show_admin_bar( false );
+    }
+}
+add_action( 'init', 'vemcomer_block_admin_access_for_restaurant_owners' );
+
