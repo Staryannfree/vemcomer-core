@@ -646,6 +646,59 @@
                 return;
             }
 
+            // ATUALIZAR TEXTO DO HERO IMEDIATAMENTE (antes de pedir permissão)
+            // Tentar obter cidade salva de cookie ou localStorage
+            let cityName = localStorage.getItem('vc_user_city');
+            
+            // Se não tem cidade no localStorage, tentar obter do cookie
+            if (!cityName) {
+                // Função auxiliar para ler cookie
+                function getCookie(name) {
+                    const value = `; ${document.cookie}`;
+                    const parts = value.split(`; ${name}=`);
+                    if (parts.length === 2) return parts.pop().split(';').shift();
+                    return null;
+                }
+                
+                const savedLocationCookie = getCookie('vc_user_location');
+                if (savedLocationCookie) {
+                    try {
+                        const locationData = JSON.parse(savedLocationCookie);
+                        if (locationData.city) {
+                            cityName = locationData.city;
+                        }
+                    } catch (e) {
+                        // Ignorar erro
+                    }
+                }
+            }
+            
+            // Se ainda não tem cidade, tentar do localStorage location
+            if (!cityName) {
+                const savedLocation = localStorage.getItem('vc_user_location');
+                if (savedLocation) {
+                    try {
+                        const locationData = JSON.parse(savedLocation);
+                        if (locationData.city) {
+                            cityName = locationData.city;
+                        }
+                    } catch (e) {
+                        // Ignorar erro
+                    }
+                }
+            }
+            
+            // Atualizar hero title imediatamente
+            if (cityName) {
+                updateHeroTitle(cityName);
+            } else {
+                // Texto genérico enquanto obtém localização
+                const heroTitle = document.getElementById('hero-title');
+                if (heroTitle) {
+                    heroTitle.textContent = 'Peça dos melhores estabelecimentos da sua cidade';
+                }
+            }
+
             btn.classList.add('is-loading');
             btn.disabled = true;
             const originalHTML = btn.innerHTML;
@@ -657,7 +710,8 @@
                     fillCheckout: false,
                     onSuccess: (address, coordinates) => {
                         localStorage.setItem('vc_location_accepted', 'true');
-                        updateHeroTitle(address.city || address.displayName);
+                        const finalCityName = address.city || address.displayName || cityName;
+                        updateHeroTitle(finalCityName);
                         
                         btn.classList.remove('is-loading');
                         btn.disabled = false;
@@ -673,23 +727,20 @@
                         
                         // Atualizar subtítulo com número de restaurantes
                         if (window.updateHeroSubtitleWithRestaurantCount) {
-                            window.updateHeroSubtitleWithRestaurantCount(address.city || address.displayName);
+                            window.updateHeroSubtitleWithRestaurantCount(finalCityName);
                         }
                         
                         // Filtrar restaurantes por cidade
                         if (window.filterRestaurantsByCity) {
-                            window.filterRestaurantsByCity(address.city || address.displayName);
+                            window.filterRestaurantsByCity(finalCityName);
                         } else {
                             loadRestaurantsWithLocation(coordinates.lat, coordinates.lng);
                         }
                         showNotification('Localização atualizada!', 'success');
                         
-                        setTimeout(() => {
-                            const restaurantsSection = document.getElementById('restaurants-list');
-                            if (restaurantsSection) {
-                                restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                        }, 500);
+                        // REMOVIDO: scrollIntoView - manter página no topo
+                        // Manter scroll no topo da página
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     },
                     onError: (error) => {
                         btn.classList.remove('is-loading');
@@ -707,27 +758,55 @@
                         localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                         localStorage.setItem('vc_location_accepted', 'true');
                         
-                        btn.classList.remove('is-loading');
-                        btn.disabled = false;
-                        btn.innerHTML = originalHTML;
-                        
-                        popupElement.classList.remove('is-open');
-                        document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
-                        
-                        const heroLocationBtn = document.getElementById('vc-use-location');
-                        if (heroLocationBtn) {
-                            heroLocationBtn.classList.add('is-active');
-                        }
-                        
-                        loadRestaurantsWithLocation(lat, lng);
-                        showNotification('Localização atualizada!', 'success');
-                        
-                        setTimeout(() => {
-                            const restaurantsSection = document.getElementById('restaurants-list');
-                            if (restaurantsSection) {
-                                restaurantsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                        }, 500);
+                        // Obter nome da cidade via reverse geocoding
+                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
+                            .then(response => response.json())
+                            .then(data => {
+                                const finalCityName = data.address?.city || 
+                                    data.address?.town || 
+                                    data.address?.municipality || 
+                                    data.address?.county || 
+                                    data.display_name?.split(',')[0] || 
+                                    cityName || 
+                                    'sua cidade';
+                                
+                                localStorage.setItem('vc_user_city', finalCityName);
+                                updateHeroTitle(finalCityName);
+                                
+                                btn.classList.remove('is-loading');
+                                btn.disabled = false;
+                                btn.innerHTML = originalHTML;
+                                
+                                popupElement.classList.remove('is-open');
+                                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+                                
+                                const heroLocationBtn = document.getElementById('vc-use-location');
+                                if (heroLocationBtn) {
+                                    heroLocationBtn.classList.add('is-active');
+                                }
+                                
+                                loadRestaurantsWithLocation(lat, lng);
+                                showNotification('Localização atualizada!', 'success');
+                                
+                                // REMOVIDO: scrollIntoView - manter página no topo
+                                // Manter scroll no topo da página
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            })
+                            .catch(error => {
+                                console.error('Erro ao obter nome da cidade:', error);
+                                // Mesmo sem cidade, atualizar com texto genérico
+                                updateHeroTitle(cityName || 'sua cidade');
+                                
+                                btn.classList.remove('is-loading');
+                                btn.disabled = false;
+                                btn.innerHTML = originalHTML;
+                                
+                                popupElement.classList.remove('is-open');
+                                document.cookie = 'vc_welcome_popup_seen=1; path=/; max-age=' + (30 * 24 * 60 * 60);
+                                
+                                showNotification('Localização atualizada!', 'success');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            });
                     },
                     (error) => {
                         btn.classList.remove('is-loading');
@@ -752,7 +831,7 @@
     function updateHeroTitle(cityName) {
         const heroTitle = document.getElementById('hero-title');
         if (heroTitle && cityName) {
-            heroTitle.textContent = `Peça dos melhores restaurantes de ${cityName}`;
+            heroTitle.textContent = `Peça dos melhores estabelecimentos de ${cityName}`;
             // Salvar cidade no localStorage
             localStorage.setItem('vc_user_city', cityName);
         }

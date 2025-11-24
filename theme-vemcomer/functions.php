@@ -265,7 +265,7 @@ function popup_boas_vindas_independente() {
                     // Atualizar título do hero se existir
                     const heroTitle = document.getElementById('hero-title');
                     if (heroTitle) {
-                        heroTitle.textContent = 'Peça dos melhores restaurantes de ' + city;
+                        heroTitle.textContent = 'Peça dos melhores estabelecimentos de ' + city;
                     }
 
                     // Atualizar subtítulo com número de restaurantes se a função existir
@@ -390,8 +390,11 @@ function popup_boas_vindas_independente() {
                                 // Atualizar título do hero se existir
                                 const heroTitle = document.getElementById('hero-title');
                                 if (heroTitle) {
-                                    heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
+                                    heroTitle.textContent = 'Peça dos melhores estabelecimentos de ' + cityName;
                                 }
+                                
+                                // Manter página no topo (não fazer scroll)
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
                                 
                                 // Atualizar subtítulo com número de restaurantes se a função existir
                                 if (window.updateHeroSubtitleWithRestaurantCount) {
@@ -962,7 +965,7 @@ function mensagem_localizacao_botao_home() {
                     if (locationData.city) {
                         const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
                         if (heroTitle) {
-                            heroTitle.textContent = 'Peça dos melhores restaurantes de ' + locationData.city;
+                            heroTitle.textContent = 'Peça dos melhores estabelecimentos de ' + locationData.city;
                         }
                         
                         if (window.updateHeroSubtitleWithRestaurantCount) {
@@ -1023,7 +1026,7 @@ function mensagem_localizacao_botao_home() {
                             // Atualizar título do hero
                             const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
                             if (heroTitle) {
-                                heroTitle.textContent = 'Peça dos melhores restaurantes de ' + cityName;
+                                heroTitle.textContent = 'Peça dos melhores estabelecimentos de ' + cityName;
                             }
                             
                             // Atualizar subtítulo com número de restaurantes
