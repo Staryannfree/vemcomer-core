@@ -1,4 +1,4 @@
-# VemComer Core
+# Pedevem Core
 
 Core de marketplace para WordPress com:
 - CPTs: **Produtos**, **Pedidos**, **Restaurantes**, **Itens do Cardápio**.
@@ -7,8 +7,8 @@ Core de marketplace para WordPress com:
 
 ## Instalação e Ativação
 1. Copie o plugin para `wp-content/plugins/vemcomer-core/`.
-2. Ative **VemComer Core** no painel do WordPress.
-3. (Opcional) Configure **VemComer ▸ Configurações** → Segredo do Webhook e integrações.
+2. Ative **Pedevem Core** no painel do WordPress.
+3. (Opcional) Configure **Pedevem ▸ Configurações** → Segredo do Webhook e integrações.
 
 ### Páginas públicas (shortcodes)
 Ao ativar o plugin o núcleo cria/atualiza automaticamente as páginas que contêm apenas os shortcodes principais (lista, cardápio e checkout) e elas passam a aparecer em **Páginas ▸ Todas** como qualquer outra página. Se quiser recriá-las depois — ou gerar versões parametrizadas para um restaurante específico — use **VemComer ▸ Instalador**, que reaproveita as mesmas rotinas sem duplicar conteúdos existentes.
@@ -43,7 +43,7 @@ O sistema de onboarding guia novos donos de restaurantes através dos primeiros 
 
 ### Steps do Onboarding
 
-1. **Bem-vindo ao VemComer!** - Tela inicial de boas-vindas
+1. **Bem-vindo ao Pedevem!** - Tela inicial de boas-vindas
 2. **Complete seu perfil** - Adicionar WhatsApp, endereço e horários
 3. **Adicione itens ao cardápio** - Criar pelo menos 3 itens
 4. **Configure delivery** - Definir se oferece delivery

@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Home VemComer
+ * Template Name: Home Pedevem
  * 
  * Template para a página inicial do marketplace.
  * Usa shortcodes do plugin para montar a Home completa.
@@ -109,7 +109,7 @@ get_header();
     <section class="vc-home-cta">
         <div class="vc-home-container">
             <div class="vc-home-cta__content">
-                <h2 class="vc-home-cta__title"><?php echo esc_html__( 'Tem um restaurante? Venda pelo VemComer', 'vemcomer' ); ?></h2>
+                <h2 class="vc-home-cta__title"><?php echo esc_html__( 'Tem um restaurante? Venda pelo Pedevem', 'vemcomer' ); ?></h2>
                 <p class="vc-home-cta__text">
                     <?php echo esc_html__( 'Cadastre seu restaurante e comece a receber pedidos hoje mesmo. Sem comissões por venda, apenas uma mensalidade fixa.', 'vemcomer' ); ?>
                 </p>

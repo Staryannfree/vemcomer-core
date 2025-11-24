@@ -26,8 +26,8 @@ class Menu_Restaurant {
         global $menu, $admin_page_hooks;
         if ( ! isset( $admin_page_hooks['vemcomer-root'] ) ) {
             add_menu_page(
-                __( 'VemComer', 'vemcomer' ),
-                __( 'VemComer', 'vemcomer' ),
+                __( 'Pedevem', 'vemcomer' ),
+                __( 'Pedevem', 'vemcomer' ),
                 'edit_posts',
                 'vemcomer-root',
                 '__return_null',

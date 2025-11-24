@@ -28,7 +28,7 @@ class Home_Template {
         $template_file = VEMCOMER_CORE_DIR . $template_path;
         
         if ( file_exists( $template_file ) ) {
-            $post_templates[ $template_path ] = __( 'Home VemComer', 'vemcomer' );
+            $post_templates[ $template_path ] = __( 'Home Pedevem', 'vemcomer' );
         }
         
         return $post_templates;

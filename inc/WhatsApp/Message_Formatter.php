@@ -45,7 +45,7 @@ class Message_Formatter {
 	 * Retorna template padrão (Rico/Formatado).
 	 */
 	private static function get_default_template(): string {
-		return "*Novo Pedido via VemComer* 🛵\n\n" .
+		return "*Novo Pedido via Pedevem* 🛵\n\n" .
 			"--------------------------------\n\n" .
 			"*Cliente:* {customer_name}\n" .
 			"*Telefone:* {customer_phone}\n" .
@@ -69,7 +69,7 @@ class Message_Formatter {
 			"{order_items}\n\n" .
 			"Endereço: {customer_address}\n" .
 			"Total estimado: {total}\n\n" .
-			"(Pedido via VemComer)";
+			"(Pedido via Pedevem)";
 	}
 
 	/**

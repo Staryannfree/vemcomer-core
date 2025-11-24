@@ -1,6 +1,6 @@
-# Tema VemComer
+# Tema Pedevem
 
-Tema WordPress completo para o marketplace VemComer.
+Tema WordPress completo para o marketplace Pedevem.
 
 ## Instalação
 
@@ -11,12 +11,12 @@ Tema WordPress completo para o marketplace VemComer.
 
 2. **Ative o tema:**
    - Vá em **Aparência ▸ Temas**
-   - Encontre **VemComer**
+   - Encontre **Pedevem**
    - Clique em **Ativar**
 
 3. **Ative o plugin vemcomer-core:**
    - Vá em **Plugins ▸ Plugins Instalados**
-   - Ative **VemComer Core**
+   - Ative **Pedevem Core**
 
 ## Estrutura
 

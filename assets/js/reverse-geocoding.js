@@ -20,7 +20,7 @@
             const response = await fetch(url, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'VemComer Marketplace' // Nominatim requer User-Agent
+                    'User-Agent': 'Pedevem Marketplace' // Nominatim requer User-Agent
                 }
             });
             

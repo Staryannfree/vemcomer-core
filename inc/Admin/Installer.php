@@ -66,37 +66,37 @@ class Installer {
                 'needs'     => [],
             ],
             'vemcomer_restaurants' => [
-                'title'     => __( 'Lista de Restaurantes (VemComer)', 'vemcomer' ),
-                'desc'      => __( 'Lista restaurantes usando o conjunto de shortcodes VemComer.', 'vemcomer' ),
+                'title'     => __( 'Lista de Restaurantes (Pedevem)', 'vemcomer' ),
+                'desc'      => __( 'Lista restaurantes usando o conjunto de shortcodes Pedevem.', 'vemcomer' ),
                 'shortcode' => '[vemcomer_restaurants]',
                 'needs'     => [],
             ],
             'vemcomer_menu' => [
-                'title'     => __( 'Cardápio (VemComer)', 'vemcomer' ),
+                'title'     => __( 'Cardápio (Pedevem)', 'vemcomer' ),
                 'desc'      => __( 'Mostra o cardápio do restaurante corrente (pode usar ?restaurant_id=ID).', 'vemcomer' ),
                 'shortcode' => '[vemcomer_menu]',
                 'needs'     => [],
             ],
             'vemcomer_checkout' => [
-                'title'     => __( 'Checkout (VemComer)', 'vemcomer' ),
+                'title'     => __( 'Checkout (Pedevem)', 'vemcomer' ),
                 'desc'      => __( 'Renderiza o checkout isolado.', 'vemcomer' ),
                 'shortcode' => '[vemcomer_checkout]',
                 'needs'     => [],
             ],
             'vemcomer_restaurant_panel' => [
-                'title'     => __( 'Painel do Restaurante (VemComer)', 'vemcomer' ),
+                'title'     => __( 'Painel do Restaurante (Pedevem)', 'vemcomer' ),
                 'desc'      => __( 'Área logada para restaurantes gerenciarem dados e pedidos.', 'vemcomer' ),
                 'shortcode' => '[vemcomer_restaurant_panel]',
                 'needs'     => [],
             ],
             'vemcomer_restaurant_signup' => [
-                'title'     => __( 'Cadastro de Restaurantes (VemComer)', 'vemcomer' ),
+                'title'     => __( 'Cadastro de Restaurantes (Pedevem)', 'vemcomer' ),
                 'desc'      => __( 'Formulário público para restaurantes enviarem seus dados.', 'vemcomer' ),
                 'shortcode' => '[vemcomer_restaurant_signup]',
                 'needs'     => [],
             ],
             'vemcomer_customer_signup' => [
-                'title'     => __( 'Cadastro de Clientes (VemComer)', 'vemcomer' ),
+                'title'     => __( 'Cadastro de Clientes (Pedevem)', 'vemcomer' ),
                 'desc'      => __( 'Formulário para consumidores criarem contas no marketplace.', 'vemcomer' ),
                 'shortcode' => '[vemcomer_customer_signup]',
                 'needs'     => [],
@@ -147,12 +147,12 @@ class Installer {
         $created = (array) get_option( self::OPTION_PAGES, [] );
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Instalador de Páginas (VemComer)', 'vemcomer' ) . '</h1>';
+        echo '<h1>' . esc_html__( 'Instalador de Páginas (Pedevem)', 'vemcomer' ) . '</h1>';
         if ( isset( $_GET['vc_installed'] ) ) {
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Páginas atualizadas/criadas com sucesso.', 'vemcomer' ) . '</p></div>';
         }
 
-        echo '<p>' . esc_html__( 'Crie automaticamente páginas públicas contendo os shortcodes do VemComer.', 'vemcomer' ) . '</p>';
+        echo '<p>' . esc_html__( 'Crie automaticamente páginas públicas contendo os shortcodes do Pedevem.', 'vemcomer' ) . '</p>';
 
         echo '<table class="widefat striped" style="max-width:980px">';
         echo '<thead><tr>'

@@ -24,7 +24,7 @@ $signup_url = ! empty( $signup_page )
 <section class="home-cta">
     <div class="container">
         <div class="home-cta__content">
-            <h2 class="home-cta__title"><?php echo esc_html__( 'Tem um restaurante? Venda pelo VemComer', 'vemcomer' ); ?></h2>
+            <h2 class="home-cta__title"><?php echo esc_html__( 'Tem um restaurante? Venda pelo Pedevem', 'vemcomer' ); ?></h2>
             <p class="home-cta__text">
                 <?php echo esc_html__( 'Cadastre seu restaurante e comece a receber pedidos hoje mesmo. Sem comissões por venda, apenas uma mensalidade fixa.', 'vemcomer' ); ?>
             </p>

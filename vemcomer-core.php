@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: VemComer Core
- * Description: Core do marketplace VemComer — Instalador de páginas com shortcodes
+ * Plugin Name: Pedevem Core
+ * Description: Core do marketplace Pedevem — Instalador de páginas com shortcodes
  * Version: 0.8.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
- * Author: VemComer
+ * Author: Pedevem
  * Text Domain: vemcomer
  */
 

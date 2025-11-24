@@ -18,7 +18,7 @@ body.login div#login h1 a {
 }
 
 body.login div#login h1 a:before {
-    content: "VemComer"; /* Fallback text if no image */
+    content: "Pedevem"; /* Fallback text if no image */
 }
 
 /* Login Box */

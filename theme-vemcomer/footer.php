@@ -84,7 +84,7 @@
         <div class="welcome-popup__dialog">
             <button class="welcome-popup__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
             <div class="welcome-popup__icon">👋</div>
-            <h2 class="welcome-popup__title"><?php esc_html_e( 'Bem-vindo ao VemComer!', 'vemcomer' ); ?></h2>
+            <h2 class="welcome-popup__title"><?php esc_html_e( 'Bem-vindo ao Pedevem!', 'vemcomer' ); ?></h2>
             <p class="welcome-popup__text">
                 <?php esc_html_e( 'Descubra os melhores restaurantes perto de você!', 'vemcomer' ); ?>
             </p>

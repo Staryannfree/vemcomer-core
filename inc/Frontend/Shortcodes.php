@@ -224,7 +224,7 @@ class Shortcodes {
         
         if ( $is_basic ) {
             echo '<div class="vc-powered-by">';
-            echo 'Tecnologia <a href="' . esc_url( home_url() ) . '" target="_blank">VemComer</a> • Crie sua loja grátis';
+            echo 'Tecnologia <a href="' . esc_url( home_url() ) . '" target="_blank">Pedevem</a> • Crie sua loja grátis';
             echo '</div>';
         }
 
