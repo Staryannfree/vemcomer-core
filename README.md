@@ -883,6 +883,55 @@ E mais 11 recursos adicionais para completar a plataforma.
 * Autoload interno + PSR‑4 simples (namespace `VC\*` mapeado para `inc/`).
 * Sanitização e escapes seguindo o Handbook do WordPress.
 
+### Git e Deploy (WP Pusher)
+
+**⚠️ IMPORTANTE:** Este projeto usa **WP Pusher** para sincronizar automaticamente com o site na Hostinger. Sempre faça commit e push após alterações.
+
+#### Comandos para Commit e Push
+
+```bash
+# 1. Verificar arquivos modificados
+git status
+
+# 2. Adicionar arquivos específicos
+git add caminho/do/arquivo.php
+
+# OU adicionar todos os arquivos modificados
+git add .
+
+# 3. Criar commit com mensagem descritiva
+git commit -m "Descrição clara do que foi alterado"
+
+# 4. Enviar para o GitHub (sincroniza automaticamente via WP Pusher)
+git push origin main
+```
+
+#### Exemplo Completo
+
+```bash
+# Ver o que mudou
+git status
+
+# Adicionar arquivos modificados
+git add inc/REST/Subscription_Controller.php README.md
+
+# Commit
+git commit -m "Adiciona webhook do Mercado Pago para assinaturas pagas"
+
+# Push para GitHub
+git push origin main
+```
+
+**Nota:** Se sua branch principal for `master` em vez de `main`, use:
+```bash
+git push origin master
+```
+
+#### Verificar se o Push Funcionou
+
+Após o push, o WP Pusher na Hostinger deve sincronizar automaticamente. Você pode verificar:
+1. No painel do WordPress → Plugins → WP Pusher (verificar logs)
+2. No GitHub → Verificar se o commit aparece no histórico
 
 ## Troubleshooting
 
