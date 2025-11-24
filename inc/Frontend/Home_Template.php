@@ -38,13 +38,51 @@ class Home_Template {
      * Carrega o template da Home quando selecionado
      */
     public function maybe_use_home_template( string $template ): string {
+        // Verificar se é a página "inicio" de várias formas
+        $is_inicio_page = false;
+        $page_id = null;
+        
         if ( is_page() ) {
             $page_template = get_page_template_slug();
+            
+            // Se já tem o template selecionado, usar
             if ( $page_template === 'templates/page-home.php' ) {
                 $template_file = VEMCOMER_CORE_DIR . $page_template;
                 if ( file_exists( $template_file ) ) {
                     return $template_file;
                 }
+            }
+            
+            // Verificar se é a página "inicio"
+            $page = get_queried_object();
+            if ( $page && isset( $page->post_name ) && $page->post_name === 'inicio' ) {
+                $is_inicio_page = true;
+                $page_id = $page->ID;
+            } elseif ( is_page( 'inicio' ) ) {
+                $is_inicio_page = true;
+                $page_id = get_queried_object_id();
+            } elseif ( is_page() ) {
+                // Verificar pelo slug
+                $current_page = get_queried_object();
+                if ( $current_page && isset( $current_page->post_name ) && $current_page->post_name === 'inicio' ) {
+                    $is_inicio_page = true;
+                    $page_id = $current_page->ID;
+                }
+            }
+        }
+        
+        // Se é a página inicio, aplicar o template
+        if ( $is_inicio_page ) {
+            $template_file = VEMCOMER_CORE_DIR . 'templates/page-home.php';
+            if ( file_exists( $template_file ) ) {
+                // Atualizar o meta da página para usar o template correto (apenas uma vez)
+                if ( $page_id ) {
+                    $current_template = get_post_meta( $page_id, '_wp_page_template', true );
+                    if ( $current_template !== 'templates/page-home.php' ) {
+                        update_post_meta( $page_id, '_wp_page_template', 'templates/page-home.php' );
+                    }
+                }
+                return $template_file;
             }
         }
         
