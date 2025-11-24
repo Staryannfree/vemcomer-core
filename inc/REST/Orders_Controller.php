@@ -367,6 +367,7 @@ class Orders_Controller {
                 'address' => $customer_address,
             ],
             [
+                'id'   => $restaurant_id,
                 'name' => get_the_title( $restaurant ),
             ]
         );

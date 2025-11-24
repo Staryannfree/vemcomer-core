@@ -73,6 +73,46 @@ class CPT_Restaurant {
 
     public function register_metaboxes(): void {
         add_meta_box( 'vc_restaurant_meta', __( 'Dados do Restaurante', 'vemcomer' ), [ $this, 'metabox' ], self::SLUG, 'normal', 'high' );
+        add_meta_box( 'vc_restaurant_subscription', __( 'Plano de Assinatura', 'vemcomer' ), [ $this, 'metabox_subscription' ], self::SLUG, 'side', 'high' );
+    }
+
+    public function metabox_subscription( $post ): void {
+        $user_id = (int) $post->post_author;
+        $current_plan_id = (int) get_user_meta( $user_id, 'vc_restaurant_subscription_plan_id', true );
+        
+        // Se não tiver no user meta, tenta pegar do post meta (migração/fallback)
+        if ( ! $current_plan_id ) {
+            $current_plan_id = (int) get_post_meta( $post->ID, '_vc_subscription_plan_id', true );
+        }
+
+        $plans = get_posts([
+            'post_type' => 'vc_subscription_plan',
+            'numberposts' => -1,
+            'post_status' => 'publish', // Assumindo que planos são publicados
+        ]);
+
+        echo '<p><label for="vc_subscription_plan_id"><strong>' . esc_html__( 'Selecione o Plano:', 'vemcomer' ) . '</strong></label></p>';
+        echo '<select name="vc_subscription_plan_id" id="vc_subscription_plan_id" class="widefat">';
+        echo '<option value="">' . esc_html__( '— Sem Plano (Limites Padrão) —', 'vemcomer' ) . '</option>';
+        
+        foreach ( $plans as $plan ) {
+            echo '<option value="' . esc_attr( $plan->ID ) . '" ' . selected( $current_plan_id, $plan->ID, false ) . '>';
+            echo esc_html( $plan->post_title );
+            echo '</option>';
+        }
+        echo '</select>';
+        
+        echo '<p class="description">' . esc_html__( 'Define os limites e recursos disponíveis para este restaurante.', 'vemcomer' ) . '</p>';
+        
+        // Status da Assinatura
+        $status = get_user_meta( $user_id, 'vc_restaurant_subscription_status', true ) ?: 'active';
+        echo '<p><label for="vc_subscription_status"><strong>' . esc_html__( 'Status da Assinatura:', 'vemcomer' ) . '</strong></label></p>';
+        echo '<select name="vc_subscription_status" id="vc_subscription_status" class="widefat">';
+        $statuses = [ 'active' => 'Ativo', 'cancelled' => 'Cancelado', 'expired' => 'Expirado', 'past_due' => 'Pagamento Pendente' ];
+        foreach ( $statuses as $key => $label ) {
+            echo '<option value="' . esc_attr( $key ) . '" ' . selected( $status, $key, false ) . '>' . esc_html( $label ) . '</option>';
+        }
+        echo '</select>';
     }
 
     public function metabox( $post ): void {
@@ -87,6 +127,26 @@ class CPT_Restaurant {
     }
 
     public function save_meta( int $post_id ): void {
+        // Salvar Plano de Assinatura
+        if ( isset( $_POST['vc_subscription_plan_id'] ) ) {
+            $plan_id = (int) $_POST['vc_subscription_plan_id'];
+            $restaurant = get_post( $post_id );
+            $user_id = (int) $restaurant->post_author;
+            
+            // Salvar no user meta (para o Plan_Manager atual)
+            update_user_meta( $user_id, 'vc_restaurant_subscription_plan_id', $plan_id );
+            
+            // Salvar no post meta também (para facilitar consultas diretas ao restaurante)
+            update_post_meta( $post_id, '_vc_subscription_plan_id', $plan_id );
+        }
+
+        if ( isset( $_POST['vc_subscription_status'] ) ) {
+            $status = sanitize_text_field( $_POST['vc_subscription_status'] );
+            $restaurant = get_post( $post_id );
+            $user_id = (int) $restaurant->post_author;
+            update_user_meta( $user_id, 'vc_restaurant_subscription_status', $status );
+        }
+
         $map = [ '_vc_address', '_vc_phone', '_vc_min_order', '_vc_has_delivery', '_vc_is_open' ];
         foreach ( $map as $key ) {
             if ( isset( $_POST[ $key ] ) ) {

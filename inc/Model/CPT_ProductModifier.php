@@ -21,6 +21,50 @@ class CPT_ProductModifier {
 		add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
 		add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
 		add_action( 'init', [ $this, 'grant_caps' ], 5 );
+		// Validação de permissão de plano
+		add_filter( 'wp_insert_post_data', [ $this, 'check_permission_on_save' ], 10, 2 );
+	}
+
+	/**
+	 * Verifica se o plano permite criar modificadores.
+	 */
+	public function check_permission_on_save( $data, $postarr ) {
+		// Apenas para este CPT
+		if ( $data['post_type'] !== self::SLUG ) {
+			return $data;
+		}
+
+		// Se for administrador, libera tudo
+		if ( current_user_can( 'manage_options' ) ) {
+			return $data;
+		}
+
+		// Descobrir o restaurante (user_id do autor)
+		$author_id = (int) $data['post_author'];
+		
+		// Busca restaurante(s) deste autor
+		$restaurants = get_posts([
+			'post_type' => 'vc_restaurant',
+			'author'    => $author_id,
+			'posts_per_page' => 1,
+			'fields' => 'ids'
+		]);
+
+		if ( empty( $restaurants ) ) {
+			return $data;
+		}
+
+		$restaurant_id = $restaurants[0];
+		
+		// Verificar se o plano permite modificadores
+		if ( ! \VC\Subscription\Plan_Manager::can_use_modifiers( $restaurant_id ) ) {
+			// Se não permitir, força Rascunho (não deixa publicar)
+			if ( $data['post_status'] === 'publish' ) {
+				$data['post_status'] = 'draft';
+			}
+		}
+
+		return $data;
 	}
 
 	private function capabilities(): array {

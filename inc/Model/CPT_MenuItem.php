@@ -22,6 +22,74 @@ class CPT_MenuItem {
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
         add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        // Validação de limite de itens
+        add_filter( 'wp_insert_post_data', [ $this, 'check_limit_on_save' ], 10, 2 );
+    }
+
+    /**
+     * Impede a publicação de novos itens se o limite do plano for atingido.
+     */
+    public function check_limit_on_save( $data, $postarr ) {
+        // Apenas para este CPT
+        if ( $data['post_type'] !== self::SLUG ) {
+            return $data;
+        }
+
+        // Se não for publicação, permite (rascunhos são livres, ou não?)
+        // Vamos bloquear apenas status 'publish'
+        if ( $data['post_status'] !== 'publish' ) {
+            return $data;
+        }
+
+        // Se for update de post já publicado, permite
+        if ( ! empty( $postarr['ID'] ) ) {
+            $old_status = get_post_status( $postarr['ID'] );
+            if ( $old_status === 'publish' ) {
+                return $data;
+            }
+        }
+
+        // Descobrir o restaurante (user_id do autor)
+        $author_id = (int) $data['post_author'];
+        
+        // Busca restaurante(s) deste autor
+        $restaurants = get_posts([
+            'post_type' => 'vc_restaurant',
+            'author'    => $author_id,
+            'posts_per_page' => 1,
+            'fields' => 'ids'
+        ]);
+
+        if ( empty( $restaurants ) ) {
+            return $data; // Sem restaurante, sem limite (ou erro de lógica)
+        }
+
+        $restaurant_id = $restaurants[0];
+        $max_items = \VC\Subscription\Plan_Manager::get_max_menu_items( $restaurant_id );
+
+        if ( $max_items <= 0 ) {
+            return $data; // Ilimitado
+        }
+
+        // Conta itens PUBLICADOS deste restaurante
+        // Nota: Precisamos filtrar por restaurante, mas itens são do autor.
+        // Se o sistema vincula via meta _vc_restaurant_id, melhor contar via meta.
+        // Mas aqui no insert ainda pode não ter o meta salvo. Vamos contar pelo autor.
+        $count = (int) (new \WP_Query([
+            'post_type' => self::SLUG,
+            'post_status' => 'publish',
+            'author' => $author_id,
+            'fields' => 'ids', // Performance
+            'no_found_rows' => false, // Precisamos do found_posts? Sim
+        ]))->found_posts;
+
+        if ( $count >= $max_items ) {
+            // Bloqueia definindo como 'draft'
+            $data['post_status'] = 'draft';
+            // Opcional: Adicionar aviso ao admin (não funciona bem dentro do filtro)
+        }
+
+        return $data;
     }
 
     private function capabilities(): array {

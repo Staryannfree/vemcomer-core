@@ -113,12 +113,51 @@ class Plan_Manager {
 	 * @param int $restaurant_id ID do restaurante
 	 * @return bool
 	 */
-	public static function has_advanced_analytics( int $restaurant_id ): bool {
+	public static function can_view_analytics( int $restaurant_id ): bool {
 		$plan = self::get_restaurant_plan( $restaurant_id );
+		// Se não tiver plano, assumimos que é o básico (sem analytics)
 		if ( ! $plan ) {
 			return false;
 		}
-		return $plan['advanced_analytics'];
+		return ! empty( $plan['advanced_analytics'] );
+	}
+
+	/**
+	 * Verifica se o plano permite modificadores de produto.
+	 *
+	 * @param int $restaurant_id ID do restaurante
+	 * @return bool
+	 */
+	public static function can_use_modifiers( int $restaurant_id ): bool {
+		$plan = self::get_restaurant_plan( $restaurant_id );
+		if ( ! $plan ) {
+			return false; // Plano básico não tem modificadores
+		}
+		// Se o limite for > 0 ou -1 (ilimitado), permite. Se for 0, bloqueia.
+		// Nota: A lógica original usava max_modifiers_per_item. 
+		// Se for 0, assumimos que não pode usar.
+		return $plan['max_modifiers_per_item'] !== 0;
+	}
+
+	/**
+	 * Verifica se o plano permite formatação rica no WhatsApp.
+	 *
+	 * @param int $restaurant_id ID do restaurante
+	 * @return bool
+	 */
+	public static function can_use_whatsapp_rich( int $restaurant_id ): bool {
+		$plan = self::get_restaurant_plan( $restaurant_id );
+		if ( ! $plan ) {
+			return false; // Plano básico é texto simples
+		}
+		// Verifica nas features JSON se existe a flag ou se é um plano Pro/Growth
+		// Assumindo que planos pagos (> 0) têm isso por padrão se não especificado
+		if ( isset( $plan['features']['whatsapp_rich'] ) ) {
+			return (bool) $plan['features']['whatsapp_rich'];
+		}
+		
+		// Fallback: se paga mensalidade, tem zap formatado
+		return $plan['monthly_price'] > 0;
 	}
 
 	/**

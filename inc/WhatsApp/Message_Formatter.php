@@ -24,15 +24,25 @@ class Message_Formatter {
 			return $template;
 		}
 
-		// Template padrão
-		$message = self::get_default_template();
+		// Verificar se o restaurante tem permissão para mensagem rica
+		$is_rich = true;
+		if ( isset( $restaurant_data['id'] ) ) {
+			$restaurant_id = (int) $restaurant_data['id'];
+			// Se a classe Plan_Manager existir, usar verificação
+			if ( class_exists( '\\VC\\Subscription\\Plan_Manager' ) ) {
+				$is_rich = \VC\Subscription\Plan_Manager::can_use_whatsapp_rich( $restaurant_id );
+			}
+		}
+
+		// Selecionar template
+		$message = $is_rich ? self::get_default_template() : self::get_simple_template();
 		$message = self::replace_placeholders( $message, $order_data, $customer_data, $restaurant_data );
 
 		return $message;
 	}
 
 	/**
-	 * Retorna template padrão.
+	 * Retorna template padrão (Rico/Formatado).
 	 */
 	private static function get_default_template(): string {
 		return "*Novo Pedido via VemComer* 🛵\n\n" .
@@ -49,6 +59,17 @@ class Message_Formatter {
 			"--------------------------------\n\n" .
 			"*Tipo:* {fulfillment_type}\n" .
 			"*Pagamento:* A combinar na entrega.\n";
+	}
+
+	/**
+	 * Retorna template simples (Texto puro, para plano Grátis).
+	 */
+	private static function get_simple_template(): string {
+		return "Olá, gostaria de fazer um pedido:\n\n" .
+			"{order_items}\n\n" .
+			"Endereço: {customer_address}\n" .
+			"Total estimado: {total}\n\n" .
+			"(Pedido via VemComer)";
 	}
 
 	/**
