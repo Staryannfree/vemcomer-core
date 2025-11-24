@@ -902,6 +902,9 @@
             }, 300);
         }, 3000);
     }
+    
+    // Expor função globalmente
+    window.showNotification = showNotification;
 
     // ===== Carregar Restaurantes =====
     function loadRestaurants(params = new URLSearchParams()) {

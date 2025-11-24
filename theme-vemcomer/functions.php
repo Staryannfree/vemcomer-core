@@ -331,12 +331,49 @@ function popup_boas_vindas_independente() {
         }, 1000);
 
         // 2. Listener de Clique (Javascript Puro)
+        console.log('POPUP: Anexando listener de clique...');
         popup.addEventListener('click', function(e) {
+            console.log('POPUP: Clique detectado no popup', e.target);
             
             // >>> BOTÃO VERDE (LOCALIZAÇÃO) <<<
-            if (e.target.id === 'welcome-popup-location-btn') {
+            // Usar closest para pegar o botão mesmo se clicar no span interno
+            const locationBtn = e.target.closest('#welcome-popup-location-btn');
+            console.log('POPUP: locationBtn encontrado?', locationBtn);
+            if (locationBtn) {
                 e.preventDefault();
-                const btn = e.target;
+                e.stopPropagation();
+                const btn = locationBtn;
+                
+                console.log('POPUP: Botão clicado!', btn);
+                
+                // ATUALIZAR TEXTO DO HERO IMEDIATAMENTE (antes de pedir permissão)
+                // Tentar obter cidade salva de cookie ou localStorage
+                let cityName = localStorage.getItem('vc_user_city');
+                
+                // Se não tem cidade no localStorage, tentar obter do cookie
+                if (!cityName) {
+                    const savedLocationCookie = getCookie('vc_user_location');
+                    if (savedLocationCookie) {
+                        try {
+                            const locationData = JSON.parse(savedLocationCookie);
+                            if (locationData.city) {
+                                cityName = locationData.city;
+                            }
+                        } catch (e) {
+                            console.error('Erro ao ler cookie:', e);
+                        }
+                    }
+                }
+                
+                // Atualizar hero title imediatamente
+                const heroTitle = document.getElementById('hero-title');
+                if (heroTitle) {
+                    if (cityName) {
+                        heroTitle.textContent = 'Peça dos melhores estabelecimentos de ' + cityName;
+                    } else {
+                        heroTitle.textContent = 'Peça dos melhores estabelecimentos da sua cidade';
+                    }
+                }
                 
                 // Feedback visual
                 btn.innerText = '📍 Obtendo GPS...';
@@ -406,6 +443,13 @@ function popup_boas_vindas_independente() {
                                     window.filterRestaurantsByCity(cityName);
                                 } else if (window.loadRestaurantsWithLocation) {
                                     window.loadRestaurantsWithLocation(lat, lng);
+                                }
+                                
+                                // Mostrar notificação
+                                if (window.showNotification) {
+                                    window.showNotification('Localização atualizada!', 'success');
+                                } else {
+                                    console.log('Localização atualizada!');
                                 }
                                 
                                 // Fecha o popup após processar
