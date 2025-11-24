@@ -89,5 +89,15 @@ class Menu_Restaurant {
                 'edit.php?post_type=' . CPT_Event::SLUG
             );
         }
+
+        if ( class_exists( '\\VC\\Model\\CPT_SubscriptionPlan' ) ) {
+            add_submenu_page(
+                'vemcomer-root',
+                __( 'Planos de Assinatura', 'vemcomer' ),
+                __( 'Planos', 'vemcomer' ),
+                'manage_options', // Apenas admin pode gerenciar planos
+                'edit.php?post_type=' . \VC\Model\CPT_SubscriptionPlan::SLUG
+            );
+        }
     }
 }

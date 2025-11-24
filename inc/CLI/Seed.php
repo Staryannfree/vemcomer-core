@@ -22,7 +22,24 @@ class Seed {
             \WP_CLI::add_command( 'vc seed', [ $this, 'cmd_seed' ] );
             // Alias solicitado no checklist
             \WP_CLI::add_command( 'vemcomer seed-restaurants', [ $this, 'cmd_seed' ] );
+            // Seed de planos
+            \WP_CLI::add_command( 'vc seed-plans', [ $this, 'cmd_seed_plans' ] );
         }
+    }
+
+    /**
+     * wp vc seed-plans
+     * Cria os planos padrão (Vitrine, Pro, Growth)
+     */
+    public function cmd_seed_plans( $args, $assoc_args ): void {
+        if ( ! class_exists( '\\VC\\Utils\\Plan_Seeder' ) ) {
+            if ( class_exists( 'WP_CLI' ) ) { \WP_CLI::error( 'Classe Plan_Seeder não encontrada.' ); }
+            return;
+        }
+        
+        \VC\Utils\Plan_Seeder::seed();
+        
+        if ( class_exists( 'WP_CLI' ) ) { \WP_CLI::success( 'Planos padrão criados/atualizados com sucesso.' ); }
     }
 
     /**

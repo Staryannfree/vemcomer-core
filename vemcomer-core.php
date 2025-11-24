@@ -226,6 +226,15 @@ add_action( 'plugins_loaded', function () {
 
     // Pacote 8 — Instalador de Páginas
     if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); }
+
+    // Seed automático de planos (uma vez)
+    if ( class_exists( '\\VC\\Utils\\Plan_Seeder' ) ) {
+        $seeded = get_option( 'vemcomer_plans_seeded' );
+        if ( ! $seeded ) {
+            \VC\Utils\Plan_Seeder::seed();
+            update_option( 'vemcomer_plans_seeded', true );
+        }
+    }
 } );
 
 // --- Bootstrap do módulo Restaurantes ---

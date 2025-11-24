@@ -207,6 +207,34 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.29 - Sistema de Planos/Assinaturas SaaS - Enforcers e Seed (9.1 + 9.2 + 9.3)
+
+**Novas funcionalidades:**
+- **Gestão de Planos**:
+  - Planos criados automaticamente via seed: **Vitrine (Grátis)**, **Delivery Pro** e **Gestão & Growth**.
+  - Menu de gestão de planos exposto para o Admin ("VemComer > Planos de Assinatura").
+  - Atribuição de plano ao restaurante via metabox lateral no editor do restaurante.
+- **Limites e Restrições (Enforcers)**:
+  - **Limite de Itens**: Bloqueia criação de novos itens no cardápio se o limite do plano for atingido (ex: 20 itens no Vitrine).
+  - **Permissão de Modificadores**: Bloqueia criação de modificadores se o plano não permitir (ex: Vitrine não tem modificadores).
+  - **Mensagem WhatsApp Dinâmica**:
+    - **Vitrine**: Envia mensagem de texto simples.
+    - **Pro/Growth**: Envia mensagem formatada rica (negrito, separadores, detalhes).
+- **Integração Frontend**:
+  - O checkout detecta o plano e ajusta a mensagem enviada ao WhatsApp automaticamente.
+
+**Arquivos novos:**
+- `inc/Utils/Plan_Seeder.php` - Criação automática dos planos padrão
+
+**Arquivos modificados:**
+- `inc/Admin/Menu_Restaurant.php` - Adicionado submenu de Planos
+- `inc/Model/CPT_Restaurant.php` - Metabox de seleção de plano
+- `inc/Model/CPT_MenuItem.php` - Validação de limite de itens
+- `inc/Model/CPT_ProductModifier.php` - Validação de permissão de modificadores
+- `inc/WhatsApp/Message_Formatter.php` - Templates dinâmicos (simples vs rico)
+- `inc/REST/Orders_Controller.php` - Passagem de dados para formatação
+- `vemcomer-core.php` - Execução do seed automático
+
 ### v0.28+ - Implementação Completa de Recursos Backend (Seções 8-25.1)
 
 **Todas as seções de 8 a 25.1 foram implementadas:**
