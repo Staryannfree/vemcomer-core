@@ -207,6 +207,25 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.31 - Modal de Upgrade e Pricing (10.3)
+
+**Novas funcionalidades:**
+- **Modal de Pricing (Tabela de Preços)**:
+  - Interface moderna com 3 colunas (Vitrine, Delivery Pro, Growth).
+  - Destaque visual para o plano "Delivery Pro" (Recomendado).
+  - Lista de recursos comparativa (check/cross).
+- **Fluxo de Assinatura**:
+  - Botões de "Assinar" redirecionam para o WhatsApp do suporte com mensagem pré-formatada contendo o nome do restaurante e o plano desejado.
+- **Pontos de Entrada**:
+  - Links de upgrade espalhados pelo painel (widget lateral, alerta de limite, blur de analytics) abrem o modal automaticamente.
+
+**Arquivos novos:**
+- `assets/js/admin-panel.js` - Lógica de interação do painel e modal
+
+**Arquivos modificados:**
+- `inc/Frontend/RestaurantPanel.php` - Inclusão do HTML do modal e enfileiramento do JS
+- `assets/css/admin-panel-basic.css` - Estilos do modal e tabela de preços
+
 ### v0.30 - Frontend e Dashboard para Plano Vitrine/Básico (10.1 + 10.2)
 
 **Novas funcionalidades:**

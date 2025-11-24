@@ -65,6 +65,9 @@ class RestaurantPanel {
         if ( $is_basic ) {
             wp_enqueue_style( 'vemcomer-admin-basic', plugin_dir_url( dirname( __DIR__ ) ) . 'assets/css/admin-panel-basic.css', [], '1.0' );
         }
+        
+        // Script do painel (Modal de upgrade, interações)
+        wp_enqueue_script( 'vemcomer-admin-panel', plugin_dir_url( dirname( __DIR__ ) ) . 'assets/js/admin-panel.js', [], '1.0', true );
 
         // Dados de uso do plano
         $max_items = Plan_Manager::get_max_menu_items( $restaurant->ID );
@@ -241,6 +244,66 @@ class RestaurantPanel {
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Modal de Pricing -->
+        <div id="vc-pricing-modal" class="vc-modal-pricing">
+            <div class="vc-modal-overlay"></div>
+            <div class="vc-modal-content">
+                <button class="vc-modal-close">&times;</button>
+                
+                <div class="vc-pricing-header">
+                    <h2><?php echo esc_html__( 'Escolha o plano ideal para crescer', 'vemcomer' ); ?></h2>
+                    <p><?php echo esc_html__( 'Desbloqueie recursos poderosos para vender mais e gerenciar melhor.', 'vemcomer' ); ?></p>
+                </div>
+                
+                <div class="vc-pricing-grid">
+                    <!-- Vitrine (Atual) -->
+                    <div class="vc-pricing-card">
+                        <h3 class="vc-pricing-title"><?php echo esc_html__( 'Vitrine', 'vemcomer' ); ?></h3>
+                        <div class="vc-pricing-price"><?php echo esc_html__( 'Grátis', 'vemcomer' ); ?></div>
+                        <ul class="vc-pricing-features">
+                            <li><?php echo esc_html__( 'Cardápio digital básico', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Pedidos via WhatsApp (texto)', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Até 20 itens', 'vemcomer' ); ?></li>
+                            <li class="disabled"><?php echo esc_html__( 'Modificadores de produto', 'vemcomer' ); ?></li>
+                            <li class="disabled"><?php echo esc_html__( 'Analytics', 'vemcomer' ); ?></li>
+                            <li class="disabled"><?php echo esc_html__( 'Suporte prioritário', 'vemcomer' ); ?></li>
+                        </ul>
+                        <button class="vc-pricing-btn ghost" disabled><?php echo esc_html__( 'Seu plano atual', 'vemcomer' ); ?></button>
+                    </div>
+                    
+                    <!-- Delivery Pro -->
+                    <div class="vc-pricing-card featured">
+                        <div class="vc-badge-featured"><?php echo esc_html__( 'Recomendado', 'vemcomer' ); ?></div>
+                        <h3 class="vc-pricing-title"><?php echo esc_html__( 'Delivery Pro', 'vemcomer' ); ?></h3>
+                        <div class="vc-pricing-price"><?php echo esc_html__( 'R$ 49,90', 'vemcomer' ); ?><span><?php echo esc_html__( '/mês', 'vemcomer' ); ?></span></div>
+                        <ul class="vc-pricing-features">
+                            <li><?php echo esc_html__( 'Tudo do Vitrine', 'vemcomer' ); ?></li>
+                            <li><strong><?php echo esc_html__( 'Itens ilimitados', 'vemcomer' ); ?></strong></li>
+                            <li><?php echo esc_html__( 'Modificadores e complementos', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Mensagem de WhatsApp formatada', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Gestão de horários avançada', 'vemcomer' ); ?></li>
+                            <li class="disabled"><?php echo esc_html__( 'Analytics completo', 'vemcomer' ); ?></li>
+                        </ul>
+                        <button class="vc-pricing-btn primary" data-plan="Delivery Pro"><?php echo esc_html__( 'Assinar Agora', 'vemcomer' ); ?></button>
+                    </div>
+                    
+                    <!-- Growth -->
+                    <div class="vc-pricing-card">
+                        <h3 class="vc-pricing-title"><?php echo esc_html__( 'Gestão & Growth', 'vemcomer' ); ?></h3>
+                        <div class="vc-pricing-price"><?php echo esc_html__( 'R$ 129,90', 'vemcomer' ); ?><span><?php echo esc_html__( '/mês', 'vemcomer' ); ?></span></div>
+                        <ul class="vc-pricing-features">
+                            <li><?php echo esc_html__( 'Tudo do Delivery Pro', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Analytics Completo (Funil)', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Banners rotativos na loja', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Suporte VIP prioritário', 'vemcomer' ); ?></li>
+                            <li><?php echo esc_html__( 'Selos de destaque na busca', 'vemcomer' ); ?></li>
+                        </ul>
+                        <button class="vc-pricing-btn secondary" data-plan="Gestão & Growth"><?php echo esc_html__( 'Falar com Consultor', 'vemcomer' ); ?></button>
+                    </div>
+                </div>
             </div>
         </div>
         <?php
