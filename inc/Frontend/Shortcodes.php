@@ -10,6 +10,7 @@ use VC\Model\CPT_Restaurant;
 use VC\Model\CPT_MenuItem;
 use VC\Utils\Rating_Helper;
 use VC\Utils\Schedule_Helper;
+use VC\Subscription\Plan_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -124,6 +125,19 @@ class Shortcodes {
         if ( ! $rid ) {
             return '<div class="vc-empty">' . esc_html__( 'Selecione um restaurante.', 'vemcomer' ) . '</div>';
         }
+
+        // Verificar Plano Básico
+        $has_modifiers = true;
+        $is_basic = false;
+        if ( class_exists( '\\VC\\Subscription\\Plan_Manager' ) ) {
+            $has_modifiers = Plan_Manager::can_use_modifiers( $rid );
+            // Se não tem modificadores, assumimos layout básico
+            if ( ! $has_modifiers ) {
+                $is_basic = true;
+                wp_enqueue_style( 'vemcomer-front-basic', plugin_dir_url( dirname( __DIR__ ) ) . 'assets/css/frontend-basic-plan.css', [], '1.0' );
+            }
+        }
+
         $q = new \WP_Query([
             'post_type'      => CPT_MenuItem::SLUG,
             'posts_per_page' => 200,
@@ -134,14 +148,34 @@ class Shortcodes {
         if ( ! $q->have_posts() ) {
             return '<div class="vc-empty">' . esc_html__( 'Cardápio vazio.', 'vemcomer' ) . '</div>';
         }
+        
         ob_start();
-        echo '<div id="vc-menu" class="vc-grid vc-menu">';
+        $body_class = $is_basic ? 'vc-layout-basic' : '';
+        // Hack para adicionar classe ao body via JS se necessário, ou envolver em wrapper
+        echo '<div id="vc-menu" class="vc-grid vc-menu ' . esc_attr( $body_class ) . '">';
+        
+        // Injetar script inline para adicionar classe ao body se for básico
+        if ( $is_basic ) {
+            echo '<script>document.body.classList.add("vc-layout-basic");</script>';
+        }
+
         while ( $q->have_posts() ) { $q->the_post();
             $mid    = get_the_ID();
             $price  = (string) get_post_meta( $mid, '_vc_price', true );
             $ptime  = (string) get_post_meta( $mid, '_vc_prep_time', true );
-            echo '<div class="vc-card">';
-            echo get_the_post_thumbnail( $mid, 'medium', [ 'class' => 'vc-thumb' ] );
+            
+            $card_class = $is_basic ? 'vc-menu-item-card' : 'vc-card';
+            
+            echo '<div class="' . $card_class . '">';
+            
+            // Imagem
+            if ( $is_basic ) {
+                echo get_the_post_thumbnail( $mid, 'thumbnail', [ 'class' => 'vc-menu-item-card__image' ] );
+                echo '<div class="vc-menu-item-card__content">';
+            } else {
+                echo get_the_post_thumbnail( $mid, 'medium', [ 'class' => 'vc-thumb' ] );
+            }
+
             echo '<h4 class="vc-title">' . esc_html( get_the_title() ) . '</h4>';
             echo '<div class="vc-desc">' . esc_html( wp_strip_all_tags( get_post_field( 'post_content', $mid ) ) ) . '</div>';
             $desc = wp_strip_all_tags( get_post_field( 'post_content', $mid ) );
@@ -150,8 +184,17 @@ class Shortcodes {
                 $image_id = get_post_thumbnail_id( $mid );
                 $image_url = wp_get_attachment_image_url( $image_id, 'medium' );
             }
-            echo '<div class="vc-line"><span class="vc-price">' . esc_html( $price ) . '</span>';
-            echo '<button class="vc-btn vc-add" 
+            
+            if ( $is_basic ) {
+                echo '<div class="vc-menu-item-card__actions">';
+                echo '<span class="vc-price" style="margin-right:10px; font-weight:bold;">' . esc_html( $price ) . '</span>';
+            } else {
+                echo '<div class="vc-line"><span class="vc-price">' . esc_html( $price ) . '</span>';
+            }
+
+            $btn_class = $is_basic ? 'vc-btn-add-simple' : 'vc-btn vc-add';
+            
+            echo '<button class="' . $btn_class . '" 
                 data-item-id="' . esc_attr( (string) $mid ) . '" 
                 data-item-title="' . esc_attr( get_the_title() ) . '" 
                 data-item-price="' . esc_attr( $price ) . '" 
@@ -160,11 +203,31 @@ class Shortcodes {
             if ( $image_url ) {
                 echo ' data-item-image="' . esc_url( $image_url ) . '"';
             }
-            echo '>' . esc_html__( 'Adicionar', 'vemcomer' ) . '</button></div>';
+            if ( $is_basic ) {
+                echo ' data-simple="1"'; // Sinaliza adição direta
+            }
+            echo '>';
+            if ( $is_basic ) echo '🛒 ';
+            echo esc_html__( 'Adicionar', 'vemcomer' ) . '</button>';
+            
+            if ( $is_basic ) {
+                echo '</div>'; // Fecha actions
+                echo '</div>'; // Fecha content
+            } else {
+                echo '</div>'; // Fecha vc-line
+            }
+
             echo '<div class="vc-meta">' . esc_html( sprintf( __( 'Preparo: %s min', 'vemcomer' ), $ptime ?: '—' ) ) . '</div>';
-            echo '</div>';
+            echo '</div>'; // Fecha card
         }
         echo '</div>';
+        
+        if ( $is_basic ) {
+            echo '<div class="vc-powered-by">';
+            echo 'Tecnologia <a href="' . esc_url( home_url() ) . '" target="_blank">VemComer</a> • Crie sua loja grátis';
+            echo '</div>';
+        }
+
         \wp_reset_postdata();
         return ob_get_clean();
     }

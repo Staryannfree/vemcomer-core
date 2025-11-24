@@ -8,6 +8,7 @@
 namespace VC\Frontend;
 
 use VC\Order\Statuses;
+use VC\Subscription\Plan_Manager;
 use WP_Post;
 use WP_Query;
 use WP_User;
@@ -56,6 +57,35 @@ class RestaurantPanel {
             return $this->render_empty_state();
         }
 
+        // --- Lógica de Plano Básico ---
+        $plan = Plan_Manager::get_restaurant_plan( $restaurant->ID );
+        // Se não tiver plano ou preço for 0, consideramos básico/vitrine
+        $is_basic = ! $plan || ( (float) $plan['monthly_price'] <= 0 );
+        
+        if ( $is_basic ) {
+            wp_enqueue_style( 'vemcomer-admin-basic', plugin_dir_url( dirname( __DIR__ ) ) . 'assets/css/admin-panel-basic.css', [], '1.0' );
+        }
+
+        // Dados de uso do plano
+        $max_items = Plan_Manager::get_max_menu_items( $restaurant->ID );
+        $items_count = 0;
+        $usage_pct = 0;
+        $is_limit_near = false;
+
+        if ( $max_items > 0 ) {
+            $items_count = (int) (new WP_Query([
+                'post_type'      => 'vc_menu_item',
+                'author'         => $user->ID,
+                'fields'         => 'ids',
+                'post_status'    => 'publish',
+                'posts_per_page' => -1,
+            ]))->found_posts;
+            
+            $usage_pct = min( 100, ( $items_count / $max_items ) * 100 );
+            $is_limit_near = ( $usage_pct >= 80 );
+        }
+        // ------------------------------
+
         $status_obj     = get_post_status_object( $restaurant->post_status );
         $status_label   = $status_obj ? $status_obj->label : $restaurant->post_status;
         $meta           = $this->restaurant_meta( $restaurant->ID );
@@ -75,7 +105,12 @@ class RestaurantPanel {
             <div class="vc-panel__header">
                 <div>
                     <p class="vc-panel__eyebrow"><?php echo esc_html__( 'Painel do restaurante', 'vemcomer' ); ?></p>
-                    <h2 class="vc-panel__title"><?php echo esc_html( $restaurant->post_title ); ?></h2>
+                    <h2 class="vc-panel__title">
+                        <?php echo esc_html( $restaurant->post_title ); ?>
+                        <?php if ( $is_basic ) : ?>
+                            <span class="vc-plan-badge" style="margin-left: 10px; font-size: 12px; vertical-align: middle;">Plano Vitrine</span>
+                        <?php endif; ?>
+                    </h2>
                     <p class="vc-panel__status"><?php echo esc_html__( 'Status:', 'vemcomer' ) . ' ' . esc_html( $status_label ); ?></p>
                 </div>
                 <div class="vc-panel__actions">
@@ -104,6 +139,33 @@ class RestaurantPanel {
                 </div>
             </div>
 
+            <?php if ( $is_limit_near ) : ?>
+                <div class="vc-limit-alert">
+                    <span>
+                        <strong><?php echo esc_html__( 'Atenção: Você quase atingiu seu limite', 'vemcomer' ); ?></strong><br>
+                        <?php echo esc_html( sprintf( __( 'Restam apenas %d itens para cadastrar no cardápio gratuito.', 'vemcomer' ), $max_items - $items_count ) ); ?>
+                    </span>
+                    <a href="#upgrade-modal"><?php echo esc_html__( 'Liberar itens ilimitados →', 'vemcomer' ); ?></a>
+                </div>
+            <?php endif; ?>
+
+            <?php if ( $is_basic && $max_items > 0 ) : ?>
+                <div class="vc-plan-widget">
+                    <h4>
+                        <?php echo esc_html__( 'Seu Plano', 'vemcomer' ); ?>
+                        <span class="vc-plan-badge">VITRINE</span>
+                    </h4>
+                    <div class="vc-plan-progress">
+                        <div class="vc-plan-progress-bar <?php echo $usage_pct > 90 ? 'danger' : ''; ?>" style="width: <?php echo esc_attr( $usage_pct ); ?>%;"></div>
+                    </div>
+                    <div class="vc-plan-stats">
+                        <span><?php echo esc_html( sprintf( __( '%d de %d itens', 'vemcomer' ), $items_count, $max_items ) ); ?></span>
+                        <span><?php echo esc_html( round( $usage_pct ) . '%' ); ?></span>
+                    </div>
+                    <a href="#upgrade-modal" class="vc-btn-upgrade-sm"><?php echo esc_html__( 'Fazer Upgrade 🚀', 'vemcomer' ); ?></a>
+                </div>
+            <?php endif; ?>
+
             <div class="vc-panel__grid">
                 <div class="vc-card vc-panel__card">
                     <h3><?php echo esc_html__( 'Dados do restaurante', 'vemcomer' ); ?></h3>
@@ -119,14 +181,43 @@ class RestaurantPanel {
 
                 <div class="vc-card vc-panel__card">
                     <h3><?php echo esc_html__( 'Resumo de pedidos', 'vemcomer' ); ?></h3>
-                    <ul class="vc-panel__summary">
-                        <?php foreach ( $orders['counts'] as $key => $count ) : ?>
-                            <li>
-                                <span class="vc-panel__summary-label"><?php echo esc_html( $orders['labels'][ $key ] ?? $key ); ?></span>
-                                <strong class="vc-panel__summary-value"><?php echo esc_html( (string) $count ); ?></strong>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <?php if ( ! Plan_Manager::can_view_analytics( $restaurant->ID ) ) : ?>
+                        <div class="vc-blur-container">
+                            <div class="vc-blur-overlay">
+                                <div class="vc-blur-message">
+                                    <span class="vc-blur-icon">🔒</span>
+                                    <h4 class="vc-blur-title"><?php echo esc_html__( 'Quem visitou sua loja?', 'vemcomer' ); ?></h4>
+                                    <p class="vc-blur-text"><?php echo esc_html__( 'Saiba com o Analytics Pro.', 'vemcomer' ); ?></p>
+                                    <a href="#upgrade-modal" class="vc-btn-upgrade-lg"><?php echo esc_html__( 'Liberar Dados', 'vemcomer' ); ?></a>
+                                </div>
+                            </div>
+                            <div class="vc-blur-content">
+                                <ul class="vc-panel__summary">
+                                    <li>
+                                        <span class="vc-panel__summary-label"><?php echo esc_html__( 'Visitantes', 'vemcomer' ); ?></span>
+                                        <strong class="vc-panel__summary-value">1.2k</strong>
+                                    </li>
+                                    <li>
+                                        <span class="vc-panel__summary-label"><?php echo esc_html__( 'Conversão', 'vemcomer' ); ?></span>
+                                        <strong class="vc-panel__summary-value">3.5%</strong>
+                                    </li>
+                                    <li>
+                                        <span class="vc-panel__summary-label"><?php echo esc_html__( 'Pedidos Pendentes', 'vemcomer' ); ?></span>
+                                        <strong class="vc-panel__summary-value">5</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    <?php else : ?>
+                        <ul class="vc-panel__summary">
+                            <?php foreach ( $orders['counts'] as $key => $count ) : ?>
+                                <li>
+                                    <span class="vc-panel__summary-label"><?php echo esc_html( $orders['labels'][ $key ] ?? $key ); ?></span>
+                                    <strong class="vc-panel__summary-value"><?php echo esc_html( (string) $count ); ?></strong>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
             </div>
 
