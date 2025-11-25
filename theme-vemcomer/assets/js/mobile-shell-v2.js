@@ -1280,6 +1280,19 @@ function attachFeaturedCardListeners() {
     });
 }
 
+/**
+ * Attach event listeners para resultados de busca
+ */
+function attachSearchResultListeners() {
+    // Event delegation para cliques nos resultados de busca
+    document.addEventListener('click', function(e) {
+        const searchResult = e.target.closest('.search-result-item');
+        if (searchResult && searchResult.dataset.restaurantUrl) {
+            window.location.href = searchResult.dataset.restaurantUrl;
+        }
+    });
+}
+
 // ============ LOCATION MANAGEMENT ============
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -1737,8 +1750,9 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                 }
             }
             
+            const restaurantUrl = `/restaurante/${restaurant.id}/`;
             html += `
-                <div class="search-result-item" onclick="openRestaurant(${restaurant.id})">
+                <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
                     <div class="search-result-icon restaurant">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -1860,6 +1874,7 @@ async function initApp() {
     // Anexar event listeners para cards de restaurantes (uma vez no início)
     attachRestaurantCardListeners();
     attachFeaturedCardListeners();
+    attachSearchResultListeners();
     
     // Verificar localização e mostrar modal se necessário
     checkLocationAndShowModal();
