@@ -1479,3 +1479,33 @@ Todas as URLs de restaurantes no mobile agora seguem o padrão `/restaurant/{slu
 - Parâmetros unificados, sem conflitos
 - Performance melhorada na busca
 - URLs consistentes em todo o mobile-shell
+
+## v0.53 - URLs Flexíveis para Restaurantes (Slug e ID)
+
+**Funcionalidade implementada:**
+Agora os restaurantes podem ser acessados tanto por slug quanto por ID, garantindo compatibilidade total:
+
+- **URLs com Slug**: `/restaurant/come-quieto/` ✅
+- **URLs com ID**: `/restaurant/139/` ✅
+- **Ambos funcionam**: Qualquer um dos formatos abre o mesmo restaurante
+
+**Solução implementada:**
+- **Rewrite Rules**: Adicionada regra para aceitar IDs numéricos em `/restaurant/{id}/`
+- **Template Redirect**: Busca inteligente que tenta primeiro por ID, depois por slug
+- **Atualização Automática**: Rewrite rules são atualizadas automaticamente quando um restaurante é criado ou atualizado
+- **Compatibilidade**: Links antigos (com ID) e novos (com slug) funcionam perfeitamente
+
+**Arquivos modificados:**
+- `inc/Model/CPT_Restaurant.php` - Adicionadas rewrite rules, query vars e template redirect
+
+**Como funciona:**
+1. Quando um restaurante é salvo, as rewrite rules são atualizadas automaticamente
+2. O sistema detecta se a URL contém um número (ID) ou texto (slug)
+3. Busca o restaurante pelo método apropriado
+4. Carrega o template single normalmente
+
+**Resultado:**
+- Compatibilidade total com links antigos e novos
+- URLs mais flexíveis e amigáveis
+- Atualização automática sem intervenção manual
+- SEO-friendly (slug) e compatibilidade (ID)
