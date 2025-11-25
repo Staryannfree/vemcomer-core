@@ -92,6 +92,7 @@ function vemcomer_theme_scripts() {
     wp_enqueue_style( 'vemcomer-theme-style', get_stylesheet_uri(), [], $theme_version );
     wp_enqueue_style( 'vemcomer-theme-main', get_template_directory_uri() . '/assets/css/main.css', [], $theme_version );
     wp_enqueue_style( 'vemcomer-mobile-app', get_template_directory_uri() . '/assets/css/mobile-app.css', ['vemcomer-theme-main'], $theme_version );
+    wp_enqueue_style( 'vemcomer-mobile-ui', get_template_directory_uri() . '/assets/css/mobile-ui.css', ['vemcomer-mobile-app'], $theme_version );
     if ( is_front_page() ) {
         $home_template = vemcomer_get_home_template();
         if ( $home_template === 'front-page-v2.php' ) {
@@ -105,6 +106,7 @@ function vemcomer_theme_scripts() {
     // Scripts
     wp_enqueue_script( 'vemcomer-theme-main', get_template_directory_uri() . '/assets/js/main.js', [], $theme_version, true );
     wp_enqueue_script( 'vemcomer-mobile-app', get_template_directory_uri() . '/assets/js/mobile-app.js', ['vemcomer-theme-main'], $theme_version, true );
+    wp_enqueue_script( 'vemcomer-mobile-ui', get_template_directory_uri() . '/assets/js/mobile-ui.js', ['vemcomer-mobile-app'], $theme_version, true );
     if ( is_front_page() ) {
         // Carregar scripts da home (funcionam em ambos os templates)
         wp_enqueue_script( 'vemcomer-home-improvements', get_template_directory_uri() . '/assets/js/home-improvements.js', ['vemcomer-theme-main'], $theme_version, true );

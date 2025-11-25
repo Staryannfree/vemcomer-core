@@ -207,6 +207,47 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.34 - Mobile UI Moderno (Design Estilo iFood)
+
+**Nova implementação:**
+- **Design Mobile Completo**: Interface moderna estilo iFood para dispositivos móveis
+- **Top Bar Aprimorado**: Logo, seletor de localização (com bairro) e botão de notificações
+- **Hero Banner Carousel**: Carrossel de banners promocionais com navegação por dots e swipe
+- **Stories Section**: Seção de stories estilo Instagram (estrutura pronta, aguardando integração com API)
+- **Quick Actions**: Botões rápidos para Delivery, Reservas, Eventos e Promoções
+- **Search Bar**: Barra de busca com filtros integrada
+- **Seções de Conteúdo**:
+  - Pratos do Dia (carrossel horizontal)
+  - Restaurantes em Destaque (grid)
+  - Todos os Restaurantes (grid com cards)
+- **Cart Button Flutuante**: Botão de carrinho fixo com badge de quantidade
+- **Story Viewer Modal**: Modal completo para visualização de stories com progress bars e navegação
+
+**Arquivos criados:**
+- `theme-vemcomer/assets/css/mobile-ui.css` - Estilos completos do mobile UI
+- `theme-vemcomer/assets/js/mobile-ui.js` - JavaScript para funcionalidades (carousel, stories, notificações, cart)
+- `theme-vemcomer/template-parts/home/mobile-home.php` - Template partial para home mobile
+
+**Arquivos modificados:**
+- `theme-vemcomer/header.php` - Adicionado botão de notificações no top bar mobile
+- `theme-vemcomer/functions.php` - Enqueue de `mobile-ui.css` e `mobile-ui.js`
+- `templates/page-home.php` - Detecção de mobile e renderização do template mobile
+
+**Funcionalidades implementadas:**
+- Banner carousel com auto-play e navegação por swipe
+- Estrutura de stories (aguardando integração com API)
+- Sistema de notificações (badge com contagem)
+- Botão de carrinho com atualização dinâmica
+- Cards de restaurantes com favoritos
+- Cards de pratos com preços e badges
+
+**Próximos passos (Backend):**
+- Integrar stories com API REST
+- Implementar sistema de notificações
+- Conectar pratos do dia com menu items destacados
+- Integrar eventos gastronômicos
+- Conectar favoritos com API
+
 ### v0.33.2 - Top Bar Mobile Exibe Bairro ao Invés de Cidade
 
 **Novas funcionalidades:**

@@ -13,6 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 get_header();
+
+// Se for mobile, usar template mobile
+if ( wp_is_mobile() ) {
+    get_template_part( 'template-parts/home/mobile', 'home' );
+    get_footer();
+    return;
+}
 ?>
 
 <main class="vc-home">
