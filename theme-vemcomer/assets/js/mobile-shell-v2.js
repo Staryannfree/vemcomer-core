@@ -203,8 +203,14 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     let hasLogo = isValidImage(apiRestaurant.logo);
     let finalLogo = hasLogo ? apiRestaurant.logo : null;
     
+    // URL do restaurante - usar slug se disponível, senão usar ID
+    const slug = apiRestaurant.slug || apiRestaurant.post_name || null;
+    const url = slug ? `/restaurante/${slug}/` : `/restaurante/${apiRestaurant.id}/`;
+    
     return {
         id: apiRestaurant.id,
+        slug: slug,
+        url: url,
         name: restaurantName,
         rating: rating > 0 ? rating.toFixed(1) : 'Novo',
         deliveryTime: deliveryTime,
@@ -1069,7 +1075,7 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="featured-card" onclick="openRestaurant(${restaurant.id})">
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurante/${restaurant.id}/`}">
             <div class="featured-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1102,7 +1108,7 @@ async function renderFeatured() {
                     <span>${restaurant.deliveryFee}</span>
                 </div>
                 ${restaurant.hasReservation ? `
-                    <button class="featured-reserve-btn" onclick="openReservation(${restaurant.id}, event)">
+                    <button class="featured-reserve-btn" data-restaurant-id="${restaurant.id}">
                         <svg class="reserve-icon" viewBox="0 0 24 24">
                             <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zm0-12H5V5h14v2zM7 11h5v5H7z"/>
                         </svg>
@@ -1112,6 +1118,9 @@ async function renderFeatured() {
             </div>
         </div>
     `).join('');
+    
+    // Adicionar event listeners após renderização
+    attachFeaturedCardListeners();
 }
 
 async function renderRestaurants() {
@@ -1129,7 +1138,7 @@ async function renderRestaurants() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="restaurant-card" onclick="openRestaurant(${restaurant.id})">
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurante/${restaurant.id}/`}">
             <div class="card-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1153,7 +1162,7 @@ async function renderRestaurants() {
                     }
                 </div>
 
-                <button class="favorite-btn" onclick="toggleFavorite(event, ${restaurant.id})">
+                <button class="favorite-btn" data-restaurant-id="${restaurant.id}">
                     <svg class="favorite-icon" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
@@ -1179,28 +1188,96 @@ async function renderRestaurants() {
             </div>
         </div>
     `).join('');
+    
+    // Adicionar event listeners após renderização
+    attachRestaurantCardListeners();
 }
 
 // ============ EVENT HANDLERS ============
-function openDish(id) {
+// Garantir que as funções estejam no escopo global
+window.openDish = function(id) {
     window.location.href = `/prato/${id}`;
-}
+};
 
-function openEvent(id) {
+window.openEvent = function(id) {
     window.location.href = `/evento/${id}`;
+};
+
+window.openRestaurant = function(id) {
+    // Tentar usar slug se disponível, senão usar ID
+    const card = document.querySelector(`[data-restaurant-id="${id}"]`);
+    if (card && card.dataset.restaurantUrl) {
+        window.location.href = card.dataset.restaurantUrl;
+    } else {
+        window.location.href = `/restaurante/${id}/`;
+    }
+};
+
+window.openReservation = function(id, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    window.location.href = `/reservar/${id}/`;
+};
+
+window.toggleFavorite = function(event, id) {
+    if (event) {
+        event.stopPropagation();
+    }
+    // TODO: Implementar lógica de favoritos
+    console.log('Toggle favorite:', id);
+};
+
+/**
+ * Attach event listeners para cards de restaurantes (event delegation)
+ */
+function attachRestaurantCardListeners() {
+    // Event delegation para cliques nos cards
+    document.addEventListener('click', function(e) {
+        const restaurantCard = e.target.closest('.restaurant-card');
+        if (restaurantCard) {
+            // Ignorar cliques no botão de favorito
+            if (e.target.closest('.favorite-btn')) {
+                const restaurantId = parseInt(e.target.closest('.favorite-btn').dataset.restaurantId);
+                if (restaurantId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.toggleFavorite(e, restaurantId);
+                }
+                return;
+            }
+            
+            // Redirecionar para o restaurante
+            const url = restaurantCard.dataset.restaurantUrl || `/restaurante/${restaurantCard.dataset.restaurantId}/`;
+            window.location.href = url;
+        }
+    });
 }
 
-function openRestaurant(id) {
-    window.location.href = `/restaurante/${id}`;
-}
-
-function openReservation(id, event) {
-    event.stopPropagation();
-    window.location.href = `/reservar/${id}`;
-}
-
-function toggleFavorite(event, id) {
-    event.stopPropagation();
+/**
+ * Attach event listeners para cards de restaurantes em destaque
+ */
+function attachFeaturedCardListeners() {
+    // Event delegation para cliques nos cards featured
+    document.addEventListener('click', function(e) {
+        const featuredCard = e.target.closest('.featured-card');
+        if (featuredCard) {
+            // Ignorar cliques no botão de reserva
+            if (e.target.closest('.featured-reserve-btn')) {
+                const restaurantId = parseInt(e.target.closest('.featured-reserve-btn').dataset.restaurantId);
+                if (restaurantId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.openReservation(restaurantId, e);
+                }
+                return;
+            }
+            
+            // Redirecionar para o restaurante
+            const url = featuredCard.dataset.restaurantUrl || `/restaurante/${featuredCard.dataset.restaurantId}/`;
+            window.location.href = url;
+        }
+    });
 }
 
 // ============ LOCATION MANAGEMENT ============
@@ -1780,6 +1857,10 @@ function initSearch() {
 
 // ============ INITIALIZE ============
 async function initApp() {
+    // Anexar event listeners para cards de restaurantes (uma vez no início)
+    attachRestaurantCardListeners();
+    attachFeaturedCardListeners();
+    
     // Verificar localização e mostrar modal se necessário
     checkLocationAndShowModal();
     
