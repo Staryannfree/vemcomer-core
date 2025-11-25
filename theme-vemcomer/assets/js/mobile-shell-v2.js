@@ -1204,20 +1204,34 @@ window.openEvent = function(id) {
     window.location.href = `/evento/${id}`;
 };
 
-window.openRestaurant = function(id) {
-    // Tentar usar slug se disponível, senão usar ID
+// ============ EVENT HANDLERS ============
+// Garantir que as funções estejam no escopo global
+window.openDish = function(id) {
+    window.location.href = `/prato/${id}`;
+};
+
+window.openEvent = function(id) {
+    window.location.href = `/evento/${id}`;
+};
+
+window.openRestaurant = function(id, slug = null) {
+    // 1. Tentar usar a URL salva no card (data-attribute)
     const card = document.querySelector(`[data-restaurant-id="${id}"]`);
     if (card && card.dataset.restaurantUrl) {
         window.location.href = card.dataset.restaurantUrl;
-    } else {
-        // Tentar usar slug se disponível, senão usar ID
-        const card = document.querySelector(`[data-restaurant-id="${id}"]`);
-        if (card && card.dataset.restaurantUrl) {
-            window.location.href = card.dataset.restaurantUrl;
-        } else {
-            window.location.href = `/restaurant/${id}/`;
-        }
+        return;
     }
+
+    // 2. Se o slug foi passado como argumento, use-o
+    if (slug) {
+        window.location.href = `/restaurant/${slug}/`;
+        return;
+    }
+
+    // 3. Fallback final: Tentar construir com ID, mas sabendo que idealmente seria slug
+    // Se você tiver certeza que o backend envia slug na lista principal, 
+    // isso só acontece se o card não estiver na tela (ex: link direto)
+    window.location.href = `/restaurant/${id}/`;
 };
 
 window.openReservation = function(id, event) {
