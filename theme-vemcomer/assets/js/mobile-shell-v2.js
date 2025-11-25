@@ -867,6 +867,304 @@ function checkLocationAndShowModal() {
     }
 }
 
+// ============ SEARCH FUNCTIONALITY ============
+let searchTimeout = null;
+let currentSearchAbortController = null;
+
+async function searchRestaurants(query) {
+    if (!query || query.trim().length < 2) {
+        return [];
+    }
+    
+    const url = `${API_BASE}/restaurants?search=${encodeURIComponent(query)}&per_page=10`;
+    
+    try {
+        // Cancelar requisição anterior se existir
+        if (currentSearchAbortController) {
+            currentSearchAbortController.abort();
+        }
+        currentSearchAbortController = new AbortController();
+        
+        const response = await fetch(url, {
+            signal: currentSearchAbortController.signal,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.restaurants || [];
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return [];
+        }
+        console.error('Erro na busca de restaurantes:', error);
+        return [];
+    }
+}
+
+async function searchCategories(query) {
+    if (!query || query.trim().length < 2) {
+        return [];
+    }
+    
+    // Buscar categorias via API REST do WordPress
+    const url = `/wp-json/wp/v2/vc_cuisine?search=${encodeURIComponent(query)}&per_page=5`;
+    
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            return [];
+        }
+        
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Erro na busca de categorias:', error);
+        return [];
+    }
+}
+
+async function searchMenuItems(query) {
+    if (!query || query.trim().length < 2) {
+        return [];
+    }
+    
+    // Buscar itens do cardápio via API REST
+    const url = `/wp-json/wp/v2/vc_menu_item?search=${encodeURIComponent(query)}&per_page=5&status=publish`;
+    
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            return [];
+        }
+        
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Erro na busca de itens:', error);
+        return [];
+    }
+}
+
+async function performSearch(query) {
+    const resultsContainer = document.getElementById('searchResultsContent');
+    const resultsDropdown = document.getElementById('searchResults');
+    
+    if (!resultsContainer || !resultsDropdown) return;
+    
+    if (!query || query.trim().length < 2) {
+        resultsDropdown.style.display = 'none';
+        return;
+    }
+    
+    // Mostrar loading
+    resultsContainer.innerHTML = `
+        <div class="search-results-loading">
+            <div class="spinner"></div>
+            <span>Buscando...</span>
+        </div>
+    `;
+    resultsDropdown.style.display = 'block';
+    
+    try {
+        // Buscar em paralelo
+        const [restaurants, categories, menuItems] = await Promise.all([
+            searchRestaurants(query),
+            searchCategories(query),
+            searchMenuItems(query)
+        ]);
+        
+        // Renderizar resultados (async)
+        await renderSearchResults(restaurants, categories, menuItems, query);
+    } catch (error) {
+        console.error('Erro na busca:', error);
+        resultsContainer.innerHTML = `
+            <div class="search-results-empty">
+                Erro ao buscar. Tente novamente.
+            </div>
+        `;
+    }
+}
+
+async function renderSearchResults(restaurants, categories, menuItems, query) {
+    const resultsContainer = document.getElementById('searchResultsContent');
+    const resultsDropdown = document.getElementById('searchResults');
+    
+    if (!resultsContainer || !resultsDropdown) return;
+    
+    let html = '';
+    
+    // Restaurantes
+    if (restaurants.length > 0) {
+        restaurants.forEach(restaurant => {
+            const rating = restaurant.rating?.average || 0;
+            const cuisine = restaurant.cuisines && restaurant.cuisines.length > 0 
+                ? restaurant.cuisines[0] 
+                : 'Restaurante';
+            
+            // Buscar nome da categoria se for slug
+            let cuisineName = cuisine;
+            if (categories.length > 0) {
+                const foundCategory = categories.find(cat => cat.slug === cuisine);
+                if (foundCategory) {
+                    cuisineName = foundCategory.name;
+                }
+            }
+            
+            html += `
+                <div class="search-result-item" onclick="openRestaurant(${restaurant.id})">
+                    <div class="search-result-icon restaurant">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </div>
+                    <div class="search-result-content">
+                        <div class="search-result-title">${highlightMatch(restaurant.title || restaurant.name, query)}</div>
+                        <div class="search-result-subtitle">${cuisineName} ${rating > 0 ? '• ⭐ ' + rating.toFixed(1) : ''}</div>
+                        <div class="search-result-type">Restaurante</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    // Categorias
+    if (categories.length > 0) {
+        categories.forEach(category => {
+            html += `
+                <div class="search-result-item" onclick="window.location.href='/?cuisine=${category.slug}'">
+                    <div class="search-result-icon category">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div class="search-result-content">
+                        <div class="search-result-title">${highlightMatch(category.name, query)}</div>
+                        <div class="search-result-subtitle">${category.count || 0} restaurantes</div>
+                        <div class="search-result-type">Categoria</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    // Itens do cardápio - buscar nome do restaurante para cada item
+    if (menuItems.length > 0) {
+        const restaurantNamesMap = {};
+        
+        // Buscar nomes dos restaurantes únicos
+        const uniqueRestaurantIds = [...new Set(menuItems.map(item => {
+            return item.meta?._vc_restaurant_id || item.restaurant_id || '';
+        }).filter(id => id))];
+        
+        // Buscar nomes dos restaurantes
+        for (const restId of uniqueRestaurantIds) {
+            try {
+                const restResponse = await fetch(`${API_BASE}/restaurants/${restId}`);
+                if (restResponse.ok) {
+                    const restData = await restResponse.json();
+                    restaurantNamesMap[restId] = restData.title || restData.name || 'Restaurante';
+                }
+            } catch (e) {
+                console.error('Erro ao buscar restaurante:', e);
+            }
+        }
+        
+        menuItems.forEach(item => {
+            const restaurantId = item.meta?._vc_restaurant_id || item.restaurant_id || '';
+            const price = item.price || item.meta?._vc_price || '';
+            const restaurantName = restaurantNamesMap[restaurantId] || 'Restaurante';
+            const itemTitle = item.title?.rendered || item.title || item.name || '';
+            
+            html += `
+                <div class="search-result-item" onclick="window.location.href='/restaurante/${restaurantId}?item=${item.id}'">
+                    <div class="search-result-icon dish">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
+                        </svg>
+                    </div>
+                    <div class="search-result-content">
+                        <div class="search-result-title">${highlightMatch(itemTitle, query)}</div>
+                        <div class="search-result-subtitle">${restaurantName} ${price ? '• R$ ' + parseFloat(price).toFixed(2).replace('.', ',') : ''}</div>
+                        <div class="search-result-type">Prato</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    // Se não houver resultados
+    if (!html) {
+        html = `
+            <div class="search-results-empty">
+                Nenhum resultado encontrado para "${query}"
+            </div>
+        `;
+    }
+    
+    resultsContainer.innerHTML = html;
+    resultsDropdown.style.display = 'block';
+}
+
+function highlightMatch(text, query) {
+    if (!text || !query) return text;
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    
+    if (!searchInput || !searchResults) return;
+    
+    // Debounce na busca
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300); // 300ms de debounce
+    });
+    
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    // Fechar ao pressionar Escape
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            searchResults.style.display = 'none';
+            searchInput.blur();
+        }
+    });
+}
+
 // ============ INITIALIZE ============
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar localização e mostrar modal se necessário
@@ -877,6 +1175,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (locationModalBtn) {
         locationModalBtn.addEventListener('click', requestLocationPermission);
     }
+    
+    // Inicializar busca
+    initSearch();
     
     // Renderizar conteúdo
     renderStories();
