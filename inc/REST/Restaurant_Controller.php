@@ -39,6 +39,19 @@ class Restaurant_Controller {
             'permission_callback' => '__return_true',
         ] );
 
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)', [
+            'methods'  => 'GET',
+            'callback' => [ $this, 'get_restaurant' ],
+            'permission_callback' => '__return_true',
+            'args'     => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
         register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/menu-items', [
             'methods'  => 'GET',
             'callback' => [ $this, 'get_menu_items' ],
@@ -208,13 +221,13 @@ class Restaurant_Controller {
                     }
                 }
                 if ( ! empty( $restaurant_ids_from_items ) ) {
-                    // Combinar busca: restaurantes que correspondem OU têm itens que correspondem
-                    $args['meta_query']['relation'] = 'OR';
-                    $args['meta_query'][] = [
-                        'key'     => '_vc_restaurant_id',
-                        'value'   => array_unique( $restaurant_ids_from_items ),
-                        'compare' => 'IN',
-                    ];
+                    $restaurant_ids_from_items = array_unique( $restaurant_ids_from_items );
+
+                    if ( ! empty( $args['post__in'] ) ) {
+                        $args['post__in'] = array_unique( array_merge( (array) $args['post__in'], $restaurant_ids_from_items ) );
+                    } else {
+                        $args['post__in'] = $restaurant_ids_from_items;
+                    }
                 }
             }
         }
@@ -246,9 +259,12 @@ class Restaurant_Controller {
 
         // Metas: delivery / is_open / min_rating / price_range
         $meta = [];
-        $delivery = $request->get_param( 'delivery' );
-        if ( null !== $delivery ) {
-            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
+        $delivery_param = $request->get_param( 'has_delivery' );
+        if ( null === $delivery_param ) {
+            $delivery_param = $request->get_param( 'delivery' );
+        }
+        if ( null !== $delivery_param ) {
+            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $delivery_param, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
         }
         $is_open = $request->get_param( 'is_open' );
         if ( null !== $is_open ) {
@@ -268,10 +284,6 @@ class Restaurant_Controller {
                 'type'    => 'DECIMAL(10,2)',
             ];
         }
-        $has_delivery = $request->get_param( 'has_delivery' );
-        if ( null !== $has_delivery ) {
-            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $has_delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
-        }
         $featured = $request->get_param( 'featured' );
         if ( null !== $featured && filter_var( $featured, FILTER_VALIDATE_BOOLEAN ) ) {
             $meta[] = [ 'key' => '_vc_restaurant_featured', 'value' => '1', 'compare' => '=' ];
@@ -280,10 +292,12 @@ class Restaurant_Controller {
             if ( ! isset( $args['meta_query'] ) ) {
                 $args['meta_query'] = [];
             }
-            if ( isset( $args['meta_query']['relation'] ) ) {
-                $args['meta_query'][] = $meta;
-            } else {
-                $args['meta_query'] = array_merge( $args['meta_query'] ?? [], $meta );
+            if ( ! isset( $args['meta_query']['relation'] ) ) {
+                $args['meta_query']['relation'] = 'AND';
+            }
+
+            foreach ( $meta as $condition ) {
+                $args['meta_query'][] = $condition;
             }
         }
 
@@ -321,6 +335,40 @@ class Restaurant_Controller {
         }
 
         return new WP_REST_Response( $items, 200 );
+    }
+
+    public function get_restaurant( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $id   = (int) $request->get_param( 'id' );
+        $post = get_post( $id );
+
+        if ( ! $post || CPT_Restaurant::SLUG !== $post->post_type || 'publish' !== $post->post_status ) {
+            return new WP_Error(
+                'vc_restaurant_not_found',
+                __( 'Restaurante não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        $terms  = wp_get_object_terms( $post->ID, CPT_Restaurant::TAX_CUISINE, [ 'fields' => 'slugs' ] );
+        $rating = \VC\Utils\Rating_Helper::get_rating( $post->ID );
+
+        $data = [
+            'id'           => $post->ID,
+            'title'        => get_the_title( $post ),
+            'slug'         => $post->post_name,
+            'address'      => (string) get_post_meta( $post->ID, '_vc_address', true ),
+            'phone'        => (string) get_post_meta( $post->ID, '_vc_phone', true ),
+            'has_delivery' => (bool) get_post_meta( $post->ID, '_vc_has_delivery', true ),
+            'is_open'      => Schedule_Helper::is_open( $post->ID ),
+            'is_featured'  => (bool) get_post_meta( $post->ID, '_vc_restaurant_featured', true ),
+            'cuisines'     => array_values( array_map( 'strval', (array) $terms ) ),
+            'rating'       => [
+                'average' => $rating['avg'],
+                'count'   => $rating['count'],
+            ],
+        ];
+
+        return new WP_REST_Response( $data, 200 );
     }
 
     public function get_menu_items( WP_REST_Request $request ) {

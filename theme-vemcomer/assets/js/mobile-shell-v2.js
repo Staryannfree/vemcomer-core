@@ -1,6 +1,27 @@
 // ============ CONFIGURAÇÃO ============
 const API_BASE = '/wp-json/vemcomer/v1';
 
+// ============ HELPERS DE URL ============
+function buildRestaurantSlug(data = {}) {
+    return data.slug
+        || data.restaurant_slug
+        || data.post_name
+        || null;
+}
+
+function buildRestaurantUrl(restaurantOrId, slugOverride = null) {
+    const data = typeof restaurantOrId === 'object'
+        ? restaurantOrId
+        : { id: restaurantOrId, slug: slugOverride, restaurant_slug: slugOverride, post_name: slugOverride };
+
+    const slug = slugOverride || buildRestaurantSlug(data);
+    const id = data.id || restaurantOrId;
+
+    return slug
+        ? `/restaurant/${slug}/`
+        : `/restaurant/${id}/`;
+}
+
 // ============ PLACEHOLDERS INTELIGENTES POR CATEGORIA ============
 const PLACEHOLDERS = {
     // Entidades Genéricas
@@ -139,7 +160,7 @@ function mapApiBannerToBanner(apiBanner) {
     let link = apiBanner.link || null;
     if (!link && apiBanner.restaurant_id) {
         // Usar slug se disponível, senão usar ID
-        link = `/restaurant/${apiBanner.restaurant_slug || apiBanner.restaurant_id}/`;
+        link = buildRestaurantUrl(apiBanner.restaurant_id, buildRestaurantSlug(apiBanner));
     }
     
     // Usar imagem da API ou fallback genérico (banners não têm categoria específica)
@@ -203,10 +224,10 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     // Lógica de Logo
     let hasLogo = isValidImage(apiRestaurant.logo);
     let finalLogo = hasLogo ? apiRestaurant.logo : null;
-    
+
     // URL do restaurante - usar slug (padrão: /restaurant/{slug}/)
-    const slug = apiRestaurant.slug || apiRestaurant.post_name || null;
-    const url = slug ? `/restaurant/${slug}/` : `/restaurant/${apiRestaurant.id}/`;
+    const slug = buildRestaurantSlug(apiRestaurant);
+    const url = buildRestaurantUrl(apiRestaurant, slug);
     
     return {
         id: apiRestaurant.id,
@@ -960,20 +981,22 @@ async function renderDishes() {
             console.warn('Erro ao buscar categoria do restaurante:', e);
         }
     }));
-    
+
     container.innerHTML = dishes.map(dish => {
         // Obter categoria do restaurante para fallback inteligente
         const cuisines = restaurantCuisinesMap[dish.restaurant_id] || [];
         const categoryName = cuisines.length > 0 ? cuisines[0] : '';
-        
+
         // Concatena nome e categoria para melhor precisão (FORÇA FALLBACK AQUI)
         const contextText = `${dish.name || ''} ${categoryName}`.trim();
-        const finalImage = isValidImage(dish.image) 
-            ? dish.image 
+        const finalImage = isValidImage(dish.image)
+            ? dish.image
             : getSmartImage(contextText); // Força o fallback aqui!
-        
+
+        const restaurantUrl = buildRestaurantUrl({ id: dish.restaurant_id, restaurant_slug: dish.restaurant_slug });
+
         return `
-        <div class="dish-card" onclick="window.location.href='/restaurant/${dish.restaurant_slug || dish.restaurant_id}?item=${dish.id}'">
+        <div class="dish-card" onclick="window.location.href='${restaurantUrl}?item=${dish.id}'">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
@@ -1075,13 +1098,16 @@ async function renderFeatured() {
         return;
     }
     
-    container.innerHTML = restaurants.map(restaurant => `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurant/${restaurant.slug || restaurant.id}/`}">
+    container.innerHTML = restaurants.map(restaurant => {
+        const restaurantUrl = restaurant.url || buildRestaurantUrl(restaurant);
+
+        return `
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
             <div class="featured-image-wrapper">
-                <img 
-                    src="${restaurant.image}" 
-                    alt="${restaurant.name}" 
-                    class="featured-image" 
+                <img
+                    src="${restaurant.image}"
+                    alt="${restaurant.name}"
+                    class="featured-image"
                     loading="lazy" 
                     onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';"
                 >
@@ -1118,7 +1144,8 @@ async function renderFeatured() {
                 ` : ''}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     // Adicionar event listeners após renderização
     attachFeaturedCardListeners();
@@ -1138,13 +1165,16 @@ async function renderRestaurants() {
         return;
     }
     
-    container.innerHTML = restaurants.map(restaurant => `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurant/${restaurant.slug || restaurant.id}/`}">
+    container.innerHTML = restaurants.map(restaurant => {
+        const restaurantUrl = restaurant.url || buildRestaurantUrl(restaurant);
+
+        return `
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
             <div class="card-image-wrapper">
-                <img 
-                    src="${restaurant.image}" 
-                    alt="${restaurant.name}" 
-                    class="card-image" 
+                <img
+                    src="${restaurant.image}"
+                    alt="${restaurant.name}"
+                    class="card-image"
                     loading="lazy"
                     onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';"
                 >
@@ -1188,7 +1218,8 @@ async function renderRestaurants() {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     // Adicionar event listeners após renderização
     attachRestaurantCardListeners();
@@ -1214,12 +1245,12 @@ window.openRestaurant = function(id, slug = null) {
 
     // 2. Se o slug foi passado como argumento, use-o
     if (slug) {
-        window.location.href = `/restaurant/${slug}/`;
+        window.location.href = buildRestaurantUrl(id, slug);
         return;
     }
 
     // 3. Fallback final: Tentar construir com ID
-    window.location.href = `/restaurant/${id}/`;
+    window.location.href = buildRestaurantUrl(id);
 };
 
 window.openReservation = function(id, event) {
@@ -1255,9 +1286,9 @@ function attachRestaurantCardListeners() {
                 }
                 return;
             }
-            
+
             // Redirecionar para o restaurante
-            const url = restaurantCard.dataset.restaurantUrl || `/restaurant/${restaurantCard.dataset.restaurantId}/`;
+            const url = restaurantCard.dataset.restaurantUrl || buildRestaurantUrl(restaurantCard.dataset.restaurantId);
             window.location.href = url;
         }
     });
@@ -1281,9 +1312,9 @@ function attachFeaturedCardListeners() {
                 }
                 return;
             }
-            
+
             // Redirecionar para o restaurante
-            const url = featuredCard.dataset.restaurantUrl || `/restaurant/${featuredCard.dataset.restaurantId}/`;
+            const url = featuredCard.dataset.restaurantUrl || buildRestaurantUrl(featuredCard.dataset.restaurantId);
             window.location.href = url;
         }
     });
@@ -1759,7 +1790,7 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                 }
             }
             
-            const restaurantUrl = `/restaurant/${restaurant.slug || restaurant.id}/`;
+            const restaurantUrl = buildRestaurantUrl(restaurant);
             html += `
                 <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
                     <div class="search-result-icon restaurant">

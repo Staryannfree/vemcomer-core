@@ -119,6 +119,7 @@ class Menu_Items_Controller {
                 'description' => wp_trim_words( $post->post_content, 15, '...' ),
                 'restaurant'  => $restaurant ? get_the_title( $restaurant ) : '',
                 'restaurant_id' => $restaurant_id,
+                'restaurant_slug' => $restaurant ? $restaurant->post_name : '',
                 'price'       => $price ? 'R$ ' . number_format( (float) $price, 2, ',', '.' ) : '',
                 'image'       => $image_id ? wp_get_attachment_image_url( $image_id, 'medium' ) : null,
                 'badge'       => $badge,
