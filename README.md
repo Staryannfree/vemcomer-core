@@ -1174,3 +1174,59 @@ O popup agora funciona corretamente, aparecendo após 1 segundo na home page e p
 - Cliquem em "Ver restaurantes perto de mim" para obter localização GPS
 - Cliquem em "Pular por enquanto" para fechar o popup
 - Vejam o popup novamente apenas após limpar o cookie `vc_welcome_popup_seen`
+
+---
+
+## v0.36 - Integração Mobile com API REST
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Conectar o "App Shell" mobile (`theme-vemcomer/template-parts/content-mobile-home.php`) com a API REST real do backend, substituindo todos os dados hardcoded por chamadas dinâmicas.
+
+**Implementação:**
+
+### 1. Funções de Mapeamento de Dados
+- `mapApiBannerToBanner()` - Mapeia resposta da API de banners para formato do frontend
+- `mapApiRestaurantToRestaurant()` - Mapeia resposta da API de restaurantes
+- `mapApiRestaurantToFeatured()` - Mapeia restaurantes para seção de destaques
+
+### 2. Funções de Busca de Dados
+- `fetchBanners()` - Busca banners ativos via `GET /wp-json/vemcomer/v1/banners`
+- `fetchRestaurants(params)` - Busca restaurantes via `GET /wp-json/vemcomer/v1/restaurants` com suporte a:
+  - `per_page` - Limite de resultados
+  - `orderby` - Ordenação (title, date, rating)
+  - `order` - Direção (asc, desc)
+  - `search` - Busca por texto
+- `fetchFeaturedRestaurants()` - Busca 4 restaurantes com maior rating
+- `getRestaurantImage(restaurantId)` - Busca imagem destacada via WordPress REST API padrão
+
+### 3. Renderização Dinâmica
+- `renderBanners()` - Renderiza banners do carousel (agora assíncrono)
+- `renderRestaurants()` - Renderiza lista completa de restaurantes
+- `renderFeatured()` - Renderiza restaurantes em destaque
+- Todas as funções mostram skeleton loading durante carregamento
+
+### 4. Inicialização Assíncrona
+- Função `initApp()` criada para carregar todos os dados em paralelo
+- Uso de `Promise.all()` para otimizar carregamento
+- Skeleton loading em todas as seções
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Refatoração completa para usar API REST
+
+**Endpoints utilizados:**
+- `GET /wp-json/vemcomer/v1/banners` - Lista banners ativos
+- `GET /wp-json/vemcomer/v1/restaurants` - Lista restaurantes com filtros
+- `GET /wp-json/wp/v2/vc_restaurant/{id}?_embed=true` - Busca imagem destacada
+
+**Mantido hardcoded (endpoints futuros):**
+- Stories (storiesData) - Aguardando endpoint de stories
+- Pratos do Dia (dishesData) - Aguardando endpoint de pratos em destaque
+- Eventos (eventsData) - Aguardando endpoint de eventos
+
+**Melhorias futuras:**
+- Adicionar campo `image` na resposta da API de restaurantes (evitar requisições extras)
+- Adicionar campos `delivery_time` e `delivery_fee` na API
+- Criar endpoints para Stories, Pratos do Dia e Eventos
+- Implementar cache de imagens no frontend
