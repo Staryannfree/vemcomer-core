@@ -210,27 +210,25 @@ Quando um restaurante é aprovado:
 ### v0.33 - Navegação Mobile App Nativo (Estilo iFood)
 
 **Novas funcionalidades:**
-- **Bottom Navigation Bar (Mobile Only)**:
-  - Barra de navegação fixa no rodapé para telas < 768px
-  - 5 itens com ícones SVG: Início, Buscar, Categorias, Pedidos (se logado), Perfil
-  - Estado ativo destacado com cor do tema (#ea1d2c)
-  - Acessibilidade completa (ARIA labels, aria-current)
-  - Suporte a safe area insets (iPhone X+)
-- **Top Bar Minimalista (Mobile)**:
-  - Barra sticky no topo substituindo header padrão no mobile
-  - Logo clicável + Seletor de endereço interativo
-  - Integrado com sistema de geolocalização
-  - Atualização automática quando localização muda
-- **Ocultação de Elementos no Mobile**:
-  - Header e Footer padrão ocultos em telas < 768px
-  - Padding-bottom no body para não esconder conteúdo atrás da bottom nav
-  - Layout otimizado para experiência app nativo
-- **Categorias Estilo Pílulas (Horizontal Scroll)**:
-  - Carrossel horizontal com scroll suave
-  - Botões arredondados (border-radius: 20px)
-  - Estado ativo com background vermelho (#ea1d2c)
-  - Scrollbar oculta para visual limpo
-  - Suporte a touch scrolling nativo
+- **Estrutura CSS Mobile-First (`mobile-app.css`)**:
+  - Ocultação de header padrão (`.site-header`, `#masthead`), footer padrão (`.site-footer`) e sidebars em telas < 768px
+  - Ajuste do body: `padding-top: 60px` e `padding-bottom: 80px` para não esconder conteúdo atrás das barras fixas
+  - Top bar fixa: `position: fixed; top: 0; z-index: 999` com fundo branco e sombra suave
+  - Bottom nav fixa: `position: fixed; bottom: 0; z-index: 1000` com suporte a `safe-area-inset-bottom` (iPhone X+)
+- **Bottom Navigation Bar (4 itens - estilo iFood)**:
+  - Renderizada apenas com `wp_is_mobile()` no PHP
+  - 4 ícones SVG inline: Início (Casa), Buscar (Lupa), Pedidos (Lista/Documento), Perfil (Usuário)
+  - Lógica de UX: Item da página atual recebe classe `.active` (cor `#ea1d2c`)
+  - Links: `/` (Início), `/busca` (Buscar), `/meus-pedidos` (Pedidos), `/minha-conta` (Perfil)
+- **Header Minimalista (Mobile Only)**:
+  - Exibido apenas com `wp_is_mobile()` no PHP
+  - Barra simples com Logo pequeno (à esquerda) e texto "Entregar em: [Endereço Atual] ▾"
+  - Integrado com sistema de geolocalização (atualização automática)
+- **Categorias Estilo Pílulas (Carrossel Horizontal)**:
+  - CSS: `display: flex; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;`
+  - Estilo: Botões arredondados (border-radius: 20px), fundo cinza claro (`#f2f2f2`), texto preto
+  - Item ativo: Fundo vermelho (`#ea1d2c`), texto branco
+  - Scrollbar oculta: `::-webkit-scrollbar { display: none; }`
 
 **Arquivos novos:**
 - `theme-vemcomer/assets/css/mobile-app.css` - Estilos completos para navegação mobile app
