@@ -1478,6 +1478,9 @@ async function requestLocationPermission() {
             setCookie('vc_user_city', address.city, 365);
         }
         
+        // Marcar localização como aceita/validada
+        localStorage.setItem('vc_location_accepted', 'true');
+        
         // Atualizar texto do locationText
         updateLocationText();
         
@@ -1557,6 +1560,9 @@ async function tryAutoLocation() {
             setCookie('vc_user_city', address.city, 365);
         }
         
+        // Marcar localização como aceita/validada
+        localStorage.setItem('vc_location_accepted', 'true');
+        
         // Atualizar texto e fechar modal
         updateLocationText();
         hideLocationModal();
@@ -1570,21 +1576,55 @@ async function tryAutoLocation() {
 }
 
 function checkLocationAndShowModal() {
-    // Verificar se já tem localização salva
+    // Verificar se já tem localização salva e válida
     const neighborhood = localStorage.getItem('vc_user_neighborhood') || getCookie('vc_user_neighborhood');
     const city = localStorage.getItem('vc_user_city') || getCookie('vc_user_city');
     const savedLocation = localStorage.getItem('vc_user_location');
     
-    // Se não tiver nenhuma localização, mostrar modal e tentar obter automaticamente
-    if (!neighborhood && !city && !savedLocation) {
+    // Verificar se há localização válida salva
+    let hasValidLocation = false;
+    
+    // Verificar se tem bairro ou cidade salva
+    if (neighborhood && neighborhood.trim() !== '' && neighborhood !== 'Endereço') {
+        hasValidLocation = true;
+    } else if (city && city.trim() !== '' && city !== 'Endereço') {
+        hasValidLocation = true;
+    }
+    
+    // Verificar se tem localização completa salva com dados válidos
+    if (!hasValidLocation && savedLocation) {
+        try {
+            const locData = JSON.parse(savedLocation);
+            // Verificar se tem dados válidos (neighborhood, city ou fullAddress)
+            if ((locData.neighborhood && locData.neighborhood.trim() !== '') ||
+                (locData.city && locData.city.trim() !== '') ||
+                (locData.fullAddress && locData.fullAddress.trim() !== '')) {
+                hasValidLocation = true;
+            }
+        } catch (e) {
+            // Se não conseguir parsear, considerar inválido
+            console.error('Erro ao parsear localização salva:', e);
+        }
+    }
+    
+    // Verificar flag de localização aceita/validada
+    const locationAccepted = localStorage.getItem('vc_location_accepted') === 'true';
+    if (locationAccepted) {
+        hasValidLocation = true;
+    }
+    
+    // Se não tiver nenhuma localização válida, mostrar modal e tentar obter automaticamente
+    if (!hasValidLocation) {
         showLocationModal();
         // Tentar obter localização automaticamente quando o modal abrir
         setTimeout(() => {
             tryAutoLocation();
         }, 500); // Pequeno delay para o modal aparecer primeiro
     } else {
-        // Atualizar texto do locationText
+        // Atualizar texto do locationText (já tem localização válida)
         updateLocationText();
+        // Garantir que o modal está escondido
+        hideLocationModal();
     }
 }
 
