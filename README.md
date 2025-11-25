@@ -1255,3 +1255,76 @@ Na lista de **Restaurantes** (`Pedevem > Restaurantes`), há uma coluna **"⭐ E
 - Meta field `_vc_restaurant_featured` para restaurantes
 - Endpoints REST para toggle via AJAX
 - JavaScript `admin-quick-toggle.js` para interação sem reload
+
+## v0.47 - Sistema de Smart Fallback para Imagens
+
+**Nova implementação:**
+- **Sistema de Placeholders Inteligentes**: Sistema completo de fallback baseado em categoria para restaurantes e itens sem imagem
+- **Objeto PLACEHOLDERS**: 20+ categorias com imagens do Unsplash (pizza, japonesa, lanches, açaí, brasileira, etc.)
+- **Função `getSmartImage()`**: Análise inteligente de texto (nome + categoria) para decidir qual placeholder usar
+- **Função `getLogoFallback()`**: Gera avatares com iniciais e cores para logos faltantes
+- **Validação de Imagens**: Helper `PLACEHOLDERS.isValid()` para validar URLs de imagem
+- **Proteção Multi-Camada**:
+  1. **Camada 1 (API Check)**: Se API retorna `null`, usa `getSmartImage()` imediatamente
+  2. **Camada 2 (Contexto)**: Analisa nome + categoria para escolher placeholder correto
+  3. **Camada 3 (404 Protection)**: `onerror` substitui automaticamente se URL estiver quebrada
+  4. **Camada 4 (Logo)**: Avatares com iniciais quando não há logo
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Sistema completo de smart fallback
+- `theme-vemcomer/assets/css/mobile-shell-v2.css` - Estilos para logo-fallback e object-fit
+
+**Funcionalidades:**
+- Normalização de texto (remove acentos, lowercase)
+- Match parcial (ex: "pizza italiana" encontra "pizza")
+- Palavras-chave adicionais (hamburguer, refri, temaki, etc.)
+- Cores consistentes para avatares baseadas em hash do nome
+- Todas as imagens têm `onerror` com fallback inteligente
+- CSS com `object-fit: cover` para evitar distorção
+
+**Exemplos:**
+- Restaurante "Pizzaria do João" sem foto → mostra imagem de pizza
+- Prato "Coca Cola" sem foto + categoria "Bebidas" → mostra foto de bebida
+- Restaurante "Açaí da Vila" sem logo → mostra círculo roxo com "A"
+- Link quebrado (404) → substituído automaticamente pelo placeholder
+
+## v0.46 - Modo Cardápio Digital Standalone
+
+**Nova implementação:**
+- **Dois Modos de Visualização Mobile**:
+  1. **Modo Marketplace**: Navegação completa com vários restaurantes (modo atual)
+  2. **Modo Cardápio Digital (Standalone)**: Link direto de restaurante, navegação blindada
+
+**Funcionalidades:**
+- **Detecção de Contexto**: Função `vc_is_standalone_mode()` detecta `?mode=menu` ou `/cardapio/{slug}`
+- **Rewrite Rule**: URL `/cardapio/{slug}` aponta para restaurante com modo standalone
+- **CSS Adaptado**: Classe `vc-standalone-mode` no body esconde elementos do marketplace:
+  - Logo do marketplace
+  - Links Home e Busca na bottom nav
+  - Seção de restaurantes relacionados
+- **Bottom Nav Adaptada**: 
+  - Marketplace: 5 itens (Início, Buscar, Categorias, Pedidos, Perfil)
+  - Standalone: 3 itens (Cardápio, Info, Pedidos)
+- **Modal de Informações**: Modal com dados do restaurante (endereço, telefone, WhatsApp, horários)
+- **Link do Cardápio Digital**: Seção no metabox do restaurante com link copiável
+
+**Arquivos criados/modificados:**
+- `theme-vemcomer/functions.php` - Função `vc_is_standalone_mode()` e rewrite rules
+- `theme-vemcomer/header.php` - Classe `vc-standalone-mode` no body
+- `theme-vemcomer/footer.php` - Bottom nav adaptada para modo standalone
+- `theme-vemcomer/assets/css/mobile-shell-v2.css` - Estilos para modo standalone
+- `templates/single-vc-restaurant.php` - Modal de informações
+- `inc/meta-restaurants.php` - Link do cardápio digital no metabox
+
+**URLs suportadas:**
+- `https://seusite.com.br/restaurante/{slug}/?mode=menu`
+- `https://seusite.com.br/cardapio/{slug}/`
+
+**Como usar:**
+1. Edite um restaurante no admin
+2. No metabox "Informações do restaurante", role até "Link do Cardápio Digital"
+3. Clique em "Copiar Link"
+4. Compartilhe o link com seus clientes
+
+**Resultado:**
+Clientes que acessam o link do cardápio digital veem apenas o restaurante específico, sem opções de navegação para outros restaurantes, focando no pedido rápido.
