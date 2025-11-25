@@ -203,8 +203,9 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     let hasLogo = isValidImage(apiRestaurant.logo);
     let finalLogo = hasLogo ? apiRestaurant.logo : null;
     
-    // URL do restaurante - sempre usar ID (padrão: /restaurante/{id}/)
-    const url = `/restaurante/${apiRestaurant.id}/`;
+    // URL do restaurante - usar slug (padrão: /restaurant/{slug}/)
+    const slug = apiRestaurant.slug || apiRestaurant.post_name || null;
+    const url = slug ? `/restaurant/${slug}/` : `/restaurant/${apiRestaurant.id}/`;
     
     return {
         id: apiRestaurant.id,
@@ -971,7 +972,7 @@ async function renderDishes() {
             : getSmartImage(contextText); // Força o fallback aqui!
         
         return `
-        <div class="dish-card" onclick="window.location.href='/restaurante/${dish.restaurant_id}?item=${dish.id}'">
+        <div class="dish-card" onclick="window.location.href='/restaurant/${dish.restaurant_slug || dish.restaurant_id}?item=${dish.id}'">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
@@ -1074,7 +1075,7 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurante/${restaurant.id}/`}">
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurant/${restaurant.slug || restaurant.id}/`}">
             <div class="featured-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1137,7 +1138,7 @@ async function renderRestaurants() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurante/${restaurant.id}/`}">
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurant/${restaurant.slug || restaurant.id}/`}">
             <div class="card-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1208,7 +1209,13 @@ window.openRestaurant = function(id) {
     if (card && card.dataset.restaurantUrl) {
         window.location.href = card.dataset.restaurantUrl;
     } else {
-        window.location.href = `/restaurante/${id}/`;
+        // Tentar usar slug se disponível, senão usar ID
+        const card = document.querySelector(`[data-restaurant-id="${id}"]`);
+        if (card && card.dataset.restaurantUrl) {
+            window.location.href = card.dataset.restaurantUrl;
+        } else {
+            window.location.href = `/restaurant/${id}/`;
+        }
     }
 };
 
@@ -1247,7 +1254,7 @@ function attachRestaurantCardListeners() {
             }
             
             // Redirecionar para o restaurante
-            const url = restaurantCard.dataset.restaurantUrl || `/restaurante/${restaurantCard.dataset.restaurantId}/`;
+            const url = restaurantCard.dataset.restaurantUrl || `/restaurant/${restaurantCard.dataset.restaurantId}/`;
             window.location.href = url;
         }
     });
@@ -1273,7 +1280,7 @@ function attachFeaturedCardListeners() {
             }
             
             // Redirecionar para o restaurante
-            const url = featuredCard.dataset.restaurantUrl || `/restaurante/${featuredCard.dataset.restaurantId}/`;
+            const url = featuredCard.dataset.restaurantUrl || `/restaurant/${featuredCard.dataset.restaurantId}/`;
             window.location.href = url;
         }
     });
@@ -1749,7 +1756,7 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                 }
             }
             
-            const restaurantUrl = `/restaurante/${restaurant.id}/`;
+            const restaurantUrl = `/restaurant/${restaurant.slug || restaurant.id}/`;
             html += `
                 <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
                     <div class="search-result-icon restaurant">

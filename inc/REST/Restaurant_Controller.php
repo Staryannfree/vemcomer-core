@@ -306,6 +306,7 @@ class Restaurant_Controller {
             $items[] = [
                 'id'          => $p->ID,
                 'title'       => get_the_title( $p ),
+                'slug'        => $p->post_name, // Adicionar slug para URLs
                 'address'     => (string) get_post_meta( $p->ID, '_vc_address', true ),
                 'phone'       => (string) get_post_meta( $p->ID, '_vc_phone', true ),
                 'has_delivery' => (bool) get_post_meta( $p->ID, '_vc_has_delivery', true ),
