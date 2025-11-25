@@ -1436,3 +1436,46 @@ Todas as URLs de restaurantes no mobile agora seguem o padrão `/restaurant/{slu
 - Exemplo: `https://seusite.com.br/restaurant/cantina-da-praca-1/` ✅
 - Consistente com o padrão do site desktop
 - URLs mais amigáveis e SEO-friendly
+
+## v0.52 - Correção de Bugs Críticos na REST API e Mobile Shell
+
+**Bugs corrigidos:**
+
+### 1. Bug na busca por restaurantes via itens de cardápio
+- **Problema**: Meta_query incorreta usando `_vc_restaurant_id` (meta do item, não do restaurante)
+- **Solução**: Substituído por `post__in` para buscar restaurantes cujo ID está na lista
+- **Performance**: Limitado busca de itens a 200 resultados (ao invés de -1)
+
+### 2. Composição de meta_query corrigida
+- **Problema**: Arrays aninhados quando já existia `relation` na meta_query
+- **Solução**: Adiciona cada condição diretamente (flat), garantindo relation 'AND' quando necessário
+
+### 3. Endpoint GET /restaurants/{id} criado
+- **Problema**: JavaScript chamava endpoint inexistente, causando 404
+- **Solução**: Criado endpoint completo que retorna dados de um único restaurante
+- **Uso**: Mobile-shell agora pode buscar dados de restaurante individual sem erro
+
+### 4. Parametrização unificada: delivery x has_delivery
+- **Problema**: Dois parâmetros fazendo a mesma coisa, risco de conflito
+- **Solução**: Unificado com prioridade para `has_delivery`, `delivery` como fallback (deprecated)
+
+### 5. Performance: busca por itens de cardápio
+- **Problema**: `posts_per_page = -1` em tabela possivelmente grande
+- **Solução**: Limitado a 200 resultados para evitar sobrecarga
+
+### 6. URLs consistentes no mobile-shell
+- **Problema**: URLs de pratos não usavam slug do restaurante
+- **Solução**: API de menu-items agora retorna `restaurant_slug`, URLs corrigidas para usar slug
+
+**Arquivos modificados:**
+- `inc/REST/Restaurant_Controller.php` - Todas as correções acima
+- `inc/REST/Menu_Items_Controller.php` - Adicionado `restaurant_slug` na resposta
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - URLs corrigidas para usar slug
+
+**Resultado:**
+- Busca de restaurantes funciona corretamente via itens de cardápio
+- Meta_query composta corretamente sem arrays aninhados
+- Endpoint `/restaurants/{id}` disponível e funcional
+- Parâmetros unificados, sem conflitos
+- Performance melhorada na busca
+- URLs consistentes em todo o mobile-shell
