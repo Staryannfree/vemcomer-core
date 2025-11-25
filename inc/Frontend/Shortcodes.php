@@ -21,6 +21,7 @@ class Shortcodes {
         add_shortcode( 'vemcomer_restaurants', [ $this, 'sc_restaurants' ] );
         add_shortcode( 'vemcomer_menu', [ $this, 'sc_menu' ] );
         add_shortcode( 'vemcomer_checkout', [ $this, 'sc_checkout' ] );
+        add_shortcode( 'vc_categories', [ $this, 'sc_categories' ] );
     }
 
     private function ensure_assets(): void {
@@ -311,6 +312,200 @@ class Shortcodes {
             <div class="vc-order-result"></div>
             <p class="vc-tip" style="margin-top: 16px; font-size: 0.9rem; color: #6b7280;"><?php echo esc_html__( 'O carrinho aceita itens de um único restaurante para garantir cálculo correto de frete.', 'vemcomer' ); ?></p>
         </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Lista todas as categorias de restaurantes (tipos de cozinha)
+     * Shortcode: [vc_categories]
+     */
+    public function sc_categories( $atts = [] ): string {
+        $this->ensure_assets();
+        
+        // Buscar todas as categorias (taxonomia vc_cuisine)
+        $categories = get_terms( [
+            'taxonomy'   => 'vc_cuisine',
+            'hide_empty' => true, // Apenas categorias com restaurantes
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        ] );
+        
+        if ( is_wp_error( $categories ) || empty( $categories ) ) {
+            return '<div class="vc-empty">' . esc_html__( 'Nenhuma categoria disponível no momento.', 'vemcomer' ) . '</div>';
+        }
+        
+        // Ícones padrão para categorias (pode ser expandido)
+        $category_icons = [
+            'pizza' => '🍕',
+            'brasileira' => '🇧🇷',
+            'lanches' => '🍔',
+            'sushi' => '🍣',
+            'bares' => '🍺',
+            'doces' => '🍰',
+            'japonesa' => '🍱',
+            'chinesa' => '🥢',
+            'italiana' => '🍝',
+            'mexicana' => '🌮',
+            'vegetariana' => '🥗',
+            'churrasco' => '🥩',
+        ];
+        
+        ob_start();
+        ?>
+        <div class="vc-categories-page">
+            <h2 class="vc-page-title"><?php esc_html_e( 'Categorias de Restaurantes', 'vemcomer' ); ?></h2>
+            <p class="vc-page-subtitle"><?php esc_html_e( 'Escolha uma categoria para ver os restaurantes disponíveis', 'vemcomer' ); ?></p>
+            
+            <div class="vc-categories-grid">
+                <?php foreach ( $categories as $category ) : 
+                    $term_id = $category->term_id;
+                    $name = $category->name;
+                    $slug = $category->slug;
+                    $description = $category->description;
+                    $count = $category->count;
+                    
+                    // URL para filtrar restaurantes por categoria
+                    $category_url = add_query_arg( 
+                        [ 'cuisine' => $slug ], 
+                        home_url( '/restaurantes/' ) 
+                    );
+                    
+                    // Obter ícone (verificar slug ou usar padrão)
+                    $icon = $category_icons[ $slug ] ?? '🍽️';
+                    
+                    // Tentar obter imagem da categoria (se houver meta)
+                    $image_id = get_term_meta( $term_id, '_vc_category_image', true );
+                    $image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'medium' ) : null;
+                ?>
+                    <a href="<?php echo esc_url( $category_url ); ?>" class="vc-category-card">
+                        <?php if ( $image_url ) : ?>
+                            <div class="vc-category-card__image">
+                                <img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $name ); ?>" />
+                            </div>
+                        <?php else : ?>
+                            <div class="vc-category-card__icon">
+                                <?php echo esc_html( $icon ); ?>
+                            </div>
+                        <?php endif; ?>
+                        <div class="vc-category-card__content">
+                            <h3 class="vc-category-card__name"><?php echo esc_html( $name ); ?></h3>
+                            <?php if ( $description ) : ?>
+                                <p class="vc-category-card__description"><?php echo esc_html( wp_trim_words( $description, 15 ) ); ?></p>
+                            <?php endif; ?>
+                            <p class="vc-category-card__count">
+                                <?php 
+                                echo esc_html( sprintf( 
+                                    _n( '%d restaurante', '%d restaurantes', $count, 'vemcomer' ), 
+                                    $count 
+                                ) ); 
+                                ?>
+                            </p>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
+        <style>
+        .vc-categories-page {
+            padding: 24px 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .vc-page-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+        
+        .vc-page-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+        
+        .vc-categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .vc-categories-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 16px;
+            }
+        }
+        
+        .vc-category-card {
+            display: block;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .vc-category-card:hover,
+        .vc-category-card:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #ea1d2c;
+        }
+        
+        .vc-category-card__image {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            background: #f3f4f6;
+        }
+        
+        .vc-category-card__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .vc-category-card__icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1;
+        }
+        
+        .vc-category-card__content {
+            text-align: center;
+        }
+        
+        .vc-category-card__name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+        
+        .vc-category-card__description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .vc-category-card__count {
+            font-size: 14px;
+            color: #ea1d2c;
+            font-weight: 500;
+            margin: 0;
+        }
+        </style>
         <?php
         return ob_get_clean();
     }

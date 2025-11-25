@@ -207,6 +207,29 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.33.1 - Página de Categorias e Menu Mobile Atualizado
+
+**Novas funcionalidades:**
+- **Item "Categorias" no Menu Mobile**:
+  - Adicionado entre "Buscar" e "Pedidos" na bottom navigation
+  - Link para `/categorias/` com ícone de grid
+  - Estado ativo destacado quando na página de categorias
+- **Shortcode `[vc_categories]`**:
+  - Lista todas as categorias de restaurantes (taxonomia `vc_cuisine`)
+  - Grid responsivo com cards de categoria
+  - Exibe ícone ou imagem da categoria
+  - Mostra contagem de restaurantes por categoria
+  - Links para filtrar restaurantes por categoria
+  - Suporte a imagens customizadas (meta `_vc_category_image`)
+  - Ícones padrão para categorias comuns (pizza, brasileira, lanches, etc.)
+
+**Arquivos modificados:**
+- `theme-vemcomer/footer.php` - Adicionado item "Categorias" na bottom nav
+- `inc/Frontend/Shortcodes.php` - Novo shortcode `sc_categories()` com grid de categorias
+
+**Próximos passos:**
+- Criar página `/categorias/` no WordPress com o shortcode `[vc_categories]`
+
 ### v0.33 - Navegação Mobile App Nativo (Estilo iFood)
 
 **Novas funcionalidades:**

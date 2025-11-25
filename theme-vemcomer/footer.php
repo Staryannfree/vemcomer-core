@@ -51,6 +51,7 @@
         $current_url = home_url( $_SERVER['REQUEST_URI'] );
         $is_home = is_front_page() || is_home();
         $is_search = is_search() || ( isset( $_GET['s'] ) && ! empty( $_GET['s'] ) ) || strpos( $current_url, '/busca' ) !== false || strpos( $current_url, '/restaurantes' ) !== false;
+        $is_categories = strpos( $current_url, '/categorias' ) !== false;
         $is_orders = strpos( $current_url, '/meus-pedidos' ) !== false || strpos( $current_url, '/pedidos' ) !== false;
         $is_profile = strpos( $current_url, '/perfil' ) !== false || strpos( $current_url, '/minha-conta' ) !== false || strpos( $current_url, '/wp-login' ) !== false;
         
@@ -89,7 +90,27 @@
                 <span class="bottom-nav__label"><?php esc_html_e( 'Buscar', 'vemcomer' ); ?></span>
             </a>
             
-            <!-- 3. Pedidos -->
+            <!-- 3. Categorias -->
+            <?php
+            $categories_url = home_url( '/categorias/' );
+            $is_categories = strpos( $current_url, '/categorias' ) !== false;
+            ?>
+            <a href="<?php echo esc_url( $categories_url ); ?>" 
+               class="bottom-nav__item <?php echo $is_categories ? 'active' : ''; ?>" 
+               aria-label="<?php esc_attr_e( 'Categorias', 'vemcomer' ); ?>"
+               <?php echo $is_categories ? 'aria-current="page"' : ''; ?>>
+                <span class="bottom-nav__icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="bottom-nav__label"><?php esc_html_e( 'Categorias', 'vemcomer' ); ?></span>
+            </a>
+            
+            <!-- 4. Pedidos -->
             <a href="<?php echo esc_url( $orders_url ); ?>" 
                class="bottom-nav__item <?php echo $is_orders ? 'active' : ''; ?>" 
                aria-label="<?php esc_attr_e( 'Pedidos', 'vemcomer' ); ?>"
@@ -102,7 +123,7 @@
                 <span class="bottom-nav__label"><?php esc_html_e( 'Pedidos', 'vemcomer' ); ?></span>
             </a>
             
-            <!-- 4. Perfil -->
+            <!-- 5. Perfil -->
             <a href="<?php echo esc_url( $profile_url ); ?>" 
                class="bottom-nav__item <?php echo $is_profile ? 'active' : ''; ?>" 
                aria-label="<?php esc_attr_e( 'Perfil', 'vemcomer' ); ?>"
