@@ -973,7 +973,7 @@ async function renderDishes() {
             : getSmartImage(contextText); // Força o fallback aqui!
         
         return `
-        <div class="dish-card" onclick="window.location.href='/restaurant/${dish.restaurant_slug || dish.restaurant_id}?item=${dish.id}'">
+        <div class="dish-card" onclick="window.location.href='/restaurant/${dish.restaurant_slug || dish.restaurant_id}/?item=${dish.id}'">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}

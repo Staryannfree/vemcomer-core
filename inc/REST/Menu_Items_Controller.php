@@ -114,15 +114,16 @@ class Menu_Items_Controller {
             }
             
             $items[] = [
-                'id'          => $post->ID,
-                'name'        => get_the_title( $post ),
-                'description' => wp_trim_words( $post->post_content, 15, '...' ),
-                'restaurant'  => $restaurant ? get_the_title( $restaurant ) : '',
+                'id'            => $post->ID,
+                'name'          => get_the_title( $post ),
+                'description'  => wp_trim_words( $post->post_content, 15, '...' ),
+                'restaurant'    => $restaurant ? get_the_title( $restaurant ) : '',
                 'restaurant_id' => $restaurant_id,
-                'price'       => $price ? 'R$ ' . number_format( (float) $price, 2, ',', '.' ) : '',
-                'image'       => $image_id ? wp_get_attachment_image_url( $image_id, 'medium' ) : null,
-                'badge'       => $badge,
-                'is_featured' => $is_featured,
+                'restaurant_slug' => $restaurant ? $restaurant->post_name : null, // Adicionar slug para URLs
+                'price'         => $price ? 'R$ ' . number_format( (float) $price, 2, ',', '.' ) : '',
+                'image'         => $image_id ? wp_get_attachment_image_url( $image_id, 'medium' ) : null,
+                'badge'         => $badge,
+                'is_featured'   => $is_featured,
             ];
         }
 

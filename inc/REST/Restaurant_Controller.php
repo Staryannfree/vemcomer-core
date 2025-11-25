@@ -39,6 +39,19 @@ class Restaurant_Controller {
             'permission_callback' => '__return_true',
         ] );
 
+        register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)', [
+            'methods'  => 'GET',
+            'callback' => [ $this, 'get_restaurant' ],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
         register_rest_route( 'vemcomer/v1', '/restaurants/(?P<id>\d+)/menu-items', [
             'methods'  => 'GET',
             'callback' => [ $this, 'get_menu_items' ],
@@ -192,9 +205,10 @@ class Restaurant_Controller {
         if ( $search ) {
             $args['s'] = $search;
             // Buscar também em itens do cardápio
+            // Limitar a 200 resultados para performance
             $menu_items = get_posts( [
                 'post_type'      => CPT_MenuItem::SLUG,
-                'posts_per_page' => -1,
+                'posts_per_page' => 200,
                 'post_status'    => 'publish',
                 's'              => $search,
                 'fields'         => 'ids',
@@ -208,13 +222,18 @@ class Restaurant_Controller {
                     }
                 }
                 if ( ! empty( $restaurant_ids_from_items ) ) {
+                    $restaurant_ids_from_items = array_unique( $restaurant_ids_from_items );
                     // Combinar busca: restaurantes que correspondem OU têm itens que correspondem
-                    $args['meta_query']['relation'] = 'OR';
-                    $args['meta_query'][] = [
-                        'key'     => '_vc_restaurant_id',
-                        'value'   => array_unique( $restaurant_ids_from_items ),
-                        'compare' => 'IN',
-                    ];
+                    // Usar post__in ao invés de meta_query (correção do bug)
+                    if ( ! empty( $args['post__in'] ) ) {
+                        // Se já tiver um post__in, combina (OR) na mão
+                        $args['post__in'] = array_unique( array_merge(
+                            (array) $args['post__in'],
+                            $restaurant_ids_from_items
+                        ) );
+                    } else {
+                        $args['post__in'] = $restaurant_ids_from_items;
+                    }
                 }
             }
         }
@@ -246,19 +265,33 @@ class Restaurant_Controller {
 
         // Metas: delivery / is_open / min_rating / price_range
         $meta = [];
-        $delivery = $request->get_param( 'delivery' );
-        if ( null !== $delivery ) {
-            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
+        
+        // Unificar parâmetros delivery e has_delivery (priorizar has_delivery)
+        $value_delivery = $request->get_param( 'has_delivery' );
+        if ( null === $value_delivery ) {
+            $value_delivery = $request->get_param( 'delivery' ); // Fallback para compatibilidade
         }
+        if ( null !== $value_delivery ) {
+            $meta[] = [
+                'key'   => '_vc_has_delivery',
+                'value' => filter_var( $value_delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0',
+            ];
+        }
+        
         $is_open = $request->get_param( 'is_open' );
         if ( null !== $is_open ) {
-            $meta[] = [ 'key' => '_vc_is_open', 'value' => ( filter_var( $is_open, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
+            $meta[] = [
+                'key'   => '_vc_is_open',
+                'value' => filter_var( $is_open, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0',
+            ];
         }
+        
         $is_open_now = $request->get_param( 'is_open_now' );
         if ( null !== $is_open_now && filter_var( $is_open_now, FILTER_VALIDATE_BOOLEAN ) ) {
             // Filtrar por restaurantes abertos agora (usar Schedule_Helper)
             // Isso será filtrado após a query
         }
+        
         $min_rating = $request->get_param( 'min_rating' );
         if ( null !== $min_rating && is_numeric( $min_rating ) ) {
             $meta[] = [
@@ -268,22 +301,28 @@ class Restaurant_Controller {
                 'type'    => 'DECIMAL(10,2)',
             ];
         }
-        $has_delivery = $request->get_param( 'has_delivery' );
-        if ( null !== $has_delivery ) {
-            $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $has_delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
-        }
+        
         $featured = $request->get_param( 'featured' );
         if ( null !== $featured && filter_var( $featured, FILTER_VALIDATE_BOOLEAN ) ) {
-            $meta[] = [ 'key' => '_vc_restaurant_featured', 'value' => '1', 'compare' => '=' ];
+            $meta[] = [
+                'key'     => '_vc_restaurant_featured',
+                'value'   => '1',
+                'compare' => '=',
+            ];
         }
-        if ( $meta ) {
+        
+        // Composição segura de meta_query (evitar arrays aninhados)
+        if ( ! empty( $meta ) ) {
             if ( ! isset( $args['meta_query'] ) ) {
                 $args['meta_query'] = [];
             }
-            if ( isset( $args['meta_query']['relation'] ) ) {
-                $args['meta_query'][] = $meta;
-            } else {
-                $args['meta_query'] = array_merge( $args['meta_query'] ?? [], $meta );
+            // Garante que exista uma relation
+            if ( ! isset( $args['meta_query']['relation'] ) ) {
+                $args['meta_query']['relation'] = 'AND';
+            }
+            // Adiciona cada condição diretamente (flat, não aninhado)
+            foreach ( $meta as $cond ) {
+                $args['meta_query'][] = $cond;
             }
         }
 
