@@ -124,6 +124,15 @@ function getLogoFallback(name) {
 // Mantido para compatibilidade
 const PLACEHOLDER_IMAGE = PLACEHOLDERS.default;
 
+/**
+ * Função Helper Robusta para verificar URL de imagem
+ * @param {string} url - URL da imagem
+ * @returns {boolean} true se URL é válida
+ */
+const isValidImage = (url) => {
+    return url && typeof url === 'string' && url.length > 10 && !url.includes('null') && !url.includes('undefined') && !url.includes('placeholder');
+};
+
 // ============ MAPEAMENTO DE DADOS DA API ============
 function mapApiBannerToBanner(apiBanner) {
     // Se o banner tem restaurant_id, criar link para o restaurante
@@ -174,23 +183,25 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     const cuisines = apiRestaurant.cuisines || [];
     const restaurantName = apiRestaurant.title || '';
     
+    // Define a categoria principal para o fallback
+    const mainCategory = cuisines.length > 0 ? cuisines.join(' ') : restaurantName;
+    
     // Calcular tempo de entrega (placeholder - pode vir da API depois)
     const deliveryTime = '30-45 min';
     
     // Calcular taxa de entrega (placeholder - pode vir da API depois)
     const deliveryFee = apiRestaurant.has_delivery ? 'R$ 5,00' : 'Grátis';
     
-    // Verificar se tem imagem real (featured_media_url, logo, etc)
-    const hasImage = apiRestaurant.featured_media_url || apiRestaurant.logo || apiRestaurant.image;
-    const imageUrl = hasImage && PLACEHOLDERS.isValid(hasImage) 
-        ? (apiRestaurant.featured_media_url || apiRestaurant.logo || apiRestaurant.image)
-        : null;
+    // Lógica de Capa (Hero Image) - FORÇA FALLBACK AQUI se não tiver imagem válida
+    let finalImage = isValidImage(apiRestaurant.featured_media_url) 
+        ? apiRestaurant.featured_media_url 
+        : (isValidImage(apiRestaurant.image) 
+            ? apiRestaurant.image 
+            : getSmartImage(mainCategory)); // Força o fallback aqui!
     
-    // Se não tem imagem, usar smart fallback baseado na categoria ou nome
-    const fallbackImage = imageUrl || getSmartImage(cuisines.length > 0 ? cuisines.join(' ') : restaurantName);
-    
-    // Verificar se tem logo
-    const hasLogo = apiRestaurant.logo && PLACEHOLDERS.isValid(apiRestaurant.logo);
+    // Lógica de Logo
+    let hasLogo = isValidImage(apiRestaurant.logo);
+    let finalLogo = hasLogo ? apiRestaurant.logo : null;
     
     return {
         id: apiRestaurant.id,
@@ -198,11 +209,12 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
         rating: rating > 0 ? rating.toFixed(1) : 'Novo',
         deliveryTime: deliveryTime,
         deliveryFee: deliveryFee,
-        image: imageUrl || fallbackImage,
-        logo: apiRestaurant.logo || null,
+        image: finalImage, // URL garantida (nunca null)
+        logo: finalLogo,
         hasLogo: hasLogo,
         isOpen: apiRestaurant.is_open || false,
         cuisines: cuisines,
+        category: cuisines.length > 0 ? cuisines[0] : 'Restaurante',
         address: apiRestaurant.address || '',
         phone: apiRestaurant.phone || ''
     };
@@ -947,16 +959,16 @@ async function renderDishes() {
         const cuisines = restaurantCuisinesMap[dish.restaurant_id] || [];
         const categoryName = cuisines.length > 0 ? cuisines[0] : '';
         
-        // Usar smart fallback: nome do prato + categoria para maior precisão
+        // Concatena nome e categoria para melhor precisão (FORÇA FALLBACK AQUI)
         const contextText = `${dish.name || ''} ${categoryName}`.trim();
-        const hasValidImage = dish.image && PLACEHOLDERS.isValid(dish.image);
-        const fallbackImg = hasValidImage ? dish.image : getSmartImage(contextText);
-        const fallbackOnError = getSmartImage(contextText);
+        const finalImage = isValidImage(dish.image) 
+            ? dish.image 
+            : getSmartImage(contextText); // Força o fallback aqui!
         
         return `
         <div class="dish-card" onclick="window.location.href='/restaurante/${dish.restaurant_id}?item=${dish.id}'">
             <div class="dish-image-wrapper">
-                <img src="${fallbackImg}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${fallbackOnError}';">
+                <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
                 ${dish.price ? `<div class="dish-price-badge">${dish.price}</div>` : ''}
             </div>
@@ -1059,7 +1071,13 @@ async function renderFeatured() {
     container.innerHTML = restaurants.map(restaurant => `
         <div class="featured-card" onclick="openRestaurant(${restaurant.id})">
             <div class="featured-image-wrapper">
-                <img src="${restaurant.image}" alt="${restaurant.name}" class="featured-image" loading="lazy" onerror="this.onerror=null; this.src='${getSmartImage(restaurant.tags || restaurant.cuisines || restaurant.name || '')}';">
+                <img 
+                    src="${restaurant.image}" 
+                    alt="${restaurant.name}" 
+                    class="featured-image" 
+                    loading="lazy" 
+                    onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';"
+                >
                 <div class="featured-badge">⭐ DESTAQUE</div>
             </div>
             <div class="featured-content">
@@ -1113,12 +1131,28 @@ async function renderRestaurants() {
     container.innerHTML = restaurants.map(restaurant => `
         <div class="restaurant-card" onclick="openRestaurant(${restaurant.id})">
             <div class="card-image-wrapper">
-                <img src="${restaurant.image}" alt="${restaurant.name}" class="card-image" loading="lazy" onerror="this.onerror=null; this.src='${getSmartImage(restaurant.cuisines || restaurant.name || '')}';">
+                <img 
+                    src="${restaurant.image}" 
+                    alt="${restaurant.name}" 
+                    class="card-image" 
+                    loading="lazy"
+                    onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';"
+                >
+                
                 <div class="card-badges">
                     <div class="card-badge ${restaurant.isOpen ? 'badge-open' : 'badge-closed'}">
                         ${restaurant.isOpen ? '• Aberto' : 'Fechado'}
                     </div>
                 </div>
+
+                <div class="card-logo-wrapper" style="position:absolute; bottom:10px; left:10px; width:40px; height:40px; border-radius:50%; overflow:hidden; border:2px solid white; background:#fff; z-index:2;">
+                    ${restaurant.hasLogo 
+                        ? `<img src="${restaurant.logo}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                           <div class="logo-fallback-hidden" style="display:none; width:100%; height:100%;">${getLogoFallback(restaurant.name)}</div>`
+                        : getLogoFallback(restaurant.name)
+                    }
+                </div>
+
                 <button class="favorite-btn" onclick="toggleFavorite(event, ${restaurant.id})">
                     <svg class="favorite-icon" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -1136,6 +1170,8 @@ async function renderRestaurants() {
                     </div>
                 </div>
                 <div class="card-info">
+                    <span>${restaurant.category || 'Restaurante'}</span>
+                    <span class="info-dot"></span>
                     <span>${restaurant.deliveryTime}</span>
                     <span class="info-dot"></span>
                     <span>${restaurant.deliveryFee}</span>
