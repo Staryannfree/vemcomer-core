@@ -5,8 +5,20 @@
  * @package VemComer
  */
 
+// DEBUG: Verificar se este arquivo está sendo carregado
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+    error_log( 'FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=' . ( isset( $_GET['mode'] ) ? $_GET['mode'] : 'não definido' ) );
+    error_log( 'FRONT-PAGE.PHP: wp_is_mobile()=' . ( wp_is_mobile() ? 'true' : 'false' ) );
+}
+
 // Lógica de Detecção: É mobile OU temos o parâmetro ?mode=app na URL?
-$is_mobile_app = wp_is_mobile() || ( isset( $_GET['mode'] ) && $_GET['mode'] === 'app' );
+// IMPORTANTE: Verificar ?mode=app PRIMEIRO para garantir que funciona no desktop
+$is_mobile_app = ( isset( $_GET['mode'] ) && $_GET['mode'] === 'app' ) || wp_is_mobile();
+
+// DEBUG: Log da decisão
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+    error_log( 'FRONT-PAGE.PHP: is_mobile_app=' . ( $is_mobile_app ? 'true' : 'false' ) );
+}
 
 if ( $is_mobile_app ) {
     
@@ -36,21 +48,30 @@ if ( $is_mobile_app ) {
     }, 9999);
 
     // Renderiza o App Shell
+    // DEBUG: Log antes de renderizar
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( 'FRONT-PAGE.PHP: Renderizando App Shell mobile' );
+    }
     ?>
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
         <meta name="theme-color" content="#ea1d2c">
-        <title>VemComer</title>
+        <title>VemComer - App</title>
         <?php wp_head(); ?>
     </head>
     <body>
         <?php 
-        if ( locate_template('template-parts/content-mobile-home.php') ) {
+        $template_path = locate_template('template-parts/content-mobile-home.php');
+        if ( $template_path ) {
             get_template_part('template-parts/content', 'mobile-home'); 
         } else {
-            echo '<h1 style="padding:50px; text-align:center">ERRO: template-parts/content-mobile-home.php não encontrado!</h1>';
+            echo '<h1 style="padding:50px; text-align:center; color:red;">ERRO: template-parts/content-mobile-home.php não encontrado!</h1>';
+            echo '<p style="padding:20px; text-align:center;">Caminho procurado: ' . esc_html( $template_path ) . '</p>';
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                error_log( 'FRONT-PAGE.PHP: Template não encontrado. Caminho: ' . $template_path );
+            }
         }
         ?>
         <?php wp_footer(); ?>

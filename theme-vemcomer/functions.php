@@ -71,6 +71,11 @@ function vemcomer_get_home_template() {
  * Filtro para usar template alternativo da home
  */
 function vemcomer_template_include( $template ) {
+    // Se tiver ?mode=app, deixar o front-page.php lidar com isso
+    if ( isset( $_GET['mode'] ) && $_GET['mode'] === 'app' ) {
+        return $template; // Não interferir, deixar front-page.php processar
+    }
+    
     if ( is_front_page() && ! is_home() ) {
         $home_template = vemcomer_get_home_template();
         $template_path = get_template_directory() . '/' . $home_template;
