@@ -17,12 +17,85 @@ class CPT_Restaurant {
     public function init(): void {
         add_action( 'init', [ $this, 'register_cpt' ] );
         add_action( 'init', [ $this, 'register_taxonomies' ] );
+        add_action( 'init', [ $this, 'add_rewrite_rules' ] );
         add_action( 'add_meta_boxes', [ $this, 'register_metaboxes' ] );
         add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
         // Concede capabilities nas roles padrão
         add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        // Adiciona query var para ID
+        add_filter( 'query_vars', [ $this, 'add_query_vars' ] );
+        // Template redirect para usar ID
+        add_action( 'template_redirect', [ $this, 'template_redirect_by_id' ] );
+        // Filtro para get_permalink retornar URL com ID
+        add_filter( 'post_type_link', [ $this, 'filter_permalink' ], 10, 2 );
+    }
+    
+    /**
+     * Adiciona rewrite rule para /restaurante/{id}/
+     */
+    public function add_rewrite_rules(): void {
+        add_rewrite_rule(
+            '^restaurante/([0-9]+)/?$',
+            'index.php?post_type=' . self::SLUG . '&vc_restaurant_id=$matches[1]',
+            'top'
+        );
+    }
+    
+    /**
+     * Adiciona query var para ID do restaurante
+     */
+    public function add_query_vars( array $vars ): array {
+        $vars[] = 'vc_restaurant_id';
+        return $vars;
+    }
+    
+    /**
+     * Template redirect para buscar restaurante por ID
+     */
+    public function template_redirect_by_id(): void {
+        $restaurant_id = get_query_var( 'vc_restaurant_id' );
+        if ( ! $restaurant_id ) {
+            return;
+        }
+        
+        $restaurant = get_post( (int) $restaurant_id );
+        if ( ! $restaurant || $restaurant->post_type !== self::SLUG ) {
+            return;
+        }
+        
+        // Redirecionar para o template single
+        global $wp_query;
+        $wp_query->is_single = true;
+        $wp_query->is_singular = true;
+        $wp_query->queried_object = $restaurant;
+        $wp_query->queried_object_id = $restaurant->ID;
+        $wp_query->posts = [ $restaurant ];
+        $wp_query->post_count = 1;
+        $wp_query->found_posts = 1;
+        $wp_query->max_num_pages = 1;
+        
+        // Forçar o template single
+        add_filter( 'single_template', function( $template ) use ( $restaurant ) {
+            $single_template = locate_template( [ 'single-' . self::SLUG . '.php', 'single.php' ] );
+            if ( $single_template ) {
+                return $single_template;
+            }
+            return $template;
+        } );
+    }
+    
+    /**
+     * Filtra get_permalink para retornar URL com ID ao invés de slug
+     */
+    public function filter_permalink( string $post_link, \WP_Post $post ): string {
+        if ( $post->post_type !== self::SLUG ) {
+            return $post_link;
+        }
+        
+        // Retornar URL no formato /restaurante/{id}/
+        return home_url( '/restaurante/' . $post->ID . '/' );
     }
 
     private function capabilities(): array {
@@ -54,7 +127,7 @@ class CPT_Restaurant {
             'show_in_rest' => true,
             'supports'     => [ 'title', 'editor', 'thumbnail' ],
             'has_archive'  => false,
-            'rewrite'      => [ 'slug' => 'restaurant' ],
+            'rewrite'      => [ 'slug' => 'restaurante' ],
             'capability_type' => [ 'vc_restaurant', 'vc_restaurants' ],
             'map_meta_cap'    => true,
             'capabilities'    => $this->capabilities(),

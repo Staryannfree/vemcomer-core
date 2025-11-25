@@ -203,9 +203,8 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     let hasLogo = isValidImage(apiRestaurant.logo);
     let finalLogo = hasLogo ? apiRestaurant.logo : null;
     
-    // URL do restaurante - usar slug se disponível, senão usar ID
-    const slug = apiRestaurant.slug || apiRestaurant.post_name || null;
-    const url = slug ? `/restaurante/${slug}/` : `/restaurante/${apiRestaurant.id}/`;
+    // URL do restaurante - sempre usar ID (padrão: /restaurante/{id}/)
+    const url = `/restaurante/${apiRestaurant.id}/`;
     
     return {
         id: apiRestaurant.id,
