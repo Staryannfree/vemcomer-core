@@ -28,7 +28,8 @@ class CPT_Restaurant {
         // Adiciona query vars para slug e ID
         add_filter( 'query_vars', [ $this, 'add_query_vars' ] );
         // Template redirect para buscar restaurante por slug ou ID
-        add_action( 'template_redirect', [ $this, 'template_redirect_by_slug_or_id' ] );
+        // Prioridade alta (1) para executar antes de outros redirects e 404s
+        add_action( 'template_redirect', [ $this, 'template_redirect_by_slug_or_id' ], 1 );
     }
     
     /**
@@ -60,56 +61,66 @@ class CPT_Restaurant {
     public function template_redirect_by_slug_or_id(): void {
         global $wp_query;
         
-        // Verificar se é uma página de restaurante
-        if ( ! is_singular( self::SLUG ) && ! get_query_var( 'vc_restaurant_id' ) ) {
-            return;
+        // Verificar diretamente na URL antes de qualquer outra coisa
+        $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+        $parsed_uri = parse_url( $request_uri );
+        $path = $parsed_uri['path'] ?? '';
+        
+        // Verificar se a URL corresponde ao padrão /restaurant/{identifier}
+        if ( ! preg_match( '#^/restaurant/([^/]+)/?#', $path, $matches ) ) {
+            // Verificar se já é uma página de restaurante válida
+            if ( is_singular( self::SLUG ) ) {
+                return; // Já está funcionando, não precisa fazer nada
+            }
+            return; // Não é uma URL de restaurante
         }
         
+        $identifier = $matches[1];
         $restaurant = null;
         
-        // Tentar buscar por ID primeiro (se vc_restaurant_id estiver presente)
-        $restaurant_id = get_query_var( 'vc_restaurant_id' );
-        if ( $restaurant_id ) {
-            $restaurant = get_post( (int) $restaurant_id );
-            if ( ! $restaurant || $restaurant->post_type !== self::SLUG ) {
+        // Tentar buscar por ID primeiro (se for numérico)
+        if ( is_numeric( $identifier ) ) {
+            $restaurant = get_post( (int) $identifier );
+            if ( $restaurant && $restaurant->post_type !== self::SLUG ) {
                 $restaurant = null;
             }
         }
         
-        // Se não encontrou por ID, tentar pelo slug (WordPress padrão)
+        // Se não encontrou por ID, tentar pelo slug (post_name)
+        if ( ! $restaurant ) {
+            $restaurant = get_page_by_path( $identifier, OBJECT, self::SLUG );
+        }
+        
+        // Se ainda não encontrou, verificar se o WordPress já encontrou (caso de slug válido)
         if ( ! $restaurant && is_singular( self::SLUG ) ) {
             $restaurant = get_queried_object();
         }
         
-        // Se ainda não encontrou, tentar pelo nome na URL
-        if ( ! $restaurant ) {
-            $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-            if ( preg_match( '#^/restaurant/([^/]+)/?#', $request_uri, $matches ) ) {
-                $identifier = $matches[1];
-                
-                // Se for numérico, buscar por ID
-                if ( is_numeric( $identifier ) ) {
-                    $restaurant = get_post( (int) $identifier );
-                } else {
-                    // Se for slug, buscar por post_name
-                    $restaurant = get_page_by_path( $identifier, OBJECT, self::SLUG );
-                }
-            }
-        }
-        
+        // Se não encontrou restaurante válido, retornar (deixa WordPress lidar com 404)
         if ( ! $restaurant || $restaurant->post_type !== self::SLUG || 'publish' !== $restaurant->post_status ) {
             return;
         }
         
+        // Limpar qualquer erro 404
+        $wp_query->is_404 = false;
+        status_header( 200 );
+        
         // Configurar query para o restaurante encontrado
         $wp_query->is_single = true;
         $wp_query->is_singular = true;
+        $wp_query->is_archive = false;
+        $wp_query->is_home = false;
+        $wp_query->is_front_page = false;
         $wp_query->queried_object = $restaurant;
         $wp_query->queried_object_id = $restaurant->ID;
         $wp_query->posts = [ $restaurant ];
         $wp_query->post_count = 1;
         $wp_query->found_posts = 1;
         $wp_query->max_num_pages = 1;
+        
+        // Configurar post atual
+        $wp_query->post = $restaurant;
+        $GLOBALS['post'] = $restaurant;
         
         // Forçar o template single
         add_filter( 'single_template', function( $template ) use ( $restaurant ) {
@@ -118,7 +129,7 @@ class CPT_Restaurant {
                 return $single_template;
             }
             return $template;
-        } );
+        }, 999 );
     }
     
     /**
