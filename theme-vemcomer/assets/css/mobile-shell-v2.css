@@ -1158,3 +1158,138 @@ body {
 
 .hidden { display: none !important; }
 
+/* ============ LOCATION MODAL (Obrigatório) ============ */
+.location-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    /* Modal obrigatório - não pode ser fechado clicando fora */
+    pointer-events: auto;
+}
+
+.location-modal.hidden {
+    display: none;
+    pointer-events: none;
+}
+
+.location-modal.hidden {
+    display: none;
+}
+
+.location-modal-content {
+    background: var(--bg-white);
+    border-radius: 20px;
+    padding: 32px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.location-modal-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.location-modal-icon svg {
+    width: 40px;
+    height: 40px;
+}
+
+.location-modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+}
+
+.location-modal-text {
+    font-size: 15px;
+    color: var(--text-light);
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.location-modal-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    position: relative;
+    min-height: 52px;
+}
+
+.location-modal-btn:hover {
+    background: var(--primary-dark);
+}
+
+.location-modal-btn:active {
+    transform: scale(0.98);
+}
+
+.location-modal-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    color: white;
+}
+
+.location-modal-error {
+    margin-top: 16px;
+    padding: 12px;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 8px;
+    color: var(--error-color);
+    font-size: 14px;
+    line-height: 1.4;
+}
+

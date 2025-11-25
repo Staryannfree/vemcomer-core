@@ -1,3 +1,30 @@
+<!-- LOCATION PERMISSION MODAL (Obrigatório) -->
+<div class="location-modal" id="locationModal">
+    <div class="location-modal-content">
+        <div class="location-modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+        </div>
+        <h2 class="location-modal-title">Precisamos da sua localização</h2>
+        <p class="location-modal-text">
+            Para mostrar os melhores estabelecimentos perto de você, precisamos acessar sua localização.
+        </p>
+        <button class="location-modal-btn" id="locationModalBtn">
+            <span class="btn-text">Permitir Localização</span>
+            <span class="btn-loader" style="display: none;">
+                <svg class="spinner" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="31.416" stroke-dashoffset="31.416">
+                        <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416;0 31.416" repeatCount="indefinite"/>
+                        <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416;-31.416" repeatCount="indefinite"/>
+                    </circle>
+                </svg>
+            </span>
+        </button>
+        <p class="location-modal-error" id="locationModalError" style="display: none;"></p>
+    </div>
+</div>
+
 <!-- TOP BAR -->
 <header class="top-bar">
     <div class="logo">Pedevem</div>

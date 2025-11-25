@@ -659,8 +659,226 @@ function toggleFavorite(event, id) {
     event.stopPropagation();
 }
 
+// ============ LOCATION MANAGEMENT ============
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+function setCookie(name, value, days) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
+
+function updateLocationText() {
+    const locationTextEl = document.getElementById('locationText');
+    if (!locationTextEl) return;
+    
+    // Prioridade: bairro > cidade > endereço completo > padrão
+    const neighborhood = localStorage.getItem('vc_user_neighborhood') || getCookie('vc_user_neighborhood');
+    const city = localStorage.getItem('vc_user_city') || getCookie('vc_user_city');
+    const savedLocation = localStorage.getItem('vc_user_location');
+    
+    let displayText = 'Selecione um endereço';
+    
+    if (neighborhood) {
+        displayText = neighborhood;
+    } else if (city) {
+        displayText = city;
+    } else if (savedLocation) {
+        try {
+            const locData = JSON.parse(savedLocation);
+            if (locData.address) {
+                displayText = locData.address;
+            }
+        } catch (e) {
+            console.error('Erro ao parsear localização:', e);
+        }
+    }
+    
+    locationTextEl.textContent = displayText;
+}
+
+async function reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1`;
+    
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Pedevem Marketplace'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const addr = data.address || {};
+        
+        return {
+            neighborhood: addr.suburb || addr.neighbourhood || addr.quarter || '',
+            city: addr.city || addr.town || addr.village || addr.municipality || '',
+            state: addr.state || addr.region || '',
+            fullAddress: data.display_name || ''
+        };
+    } catch (error) {
+        console.error('Erro no reverse geocoding:', error);
+        throw error;
+    }
+}
+
+function showLocationModal() {
+    const modal = document.getElementById('locationModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function hideLocationModal() {
+    const modal = document.getElementById('locationModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function showLocationError(message) {
+    const errorEl = document.getElementById('locationModalError');
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+}
+
+function hideLocationError() {
+    const errorEl = document.getElementById('locationModalError');
+    if (errorEl) {
+        errorEl.style.display = 'none';
+    }
+}
+
+function setLoadingState(isLoading) {
+    const btn = document.getElementById('locationModalBtn');
+    const btnText = btn?.querySelector('.btn-text');
+    const btnLoader = btn?.querySelector('.btn-loader');
+    
+    if (!btn) return;
+    
+    if (isLoading) {
+        btn.disabled = true;
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoader) btnLoader.style.display = 'flex';
+    } else {
+        btn.disabled = false;
+        if (btnText) btnText.style.display = 'block';
+        if (btnLoader) btnLoader.style.display = 'none';
+    }
+}
+
+async function requestLocationPermission() {
+    if (!navigator.geolocation) {
+        showLocationError('Geolocalização não é suportada pelo seu navegador.');
+        setLoadingState(false);
+        return;
+    }
+    
+    setLoadingState(true);
+    hideLocationError();
+    
+    try {
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        });
+        
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        // Fazer reverse geocoding para obter bairro
+        const address = await reverseGeocode(lat, lng);
+        
+        // Salvar localização
+        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+        
+        if (address.neighborhood) {
+            localStorage.setItem('vc_user_neighborhood', address.neighborhood);
+            setCookie('vc_user_neighborhood', address.neighborhood, 30);
+        }
+        
+        if (address.city) {
+            localStorage.setItem('vc_user_city', address.city);
+            setCookie('vc_user_city', address.city, 30);
+        }
+        
+        // Atualizar texto do locationText
+        updateLocationText();
+        
+        // Fechar modal
+        hideLocationModal();
+        
+        // Disparar evento para outros scripts
+        const event = new CustomEvent('vc_location_updated', {
+            detail: { lat, lng, address }
+        });
+        document.dispatchEvent(event);
+        
+    } catch (error) {
+        console.error('Erro ao obter localização:', error);
+        setLoadingState(false);
+        
+        let errorMsg = 'Não foi possível obter sua localização.';
+        if (error.code === error.PERMISSION_DENIED || error.code === 1) {
+            errorMsg = 'Permissão de localização negada. Por favor, permita o acesso nas configurações do navegador e tente novamente.';
+        } else if (error.code === error.POSITION_UNAVAILABLE || error.code === 2) {
+            errorMsg = 'Localização indisponível. Verifique se o GPS está ativado.';
+        } else if (error.code === error.TIMEOUT || error.code === 3) {
+            errorMsg = 'Tempo de espera esgotado. Tente novamente.';
+        } else if (error.message) {
+            errorMsg = error.message;
+        }
+        
+        showLocationError(errorMsg);
+    }
+}
+
+function checkLocationAndShowModal() {
+    // Verificar se já tem localização salva
+    const neighborhood = localStorage.getItem('vc_user_neighborhood') || getCookie('vc_user_neighborhood');
+    const city = localStorage.getItem('vc_user_city') || getCookie('vc_user_city');
+    const savedLocation = localStorage.getItem('vc_user_location');
+    
+    // Se não tiver nenhuma localização, mostrar modal obrigatório
+    if (!neighborhood && !city && !savedLocation) {
+        showLocationModal();
+    } else {
+        // Atualizar texto do locationText
+        updateLocationText();
+    }
+}
+
 // ============ INITIALIZE ============
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar localização e mostrar modal se necessário
+    checkLocationAndShowModal();
+    
+    // Event listener para o botão do modal
+    const locationModalBtn = document.getElementById('locationModalBtn');
+    if (locationModalBtn) {
+        locationModalBtn.addEventListener('click', requestLocationPermission);
+    }
+    
+    // Renderizar conteúdo
     renderStories();
     renderDishes();
     renderEvents();
