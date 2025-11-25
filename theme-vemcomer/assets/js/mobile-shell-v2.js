@@ -1,6 +1,73 @@
 // ============ CONFIGURAÇÃO ============
 const API_BASE = '/wp-json/vemcomer/v1';
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300?text=Sem+Imagem';
+
+// ============ PLACEHOLDERS INTELIGENTES POR CATEGORIA ============
+const PLACEHOLDERS = {
+    default: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop', // Comida genérica
+    lanches: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop', // Burguer
+    hamburguer: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop', // Burguer (alternativo)
+    burger: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop', // Burguer (alternativo)
+    pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
+    japonesa: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=300&fit=crop',
+    sushi: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=300&fit=crop',
+    acai: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400&h=300&fit=crop',
+    açaí: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400&h=300&fit=crop',
+    brasileira: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop', // Feijoada/Prato feito
+    italiana: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop',
+    chinesa: 'https://images.unsplash.com/photo-1563379091339-03246963d29a?w=400&h=300&fit=crop',
+    mexicana: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop',
+    doce: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',
+    sobremesa: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',
+    bebida: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop',
+    cafe: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop',
+    café: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop'
+};
+
+/**
+ * Normaliza string removendo acentos e convertendo para lowercase
+ */
+function normalizeString(str) {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .trim();
+}
+
+/**
+ * Retorna o placeholder apropriado baseado na categoria
+ * @param {string|string[]} category - Categoria ou array de categorias
+ * @returns {string} URL do placeholder
+ */
+function getFallbackImage(category) {
+    if (!category) return PLACEHOLDERS.default;
+    
+    // Se for array, pegar a primeira categoria
+    const categories = Array.isArray(category) ? category : [category];
+    
+    // Tentar encontrar match em cada categoria
+    for (const cat of categories) {
+        const normalized = normalizeString(cat);
+        
+        // Buscar match exato primeiro
+        if (PLACEHOLDERS[normalized]) {
+            return PLACEHOLDERS[normalized];
+        }
+        
+        // Buscar match parcial (ex: "pizza italiana" contém "pizza")
+        for (const key in PLACEHOLDERS) {
+            if (key !== 'default' && normalized.includes(key)) {
+                return PLACEHOLDERS[key];
+            }
+        }
+    }
+    
+    return PLACEHOLDERS.default;
+}
+
+// Mantido para compatibilidade (usar getFallbackImage quando possível)
+const PLACEHOLDER_IMAGE = PLACEHOLDERS.default;
 
 // ============ MAPEAMENTO DE DADOS DA API ============
 function mapApiBannerToBanner(apiBanner) {
@@ -10,35 +77,45 @@ function mapApiBannerToBanner(apiBanner) {
         link = `/restaurante/${apiBanner.restaurant_id}`;
     }
     
+    // Usar imagem da API ou fallback genérico (banners não têm categoria específica)
+    const image = apiBanner.image && apiBanner.image.trim() !== '' 
+        ? apiBanner.image 
+        : PLACEHOLDERS.default;
+    
     return {
         id: apiBanner.id,
         title: apiBanner.title || '',
         subtitle: '', // API não retorna subtitle, pode ser adicionado depois
-        image: apiBanner.image || PLACEHOLDER_IMAGE,
+        image: image,
         link: link,
         restaurantId: apiBanner.restaurant_id || null
     };
 }
 
-async function getRestaurantImage(restaurantId) {
+async function getRestaurantImage(restaurantId, cuisines = []) {
     try {
         // Tentar buscar imagem via WordPress REST API padrão
         const response = await fetch(`/wp-json/wp/v2/vc_restaurant/${restaurantId}?_embed=true`);
         if (response.ok) {
             const data = await response.json();
             if (data._embedded && data._embedded['wp:featuredmedia'] && data._embedded['wp:featuredmedia'][0]) {
-                return data._embedded['wp:featuredmedia'][0].source_url || PLACEHOLDER_IMAGE;
+                const imageUrl = data._embedded['wp:featuredmedia'][0].source_url;
+                if (imageUrl && imageUrl.trim() !== '') {
+                    return imageUrl;
+                }
             }
         }
     } catch (error) {
         console.error('Erro ao buscar imagem do restaurante:', error);
     }
-    return PLACEHOLDER_IMAGE;
+    // Se não encontrou imagem, usar fallback baseado na categoria
+    return getFallbackImage(cuisines);
 }
 
 function mapApiRestaurantToRestaurant(apiRestaurant) {
     const rating = apiRestaurant.rating?.average || 0;
     const ratingCount = apiRestaurant.rating?.count || 0;
+    const cuisines = apiRestaurant.cuisines || [];
     
     // Calcular tempo de entrega (placeholder - pode vir da API depois)
     const deliveryTime = '30-45 min';
@@ -46,15 +123,18 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     // Calcular taxa de entrega (placeholder - pode vir da API depois)
     const deliveryFee = apiRestaurant.has_delivery ? 'R$ 5,00' : 'Grátis';
     
+    // Usar fallback baseado na categoria se não houver imagem
+    const fallbackImage = getFallbackImage(cuisines);
+    
     return {
         id: apiRestaurant.id,
         name: apiRestaurant.title || '',
         rating: rating > 0 ? rating.toFixed(1) : 'Novo',
         deliveryTime: deliveryTime,
         deliveryFee: deliveryFee,
-        image: PLACEHOLDER_IMAGE, // Será atualizado depois
+        image: fallbackImage, // Será atualizado depois com imagem real, mas já tem fallback inteligente
         isOpen: apiRestaurant.is_open || false,
-        cuisines: apiRestaurant.cuisines || [],
+        cuisines: cuisines,
         address: apiRestaurant.address || '',
         phone: apiRestaurant.phone || ''
     };
@@ -118,7 +198,11 @@ async function fetchRestaurants(params = {}) {
         
         // Buscar imagens em paralelo (limitado para não sobrecarregar)
         const imagePromises = restaurants.slice(0, 20).map(async (restaurant) => {
-            restaurant.image = await getRestaurantImage(restaurant.id);
+            const imageUrl = await getRestaurantImage(restaurant.id, restaurant.cuisines);
+            // Só atualizar se encontrou uma imagem real (não é placeholder)
+            if (imageUrl && imageUrl !== restaurant.image) {
+                restaurant.image = imageUrl;
+            }
             return restaurant;
         });
         
@@ -638,7 +722,7 @@ async function renderBanners() {
     // Renderizar banners
     container.innerHTML = banners.map((banner, index) => `
         <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
-            <img src="${banner.image || PLACEHOLDER_IMAGE}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+            <img src="${banner.image || PLACEHOLDERS.default}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
             <div class="banner-overlay">
                 <div class="banner-title">${banner.title || 'Bem-vindo ao VemComer'}</div>
                 ${banner.subtitle ? `<div class="banner-subtitle">${banner.subtitle}</div>` : ''}
@@ -773,10 +857,35 @@ async function renderDishes() {
         return;
     }
     
-    container.innerHTML = dishes.map(dish => `
+    // Buscar categorias dos restaurantes para fallback inteligente
+    const restaurantIds = [...new Set(dishes.map(d => d.restaurant_id).filter(Boolean))];
+    const restaurantCuisinesMap = {};
+    
+    // Buscar categorias em paralelo
+    await Promise.all(restaurantIds.map(async (restId) => {
+        try {
+            const res = await fetch(`${API_BASE}/restaurants/${restId}`);
+            if (res.ok) {
+                const restData = await res.json();
+                restaurantCuisinesMap[restId] = restData.cuisines || [];
+            }
+        } catch (e) {
+            console.warn('Erro ao buscar categoria do restaurante:', e);
+        }
+    }));
+    
+    container.innerHTML = dishes.map(dish => {
+        // Obter categoria do restaurante para fallback inteligente
+        const cuisines = restaurantCuisinesMap[dish.restaurant_id] || [];
+        const fallbackImg = dish.image && dish.image.trim() !== '' 
+            ? dish.image 
+            : getFallbackImage(cuisines);
+        const fallbackOnError = getFallbackImage(cuisines);
+        
+        return `
         <div class="dish-card" onclick="window.location.href='/restaurante/${dish.restaurant_id}?item=${dish.id}'">
             <div class="dish-image-wrapper">
-                <img src="${dish.image || PLACEHOLDER_IMAGE}" alt="${dish.name}" class="dish-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+                <img src="${fallbackImg}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${fallbackOnError}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
                 ${dish.price ? `<div class="dish-price-badge">${dish.price}</div>` : ''}
             </div>
@@ -786,7 +895,8 @@ async function renderDishes() {
                 <div class="dish-description">${dish.description || ''}</div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 async function fetchEvents() {
@@ -828,7 +938,7 @@ async function renderEvents() {
     container.innerHTML = events.map(event => `
         <div class="event-card" onclick="window.location.href='/evento/${event.id}'">
             <div class="event-image-wrapper">
-                <img src="${event.image || PLACEHOLDER_IMAGE}" alt="${event.title}" class="event-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+                <img src="${event.image || PLACEHOLDERS.default}" alt="${event.title}" class="event-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 <div class="event-date-badge">
                     <div class="event-day">${event.date.day || ''}</div>
                     <div class="event-month">${event.date.month || ''}</div>
@@ -878,7 +988,7 @@ async function renderFeatured() {
     container.innerHTML = restaurants.map(restaurant => `
         <div class="featured-card" onclick="openRestaurant(${restaurant.id})">
             <div class="featured-image-wrapper">
-                <img src="${restaurant.image}" alt="${restaurant.name}" class="featured-image" loading="lazy">
+                <img src="${restaurant.image}" alt="${restaurant.name}" class="featured-image" loading="lazy" onerror="this.onerror=null; this.src='${getFallbackImage(restaurant.tags || restaurant.cuisines || [])}';">
                 <div class="featured-badge">⭐ DESTAQUE</div>
             </div>
             <div class="featured-content">
@@ -932,7 +1042,7 @@ async function renderRestaurants() {
     container.innerHTML = restaurants.map(restaurant => `
         <div class="restaurant-card" onclick="openRestaurant(${restaurant.id})">
             <div class="card-image-wrapper">
-                <img src="${restaurant.image}" alt="${restaurant.name}" class="card-image" loading="lazy">
+                <img src="${restaurant.image}" alt="${restaurant.name}" class="card-image" loading="lazy" onerror="this.onerror=null; this.src='${getFallbackImage(restaurant.cuisines || [])}';">
                 <div class="card-badges">
                     <div class="card-badge ${restaurant.isOpen ? 'badge-open' : 'badge-closed'}">
                         ${restaurant.isOpen ? '• Aberto' : 'Fechado'}
