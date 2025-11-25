@@ -220,9 +220,12 @@
             localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
             localStorage.setItem('vc_user_address', JSON.stringify(address));
             
-            // Salvar cidade separadamente para fácil acesso
+            // Salvar cidade e bairro separadamente para fácil acesso
             if (address.city) {
                 localStorage.setItem('vc_user_city', address.city);
+            }
+            if (address.neighborhood) {
+                localStorage.setItem('vc_user_neighborhood', address.neighborhood);
             }
 
             if (onSuccess) {

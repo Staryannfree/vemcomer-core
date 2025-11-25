@@ -8,25 +8,32 @@
     'use strict';
     
     /**
-     * Atualiza o texto do endereço no top bar mobile
+     * Atualiza o texto do endereço no top bar mobile (prioriza bairro)
      */
     function updateMobileAddress() {
         const addressText = document.getElementById('mobile-address-text');
         if (!addressText) return;
         
-        // Tentar obter cidade do localStorage
-        let cityName = localStorage.getItem('vc_user_city');
+        // Prioridade: bairro > cidade > endereço completo
+        let displayText = localStorage.getItem('vc_user_neighborhood');
+        
+        // Se não tem bairro, tentar cidade
+        if (!displayText) {
+            displayText = localStorage.getItem('vc_user_city');
+        }
         
         // Se não tem cidade, tentar do cookie
-        if (!cityName) {
+        if (!displayText) {
             const savedLocationCookie = getCookie('vc_user_location');
             if (savedLocationCookie) {
                 try {
                     const locationData = JSON.parse(savedLocationCookie);
-                    if (locationData.city) {
-                        cityName = locationData.city;
+                    if (locationData.neighborhood) {
+                        displayText = locationData.neighborhood;
+                    } else if (locationData.city) {
+                        displayText = locationData.city;
                     } else if (locationData.address) {
-                        cityName = locationData.address;
+                        displayText = locationData.address;
                     }
                 } catch (e) {
                     // Ignorar erro
@@ -34,16 +41,18 @@
             }
         }
         
-        // Se ainda não tem, tentar do localStorage location
-        if (!cityName) {
-            const savedLocation = localStorage.getItem('vc_user_location');
-            if (savedLocation) {
+        // Se ainda não tem, tentar do localStorage address
+        if (!displayText) {
+            const savedAddress = localStorage.getItem('vc_user_address');
+            if (savedAddress) {
                 try {
-                    const locationData = JSON.parse(savedLocation);
-                    if (locationData.city) {
-                        cityName = locationData.city;
-                    } else if (locationData.address) {
-                        cityName = locationData.address;
+                    const addressData = JSON.parse(savedAddress);
+                    if (addressData.neighborhood) {
+                        displayText = addressData.neighborhood;
+                    } else if (addressData.city) {
+                        displayText = addressData.city;
+                    } else if (addressData.fullAddress) {
+                        displayText = addressData.fullAddress;
                     }
                 } catch (e) {
                     // Ignorar erro
@@ -52,8 +61,8 @@
         }
         
         // Atualizar texto
-        if (cityName) {
-            addressText.textContent = cityName;
+        if (displayText) {
+            addressText.textContent = displayText;
         } else {
             addressText.textContent = 'Selecione um endereço';
         }

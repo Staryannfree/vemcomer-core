@@ -157,7 +157,10 @@
                     await window.VemComerReverseGeocode.getLocationAndFill({
                         fillCheckout: false,
                         onSuccess: (address, coordinates) => {
-                            // Atualizar título do hero
+                            // Salvar bairro se disponível
+                            saveNeighborhood(address);
+                            
+                            // Atualizar título do hero (usa cidade)
                             updateHeroTitle(address.city || address.displayName);
                             
                             // Atualizar UI
@@ -709,6 +712,9 @@
                 window.VemComerReverseGeocode.getLocationAndFill({
                     fillCheckout: false,
                     onSuccess: (address, coordinates) => {
+                        // Salvar bairro se disponível
+                        saveNeighborhood(address);
+                        
                         localStorage.setItem('vc_location_accepted', 'true');
                         const finalCityName = address.city || address.displayName || cityName;
                         updateHeroTitle(finalCityName);
@@ -838,6 +844,20 @@
             // Disparar evento para atualizar mobile top bar
             document.dispatchEvent(new CustomEvent('vemcomer:location-updated', {
                 detail: { city: cityName }
+            }));
+        }
+    }
+    
+    // Salvar bairro quando disponível no endereço
+    function saveNeighborhood(address) {
+        if (address && address.neighborhood) {
+            localStorage.setItem('vc_user_neighborhood', address.neighborhood);
+            // Salvar também no cookie para acesso no PHP
+            document.cookie = `vc_user_neighborhood=${encodeURIComponent(address.neighborhood)}; path=/; max-age=${30 * 24 * 60 * 60}`;
+            
+            // Disparar evento para atualizar mobile top bar
+            document.dispatchEvent(new CustomEvent('vemcomer:location-updated', {
+                detail: { neighborhood: address.neighborhood }
             }));
         }
     }

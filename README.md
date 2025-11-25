@@ -207,6 +207,29 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.33.2 - Top Bar Mobile Exibe Bairro ao Invés de Cidade
+
+**Novas funcionalidades:**
+- **Top Bar Mobile - Exibição de Bairro**:
+  - Prioriza exibição do bairro sobre a cidade no top bar mobile
+  - Salva bairro no localStorage (`vc_user_neighborhood`) e cookie (`vc_user_neighborhood`)
+  - Atualização automática quando localização é obtida via reverse geocoding
+  - Fallback: se não houver bairro, exibe cidade; se não houver cidade, exibe endereço completo
+- **Integração com Reverse Geocoding**:
+  - Extrai bairro do Nominatim (suburb, neighbourhood, quarter)
+  - Salva bairro em todas as funções de geolocalização
+  - Sincroniza bairro entre localStorage e cookies
+
+**Arquivos modificados:**
+- `theme-vemcomer/header.php` - Prioriza bairro na exibição do top bar
+- `theme-vemcomer/assets/js/mobile-app.js` - Busca bairro primeiro, depois cidade
+- `theme-vemcomer/assets/js/home-improvements.js` - Função `saveNeighborhood()` para salvar bairro
+- `assets/js/reverse-geocoding.js` - Salva bairro no localStorage
+- `theme-vemcomer/functions.php` - Todas as funções de geolocalização agora salvam bairro
+
+**Resultado:**
+Top bar mobile agora exibe o nome do bairro (ex: "Centro", "Jardim América") ao invés da cidade, proporcionando informação mais específica e útil para o usuário.
+
 ### v0.33.1 - Página de Categorias e Menu Mobile Atualizado
 
 **Novas funcionalidades:**

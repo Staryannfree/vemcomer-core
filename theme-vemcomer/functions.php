@@ -251,6 +251,7 @@ function popup_boas_vindas_independente() {
                 const lat = locationData.lat;
                 const lng = locationData.lng;
                 const city = locationData.city || '';
+                const neighborhood = locationData.neighborhood || '';
 
                 // IMPORTANTE: Esconder popup IMEDIATAMENTE se já tem localização
                 popup.classList.remove('is-open');
@@ -260,6 +261,12 @@ function popup_boas_vindas_independente() {
                 const heroLocationActions = document.getElementById('hero-location-actions');
                 if (heroLocationActions) {
                     heroLocationActions.style.display = 'none';
+                }
+
+                // Salvar bairro se disponível
+                if (neighborhood) {
+                    localStorage.setItem('vc_user_neighborhood', neighborhood);
+                    setCookie('vc_user_neighborhood', neighborhood, 30);
                 }
 
                 // Usar localização salva para filtrar dados
@@ -290,7 +297,8 @@ function popup_boas_vindas_independente() {
                     const locationDataForCookie = {
                         lat: lat,
                         lng: lng,
-                        city: city
+                        city: city,
+                        neighborhood: neighborhood
                     };
                     setCookie('vc_user_location', JSON.stringify(locationDataForCookie), 30);
                 }
@@ -300,6 +308,9 @@ function popup_boas_vindas_independente() {
                     localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                     if (city) {
                         localStorage.setItem('vc_user_city', city);
+                    }
+                    if (neighborhood) {
+                        localStorage.setItem('vc_user_neighborhood', neighborhood);
                     }
                 }
 
@@ -403,28 +414,41 @@ function popup_boas_vindas_independente() {
                             heroLocationActions.style.display = 'none';
                         }
 
-                        // Obter nome da cidade via reverse geocoding
-                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
+                        // Obter nome da cidade e bairro via reverse geocoding
+                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1', {
+                            headers: {
+                                'User-Agent': 'Pedevem Marketplace'
+                            }
+                        })
                             .then(response => response.json())
                             .then(data => {
-                                const cityName = data.address?.city || 
-                                                data.address?.town || 
-                                                data.address?.municipality || 
-                                                data.address?.county || 
+                                const addr = data.address || {};
+                                const cityName = addr.city || 
+                                                addr.town || 
+                                                addr.municipality || 
+                                                addr.county || 
                                                 data.display_name?.split(',')[0] || 
                                                 'Localização desconhecida';
+                                
+                                // Obter bairro (prioridade: suburb > neighbourhood > quarter)
+                                const neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || '';
                                 
                                 // Salvar localização em COOKIE (30 dias) - PRINCIPAL
                                 const locationData = {
                                     lat: lat,
                                     lng: lng,
-                                    city: cityName
+                                    city: cityName,
+                                    neighborhood: neighborhood
                                 };
                                 setCookie('vc_user_location', JSON.stringify(locationData), 30);
                                 
                                 // Salvar também no localStorage para compatibilidade
                                 localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                                 localStorage.setItem('vc_user_city', cityName);
+                                if (neighborhood) {
+                                    localStorage.setItem('vc_user_neighborhood', neighborhood);
+                                    setCookie('vc_user_neighborhood', neighborhood, 30);
+                                }
                                 
                                 // Atualizar título do hero se existir
                                 const heroTitle = document.getElementById('hero-title');
@@ -971,7 +995,92 @@ function mensagem_localizacao_botao_home() {
         
         // Função para obter nome da cidade
         function getCityName(lat, lng) {
+            // Esta função retorna apenas a cidade (mantida para compatibilidade)
+            // Para obter bairro também, usar getLocationData()
             return fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1')
+                .then(response => response.json())
+                .then(data => {
+                    return data.address?.city || 
+                           data.address?.town || 
+                           data.address?.municipality || 
+                           data.address?.county || 
+                           data.display_name?.split(',')[0] || 
+                           'Localização desconhecida';
+                })
+                .catch(error => {
+                    console.error('Erro ao obter nome da cidade:', error);
+                    return 'Localização obtida';
+                });
+        }
+        
+        // Função auxiliar para obter cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // Função para esconder o botão de localização se já tiver localização salva
+        function hideLocationButtonIfExists() {
+            const heroLocationActions = document.getElementById('hero-location-actions');
+            if (!heroLocationActions) return;
+            
+            // Verificar cookie primeiro (prioridade)
+            const savedLocationCookie = getCookie('vc_user_location');
+            if (savedLocationCookie) {
+                try {
+                    const locationData = JSON.parse(savedLocationCookie);
+                    heroLocationActions.style.display = 'none';
+                    
+                    // Aplicar localização salva
+                    if (locationData.city) {
+                        const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
+                        if (heroTitle) {
+                            heroTitle.textContent = 'Peça dos melhores estabelecimentos de ' + locationData.city;
+                        }
+                        
+                        if (window.updateHeroSubtitleWithRestaurantCount) {
+                            window.updateHeroSubtitleWithRestaurantCount(locationData.city);
+                        }
+                        
+                        if (window.filterRestaurantsByCity) {
+                            window.filterRestaurantsByCity(locationData.city);
+                        } else if (window.loadRestaurantsWithLocation && locationData.lat && locationData.lng) {
+                            window.loadRestaurantsWithLocation(locationData.lat, locationData.lng);
+                        }
+                    }
+                    
+                    // Salvar bairro se disponível
+                    if (locationData.neighborhood) {
+                        localStorage.setItem('vc_user_neighborhood', locationData.neighborhood);
+                    }
+                }
+            }
+            
+            // Verificar localStorage também
+            const savedLocationStorage = localStorage.getItem('vc_user_location');
+            if (savedLocationStorage) {
+                try {
+                    const locationData = JSON.parse(savedLocationStorage);
+                    if (locationData.lat && locationData.lng) {
+                        heroLocationActions.style.display = 'none';
+                    }
+                } catch (e) {
+                    // Ignorar erro
+                }
+            }
+        }
+        
+        // Função para obter nome da cidade
+        function getCityName(lat, lng) {
+            // Esta função retorna apenas a cidade (mantida para compatibilidade)
+            // Para obter bairro também, usar getLocationData()
+            return fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1', {
+                headers: {
+                    'User-Agent': 'Pedevem Marketplace'
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     return data.address?.city || 
@@ -1027,6 +1136,11 @@ function mensagem_localizacao_botao_home() {
                         window.loadRestaurantsWithLocation(locationData.lat, locationData.lng);
                     }
                     
+                    // Salvar bairro se disponível
+                    if (locationData.neighborhood) {
+                        localStorage.setItem('vc_user_neighborhood', locationData.neighborhood);
+                    }
+                    
                     return; // Já aplicou, não precisa verificar localStorage
                 } catch (e) {
                     console.error('Erro ao ler cookie de localização:', e);
@@ -1066,8 +1180,32 @@ function mensagem_localizacao_botao_home() {
                             const lat = position.coords.latitude;
                             const lng = position.coords.longitude;
                             
-                            // Obter nome da cidade
-                            const cityName = await getCityName(lat, lng);
+                            // Obter cidade e bairro via reverse geocoding
+                            let cityName = 'Localização obtida';
+                            let neighborhood = '';
+                            
+                            try {
+                                const response = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1', {
+                                    headers: {
+                                        'User-Agent': 'Pedevem Marketplace'
+                                    }
+                                });
+                                const data = await response.json();
+                                const addr = data.address || {};
+                                
+                                cityName = addr.city || 
+                                          addr.town || 
+                                          addr.municipality || 
+                                          addr.county || 
+                                          data.display_name?.split(',')[0] || 
+                                          'Localização obtida';
+                                
+                                // Obter bairro (prioridade: suburb > neighbourhood > quarter)
+                                neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || '';
+                            } catch (error) {
+                                console.error('Erro ao obter nome da cidade:', error);
+                                cityName = await getCityName(lat, lng);
+                            }
                             
                             // Atualizar título do hero
                             const heroTitle = document.getElementById('hero-title') || document.querySelector('.home-hero__title');
@@ -1093,13 +1231,18 @@ function mensagem_localizacao_botao_home() {
                             const locationData = {
                                 lat: lat,
                                 lng: lng,
-                                city: cityName
+                                city: cityName,
+                                neighborhood: neighborhood
                             };
                             setCookie('vc_user_location', JSON.stringify(locationData), 30);
                             
                             // Salvar também no localStorage para compatibilidade
                             localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
                             localStorage.setItem('vc_user_city', cityName);
+                            if (neighborhood) {
+                                localStorage.setItem('vc_user_neighborhood', neighborhood);
+                                setCookie('vc_user_neighborhood', neighborhood, 30);
+                            }
                             
                             // Esconder o botão de localização após obter localização
                             const heroLocationActions = document.getElementById('hero-location-actions');
@@ -1630,7 +1773,8 @@ add_action( 'wp_head', 'vemcomer_pwa_inject_meta_tags', 1 );
  */
 function vemcomer_pwa_register_service_worker() {
     // Verifica se não é admin ou login
-    if ( is_admin() || is_login() ) {
+    // CORREÇÃO AQUI: Alteramos a chamada para a nova função renomeada
+    if ( is_admin() || vemcomer_is_login_page() ) {
         return;
     }
     
@@ -1684,8 +1828,9 @@ add_action( 'wp_footer', 'vemcomer_pwa_register_service_worker', 999 );
 
 /**
  * Função auxiliar para verificar se é página de login
+ * CORREÇÃO AQUI: Renomeamos a função de is_login() para vemcomer_is_login_page()
+ * Isso evita o conflito com a função nativa do WordPress.
  */
-function is_login() {
+function vemcomer_is_login_page() {
     return in_array( $GLOBALS['pagenow'], [ 'wp-login.php', 'wp-register.php' ], true );
 }
-

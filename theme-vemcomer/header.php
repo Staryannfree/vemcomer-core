@@ -31,9 +31,21 @@
     <?php
     // Top Bar Minimalista (Mobile Only)
     if ( wp_is_mobile() ) :
+        // Priorizar bairro sobre cidade
+        $user_neighborhood = isset( $_COOKIE['vc_user_neighborhood'] ) ? sanitize_text_field( $_COOKIE['vc_user_neighborhood'] ) : '';
         $user_city = isset( $_COOKIE['vc_user_city'] ) ? sanitize_text_field( $_COOKIE['vc_user_city'] ) : '';
         $user_address = isset( $_COOKIE['vc_user_location'] ) ? json_decode( stripslashes( $_COOKIE['vc_user_location'] ), true ) : null;
-        $address_text = ! empty( $user_city ) ? $user_city : ( ! empty( $user_address['address'] ) ? $user_address['address'] : __( 'Selecione um endereço', 'vemcomer' ) );
+        
+        // Prioridade: bairro > cidade > endereço completo > texto padrão
+        $address_text = ! empty( $user_neighborhood ) 
+            ? $user_neighborhood 
+            : ( ! empty( $user_city ) 
+                ? $user_city 
+                : ( ! empty( $user_address['address'] ) 
+                    ? $user_address['address'] 
+                    : __( 'Selecione um endereço', 'vemcomer' ) 
+                ) 
+            );
     ?>
     <div class="mobile-top-bar" id="mobile-top-bar">
         <div class="mobile-top-bar__content">
