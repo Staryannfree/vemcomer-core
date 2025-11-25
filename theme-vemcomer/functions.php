@@ -88,6 +88,52 @@ function vemcomer_template_include( $template ) {
 add_filter( 'template_include', 'vemcomer_template_include', 99 );
 
 /**
+ * Verifica se está no modo Standalone (Cardápio Digital)
+ * Retorna true se:
+ * - URL tiver ?mode=menu OU
+ * - URL for /cardapio/{slug}
+ */
+function vc_is_standalone_mode(): bool {
+    // Verificar parâmetro ?mode=menu
+    if ( isset( $_GET['mode'] ) && $_GET['mode'] === 'menu' ) {
+        return true;
+    }
+    
+    // Verificar se está na URL /cardapio/{slug}
+    $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+    $parsed = wp_parse_url( $request_uri );
+    $path = $parsed['path'] ?? '';
+    
+    // Verificar padrão /cardapio/{slug}
+    if ( preg_match( '#^/cardapio/([^/]+)/?$#', $path, $matches ) ) {
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+ * Adiciona rewrite rule para /cardapio/{slug}
+ */
+function vc_add_cardapio_rewrite_rules() {
+    add_rewrite_rule(
+        '^cardapio/([^/]+)/?$',
+        'index.php?post_type=vc_restaurant&name=$matches[1]&mode=menu',
+        'top'
+    );
+}
+add_action( 'init', 'vc_add_cardapio_rewrite_rules' );
+
+/**
+ * Adiciona query var para mode
+ */
+function vc_add_query_vars( $vars ) {
+    $vars[] = 'mode';
+    return $vars;
+}
+add_filter( 'query_vars', 'vc_add_query_vars' );
+
+/**
  * Enfileira estilos e scripts
  */
 function vemcomer_theme_scripts() {

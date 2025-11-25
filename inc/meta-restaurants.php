@@ -288,6 +288,39 @@ function vc_render_restaurant_metabox( $post ) {
             </td>
         </tr>
     </table>
+    
+    <?php
+    // Link do Cardápio Digital (Standalone)
+    $restaurant_slug = $post->post_name;
+    $standalone_url = home_url( "/restaurante/{$restaurant_slug}/?mode=menu" );
+    $cardapio_url = home_url( "/cardapio/{$restaurant_slug}/" );
+    ?>
+    <div style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #158943;">
+        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
+            <?php echo esc_html__( '🔗 Link do Cardápio Digital', 'vemcomer' ); ?>
+        </h3>
+        <p style="margin-bottom: 12px; color: #666; font-size: 13px;">
+            <?php echo esc_html__( 'Compartilhe este link para que seus clientes acessem diretamente seu cardápio sem ver outros restaurantes.', 'vemcomer' ); ?>
+        </p>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="text" 
+                   id="vc-standalone-link" 
+                   value="<?php echo esc_attr( $standalone_url ); ?>" 
+                   readonly 
+                   style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; background: white;"
+                   onclick="this.select();">
+            <button type="button" 
+                    class="button button-secondary" 
+                    onclick="document.getElementById('vc-standalone-link').select(); document.execCommand('copy'); alert('<?php echo esc_js( __( 'Link copiado!', 'vemcomer' ) ); ?>');"
+                    style="white-space: nowrap;">
+                <?php echo esc_html__( 'Copiar Link', 'vemcomer' ); ?>
+            </button>
+        </div>
+        <p style="margin-top: 8px; margin-bottom: 0; color: #999; font-size: 12px;">
+            <?php echo esc_html__( 'URL alternativa:', 'vemcomer' ); ?> 
+            <code style="background: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;"><?php echo esc_html( $cardapio_url ); ?></code>
+        </p>
+    </div>
     <?php
 }
 

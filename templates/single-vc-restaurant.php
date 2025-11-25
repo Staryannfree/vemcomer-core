@@ -253,4 +253,97 @@ get_header();
 		?>
 	</div>
 </main>
+
+<?php
+// Modal de Informações do Restaurante (para modo standalone)
+if ( function_exists( 'vc_is_standalone_mode' ) && vc_is_standalone_mode() ) :
+	$restaurant_id = get_the_ID();
+	$restaurant_title = get_the_title( $restaurant_id );
+	$restaurant_address = get_post_meta( $restaurant_id, '_vc_address', true );
+	$restaurant_phone = get_post_meta( $restaurant_id, '_vc_phone', true );
+	$restaurant_whatsapp = get_post_meta( $restaurant_id, 'vc_restaurant_whatsapp', true );
+	$schedule = [];
+	if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
+		$schedule = \VC\Utils\Schedule_Helper::get_schedule( $restaurant_id );
+	}
+	$hours = get_post_meta( $restaurant_id, 'vc_restaurant_open_hours', true );
+?>
+<div id="vc-restaurant-info-modal" class="vc-info-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+	<div class="vc-info-modal-content" style="background: white; border-radius: 16px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative;">
+		<button type="button" onclick="document.getElementById('vc-restaurant-info-modal').style.display='none';" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+		<h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-right: 30px;"><?php echo esc_html( $restaurant_title ); ?></h2>
+		
+		<?php if ( $restaurant_address ) : ?>
+		<div style="margin-bottom: 16px;">
+			<strong style="display: block; margin-bottom: 4px; color: #333;"><?php esc_html_e( 'Endereço', 'vemcomer' ); ?></strong>
+			<p style="color: #666; margin: 0;"><?php echo esc_html( $restaurant_address ); ?></p>
+		</div>
+		<?php endif; ?>
+		
+		<?php if ( $restaurant_phone ) : ?>
+		<div style="margin-bottom: 16px;">
+			<strong style="display: block; margin-bottom: 4px; color: #333;"><?php esc_html_e( 'Telefone', 'vemcomer' ); ?></strong>
+			<p style="color: #666; margin: 0;">
+				<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $restaurant_phone ) ); ?>" style="color: #158943; text-decoration: none;">
+					<?php echo esc_html( $restaurant_phone ); ?>
+				</a>
+			</p>
+		</div>
+		<?php endif; ?>
+		
+		<?php if ( $restaurant_whatsapp ) : ?>
+		<div style="margin-bottom: 16px;">
+			<strong style="display: block; margin-bottom: 4px; color: #333;"><?php esc_html_e( 'WhatsApp', 'vemcomer' ); ?></strong>
+			<p style="color: #666; margin: 0;">
+				<a href="https://wa.me/<?php echo esc_attr( preg_replace( '/[^0-9]/', '', $restaurant_whatsapp ) ); ?>" target="_blank" style="color: #158943; text-decoration: none;">
+					<?php echo esc_html( $restaurant_whatsapp ); ?>
+				</a>
+			</p>
+		</div>
+		<?php endif; ?>
+		
+		<?php if ( ! empty( $schedule ) || $hours ) : ?>
+		<div style="margin-bottom: 16px;">
+			<strong style="display: block; margin-bottom: 4px; color: #333;"><?php esc_html_e( 'Horário de Funcionamento', 'vemcomer' ); ?></strong>
+			<?php if ( ! empty( $schedule ) ) : ?>
+				<?php
+				$day_names_pt = [
+					'monday'    => __( 'Segunda', 'vemcomer' ),
+					'tuesday'   => __( 'Terça', 'vemcomer' ),
+					'wednesday' => __( 'Quarta', 'vemcomer' ),
+					'thursday'  => __( 'Quinta', 'vemcomer' ),
+					'friday'    => __( 'Sexta', 'vemcomer' ),
+					'saturday'  => __( 'Sábado', 'vemcomer' ),
+					'sunday'    => __( 'Domingo', 'vemcomer' ),
+				];
+				foreach ( $schedule as $day => $day_data ) :
+					if ( ! empty( $day_data['enabled'] ) && ! empty( $day_data['periods'] ) ) :
+						$periods_str = [];
+						foreach ( $day_data['periods'] as $period ) {
+							$open = $period['open'] ?? '';
+							$close = $period['close'] ?? '';
+							if ( $open && $close ) {
+								$periods_str[] = $open . ' - ' . $close;
+							}
+						}
+						if ( ! empty( $periods_str ) ) :
+				?>
+				<p style="color: #666; margin: 4px 0;">
+					<strong><?php echo esc_html( $day_names_pt[ $day ] ?? ucfirst( $day ) ); ?>:</strong> 
+					<?php echo esc_html( implode( ', ', $periods_str ) ); ?>
+				</p>
+				<?php
+						endif;
+					endif;
+				endforeach;
+				?>
+			<?php else : ?>
+				<p style="color: #666; margin: 0; white-space: pre-line;"><?php echo esc_html( $hours ); ?></p>
+			<?php endif; ?>
+		</div>
+		<?php endif; ?>
+	</div>
+</div>
+<?php endif; ?>
+
 <?php get_footer(); ?>

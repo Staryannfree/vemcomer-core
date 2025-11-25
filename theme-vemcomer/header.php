@@ -11,7 +11,13 @@
     <?php wp_head(); ?>
 </head>
 
-<body <?php body_class(); ?>>
+<body <?php 
+    $body_classes = get_body_class();
+    if ( function_exists( 'vc_is_standalone_mode' ) && vc_is_standalone_mode() ) {
+        $body_classes[] = 'vc-standalone-mode';
+    }
+    body_class( $body_classes );
+?>>
 <?php wp_body_open(); ?>
 
 <div id="page" class="site">

@@ -1308,6 +1308,38 @@ body {
 
 .hidden { display: none !important; }
 
+/* ============ STANDALONE MODE (Cardápio Digital) ============ */
+body.vc-standalone-mode .top-bar .logo {
+    display: none !important;
+}
+
+body.vc-standalone-mode .bottom-nav .nav-item[href="/"],
+body.vc-standalone-mode .bottom-nav .nav-item[href="/busca"] {
+    display: none !important;
+}
+
+body.vc-standalone-mode .restaurant-header-name {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    margin: 0 auto !important;
+}
+
+body.vc-standalone-mode .related-restaurants-section {
+    display: none !important;
+}
+
+/* Header do restaurante em destaque no modo standalone */
+body.vc-standalone-mode .vc-single__header {
+    text-align: center;
+}
+
+body.vc-standalone-mode .vc-single__header .vc-single__title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
 /* ============ LOCATION MODAL (Obrigatório) ============ */
 .location-modal {
     position: fixed;
