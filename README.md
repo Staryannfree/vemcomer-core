@@ -207,6 +207,46 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.32 - PWA (Progressive Web App) - Infraestrutura Completa
+
+**Novas funcionalidades:**
+- **Manifest.json**: Arquivo de manifesto PWA configurado
+  - Nome: "VemComer"
+  - Display: `standalone` (remove barra do navegador)
+  - Theme Color: `#ea1d2c` (vermelho iFood)
+  - Background: `#ffffff`
+  - Ícones: 192x192 e 512x512 (placeholders configurados)
+  - Shortcuts: Atalho para "Restaurantes"
+- **Service Worker (`sw.js`)**: Estratégia de cache híbrida
+  - **Cache Name**: `vemcomer-pwa-v1`
+  - **App Shell Pré-cacheado**: Home, CSS críticos (style.css, main.css, product-modal.css)
+  - **Estratégias de Cache**:
+    - **Network First para APIs REST** (`/wp-json/`): Tenta rede primeiro, fallback para cache, retorna erro JSON se offline
+    - **Cache First para Assets** (imagens, CSS, JS): Retorna cache imediatamente, atualiza em background (stale-while-revalidate)
+    - **Network First para Navegação HTML**: Tenta rede primeiro, fallback para App Shell se offline
+  - **Ignora**: Não intercepta `/wp-admin/` ou `/wp-login.php`
+  - **Instalação e Ativação**: Auto-install, skip waiting, clients claim
+- **Integração WordPress**:
+  - **Meta Tags PWA**: Injetadas no `wp_head` (manifest, theme-color, apple-touch-icon, apple-mobile-web-app)
+  - **Registro do Service Worker**: Script inline no footer para registrar SW automaticamente
+  - **Rota Virtual `/sw.js`**: Rewrite rule para servir SW em escopo global
+    - Query var `vemcomer_sw` para identificar requisição
+    - Template redirect para servir arquivo com `Content-Type: application/javascript`
+    - Flush automático de rewrite rules na ativação do tema
+
+**Arquivos novos:**
+- `theme-vemcomer/manifest.json` - Manifesto PWA
+- `theme-vemcomer/assets/js/sw.js` - Service Worker com estratégia de cache
+- `theme-vemcomer/PWA_SETUP.md` - Documentação de configuração e setup
+
+**Arquivos modificados:**
+- `theme-vemcomer/functions.php` - Integração PWA completa (meta tags, registro SW, rewrite rules)
+
+**Próximos passos:**
+- Criar ícones PWA (192x192 e 512x512) e salvar em `theme-vemcomer/assets/images/`
+- Fazer flush de rewrite rules (Configurações → Links Permanentes → Salvar)
+- Testar instalação PWA no mobile e desktop
+
 ### v0.31 - Modal de Upgrade e Pricing (10.3)
 
 **Novas funcionalidades:**
