@@ -1220,13 +1220,38 @@ Conectar o "App Shell" mobile (`theme-vemcomer/template-parts/content-mobile-hom
 - `GET /wp-json/vemcomer/v1/restaurants` - Lista restaurantes com filtros
 - `GET /wp-json/wp/v2/vc_restaurant/{id}?_embed=true` - Busca imagem destacada
 
+**Endpoints implementados:**
+- `GET /wp-json/vemcomer/v1/menu-items?featured=true` - Pratos do Dia
+- `GET /wp-json/vemcomer/v1/events?featured=true&date=today` - Eventos do dia
+- `GET /wp-json/vemcomer/v1/restaurants?featured=true` - Restaurantes em Destaque
+- `POST /wp-json/vemcomer/v1/menu-items/{id}/toggle-featured` - Toggle rápido de Prato do Dia
+- `POST /wp-json/vemcomer/v1/restaurants/{id}/toggle-featured` - Toggle rápido de Restaurante em Destaque
+
 **Mantido hardcoded (endpoints futuros):**
 - Stories (storiesData) - Aguardando endpoint de stories
-- Pratos do Dia (dishesData) - Aguardando endpoint de pratos em destaque
-- Eventos (eventsData) - Aguardando endpoint de eventos
 
 **Melhorias futuras:**
 - Adicionar campo `image` na resposta da API de restaurantes (evitar requisições extras)
 - Adicionar campos `delivery_time` e `delivery_fee` na API
-- Criar endpoints para Stories, Pratos do Dia e Eventos
+- Criar endpoint para Stories
 - Implementar cache de imagens no frontend
+
+## Toggle Rápido de Featured (Admin)
+
+### Pratos do Dia
+Na lista de **Itens do Cardápio** (`Pedevem > Itens do Cardápio`), há uma coluna **"⭐ Prato do Dia"** com checkbox que permite marcar/desmarcar rapidamente sem entrar no item individualmente.
+
+### Restaurantes em Destaque
+Na lista de **Restaurantes** (`Pedevem > Restaurantes`), há uma coluna **"⭐ Em Destaque"** com checkbox que permite marcar/desmarcar rapidamente sem entrar no restaurante individualmente.
+
+**Como usar:**
+1. Acesse a lista de Menu Items ou Restaurantes
+2. Clique no checkbox na coluna "⭐ Prato do Dia" ou "⭐ Em Destaque"
+3. A atualização é feita via AJAX sem recarregar a página
+4. Uma notificação confirma a ação
+
+**Backend:**
+- Meta field `_vc_menu_item_featured` para menu items
+- Meta field `_vc_restaurant_featured` para restaurantes
+- Endpoints REST para toggle via AJAX
+- JavaScript `admin-quick-toggle.js` para interação sem reload
