@@ -834,6 +834,11 @@
             heroTitle.textContent = `Peça dos melhores estabelecimentos de ${cityName}`;
             // Salvar cidade no localStorage
             localStorage.setItem('vc_user_city', cityName);
+            
+            // Disparar evento para atualizar mobile top bar
+            document.dispatchEvent(new CustomEvent('vemcomer:location-updated', {
+                detail: { city: cityName }
+            }));
         }
     }
     

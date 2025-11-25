@@ -28,6 +28,25 @@
     </div>
     <?php endif; ?>
 
+    <?php
+    // Top Bar Minimalista (Mobile Only)
+    $user_city = isset( $_COOKIE['vc_user_city'] ) ? sanitize_text_field( $_COOKIE['vc_user_city'] ) : '';
+    $user_address = isset( $_COOKIE['vc_user_location'] ) ? json_decode( stripslashes( $_COOKIE['vc_user_location'] ), true ) : null;
+    $address_text = ! empty( $user_city ) ? $user_city : ( ! empty( $user_address['address'] ) ? $user_address['address'] : __( 'Selecione um endereço', 'vemcomer' ) );
+    ?>
+    <div class="mobile-top-bar" id="mobile-top-bar">
+        <div class="mobile-top-bar__content">
+            <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="mobile-top-bar__logo">
+                <?php bloginfo( 'name' ); ?>
+            </a>
+            <div class="mobile-top-bar__address" id="mobile-address-selector" role="button" tabindex="0" aria-label="<?php esc_attr_e( 'Selecionar endereço de entrega', 'vemcomer' ); ?>">
+                <span class="mobile-top-bar__address-icon">📍</span>
+                <span class="mobile-top-bar__address-text" id="mobile-address-text"><?php echo esc_html( $address_text ); ?></span>
+                <span class="mobile-top-bar__address-arrow">▾</span>
+            </div>
+        </div>
+    </div>
+
     <header id="masthead" class="site-header">
         <div class="site-header__container">
             <div class="site-header__branding">

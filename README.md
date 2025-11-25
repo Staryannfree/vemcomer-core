@@ -207,6 +207,45 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.33 - Navegação Mobile App Nativo (Estilo iFood)
+
+**Novas funcionalidades:**
+- **Bottom Navigation Bar (Mobile Only)**:
+  - Barra de navegação fixa no rodapé para telas < 768px
+  - 5 itens com ícones SVG: Início, Buscar, Categorias, Pedidos (se logado), Perfil
+  - Estado ativo destacado com cor do tema (#ea1d2c)
+  - Acessibilidade completa (ARIA labels, aria-current)
+  - Suporte a safe area insets (iPhone X+)
+- **Top Bar Minimalista (Mobile)**:
+  - Barra sticky no topo substituindo header padrão no mobile
+  - Logo clicável + Seletor de endereço interativo
+  - Integrado com sistema de geolocalização
+  - Atualização automática quando localização muda
+- **Ocultação de Elementos no Mobile**:
+  - Header e Footer padrão ocultos em telas < 768px
+  - Padding-bottom no body para não esconder conteúdo atrás da bottom nav
+  - Layout otimizado para experiência app nativo
+- **Categorias Estilo Pílulas (Horizontal Scroll)**:
+  - Carrossel horizontal com scroll suave
+  - Botões arredondados (border-radius: 20px)
+  - Estado ativo com background vermelho (#ea1d2c)
+  - Scrollbar oculta para visual limpo
+  - Suporte a touch scrolling nativo
+
+**Arquivos novos:**
+- `theme-vemcomer/assets/css/mobile-app.css` - Estilos completos para navegação mobile app
+- `theme-vemcomer/assets/js/mobile-app.js` - JavaScript para integração e funcionalidades mobile
+
+**Arquivos modificados:**
+- `theme-vemcomer/footer.php` - Bottom navigation bar com ícones SVG e estados ativos
+- `theme-vemcomer/header.php` - Top bar minimalista com seletor de endereço
+- `theme-vemcomer/template-parts/home/section-categories.php` - Categorias estilo pílulas para mobile
+- `theme-vemcomer/functions.php` - Enfileiramento de CSS e JS mobile app
+- `theme-vemcomer/assets/js/home-improvements.js` - Disparo de evento customizado para atualização de endereço
+
+**Resultado:**
+Experiência mobile idêntica a um app nativo, com navegação controlada pelo polegar na parte inferior da tela, top bar minimalista e categorias em carrossel horizontal estilo pílulas.
+
 ### v0.32 - PWA (Progressive Web App) - Infraestrutura Completa
 
 **Novas funcionalidades:**

@@ -46,30 +46,88 @@
     </footer>
     
     <?php
-    // Bottom Navigation Mobile
+    // Bottom Navigation Mobile - Estilo App Nativo
+    $current_url = home_url( $_SERVER['REQUEST_URI'] );
+    $is_home = is_front_page() || is_home();
+    $is_search = is_search() || ( isset( $_GET['s'] ) && ! empty( $_GET['s'] ) );
+    $is_orders = strpos( $current_url, '/meus-pedidos' ) !== false || strpos( $current_url, '/pedidos' ) !== false;
+    $is_profile = strpos( $current_url, '/perfil' ) !== false || strpos( $current_url, '/minha-conta' ) !== false || strpos( $current_url, '/wp-login' ) !== false;
     ?>
-    <nav class="bottom-nav" id="bottom-nav">
+    <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="<?php esc_attr_e( 'Navegação principal', 'vemcomer' ); ?>">
         <div class="bottom-nav__items">
-            <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="bottom-nav__item">
-                <span class="bottom-nav__icon">🏠</span>
+            <a href="<?php echo esc_url( home_url( '/' ) ); ?>" 
+               class="bottom-nav__item <?php echo $is_home ? 'active' : ''; ?>" 
+               aria-label="<?php esc_attr_e( 'Início', 'vemcomer' ); ?>"
+               <?php echo $is_home ? 'aria-current="page"' : ''; ?>>
+                <span class="bottom-nav__icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
                 <span class="bottom-nav__label"><?php esc_html_e( 'Início', 'vemcomer' ); ?></span>
             </a>
-            <a href="<?php echo esc_url( home_url( '/restaurantes/' ) ); ?>" class="bottom-nav__item">
-                <span class="bottom-nav__icon">🔍</span>
+            
+            <a href="<?php echo esc_url( home_url( '/restaurantes/' ) ); ?>" 
+               class="bottom-nav__item <?php echo $is_search ? 'active' : ''; ?>" 
+               aria-label="<?php esc_attr_e( 'Buscar', 'vemcomer' ); ?>"
+               <?php echo $is_search ? 'aria-current="page"' : ''; ?>>
+                <span class="bottom-nav__icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
                 <span class="bottom-nav__label"><?php esc_html_e( 'Buscar', 'vemcomer' ); ?></span>
             </a>
+            
+            <a href="<?php echo esc_url( home_url( '/restaurantes/' ) ); ?>" 
+               class="bottom-nav__item" 
+               aria-label="<?php esc_attr_e( 'Categorias', 'vemcomer' ); ?>">
+                <span class="bottom-nav__icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="bottom-nav__label"><?php esc_html_e( 'Categorias', 'vemcomer' ); ?></span>
+            </a>
+            
             <?php if ( is_user_logged_in() ) : ?>
-                <a href="<?php echo esc_url( home_url( '/meus-favoritos/' ) ); ?>" class="bottom-nav__item">
-                    <span class="bottom-nav__icon">❤️</span>
-                    <span class="bottom-nav__label"><?php esc_html_e( 'Favoritos', 'vemcomer' ); ?></span>
-                </a>
-                <a href="<?php echo esc_url( home_url( '/meus-pedidos/' ) ); ?>" class="bottom-nav__item">
-                    <span class="bottom-nav__icon">📦</span>
+                <a href="<?php echo esc_url( home_url( '/meus-pedidos/' ) ); ?>" 
+                   class="bottom-nav__item <?php echo $is_orders ? 'active' : ''; ?>" 
+                   aria-label="<?php esc_attr_e( 'Pedidos', 'vemcomer' ); ?>"
+                   <?php echo $is_orders ? 'aria-current="page"' : ''; ?>>
+                    <span class="bottom-nav__icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 6.10457 9.89543 7 11 7H13C14.1046 7 15 6.10457 15 5M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
                     <span class="bottom-nav__label"><?php esc_html_e( 'Pedidos', 'vemcomer' ); ?></span>
                 </a>
+            <?php else : ?>
+                <a href="<?php echo esc_url( wp_login_url() ); ?>" 
+                   class="bottom-nav__item" 
+                   aria-label="<?php esc_attr_e( 'Entrar', 'vemcomer' ); ?>">
+                    <span class="bottom-nav__icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="bottom-nav__label"><?php esc_html_e( 'Entrar', 'vemcomer' ); ?></span>
+                </a>
             <?php endif; ?>
-            <a href="<?php echo esc_url( is_user_logged_in() ? home_url( '/perfil/' ) : wp_login_url() ); ?>" class="bottom-nav__item">
-                <span class="bottom-nav__icon">👤</span>
+            
+            <a href="<?php echo esc_url( is_user_logged_in() ? home_url( '/perfil/' ) : wp_login_url() ); ?>" 
+               class="bottom-nav__item <?php echo $is_profile ? 'active' : ''; ?>" 
+               aria-label="<?php esc_attr_e( 'Perfil', 'vemcomer' ); ?>"
+               <?php echo $is_profile ? 'aria-current="page"' : ''; ?>>
+                <span class="bottom-nav__icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
                 <span class="bottom-nav__label"><?php esc_html_e( 'Perfil', 'vemcomer' ); ?></span>
             </a>
         </div>
