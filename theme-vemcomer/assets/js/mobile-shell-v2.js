@@ -1,7 +1,142 @@
 // ============ CONFIGURAÇÃO ============
 const API_BASE = '/wp-json/vemcomer/v1';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300?text=Sem+Imagem';
 
-// ============ DADOS DOS STORIES ============
+// ============ MAPEAMENTO DE DADOS DA API ============
+function mapApiBannerToBanner(apiBanner) {
+    return {
+        id: apiBanner.id,
+        title: apiBanner.title || '',
+        subtitle: '', // API não retorna subtitle, pode ser adicionado depois
+        image: apiBanner.image || PLACEHOLDER_IMAGE,
+        link: apiBanner.link || null,
+        restaurantId: apiBanner.restaurant_id || null
+    };
+}
+
+async function getRestaurantImage(restaurantId) {
+    try {
+        // Tentar buscar imagem via WordPress REST API padrão
+        const response = await fetch(`/wp-json/wp/v2/vc_restaurant/${restaurantId}?_embed=true`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data._embedded && data._embedded['wp:featuredmedia'] && data._embedded['wp:featuredmedia'][0]) {
+                return data._embedded['wp:featuredmedia'][0].source_url || PLACEHOLDER_IMAGE;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao buscar imagem do restaurante:', error);
+    }
+    return PLACEHOLDER_IMAGE;
+}
+
+function mapApiRestaurantToRestaurant(apiRestaurant) {
+    const rating = apiRestaurant.rating?.average || 0;
+    const ratingCount = apiRestaurant.rating?.count || 0;
+    
+    // Calcular tempo de entrega (placeholder - pode vir da API depois)
+    const deliveryTime = '30-45 min';
+    
+    // Calcular taxa de entrega (placeholder - pode vir da API depois)
+    const deliveryFee = apiRestaurant.has_delivery ? 'R$ 5,00' : 'Grátis';
+    
+    return {
+        id: apiRestaurant.id,
+        name: apiRestaurant.title || '',
+        rating: rating > 0 ? rating.toFixed(1) : 'Novo',
+        deliveryTime: deliveryTime,
+        deliveryFee: deliveryFee,
+        image: PLACEHOLDER_IMAGE, // Será atualizado depois
+        isOpen: apiRestaurant.is_open || false,
+        cuisines: apiRestaurant.cuisines || [],
+        address: apiRestaurant.address || '',
+        phone: apiRestaurant.phone || ''
+    };
+}
+
+function mapApiRestaurantToFeatured(apiRestaurant) {
+    const base = mapApiRestaurantToRestaurant(apiRestaurant);
+    return {
+        ...base,
+        tags: apiRestaurant.cuisines || [],
+        hasReservation: true // Placeholder - pode vir da API depois
+    };
+}
+
+// ============ FUNÇÕES DE BUSCA DE DADOS ============
+async function fetchBanners() {
+    try {
+        const response = await fetch(`${API_BASE}/banners`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return Array.isArray(data) ? data.map(mapApiBannerToBanner) : [];
+    } catch (error) {
+        console.error('Erro ao buscar banners:', error);
+        return [];
+    }
+}
+
+async function fetchRestaurants(params = {}) {
+    try {
+        const queryParams = new URLSearchParams();
+        if (params.per_page) queryParams.append('per_page', params.per_page);
+        if (params.orderby) queryParams.append('orderby', params.orderby);
+        if (params.order) queryParams.append('order', params.order);
+        if (params.search) queryParams.append('search', params.search);
+        
+        const url = `${API_BASE}/restaurants${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!Array.isArray(data)) return [];
+        
+        // Mapear restaurantes
+        const restaurants = data.map(mapApiRestaurantToRestaurant);
+        
+        // Buscar imagens em paralelo (limitado para não sobrecarregar)
+        const imagePromises = restaurants.slice(0, 20).map(async (restaurant) => {
+            restaurant.image = await getRestaurantImage(restaurant.id);
+            return restaurant;
+        });
+        
+        await Promise.all(imagePromises);
+        
+        return restaurants;
+    } catch (error) {
+        console.error('Erro ao buscar restaurantes:', error);
+        return [];
+    }
+}
+
+async function fetchFeaturedRestaurants() {
+    // Buscar restaurantes ordenados por rating (maior primeiro)
+    const restaurants = await fetchRestaurants({
+        per_page: 4,
+        orderby: 'rating',
+        order: 'desc'
+    });
+    
+    return restaurants.map(mapApiRestaurantToFeatured);
+}
+
+// ============ DADOS DOS STORIES (Mantido hardcoded por enquanto) ============
 const storiesData = [
     {
         id: 1,
@@ -447,19 +582,65 @@ document.addEventListener('DOMContentLoaded', function() {
 let currentBannerIndex = 0;
 let bannerCarousel = null;
 let bannerDots = null;
+let bannerAutoPlayInterval = null;
+
+async function renderBanners() {
+    const container = document.getElementById('bannerCarousel');
+    const dotsContainer = document.getElementById('bannerDots');
+    
+    if (!container || !dotsContainer) return;
+    
+    // Mostrar skeleton loading
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando banners...</div>';
+    
+    const banners = await fetchBanners();
+    
+    if (banners.length === 0) {
+        container.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        return;
+    }
+    
+    // Renderizar banners
+    container.innerHTML = banners.map((banner, index) => `
+        <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
+            <img src="${banner.image}" alt="${banner.title}" class="banner-image" loading="lazy">
+            <div class="banner-overlay">
+                <div class="banner-title">${banner.title}</div>
+                ${banner.subtitle ? `<div class="banner-subtitle">${banner.subtitle}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    // Renderizar dots
+    dotsContainer.innerHTML = banners.map((_, index) => `
+        <span class="banner-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
+    `).join('');
+    
+    // Reinicializar carousel
+    initBannerCarousel();
+}
 
 function initBannerCarousel() {
     bannerCarousel = document.getElementById('bannerCarousel');
     bannerDots = document.querySelectorAll('.banner-dot');
     
     if (!bannerCarousel || !bannerDots.length) return;
+    
+    // Limpar intervalo anterior
+    if (bannerAutoPlayInterval) {
+        clearInterval(bannerAutoPlayInterval);
+    }
 
     function updateBannerCarousel(index) {
+        const dots = document.querySelectorAll('.banner-dot');
+        if (index >= dots.length) return;
+        
         currentBannerIndex = index;
         const offset = -index * 100;
         bannerCarousel.style.transform = `translateX(${offset}%)`;
         
-        bannerDots.forEach((dot, i) => {
+        dots.forEach((dot, i) => {
             dot.classList.toggle('active', i === index);
         });
     }
@@ -467,13 +648,24 @@ function initBannerCarousel() {
     bannerDots.forEach(dot => {
         dot.addEventListener('click', () => {
             updateBannerCarousel(parseInt(dot.dataset.index));
+            // Resetar autoplay
+            if (bannerAutoPlayInterval) {
+                clearInterval(bannerAutoPlayInterval);
+            }
+            startBannerAutoPlay();
         });
     });
 
-    setInterval(() => {
-        const nextIndex = (currentBannerIndex + 1) % bannerDots.length;
-        updateBannerCarousel(nextIndex);
-    }, 5000);
+    function startBannerAutoPlay() {
+        if (bannerDots.length <= 1) return;
+        
+        bannerAutoPlayInterval = setInterval(() => {
+            const nextIndex = (currentBannerIndex + 1) % bannerDots.length;
+            updateBannerCarousel(nextIndex);
+        }, 5000);
+    }
+    
+    startBannerAutoPlay();
 
     // Swipe support
     let touchStartX = 0;
@@ -492,10 +684,18 @@ function initBannerCarousel() {
         if (touchStartX - touchEndX > 50) {
             const nextIndex = Math.min(currentBannerIndex + 1, bannerDots.length - 1);
             updateBannerCarousel(nextIndex);
+            if (bannerAutoPlayInterval) {
+                clearInterval(bannerAutoPlayInterval);
+            }
+            startBannerAutoPlay();
         }
         if (touchEndX - touchStartX > 50) {
             const prevIndex = Math.max(currentBannerIndex - 1, 0);
             updateBannerCarousel(prevIndex);
+            if (bannerAutoPlayInterval) {
+                clearInterval(bannerAutoPlayInterval);
+            }
+            startBannerAutoPlay();
         }
     }
 }
@@ -557,12 +757,22 @@ function renderEvents() {
     `).join('');
 }
 
-function renderFeatured() {
+async function renderFeatured() {
     const container = document.getElementById('featuredGrid');
     if (!container) return;
     
-    container.innerHTML = featuredData.map(restaurant => `
-        <div class="featured-card">
+    // Mostrar skeleton loading
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando destaques...</div>';
+    
+    const restaurants = await fetchFeaturedRestaurants();
+    
+    if (restaurants.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum restaurante em destaque no momento.</div>';
+        return;
+    }
+    
+    container.innerHTML = restaurants.map(restaurant => `
+        <div class="featured-card" onclick="openRestaurant(${restaurant.id})">
             <div class="featured-image-wrapper">
                 <img src="${restaurant.image}" alt="${restaurant.name}" class="featured-image" loading="lazy">
                 <div class="featured-badge">⭐ DESTAQUE</div>
@@ -578,7 +788,10 @@ function renderFeatured() {
                     </div>
                 </div>
                 <div class="featured-tags">
-                    ${restaurant.tags.map(tag => `<span class="featured-tag">${tag}</span>`).join('')}
+                    ${restaurant.tags.length > 0 
+                        ? restaurant.tags.map(tag => `<span class="featured-tag">${tag}</span>`).join('')
+                        : '<span class="featured-tag">Restaurante</span>'
+                    }
                 </div>
                 <div class="featured-info">
                     <span>${restaurant.deliveryTime}</span>
@@ -598,11 +811,21 @@ function renderFeatured() {
     `).join('');
 }
 
-function renderRestaurants() {
+async function renderRestaurants() {
     const container = document.getElementById('restaurantsGrid');
     if (!container) return;
     
-    container.innerHTML = restaurantsData.map(restaurant => `
+    // Mostrar skeleton loading
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando restaurantes...</div>';
+    
+    const restaurants = await fetchRestaurants({ per_page: 20 });
+    
+    if (restaurants.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum restaurante encontrado.</div>';
+        return;
+    }
+    
+    container.innerHTML = restaurants.map(restaurant => `
         <div class="restaurant-card" onclick="openRestaurant(${restaurant.id})">
             <div class="card-image-wrapper">
                 <img src="${restaurant.image}" alt="${restaurant.name}" class="card-image" loading="lazy">
@@ -939,7 +1162,9 @@ async function searchMenuItems(query) {
         return [];
     }
     
-    // Buscar itens do cardápio via API REST
+    // Buscar itens do cardápio via API REST do WordPress
+    // Nota: A busca de itens do cardápio será simplificada
+    // pois a API padrão não expõe meta fields facilmente
     const url = `/wp-json/wp/v2/vc_menu_item?search=${encodeURIComponent(query)}&per_page=5&status=publish`;
     
     try {
@@ -954,7 +1179,15 @@ async function searchMenuItems(query) {
         }
         
         const data = await response.json();
-        return Array.isArray(data) ? data : [];
+        if (!Array.isArray(data)) return [];
+        
+        // Retornar apenas itens com título (sem meta fields por enquanto)
+        return data.map(item => ({
+            id: item.id,
+            title: item.title?.rendered || item.title || '',
+            restaurant_id: '', // Será preenchido se necessário
+            price: ''
+        }));
     } catch (error) {
         console.error('Erro na busca de itens:', error);
         return [];
@@ -1063,36 +1296,15 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
         });
     }
     
-    // Itens do cardápio - buscar nome do restaurante para cada item
+    // Itens do cardápio (simplificado - sem meta fields por enquanto)
+    // Nota: A busca de itens do cardápio será melhorada quando houver endpoint dedicado
     if (menuItems.length > 0) {
-        const restaurantNamesMap = {};
-        
-        // Buscar nomes dos restaurantes únicos
-        const uniqueRestaurantIds = [...new Set(menuItems.map(item => {
-            return item.meta?._vc_restaurant_id || item.restaurant_id || '';
-        }).filter(id => id))];
-        
-        // Buscar nomes dos restaurantes
-        for (const restId of uniqueRestaurantIds) {
-            try {
-                const restResponse = await fetch(`${API_BASE}/restaurants/${restId}`);
-                if (restResponse.ok) {
-                    const restData = await restResponse.json();
-                    restaurantNamesMap[restId] = restData.title || restData.name || 'Restaurante';
-                }
-            } catch (e) {
-                console.error('Erro ao buscar restaurante:', e);
-            }
-        }
-        
         menuItems.forEach(item => {
-            const restaurantId = item.meta?._vc_restaurant_id || item.restaurant_id || '';
-            const price = item.price || item.meta?._vc_price || '';
-            const restaurantName = restaurantNamesMap[restaurantId] || 'Restaurante';
-            const itemTitle = item.title?.rendered || item.title || item.name || '';
+            const itemTitle = item.title || '';
+            if (!itemTitle) return;
             
             html += `
-                <div class="search-result-item" onclick="window.location.href='/restaurante/${restaurantId}?item=${item.id}'">
+                <div class="search-result-item" onclick="window.location.href='/?s=${encodeURIComponent(itemTitle)}&post_type=vc_menu_item'">
                     <div class="search-result-icon dish">
                         <svg viewBox="0 0 24 24">
                             <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
@@ -1100,7 +1312,7 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                     </div>
                     <div class="search-result-content">
                         <div class="search-result-title">${highlightMatch(itemTitle, query)}</div>
-                        <div class="search-result-subtitle">${restaurantName} ${price ? '• R$ ' + parseFloat(price).toFixed(2).replace('.', ',') : ''}</div>
+                        <div class="search-result-subtitle">Item do cardápio</div>
                         <div class="search-result-type">Prato</div>
                     </div>
                 </div>
@@ -1166,7 +1378,7 @@ function initSearch() {
 }
 
 // ============ INITIALIZE ============
-document.addEventListener('DOMContentLoaded', function() {
+async function initApp() {
     // Verificar localização e mostrar modal se necessário
     checkLocationAndShowModal();
     
@@ -1179,12 +1391,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar busca
     initSearch();
     
-    // Renderizar conteúdo
-    renderStories();
-    renderDishes();
-    renderEvents();
-    renderFeatured();
-    renderRestaurants();
-    initBannerCarousel();
-});
+    // Renderizar conteúdo (carregar em paralelo)
+    await Promise.all([
+        renderBanners(),
+        renderStories(), // Mantido hardcoded por enquanto
+        renderDishes(), // Mantido hardcoded por enquanto
+        renderEvents(), // Mantido hardcoded por enquanto
+        renderFeatured(),
+        renderRestaurants()
+    ]);
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
 
