@@ -1411,15 +1411,28 @@ As URLs de restaurantes estavam usando o padrão `/restaurant/{slug}/` (em ingl�
 4. **Template Redirect**: Busca restaurante por ID e carrega template single
 5. **get_permalink()**: Agora sempre retorna URL com ID, mesmo quando chamado no PHP
 
-**Importante:**
-Após esta atualização, é necessário fazer **flush das rewrite rules**:
-1. Acesse **Configurações → Links Permanentes** no WordPress
-2. Clique em **Salvar alterações** (sem mudar nada)
-3. Isso irá regenerar as rewrite rules e aplicar as mudanças
+## v0.51 - Correção: URLs de Restaurantes no Mobile usando Slug
+
+**Problema identificado:**
+No mobile-shell-v2.js, as URLs estavam sendo geradas com ID (`/restaurante/{id}/`) ao invés de slug (`/restaurant/{slug}/`), causando inconsistência com o padrão do site desktop.
+
+**Solução implementada:**
+- **API REST Atualizada**: Adicionado campo `slug` na resposta da API de restaurantes
+- **JavaScript Corrigido**: Todas as URLs no mobile-shell-v2.js agora usam slug quando disponível
+- **Fallback para ID**: Se slug não estiver disponível, usa ID como fallback
+- **CPT Mantido**: Slug do CPT permanece como `'restaurant'` (padrão WordPress)
+
+**Arquivos modificados:**
+- `inc/REST/Restaurant_Controller.php` - Adicionado campo `slug` na resposta
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - URLs atualizadas para usar slug
+
+**O que mudou:**
+1. **API REST**: Agora retorna `slug` (post_name) junto com os outros dados
+2. **URLs no Mobile**: Todas as URLs agora usam `/restaurant/{slug}/` ao invés de `/restaurante/{id}/`
+3. **Consistência**: Mobile e desktop agora usam o mesmo padrão de URL
 
 **Resultado:**
-Todas as URLs de restaurantes agora seguem o padrão `/restaurante/{id}/`:
-- Exemplo: `https://seusite.com.br/restaurante/51/` ao invés de `https://seusite.com.br/restaurant/cantina-da-praca-1/`
-- URLs mais limpas e consistentes
-- Funciona com `get_permalink()` em todo o código PHP
-- JavaScript atualizado para usar o novo padrão
+Todas as URLs de restaurantes no mobile agora seguem o padrão `/restaurant/{slug}/`:
+- Exemplo: `https://seusite.com.br/restaurant/cantina-da-praca-1/` ✅
+- Consistente com o padrão do site desktop
+- URLs mais amigáveis e SEO-friendly

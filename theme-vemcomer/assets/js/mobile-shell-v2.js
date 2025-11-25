@@ -138,7 +138,8 @@ function mapApiBannerToBanner(apiBanner) {
     // Se o banner tem restaurant_id, criar link para o restaurante
     let link = apiBanner.link || null;
     if (!link && apiBanner.restaurant_id) {
-        link = `/restaurante/${apiBanner.restaurant_id}`;
+        // Usar slug se disponível, senão usar ID
+        link = `/restaurant/${apiBanner.restaurant_slug || apiBanner.restaurant_id}/`;
     }
     
     // Usar imagem da API ou fallback genérico (banners não têm categoria específica)
