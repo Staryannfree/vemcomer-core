@@ -602,8 +602,18 @@ async function renderBanners() {
     const banners = await fetchBanners();
     
     if (banners.length === 0) {
-        container.innerHTML = '';
+        // Se não houver banners, mostrar placeholder
+        container.innerHTML = `
+            <div class="banner-slide" data-index="0">
+                <img src="${PLACEHOLDER_IMAGE}" alt="Sem banners" class="banner-image">
+                <div class="banner-overlay">
+                    <div class="banner-title">Bem-vindo ao VemComer</div>
+                    <div class="banner-subtitle">Cadastre banners no painel administrativo</div>
+                </div>
+            </div>
+        `;
         dotsContainer.innerHTML = '';
+        // Não inicializar carousel se não houver banners reais
         return;
     }
     
@@ -724,56 +734,122 @@ function initBannerCarousel() {
 }
 
 // ============ RENDER OTHER SECTIONS ============
-function renderDishes() {
+async function fetchFeaturedDishes() {
+    try {
+        const response = await fetch(`${API_BASE}/menu-items?featured=true&per_page=10`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Erro ao buscar pratos do dia:', error);
+        return [];
+    }
+}
+
+async function renderDishes() {
     const container = document.getElementById('dishesScroll');
     if (!container) return;
     
-    container.innerHTML = dishesData.map(dish => `
-        <div class="dish-card" onclick="openDish(${dish.id})">
+    // Mostrar skeleton loading
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando pratos do dia...</div>';
+    
+    const dishes = await fetchFeaturedDishes();
+    
+    if (dishes.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum prato em destaque no momento.</div>';
+        return;
+    }
+    
+    container.innerHTML = dishes.map(dish => `
+        <div class="dish-card" onclick="window.location.href='/restaurante/${dish.restaurant_id}?item=${dish.id}'">
             <div class="dish-image-wrapper">
-                <img src="${dish.image}" alt="${dish.name}" class="dish-image" loading="lazy">
-                <div class="dish-badge">${dish.badge}</div>
-                <div class="dish-price-badge">${dish.price}</div>
+                <img src="${dish.image || PLACEHOLDER_IMAGE}" alt="${dish.name}" class="dish-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+                ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
+                ${dish.price ? `<div class="dish-price-badge">${dish.price}</div>` : ''}
             </div>
             <div class="dish-content">
-                <div class="dish-restaurant">${dish.restaurant}</div>
+                <div class="dish-restaurant">${dish.restaurant || 'Restaurante'}</div>
                 <div class="dish-name">${dish.name}</div>
-                <div class="dish-description">${dish.description}</div>
+                <div class="dish-description">${dish.description || ''}</div>
             </div>
         </div>
     `).join('');
 }
 
-function renderEvents() {
+async function fetchEvents() {
+    try {
+        // Buscar eventos de hoje ou futuros, featured
+        const today = new Date().toISOString().split('T')[0];
+        const response = await fetch(`${API_BASE}/events?date=${today}&featured=true&per_page=10`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Erro ao buscar eventos:', error);
+        return [];
+    }
+}
+
+async function renderEvents() {
     const container = document.getElementById('eventsScroll');
     if (!container) return;
     
-    container.innerHTML = eventsData.map(event => `
-        <div class="event-card" onclick="openEvent(${event.id})">
+    // Mostrar skeleton loading
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando eventos...</div>';
+    
+    const events = await fetchEvents();
+    
+    if (events.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum evento programado para hoje.</div>';
+        return;
+    }
+    
+    container.innerHTML = events.map(event => `
+        <div class="event-card" onclick="window.location.href='/evento/${event.id}'">
             <div class="event-image-wrapper">
-                <img src="${event.image}" alt="${event.title}" class="event-image" loading="lazy">
+                <img src="${event.image || PLACEHOLDER_IMAGE}" alt="${event.title}" class="event-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
                 <div class="event-date-badge">
-                    <div class="event-day">${event.date.day}</div>
-                    <div class="event-month">${event.date.month}</div>
+                    <div class="event-day">${event.date.day || ''}</div>
+                    <div class="event-month">${event.date.month || ''}</div>
                 </div>
-                ${event.isLive ? '<div class="event-live-badge">● AO VIVO</div>' : ''}
+                ${event.is_live ? '<div class="event-live-badge">● AO VIVO</div>' : ''}
             </div>
             <div class="event-content">
-                <div class="event-restaurant">${event.restaurant}</div>
+                <div class="event-restaurant">${event.restaurant || 'Restaurante'}</div>
                 <div class="event-title">${event.title}</div>
                 <div class="event-info">
-                    <div class="event-info-item">
-                        <svg class="event-info-icon" viewBox="0 0 24 24">
-                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                        </svg>
-                        ${event.time}
-                    </div>
-                    <div class="event-info-item">
-                        <svg class="event-info-icon" viewBox="0 0 24 24">
-                            <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
-                        </svg>
-                        ${event.price}
-                    </div>
+                    ${event.time ? `
+                        <div class="event-info-item">
+                            <svg class="event-info-icon" viewBox="0 0 24 24">
+                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                            </svg>
+                            ${event.time}
+                        </div>
+                    ` : ''}
+                    ${event.price ? `
+                        <div class="event-info-item">
+                            <svg class="event-info-icon" viewBox="0 0 24 24">
+                                <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                            </svg>
+                            ${event.price}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         </div>
@@ -1498,8 +1574,8 @@ async function initApp() {
     await Promise.all([
         renderBanners(),
         renderStories(), // Mantido hardcoded por enquanto
-        renderDishes(), // Mantido hardcoded por enquanto
-        renderEvents(), // Mantido hardcoded por enquanto
+        renderDishes(), // Agora busca da API
+        renderEvents(), // Agora busca da API
         renderFeatured(),
         renderRestaurants()
     ]);

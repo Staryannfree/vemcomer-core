@@ -219,22 +219,45 @@ class CPT_MenuItem {
     }
 
     public function metabox( $post ): void {
+        wp_nonce_field( 'vc_menu_item_meta_nonce', 'vc_menu_item_meta_nonce' );
+        
+        $price = get_post_meta( $post->ID, '_vc_price', true );
+        $prep_time = get_post_meta( $post->ID, '_vc_prep_time', true );
+        $is_available = (bool) get_post_meta( $post->ID, '_vc_is_available', true );
+        $is_featured = (bool) get_post_meta( $post->ID, '_vc_menu_item_featured', true );
+        
         echo '<p><label>' . esc_html__( 'Preço (R$)', 'vemcomer' ) . '</label><br />';
-        echo '<input type="text" name="_vc_price" value="' . esc_attr( (string) get_post_meta( $post->ID, '_vc_price', true ) ) . '" class="widefat" /></p>';
+        echo '<input type="text" name="_vc_price" value="' . esc_attr( (string) $price ) . '" class="widefat" placeholder="Ex: 25.90" /></p>';
+        
         echo '<p><label>' . esc_html__( 'Tempo de preparo (min)', 'vemcomer' ) . '</label><br />';
-        echo '<input type="number" name="_vc_prep_time" value="' . esc_attr( (string) get_post_meta( $post->ID, '_vc_prep_time', true ) ) . '" class="small-text" /></p>';
-        echo '<p><label><input type="checkbox" name="_vc_is_available" value="1" ' . checked( (bool) get_post_meta( $post->ID, '_vc_is_available', true ), true, false ) . ' /> ' . esc_html__( 'Disponível', 'vemcomer' ) . '</label></p>';
+        echo '<input type="number" name="_vc_prep_time" value="' . esc_attr( (string) $prep_time ) . '" class="small-text" min="0" /></p>';
+        
+        echo '<p><label><input type="checkbox" name="_vc_is_available" value="1" ' . checked( $is_available, true, false ) . ' /> ' . esc_html__( 'Disponível', 'vemcomer' ) . '</label></p>';
+        
+        echo '<p><label><input type="checkbox" name="_vc_menu_item_featured" value="1" ' . checked( $is_featured, true, false ) . ' /> ' . esc_html__( '⭐ Prato do Dia (Destaque)', 'vemcomer' ) . '</label></p>';
+        echo '<p class="description">' . esc_html__( 'Marque para exibir este prato na seção "Pratos do Dia" da home.', 'vemcomer' ) . '</p>';
     }
 
     public function save_meta( int $post_id ): void {
-        $map = [ '_vc_price', '_vc_prep_time', '_vc_is_available' ];
+        // Verificar nonce
+        if ( ! isset( $_POST['vc_menu_item_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['vc_menu_item_meta_nonce'] ) ), 'vc_menu_item_meta_nonce' ) ) {
+            return;
+        }
+        
+        // Salvar campos básicos
+        $map = [ '_vc_price', '_vc_prep_time', '_vc_is_available', '_vc_menu_item_featured' ];
         foreach ( $map as $key ) {
             if ( isset( $_POST[ $key ] ) ) {
                 $value = $_POST[ $key ];
-                if ( '_vc_is_available' === $key ) { $value = '1'; }
+                if ( '_vc_is_available' === $key || '_vc_menu_item_featured' === $key ) { 
+                    $value = '1'; 
+                }
                 update_post_meta( $post_id, $key, sanitize_text_field( wp_unslash( (string) $value ) ) );
-            } else if ( '_vc_is_available' === $key ) {
-                delete_post_meta( $post_id, $key );
+            } else {
+                // Se checkbox não foi marcado, remover meta
+                if ( '_vc_is_available' === $key || '_vc_menu_item_featured' === $key ) {
+                    delete_post_meta( $post_id, $key );
+                }
             }
         }
     }
