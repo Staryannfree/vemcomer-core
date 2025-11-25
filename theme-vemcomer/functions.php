@@ -1528,3 +1528,162 @@ function vemcomer_block_admin_access_for_restaurant_owners() {
 }
 add_action( 'init', 'vemcomer_block_admin_access_for_restaurant_owners' );
 
+/**
+ * ========================================
+ * PWA (Progressive Web App) Integration
+ * ========================================
+ */
+
+/**
+ * Adiciona rewrite rule para servir o Service Worker em /sw.js
+ */
+function vemcomer_pwa_add_rewrite_rules() {
+    add_rewrite_rule( '^sw\.js$', 'index.php?vemcomer_sw=1', 'top' );
+}
+add_action( 'init', 'vemcomer_pwa_add_rewrite_rules' );
+
+/**
+ * Flush rewrite rules na ativação do tema (apenas uma vez)
+ */
+function vemcomer_pwa_flush_rewrite_rules() {
+    $flushed = get_option( 'vemcomer_pwa_rewrite_flushed', false );
+    if ( ! $flushed ) {
+        flush_rewrite_rules();
+        update_option( 'vemcomer_pwa_rewrite_flushed', true );
+    }
+}
+add_action( 'after_switch_theme', 'vemcomer_pwa_flush_rewrite_rules' );
+
+/**
+ * Adiciona query var para o Service Worker
+ */
+function vemcomer_pwa_add_query_vars( $vars ) {
+    $vars[] = 'vemcomer_sw';
+    return $vars;
+}
+add_filter( 'query_vars', 'vemcomer_pwa_add_query_vars' );
+
+/**
+ * Serve o Service Worker quando a rota /sw.js é acessada
+ */
+function vemcomer_pwa_serve_service_worker() {
+    $sw_requested = get_query_var( 'vemcomer_sw' );
+    
+    if ( $sw_requested === '1' ) {
+        $sw_path = get_template_directory() . '/assets/js/sw.js';
+        
+        if ( file_exists( $sw_path ) ) {
+            // Headers corretos para Service Worker
+            header( 'Content-Type: application/javascript; charset=utf-8' );
+            header( 'Service-Worker-Allowed: /' ); // Permite escopo global
+            header( 'Cache-Control: no-cache, no-store, must-revalidate' );
+            header( 'Pragma: no-cache' );
+            header( 'Expires: 0' );
+            
+            // Lê e serve o arquivo
+            readfile( $sw_path );
+            exit;
+        } else {
+            // Se o arquivo não existe, retorna 404
+            status_header( 404 );
+            exit;
+        }
+    }
+}
+add_action( 'template_redirect', 'vemcomer_pwa_serve_service_worker' );
+
+/**
+ * Injeta meta tags PWA no wp_head
+ */
+function vemcomer_pwa_inject_meta_tags() {
+    $theme_dir_uri = get_template_directory_uri();
+    $manifest_url = $theme_dir_uri . '/manifest.json';
+    
+    // Manifest link
+    echo '<link rel="manifest" href="' . esc_url( $manifest_url ) . '">' . "\n";
+    
+    // Theme color
+    echo '<meta name="theme-color" content="#ea1d2c">' . "\n";
+    
+    // Apple touch icon
+    $apple_icon = $theme_dir_uri . '/assets/images/icon-pwa-192.png';
+    echo '<link rel="apple-touch-icon" href="' . esc_url( $apple_icon ) . '">' . "\n";
+    
+    // Apple mobile web app
+    echo '<meta name="apple-mobile-web-app-capable" content="yes">' . "\n";
+    echo '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n";
+    echo '<meta name="apple-mobile-web-app-title" content="VemComer">' . "\n";
+    
+    // Microsoft tiles
+    echo '<meta name="msapplication-TileColor" content="#ea1d2c">' . "\n";
+    echo '<meta name="msapplication-TileImage" content="' . esc_url( $apple_icon ) . '">' . "\n";
+    
+    // Viewport para PWA
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">' . "\n";
+}
+add_action( 'wp_head', 'vemcomer_pwa_inject_meta_tags', 1 );
+
+/**
+ * Registra o Service Worker no footer
+ */
+function vemcomer_pwa_register_service_worker() {
+    // Verifica se não é admin ou login
+    if ( is_admin() || is_login() ) {
+        return;
+    }
+    
+    $sw_url = home_url( '/sw.js' );
+    ?>
+    <script>
+    (function() {
+        'use strict';
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('<?php echo esc_js( $sw_url ); ?>', {
+                    scope: '/'
+                })
+                .then(function(registration) {
+                    console.log('[PWA] Service Worker registrado com sucesso:', registration.scope);
+                    
+                    // Verifica se há atualização disponível
+                    registration.addEventListener('updatefound', function() {
+                        const newWorker = registration.installing;
+                        
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Novo Service Worker disponível
+                                console.log('[PWA] Nova versão disponível. Recarregue a página para atualizar.');
+                                
+                                // Opcional: Mostrar notificação para o usuário
+                                if (confirm('Nova versão disponível! Deseja atualizar agora?')) {
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.error('[PWA] Falha ao registrar Service Worker:', error);
+                });
+                
+                // Listener para mensagens do Service Worker
+                navigator.serviceWorker.addEventListener('message', function(event) {
+                    console.log('[PWA] Mensagem do Service Worker:', event.data);
+                });
+            });
+        }
+    })();
+    </script>
+    <?php
+}
+add_action( 'wp_footer', 'vemcomer_pwa_register_service_worker', 999 );
+
+/**
+ * Função auxiliar para verificar se é página de login
+ */
+function is_login() {
+    return in_array( $GLOBALS['pagenow'], [ 'wp-login.php', 'wp-register.php' ], true );
+}
+

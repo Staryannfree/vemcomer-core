@@ -1,0 +1,42 @@
+{
+  "name": "VemComer",
+  "short_name": "VemComer",
+  "description": "Marketplace de delivery e pedidos online",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ea1d2c",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/wp-content/themes/theme-vemcomer/assets/images/icon-pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/themes/theme-vemcomer/assets/images/icon-pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "shopping", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Restaurantes",
+      "short_name": "Restaurantes",
+      "description": "Ver restaurantes disponíveis",
+      "url": "/restaurantes",
+      "icons": [
+        {
+          "src": "/wp-content/themes/theme-vemcomer/assets/images/icon-pwa-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
+
