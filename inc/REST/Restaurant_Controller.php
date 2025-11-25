@@ -362,6 +362,44 @@ class Restaurant_Controller {
         return new WP_REST_Response( $items, 200 );
     }
 
+    /**
+     * GET /wp-json/vemcomer/v1/restaurants/{id}
+     * Retorna dados de um único restaurante
+     */
+    public function get_restaurant( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $id = (int) $request->get_param( 'id' );
+        
+        $post = get_post( $id );
+        if ( ! $post || CPT_Restaurant::SLUG !== $post->post_type || 'publish' !== $post->post_status ) {
+            return new WP_Error(
+                'vc_restaurant_not_found',
+                __( 'Restaurante não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+        
+        $terms  = wp_get_object_terms( $post->ID, CPT_Restaurant::TAX_CUISINE, [ 'fields' => 'slugs' ] );
+        $rating = \VC\Utils\Rating_Helper::get_rating( $post->ID );
+        
+        $data = [
+            'id'          => $post->ID,
+            'title'       => get_the_title( $post ),
+            'slug'        => $post->post_name,
+            'address'     => (string) get_post_meta( $post->ID, '_vc_address', true ),
+            'phone'       => (string) get_post_meta( $post->ID, '_vc_phone', true ),
+            'has_delivery' => (bool) get_post_meta( $post->ID, '_vc_has_delivery', true ),
+            'is_open'     => Schedule_Helper::is_open( $post->ID ),
+            'is_featured' => (bool) get_post_meta( $post->ID, '_vc_restaurant_featured', true ),
+            'cuisines'    => array_values( array_map( 'strval', (array) $terms ) ),
+            'rating'      => [
+                'average' => $rating['avg'],
+                'count'   => $rating['count'],
+            ],
+        ];
+        
+        return new WP_REST_Response( $data, 200 );
+    }
+
     public function get_menu_items( WP_REST_Request $request ) {
         $rid = (int) $request->get_param( 'id' );
         if ( ! $rid ) {
