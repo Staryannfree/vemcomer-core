@@ -1355,3 +1355,35 @@ Os placeholders não estavam funcionando corretamente - restaurantes sem imagem 
 
 **Resultado:**
 Todas as imagens agora têm garantia de exibição - se não tiverem URL válida na API, o placeholder inteligente é aplicado imediatamente, antes da renderização. O `onerror` funciona como backup secundário apenas para links quebrados (404).
+
+## v0.49 - Correção de Links de Restaurantes
+
+**Problema identificado:**
+Os links dos restaurantes não estavam funcionando - ao clicar nos cards de restaurantes, não havia redirecionamento. O problema estava na implementação dos event handlers usando `onclick` inline, que não funcionavam corretamente após renderização dinâmica.
+
+**Solução implementada:**
+- **Event Delegation**: Substituição de `onclick` inline por event delegation no `document`
+- **Funções no Escopo Global**: Todas as funções de navegação (`openRestaurant`, `openDish`, `openEvent`, etc.) agora estão no objeto `window` para garantir acesso global
+- **Data Attributes**: Cards de restaurantes agora usam `data-restaurant-id` e `data-restaurant-url` para armazenar informações
+- **URLs Corretas**: Suporte a slug quando disponível, fallback para ID
+- **Event Listeners Dedicados**: 
+  - `attachRestaurantCardListeners()` - Para cards da lista principal
+  - `attachFeaturedCardListeners()` - Para cards em destaque
+  - `attachSearchResultListeners()` - Para resultados de busca
+- **Prevenção de Propagação**: Botões de favorito e reserva usam `stopPropagation()` corretamente
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Refatoração completa dos event handlers
+
+**O que mudou:**
+1. **Remoção de `onclick` inline**: Todos os `onclick="openRestaurant(${id})"` foram substituídos por data attributes
+2. **Event Delegation**: Um único listener no `document` captura todos os cliques nos cards
+3. **URLs Dinâmicas**: Suporte a slug quando disponível na API, fallback para ID
+4. **Inicialização Garantida**: Event listeners são anexados na inicialização do app e após cada renderização
+
+**Resultado:**
+Todos os links de restaurantes agora funcionam corretamente:
+- Cards da lista principal redirecionam para `/restaurante/{slug}/` ou `/restaurante/{id}/`
+- Cards em destaque funcionam da mesma forma
+- Resultados de busca redirecionam corretamente
+- Botões de favorito e reserva não interferem na navegação
