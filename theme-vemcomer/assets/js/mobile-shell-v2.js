@@ -3,24 +3,33 @@ const API_BASE = '/wp-json/vemcomer/v1';
 
 // ============ PLACEHOLDERS INTELIGENTES POR CATEGORIA ============
 const PLACEHOLDERS = {
-    default: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop', // Comida genérica
-    lanches: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop', // Burguer
-    hamburguer: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop', // Burguer (alternativo)
-    burger: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop', // Burguer (alternativo)
+    // Entidades Genéricas
+    default: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop', // Salada colorida
+    restaurant_logo: null, // Vamos gerar via CSS (Avatar com iniciais)
+    
+    // Categorias Específicas (Mapeamento Inteligente)
+    lanches: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
+    burger: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
+    hamburguer: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
     pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
     japonesa: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=300&fit=crop',
     sushi: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=300&fit=crop',
+    brasileira: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop', // Feijoada style
     acai: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400&h=300&fit=crop',
     açaí: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400&h=300&fit=crop',
-    brasileira: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop', // Feijoada/Prato feito
+    bebidas: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop',
+    drinks: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop',
+    sobremesa: 'https://images.unsplash.com/photo-1563729768-74361497816e?w=400&h=300&fit=crop',
+    doce: 'https://images.unsplash.com/photo-1563729768-74361497816e?w=400&h=300&fit=crop',
+    massas: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&h=300&fit=crop',
     italiana: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop',
     chinesa: 'https://images.unsplash.com/photo-1563379091339-03246963d29a?w=400&h=300&fit=crop',
     mexicana: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop',
-    doce: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',
-    sobremesa: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',
-    bebida: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop',
     cafe: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop',
-    café: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop'
+    café: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop',
+    
+    // Helper de validação
+    isValid: (url) => url && typeof url === 'string' && url.length > 10 && !url.includes('placeholder')
 };
 
 /**
@@ -36,37 +45,83 @@ function normalizeString(str) {
 }
 
 /**
- * Retorna o placeholder apropriado baseado na categoria
- * @param {string|string[]} category - Categoria ou array de categorias
+ * Função Smart Fallback - Analisa texto para decidir qual placeholder usar
+ * @param {string|string[]} contextText - Texto do contexto (categoria, nome do prato, tags)
  * @returns {string} URL do placeholder
  */
-function getFallbackImage(category) {
-    if (!category) return PLACEHOLDERS.default;
+function getSmartImage(contextText) {
+    if (!contextText) return PLACEHOLDERS.default;
     
-    // Se for array, pegar a primeira categoria
-    const categories = Array.isArray(category) ? category : [category];
+    // Se for array, juntar tudo em uma string
+    const text = Array.isArray(contextText) 
+        ? contextText.join(' ') 
+        : String(contextText);
     
-    // Tentar encontrar match em cada categoria
-    for (const cat of categories) {
-        const normalized = normalizeString(cat);
-        
-        // Buscar match exato primeiro
-        if (PLACEHOLDERS[normalized]) {
-            return PLACEHOLDERS[normalized];
+    // Normaliza texto: "Açaí & Sorvetes" -> "acai  sorvetes"
+    const term = normalizeString(text);
+    
+    // Varre as chaves do objeto PLACEHOLDERS
+    for (const key in PLACEHOLDERS) {
+        if (key === 'default' || key === 'restaurant_logo' || key === 'isValid') continue;
+        if (term.includes(key)) {
+            return PLACEHOLDERS[key];
         }
-        
-        // Buscar match parcial (ex: "pizza italiana" contém "pizza")
-        for (const key in PLACEHOLDERS) {
-            if (key !== 'default' && normalized.includes(key)) {
-                return PLACEHOLDERS[key];
-            }
-        }
+    }
+    
+    // Palavras chave adicionais (match parcial mais inteligente)
+    if (term.includes('hamburguer') || term.includes('sanduiche') || term.includes('x-burger')) {
+        return PLACEHOLDERS.lanches;
+    }
+    if (term.includes('refri') || term.includes('suco') || term.includes('agua') || term.includes('cerveja') || term.includes('cola')) {
+        return PLACEHOLDERS.bebidas;
+    }
+    if (term.includes('temaki') || term.includes('hot roll') || term.includes('sashimi')) {
+        return PLACEHOLDERS.japonesa;
+    }
+    if (term.includes('almoco') || term.includes('jantar') || term.includes('prato feito') || term.includes('feijoada')) {
+        return PLACEHOLDERS.brasileira;
+    }
+    if (term.includes('bolo') || term.includes('torta') || term.includes('sorvete')) {
+        return PLACEHOLDERS.sobremesa;
     }
     
     return PLACEHOLDERS.default;
 }
 
-// Mantido para compatibilidade (usar getFallbackImage quando possível)
+/**
+ * Retorna o placeholder apropriado baseado na categoria (compatibilidade)
+ * @param {string|string[]} category - Categoria ou array de categorias
+ * @returns {string} URL do placeholder
+ */
+function getFallbackImage(category) {
+    return getSmartImage(category);
+}
+
+/**
+ * Gera HTML de avatar com inicial e cor para logos faltantes
+ * @param {string} name - Nome do restaurante
+ * @returns {string} HTML do avatar
+ */
+function getLogoFallback(name) {
+    const initial = name ? name.charAt(0).toUpperCase() : '?';
+    const colors = ['#F44336', '#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#009688', '#4CAF50', '#FF9800', '#FF5722'];
+    
+    // Hash simples para escolher a cor baseada no nome (consistência visual)
+    let hash = 0;
+    const nameStr = String(name || '');
+    for (let i = 0; i < nameStr.length; i++) {
+        hash = nameStr.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = colors[Math.abs(hash) % colors.length];
+    
+    return `
+        <div class="logo-fallback" style="background-color: ${color}; color: white; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2em; border-radius: inherit;">
+            ${initial}
+        </div>
+    `;
+}
+
+// Mantido para compatibilidade
 const PLACEHOLDER_IMAGE = PLACEHOLDERS.default;
 
 // ============ MAPEAMENTO DE DADOS DA API ============
@@ -92,7 +147,7 @@ function mapApiBannerToBanner(apiBanner) {
     };
 }
 
-async function getRestaurantImage(restaurantId, cuisines = []) {
+async function getRestaurantImage(restaurantId, cuisines = [], restaurantName = '') {
     try {
         // Tentar buscar imagem via WordPress REST API padrão
         const response = await fetch(`/wp-json/wp/v2/vc_restaurant/${restaurantId}?_embed=true`);
@@ -100,7 +155,7 @@ async function getRestaurantImage(restaurantId, cuisines = []) {
             const data = await response.json();
             if (data._embedded && data._embedded['wp:featuredmedia'] && data._embedded['wp:featuredmedia'][0]) {
                 const imageUrl = data._embedded['wp:featuredmedia'][0].source_url;
-                if (imageUrl && imageUrl.trim() !== '') {
+                if (imageUrl && PLACEHOLDERS.isValid(imageUrl)) {
                     return imageUrl;
                 }
             }
@@ -108,14 +163,16 @@ async function getRestaurantImage(restaurantId, cuisines = []) {
     } catch (error) {
         console.error('Erro ao buscar imagem do restaurante:', error);
     }
-    // Se não encontrou imagem, usar fallback baseado na categoria
-    return getFallbackImage(cuisines);
+    // Se não encontrou imagem, usar smart fallback baseado na categoria ou nome
+    const contextText = cuisines.length > 0 ? cuisines.join(' ') : restaurantName;
+    return getSmartImage(contextText);
 }
 
 function mapApiRestaurantToRestaurant(apiRestaurant) {
     const rating = apiRestaurant.rating?.average || 0;
     const ratingCount = apiRestaurant.rating?.count || 0;
     const cuisines = apiRestaurant.cuisines || [];
+    const restaurantName = apiRestaurant.title || '';
     
     // Calcular tempo de entrega (placeholder - pode vir da API depois)
     const deliveryTime = '30-45 min';
@@ -123,16 +180,27 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     // Calcular taxa de entrega (placeholder - pode vir da API depois)
     const deliveryFee = apiRestaurant.has_delivery ? 'R$ 5,00' : 'Grátis';
     
-    // Usar fallback baseado na categoria se não houver imagem
-    const fallbackImage = getFallbackImage(cuisines);
+    // Verificar se tem imagem real (featured_media_url, logo, etc)
+    const hasImage = apiRestaurant.featured_media_url || apiRestaurant.logo || apiRestaurant.image;
+    const imageUrl = hasImage && PLACEHOLDERS.isValid(hasImage) 
+        ? (apiRestaurant.featured_media_url || apiRestaurant.logo || apiRestaurant.image)
+        : null;
+    
+    // Se não tem imagem, usar smart fallback baseado na categoria ou nome
+    const fallbackImage = imageUrl || getSmartImage(cuisines.length > 0 ? cuisines.join(' ') : restaurantName);
+    
+    // Verificar se tem logo
+    const hasLogo = apiRestaurant.logo && PLACEHOLDERS.isValid(apiRestaurant.logo);
     
     return {
         id: apiRestaurant.id,
-        name: apiRestaurant.title || '',
+        name: restaurantName,
         rating: rating > 0 ? rating.toFixed(1) : 'Novo',
         deliveryTime: deliveryTime,
         deliveryFee: deliveryFee,
-        image: fallbackImage, // Será atualizado depois com imagem real, mas já tem fallback inteligente
+        image: imageUrl || fallbackImage,
+        logo: apiRestaurant.logo || null,
+        hasLogo: hasLogo,
         isOpen: apiRestaurant.is_open || false,
         cuisines: cuisines,
         address: apiRestaurant.address || '',
@@ -877,10 +945,13 @@ async function renderDishes() {
     container.innerHTML = dishes.map(dish => {
         // Obter categoria do restaurante para fallback inteligente
         const cuisines = restaurantCuisinesMap[dish.restaurant_id] || [];
-        const fallbackImg = dish.image && dish.image.trim() !== '' 
-            ? dish.image 
-            : getFallbackImage(cuisines);
-        const fallbackOnError = getFallbackImage(cuisines);
+        const categoryName = cuisines.length > 0 ? cuisines[0] : '';
+        
+        // Usar smart fallback: nome do prato + categoria para maior precisão
+        const contextText = `${dish.name || ''} ${categoryName}`.trim();
+        const hasValidImage = dish.image && PLACEHOLDERS.isValid(dish.image);
+        const fallbackImg = hasValidImage ? dish.image : getSmartImage(contextText);
+        const fallbackOnError = getSmartImage(contextText);
         
         return `
         <div class="dish-card" onclick="window.location.href='/restaurante/${dish.restaurant_id}?item=${dish.id}'">
@@ -988,7 +1059,7 @@ async function renderFeatured() {
     container.innerHTML = restaurants.map(restaurant => `
         <div class="featured-card" onclick="openRestaurant(${restaurant.id})">
             <div class="featured-image-wrapper">
-                <img src="${restaurant.image}" alt="${restaurant.name}" class="featured-image" loading="lazy" onerror="this.onerror=null; this.src='${getFallbackImage(restaurant.tags || restaurant.cuisines || [])}';">
+                <img src="${restaurant.image}" alt="${restaurant.name}" class="featured-image" loading="lazy" onerror="this.onerror=null; this.src='${getSmartImage(restaurant.tags || restaurant.cuisines || restaurant.name || '')}';">
                 <div class="featured-badge">⭐ DESTAQUE</div>
             </div>
             <div class="featured-content">
@@ -1042,7 +1113,7 @@ async function renderRestaurants() {
     container.innerHTML = restaurants.map(restaurant => `
         <div class="restaurant-card" onclick="openRestaurant(${restaurant.id})">
             <div class="card-image-wrapper">
-                <img src="${restaurant.image}" alt="${restaurant.name}" class="card-image" loading="lazy" onerror="this.onerror=null; this.src='${getFallbackImage(restaurant.cuisines || [])}';">
+                <img src="${restaurant.image}" alt="${restaurant.name}" class="card-image" loading="lazy" onerror="this.onerror=null; this.src='${getSmartImage(restaurant.cuisines || restaurant.name || '')}';">
                 <div class="card-badges">
                     <div class="card-badge ${restaurant.isOpen ? 'badge-open' : 'badge-closed'}">
                         ${restaurant.isOpen ? '• Aberto' : 'Fechado'}

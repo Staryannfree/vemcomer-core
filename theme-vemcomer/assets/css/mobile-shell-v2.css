@@ -1308,6 +1308,27 @@ body {
 
 .hidden { display: none !important; }
 
+/* ============ LOGO FALLBACK (Avatar com Iniciais) ============ */
+.logo-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    text-transform: uppercase;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.2em;
+    color: white;
+}
+
+/* Garantir que as imagens tenham object-fit cover para não distorcer os placeholders */
+.card-image, .featured-image, .dish-image, .banner-image, .event-image {
+    object-fit: cover;
+    background-color: #f0f0f0; /* Fundo cinza enquanto carrega */
+}
+
 /* ============ STANDALONE MODE (Cardápio Digital) ============ */
 body.vc-standalone-mode .top-bar .logo {
     display: none !important;
