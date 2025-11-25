@@ -17,12 +17,128 @@ class CPT_Restaurant {
     public function init(): void {
         add_action( 'init', [ $this, 'register_cpt' ] );
         add_action( 'init', [ $this, 'register_taxonomies' ] );
+        add_action( 'init', [ $this, 'add_rewrite_rules' ] );
         add_action( 'add_meta_boxes', [ $this, 'register_metaboxes' ] );
         add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
+        add_action( 'save_post_' . self::SLUG, [ $this, 'flush_rewrite_on_save' ], 20 );
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
         // Concede capabilities nas roles padrão
         add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        // Adiciona query vars para slug e ID
+        add_filter( 'query_vars', [ $this, 'add_query_vars' ] );
+        // Template redirect para buscar restaurante por slug ou ID
+        add_action( 'template_redirect', [ $this, 'template_redirect_by_slug_or_id' ] );
+    }
+    
+    /**
+     * Adiciona rewrite rules para aceitar tanto slug quanto ID
+     * /restaurant/{slug}/ e /restaurant/{id}/
+     */
+    public function add_rewrite_rules(): void {
+        // Regra para slug (padrão WordPress já cobre isso, mas vamos garantir)
+        // Regra adicional para ID numérico
+        add_rewrite_rule(
+            '^restaurant/([0-9]+)/?$',
+            'index.php?post_type=' . self::SLUG . '&vc_restaurant_id=$matches[1]',
+            'top'
+        );
+    }
+    
+    /**
+     * Adiciona query vars para slug e ID do restaurante
+     */
+    public function add_query_vars( array $vars ): array {
+        $vars[] = 'vc_restaurant_id';
+        return $vars;
+    }
+    
+    /**
+     * Template redirect para buscar restaurante por slug ou ID
+     * Funciona tanto para /restaurant/{slug}/ quanto /restaurant/{id}/
+     */
+    public function template_redirect_by_slug_or_id(): void {
+        global $wp_query;
+        
+        // Verificar se é uma página de restaurante
+        if ( ! is_singular( self::SLUG ) && ! get_query_var( 'vc_restaurant_id' ) ) {
+            return;
+        }
+        
+        $restaurant = null;
+        
+        // Tentar buscar por ID primeiro (se vc_restaurant_id estiver presente)
+        $restaurant_id = get_query_var( 'vc_restaurant_id' );
+        if ( $restaurant_id ) {
+            $restaurant = get_post( (int) $restaurant_id );
+            if ( ! $restaurant || $restaurant->post_type !== self::SLUG ) {
+                $restaurant = null;
+            }
+        }
+        
+        // Se não encontrou por ID, tentar pelo slug (WordPress padrão)
+        if ( ! $restaurant && is_singular( self::SLUG ) ) {
+            $restaurant = get_queried_object();
+        }
+        
+        // Se ainda não encontrou, tentar pelo nome na URL
+        if ( ! $restaurant ) {
+            $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+            if ( preg_match( '#^/restaurant/([^/]+)/?#', $request_uri, $matches ) ) {
+                $identifier = $matches[1];
+                
+                // Se for numérico, buscar por ID
+                if ( is_numeric( $identifier ) ) {
+                    $restaurant = get_post( (int) $identifier );
+                } else {
+                    // Se for slug, buscar por post_name
+                    $restaurant = get_page_by_path( $identifier, OBJECT, self::SLUG );
+                }
+            }
+        }
+        
+        if ( ! $restaurant || $restaurant->post_type !== self::SLUG || 'publish' !== $restaurant->post_status ) {
+            return;
+        }
+        
+        // Configurar query para o restaurante encontrado
+        $wp_query->is_single = true;
+        $wp_query->is_singular = true;
+        $wp_query->queried_object = $restaurant;
+        $wp_query->queried_object_id = $restaurant->ID;
+        $wp_query->posts = [ $restaurant ];
+        $wp_query->post_count = 1;
+        $wp_query->found_posts = 1;
+        $wp_query->max_num_pages = 1;
+        
+        // Forçar o template single
+        add_filter( 'single_template', function( $template ) use ( $restaurant ) {
+            $single_template = locate_template( [ 'single-' . self::SLUG . '.php', 'single.php' ] );
+            if ( $single_template ) {
+                return $single_template;
+            }
+            return $template;
+        } );
+    }
+    
+    /**
+     * Flush rewrite rules quando um restaurante é salvo
+     * Garante que novos restaurantes sejam acessíveis imediatamente
+     */
+    public function flush_rewrite_on_save( int $post_id ): void {
+        // Verificar se é um restaurante publicado
+        $restaurant = get_post( $post_id );
+        if ( ! $restaurant || $restaurant->post_type !== self::SLUG ) {
+            return;
+        }
+        
+        // Flush rewrite rules apenas uma vez por requisição (evitar múltiplos flushes)
+        if ( ! wp_get_schedule( 'vc_flush_rewrite_rules_once' ) ) {
+            // Agendar flush para próxima requisição (evita fazer durante save_post)
+            add_action( 'shutdown', function() {
+                flush_rewrite_rules( false );
+            }, 999 );
+        }
     }
 
     private function capabilities(): array {
