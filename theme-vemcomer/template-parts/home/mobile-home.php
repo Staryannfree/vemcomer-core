@@ -2,6 +2,7 @@
 /**
  * Template Partial: Home Mobile UI
  * Design moderno estilo iFood para mobile
+ * HTML completo baseado no design fornecido
  * 
  * @package VemComerCore
  */
@@ -55,6 +56,11 @@ $dishes_query = new WP_Query([
         ],
     ],
 ]);
+
+// Obter localização do usuário
+$user_neighborhood = isset( $_COOKIE['vc_user_neighborhood'] ) ? sanitize_text_field( $_COOKIE['vc_user_neighborhood'] ) : '';
+$user_city = isset( $_COOKIE['vc_user_city'] ) ? sanitize_text_field( $_COOKIE['vc_user_city'] ) : '';
+$address_text = ! empty( $user_neighborhood ) ? $user_neighborhood : ( ! empty( $user_city ) ? $user_city : __( 'Selecione um endereço', 'vemcomer' ) );
 ?>
 
 <!-- HERO BANNER CAROUSEL -->
@@ -70,7 +76,7 @@ $dishes_query = new WP_Query([
                 $banner_link = get_post_meta( get_the_ID(), '_vc_banner_link', true );
                 $image_url = $banner_image ? wp_get_attachment_image_url( $banner_image, 'large' ) : get_the_post_thumbnail_url( get_the_ID(), 'large' );
                 ?>
-                <div class="banner-slide" data-index="<?php echo esc_attr( $banner_index ); ?>" <?php echo $banner_link ? 'onclick="window.location.href=\'' . esc_url( $banner_link ) . '\'"' : ''; ?>>
+                <div class="banner-slide" data-index="<?php echo esc_attr( $banner_index ); ?>" <?php echo $banner_link ? 'onclick="window.location.href=\'' . esc_js( $banner_link ) . '\'"' : ''; ?>>
                     <?php if ( $image_url ) : ?>
                         <img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $banner_title ); ?>" class="banner-image" loading="lazy">
                     <?php endif; ?>
@@ -87,8 +93,8 @@ $dishes_query = new WP_Query([
             <!-- Banner padrão se não houver banners -->
             <div class="banner-slide" data-index="0">
                 <div class="banner-overlay">
-                    <div class="banner-title">🎉 Bem-vindo ao Pedevem!</div>
-                    <div class="banner-subtitle">Os melhores restaurantes da sua cidade</div>
+                    <div class="banner-title">🎉 <?php esc_html_e( 'Bem-vindo ao Pedevem!', 'vemcomer' ); ?></div>
+                    <div class="banner-subtitle"><?php esc_html_e( 'Os melhores restaurantes da sua cidade', 'vemcomer' ); ?></div>
                 </div>
             </div>
         <?php endif; ?>
@@ -362,9 +368,227 @@ $dishes_query = new WP_Query([
 </button>
 
 <script>
-function toggleFavorite(restaurantId) {
+// ============ CONFIGURAÇÃO ============
+const API_BASE = '/wp-json/vemcomer/v1';
+
+// ============ DADOS DOS STORIES ============
+const storiesData = [
+    // Stories serão carregados via API
+];
+
+// ============ RENDER STORIES ============
+function renderStories() {
+    const container = document.getElementById('storiesScroll');
+    if (!container) return;
+    
+    // TODO: Carregar stories da API
+    container.innerHTML = ''; // Será preenchido via API
+}
+
+// ============ STORY VIEWER ============
+let currentStoryGroup = null;
+let currentStoryIndex = 0;
+let storyTimer = null;
+let progressInterval = null;
+
+function openStory(groupId) {
+    const storyGroup = storiesData.find(s => s.id === groupId);
+    if (!storyGroup) return;
+
+    currentStoryGroup = storyGroup;
+    currentStoryIndex = 0;
+    
+    const viewer = document.getElementById('storyViewer');
+    if (viewer) {
+        viewer.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        renderStoryProgressBars(storyGroup.stories.length);
+        showStory(0);
+        
+        // Marcar como visto
+        storyGroup.viewed = true;
+        renderStories();
+    }
+}
+
+function renderStoryProgressBars(count) {
+    const container = document.getElementById('storyProgressBars');
+    if (!container) return;
+    
+    container.innerHTML = Array(count).fill(0).map((_, i) => `
+        <div class="story-progress-bar">
+            <div class="story-progress-fill" id="storyProgress${i}"></div>
+        </div>
+    `).join('');
+}
+
+function showStory(index) {
+    if (!currentStoryGroup || index >= currentStoryGroup.stories.length) {
+        closeStoryViewer();
+        return;
+    }
+
+    const story = currentStoryGroup.stories[index];
+    currentStoryIndex = index;
+
+    // Update header
+    const avatarEl = document.getElementById('storyHeaderAvatar');
+    const nameEl = document.getElementById('storyHeaderName');
+    const timeEl = document.getElementById('storyHeaderTime');
+    
+    if (avatarEl) avatarEl.src = currentStoryGroup.restaurant.avatar;
+    if (nameEl) nameEl.textContent = currentStoryGroup.restaurant.name;
+    if (timeEl) timeEl.textContent = `há ${story.timestamp}`;
+
+    // Update media
+    const media = document.getElementById('storyMedia');
+    if (media) media.src = story.url;
+
+    // Reset all progress bars
+    for (let i = 0; i < currentStoryGroup.stories.length; i++) {
+        const progress = document.getElementById(`storyProgress${i}`);
+        if (progress) {
+            if (i < index) {
+                progress.style.width = '100%';
+            } else if (i === index) {
+                progress.style.width = '0%';
+            } else {
+                progress.style.width = '0%';
+            }
+        }
+    }
+
+    // Start progress animation
+    startStoryProgress(index, story.duration);
+}
+
+function startStoryProgress(index, duration) {
+    clearInterval(progressInterval);
+    clearTimeout(storyTimer);
+
+    const progress = document.getElementById(`storyProgress${index}`);
+    if (!progress) return;
+    
+    let elapsed = 0;
+    const interval = 50;
+
+    progressInterval = setInterval(() => {
+        elapsed += interval;
+        const percentage = (elapsed / duration) * 100;
+        progress.style.width = `${Math.min(percentage, 100)}%`;
+    }, interval);
+
+    storyTimer = setTimeout(() => {
+        nextStory();
+    }, duration);
+}
+
+function nextStory() {
+    if (currentStoryIndex < currentStoryGroup.stories.length - 1) {
+        showStory(currentStoryIndex + 1);
+    } else {
+        // Go to next restaurant's stories
+        const currentGroupIndex = storiesData.findIndex(s => s.id === currentStoryGroup.id);
+        if (currentGroupIndex < storiesData.length - 1) {
+            const nextGroup = storiesData[currentGroupIndex + 1];
+            openStory(nextGroup.id);
+        } else {
+            closeStoryViewer();
+        }
+    }
+}
+
+function previousStory() {
+    if (currentStoryIndex > 0) {
+        showStory(currentStoryIndex - 1);
+    } else {
+        // Go to previous restaurant's stories
+        const currentGroupIndex = storiesData.findIndex(s => s.id === currentStoryGroup.id);
+        if (currentGroupIndex > 0) {
+            const prevGroup = storiesData[currentGroupIndex - 1];
+            currentStoryGroup = prevGroup;
+            showStory(prevGroup.stories.length - 1);
+        }
+    }
+}
+
+function closeStoryViewer() {
+    clearInterval(progressInterval);
+    clearTimeout(storyTimer);
+    
+    const viewer = document.getElementById('storyViewer');
+    if (viewer) {
+        viewer.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    
+    currentStoryGroup = null;
+    currentStoryIndex = 0;
+}
+
+// Story viewer event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('storyCloseBtn');
+    const tapLeft = document.getElementById('storyTapLeft');
+    const tapRight = document.getElementById('storyTapRight');
+    const content = document.getElementById('storyContent');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeStoryViewer);
+    }
+    if (tapLeft) {
+        tapLeft.addEventListener('click', previousStory);
+    }
+    if (tapRight) {
+        tapRight.addEventListener('click', nextStory);
+    }
+
+    // Pause on hold
+    if (content) {
+        content.addEventListener('touchstart', () => {
+            clearTimeout(storyTimer);
+            clearInterval(progressInterval);
+        });
+
+        content.addEventListener('touchend', () => {
+            if (currentStoryGroup) {
+                const story = currentStoryGroup.stories[currentStoryIndex];
+                const progress = document.getElementById(`storyProgress${currentStoryIndex}`);
+                if (progress) {
+                    const currentWidth = parseFloat(progress.style.width);
+                    const remaining = story.duration * (1 - currentWidth / 100);
+                    startStoryProgress(currentStoryIndex, remaining);
+                }
+            }
+        });
+    }
+    
+    // Render stories
+    renderStories();
+});
+
+// ============ EVENT HANDLERS ============
+function openDish(id) {
+    window.location.href = `/prato/${id}`;
+}
+
+function openEvent(id) {
+    window.location.href = `/evento/${id}`;
+}
+
+function openRestaurant(id) {
+    window.location.href = `/restaurante/${id}`;
+}
+
+function openReservation(id, event) {
+    if (event) event.stopPropagation();
+    window.location.href = `/reservar/${id}`;
+}
+
+function toggleFavorite(event, id) {
+    if (event) event.stopPropagation();
     // TODO: Implementar favoritos via API
-    console.log('Toggle favorite:', restaurantId);
+    console.log('Toggle favorite:', id);
 }
 </script>
-

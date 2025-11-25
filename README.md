@@ -222,16 +222,23 @@ Quando um restaurante é aprovado:
   - Todos os Restaurantes (grid com cards)
 - **Cart Button Flutuante**: Botão de carrinho fixo com badge de quantidade
 - **Story Viewer Modal**: Modal completo para visualização de stories com progress bars e navegação
+- **Meta Tags Mobile**: Viewport otimizado, apple-mobile-web-app-capable, viewport-fit=cover
 
 **Arquivos criados:**
-- `theme-vemcomer/assets/css/mobile-ui.css` - Estilos completos do mobile UI
+- `theme-vemcomer/assets/css/mobile-ui.css` - Estilos completos do mobile UI (baseado no HTML fornecido)
 - `theme-vemcomer/assets/js/mobile-ui.js` - JavaScript para funcionalidades (carousel, stories, notificações, cart)
-- `theme-vemcomer/template-parts/home/mobile-home.php` - Template partial para home mobile
+- `theme-vemcomer/template-parts/home/mobile-home.php` - Template partial com HTML completo do design fornecido
 
 **Arquivos modificados:**
-- `theme-vemcomer/header.php` - Adicionado botão de notificações no top bar mobile
+- `theme-vemcomer/header.php` - Adicionado botão de notificações no top bar mobile e meta tags mobile otimizadas
 - `theme-vemcomer/functions.php` - Enqueue de `mobile-ui.css` e `mobile-ui.js`
-- `templates/page-home.php` - Detecção de mobile e renderização do template mobile
+- `templates/page-home.php` - Detecção de mobile (`wp_is_mobile()`) e renderização do template mobile
+
+**Como funciona:**
+- Quando `wp_is_mobile()` retorna `true` na página home, o template `mobile-home.php` é carregado automaticamente
+- O template renderiza o HTML completo baseado no design fornecido
+- CSS e JavaScript são carregados automaticamente via WordPress enqueue
+- O template busca dados reais do WordPress (banners, restaurantes, pratos) e renderiza dinamicamente
 
 **Funcionalidades implementadas:**
 - Banner carousel com auto-play e navegação por swipe
@@ -240,6 +247,7 @@ Quando um restaurante é aprovado:
 - Botão de carrinho com atualização dinâmica
 - Cards de restaurantes com favoritos
 - Cards de pratos com preços e badges
+- JavaScript inline no template para stories viewer completo
 
 **Próximos passos (Backend):**
 - Integrar stories com API REST

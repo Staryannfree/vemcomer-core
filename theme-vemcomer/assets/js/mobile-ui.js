@@ -308,6 +308,75 @@
         updateCart();
     }
 
+    // ============ RENDER OTHER SECTIONS ============
+    function renderDishes() {
+        const container = document.getElementById('dishesScroll');
+        if (!container) return;
+        
+        // Se já tem conteúdo renderizado pelo PHP, não fazer nada
+        if (container.children.length > 0) return;
+        
+        // TODO: Carregar pratos da API
+        container.innerHTML = ''; // Será preenchido via API
+    }
+
+    function renderEvents() {
+        const container = document.getElementById('eventsScroll');
+        if (!container) return;
+        
+        // Se já tem conteúdo renderizado pelo PHP, não fazer nada
+        if (container.children.length > 0) return;
+        
+        // TODO: Carregar eventos da API
+        container.innerHTML = ''; // Será preenchido via API
+    }
+
+    function renderFeatured() {
+        const container = document.getElementById('featuredGrid');
+        if (!container) return;
+        
+        // Se já tem conteúdo renderizado pelo PHP, não fazer nada
+        if (container.children.length > 0) return;
+        
+        // TODO: Carregar restaurantes em destaque da API
+        container.innerHTML = ''; // Será preenchido via API
+    }
+
+    function renderRestaurants() {
+        const container = document.getElementById('restaurantsGrid');
+        if (!container) return;
+        
+        // Se já tem conteúdo renderizado pelo PHP, não fazer nada
+        if (container.children.length > 0) return;
+        
+        // TODO: Carregar restaurantes da API
+        container.innerHTML = ''; // Será preenchido via API
+    }
+
+    // ============ EVENT HANDLERS ============
+    window.openDish = function(id) {
+        window.location.href = `/prato/${id}`;
+    };
+
+    window.openEvent = function(id) {
+        window.location.href = `/evento/${id}`;
+    };
+
+    window.openRestaurant = function(id) {
+        window.location.href = `/restaurante/${id}`;
+    };
+
+    window.openReservation = function(id, event) {
+        if (event) event.stopPropagation();
+        window.location.href = `/reservar/${id}`;
+    };
+
+    window.toggleFavorite = function(event, id) {
+        if (event) event.stopPropagation();
+        // TODO: Implementar favoritos via API
+        console.log('Toggle favorite:', id);
+    };
+
     // ============ INITIALIZE ============
     document.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth <= 768) {
@@ -315,6 +384,12 @@
             initStories();
             initNotifications();
             initCartButton();
+            
+            // Renderizar seções (se não foram renderizadas pelo PHP)
+            renderDishes();
+            renderEvents();
+            renderFeatured();
+            renderRestaurants();
         }
     });
 
