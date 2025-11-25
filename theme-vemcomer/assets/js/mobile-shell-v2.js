@@ -914,9 +914,11 @@ function getCookie(name) {
 }
 
 function setCookie(name, value, days) {
+    // Máximo de tempo possível (365 dias = 1 ano)
+    const maxDays = days || 365;
     const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    expires.setTime(expires.getTime() + (maxDays * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
 }
 
 function updateLocationText() {
@@ -928,7 +930,7 @@ function updateLocationText() {
     const city = localStorage.getItem('vc_user_city') || getCookie('vc_user_city');
     const savedLocation = localStorage.getItem('vc_user_location');
     
-    let displayText = 'Selecione um endereço';
+    let displayText = 'Endereço'; // Texto padrão quando não há localização
     
     if (neighborhood) {
         displayText = neighborhood;
@@ -937,7 +939,11 @@ function updateLocationText() {
     } else if (savedLocation) {
         try {
             const locData = JSON.parse(savedLocation);
-            if (locData.address) {
+            if (locData.neighborhood) {
+                displayText = locData.neighborhood;
+            } else if (locData.city) {
+                displayText = locData.city;
+            } else if (locData.address) {
                 displayText = locData.address;
             }
         } catch (e) {
@@ -1054,17 +1060,27 @@ async function requestLocationPermission() {
         // Fazer reverse geocoding para obter bairro
         const address = await reverseGeocode(lat, lng);
         
-        // Salvar localização
-        localStorage.setItem('vc_user_location', JSON.stringify({ lat, lng }));
+        // Salvar localização completa (com bairro priorizado)
+        const locationData = {
+            lat: lat,
+            lng: lng,
+            neighborhood: address.neighborhood || '',
+            city: address.city || '',
+            state: address.state || '',
+            fullAddress: address.fullAddress || ''
+        };
+        localStorage.setItem('vc_user_location', JSON.stringify(locationData));
         
+        // Salvar bairro (prioridade máxima) - cookie com 365 dias
         if (address.neighborhood) {
             localStorage.setItem('vc_user_neighborhood', address.neighborhood);
-            setCookie('vc_user_neighborhood', address.neighborhood, 30);
+            setCookie('vc_user_neighborhood', address.neighborhood, 365);
         }
         
+        // Salvar cidade - cookie com 365 dias
         if (address.city) {
             localStorage.setItem('vc_user_city', address.city);
-            setCookie('vc_user_city', address.city, 30);
+            setCookie('vc_user_city', address.city, 365);
         }
         
         // Atualizar texto do locationText
@@ -1098,15 +1114,79 @@ async function requestLocationPermission() {
     }
 }
 
+async function tryAutoLocation() {
+    // Tentar obter localização automaticamente (silenciosamente)
+    if (!navigator.geolocation) {
+        return false;
+    }
+    
+    try {
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000 // Aceitar cache de até 1 minuto
+                }
+            );
+        });
+        
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        // Fazer reverse geocoding para obter bairro
+        const address = await reverseGeocode(lat, lng);
+        
+        // Salvar localização completa (com bairro priorizado)
+        const locationData = {
+            lat: lat,
+            lng: lng,
+            neighborhood: address.neighborhood || '',
+            city: address.city || '',
+            state: address.state || '',
+            fullAddress: address.fullAddress || ''
+        };
+        localStorage.setItem('vc_user_location', JSON.stringify(locationData));
+        
+        // Salvar bairro (prioridade máxima) - cookie com 365 dias
+        if (address.neighborhood) {
+            localStorage.setItem('vc_user_neighborhood', address.neighborhood);
+            setCookie('vc_user_neighborhood', address.neighborhood, 365);
+        }
+        
+        // Salvar cidade - cookie com 365 dias
+        if (address.city) {
+            localStorage.setItem('vc_user_city', address.city);
+            setCookie('vc_user_city', address.city, 365);
+        }
+        
+        // Atualizar texto e fechar modal
+        updateLocationText();
+        hideLocationModal();
+        
+        return true;
+    } catch (error) {
+        // Silenciosamente falhar - não mostrar erro, apenas deixar o modal aberto
+        console.log('Tentativa automática de localização falhou:', error);
+        return false;
+    }
+}
+
 function checkLocationAndShowModal() {
     // Verificar se já tem localização salva
     const neighborhood = localStorage.getItem('vc_user_neighborhood') || getCookie('vc_user_neighborhood');
     const city = localStorage.getItem('vc_user_city') || getCookie('vc_user_city');
     const savedLocation = localStorage.getItem('vc_user_location');
     
-    // Se não tiver nenhuma localização, mostrar modal obrigatório
+    // Se não tiver nenhuma localização, mostrar modal e tentar obter automaticamente
     if (!neighborhood && !city && !savedLocation) {
         showLocationModal();
+        // Tentar obter localização automaticamente quando o modal abrir
+        setTimeout(() => {
+            tryAutoLocation();
+        }, 500); // Pequeno delay para o modal aparecer primeiro
     } else {
         // Atualizar texto do locationText
         updateLocationText();
