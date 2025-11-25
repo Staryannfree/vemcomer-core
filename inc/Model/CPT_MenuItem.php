@@ -264,7 +264,12 @@ class CPT_MenuItem {
 
     public function admin_columns( array $columns ): array {
         $before = [ 'cb' => $columns['cb'] ?? '', 'title' => $columns['title'] ?? __( 'Título', 'vemcomer' ) ];
-        $extra  = [ 'vc_restaurant' => __( 'Restaurante', 'vemcomer' ), 'vc_price' => __( 'Preço', 'vemcomer' ), 'vc_is_available' => __( 'Disponível', 'vemcomer' ) ];
+        $extra  = [ 
+            'vc_restaurant' => __( 'Restaurante', 'vemcomer' ), 
+            'vc_price' => __( 'Preço', 'vemcomer' ), 
+            'vc_is_available' => __( 'Disponível', 'vemcomer' ),
+            'vc_featured' => __( '⭐ Prato do Dia', 'vemcomer' )
+        ];
         $rest   = $columns; unset( $rest['cb'], $rest['title'] );
         return array_merge( $before, $extra, $rest );
     }
@@ -282,6 +287,23 @@ class CPT_MenuItem {
         if ( 'vc_is_available' === $column ) {
             $v = (string) get_post_meta( $post_id, '_vc_is_available', true );
             echo esc_html( $v ? __( 'Sim', 'vemcomer' ) : __( 'Não', 'vemcomer' ) );
+            return;
+        }
+        if ( 'vc_featured' === $column ) {
+            $is_featured = (bool) get_post_meta( $post_id, '_vc_menu_item_featured', true );
+            $nonce = wp_create_nonce( 'vc_toggle_featured_' . $post_id );
+            ?>
+            <label class="vc-quick-toggle">
+                <input 
+                    type="checkbox" 
+                    class="vc-featured-toggle" 
+                    data-post-id="<?php echo esc_attr( $post_id ); ?>"
+                    data-nonce="<?php echo esc_attr( $nonce ); ?>"
+                    <?php checked( $is_featured, true ); ?>
+                />
+                <span class="vc-toggle-label"><?php echo $is_featured ? '⭐' : '○'; ?></span>
+            </label>
+            <?php
         }
     }
 

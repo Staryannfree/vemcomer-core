@@ -132,7 +132,33 @@ async function fetchRestaurants(params = {}) {
 }
 
 async function fetchFeaturedRestaurants() {
-    // Buscar restaurantes ordenados por rating (maior primeiro)
+    // Primeiro tentar buscar restaurantes marcados como featured
+    try {
+        const featuredResponse = await fetch(`${API_BASE}/restaurants?per_page=20`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (featuredResponse.ok) {
+            const allRestaurants = await featuredResponse.json();
+            if (Array.isArray(allRestaurants)) {
+                // Filtrar apenas os featured
+                const featured = allRestaurants
+                    .filter(r => r.is_featured === true)
+                    .slice(0, 4)
+                    .map(mapApiRestaurantToRestaurant);
+                
+                if (featured.length > 0) {
+                    return featured.map(mapApiRestaurantToFeatured);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao buscar restaurantes em destaque:', error);
+    }
+    
+    // Fallback: Buscar restaurantes ordenados por rating (maior primeiro)
     const restaurants = await fetchRestaurants({
         per_page: 4,
         orderby: 'rating',

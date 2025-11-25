@@ -272,6 +272,10 @@ class Restaurant_Controller {
         if ( null !== $has_delivery ) {
             $meta[] = [ 'key' => '_vc_has_delivery', 'value' => ( filter_var( $has_delivery, FILTER_VALIDATE_BOOLEAN ) ? '1' : '0' ) ];
         }
+        $featured = $request->get_param( 'featured' );
+        if ( null !== $featured && filter_var( $featured, FILTER_VALIDATE_BOOLEAN ) ) {
+            $meta[] = [ 'key' => '_vc_restaurant_featured', 'value' => '1', 'compare' => '=' ];
+        }
         if ( $meta ) {
             if ( ! isset( $args['meta_query'] ) ) {
                 $args['meta_query'] = [];
@@ -306,6 +310,7 @@ class Restaurant_Controller {
                 'phone'       => (string) get_post_meta( $p->ID, '_vc_phone', true ),
                 'has_delivery' => (bool) get_post_meta( $p->ID, '_vc_has_delivery', true ),
                 'is_open'     => Schedule_Helper::is_open( $p->ID ),
+                'is_featured' => (bool) get_post_meta( $p->ID, '_vc_restaurant_featured', true ),
                 'cuisines'    => array_values( array_map( 'strval', (array) $terms ) ),
                 'rating'      => [
                     'average' => $rating['avg'],
