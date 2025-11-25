@@ -4,12 +4,18 @@ const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300?text=Sem+Imagem';
 
 // ============ MAPEAMENTO DE DADOS DA API ============
 function mapApiBannerToBanner(apiBanner) {
+    // Se o banner tem restaurant_id, criar link para o restaurante
+    let link = apiBanner.link || null;
+    if (!link && apiBanner.restaurant_id) {
+        link = `/restaurante/${apiBanner.restaurant_id}`;
+    }
+    
     return {
         id: apiBanner.id,
         title: apiBanner.title || '',
         subtitle: '', // API não retorna subtitle, pode ser adicionado depois
         image: apiBanner.image || PLACEHOLDER_IMAGE,
-        link: apiBanner.link || null,
+        link: link,
         restaurantId: apiBanner.restaurant_id || null
     };
 }
@@ -602,20 +608,37 @@ async function renderBanners() {
     }
     
     // Renderizar banners
-    container.innerHTML = banners.map((banner, index) => `
-        <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
-            <img src="${banner.image}" alt="${banner.title}" class="banner-image" loading="lazy">
-            <div class="banner-overlay">
-                <div class="banner-title">${banner.title}</div>
-                ${banner.subtitle ? `<div class="banner-subtitle">${banner.subtitle}</div>` : ''}
+    if (banners.length > 0) {
+        container.innerHTML = banners.map((banner, index) => `
+            <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
+                <img src="${banner.image}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+                <div class="banner-overlay">
+                    <div class="banner-title">${banner.title}</div>
+                    ${banner.subtitle ? `<div class="banner-subtitle">${banner.subtitle}</div>` : ''}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    } else {
+        // Se não houver banners, mostrar placeholder
+        container.innerHTML = `
+            <div class="banner-slide" data-index="0">
+                <img src="${PLACEHOLDER_IMAGE}" alt="Sem banners" class="banner-image">
+                <div class="banner-overlay">
+                    <div class="banner-title">Bem-vindo ao VemComer</div>
+                    <div class="banner-subtitle">Cadastre banners no painel administrativo</div>
+                </div>
+            </div>
+        `;
+    }
     
-    // Renderizar dots
-    dotsContainer.innerHTML = banners.map((_, index) => `
-        <span class="banner-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
-    `).join('');
+    // Renderizar dots (apenas se houver mais de 1 banner)
+    if (banners.length > 1) {
+        dotsContainer.innerHTML = banners.map((_, index) => `
+            <span class="banner-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
+        `).join('');
+    } else {
+        dotsContainer.innerHTML = '';
+    }
     
     // Reinicializar carousel
     initBannerCarousel();

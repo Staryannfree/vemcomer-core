@@ -44,34 +44,13 @@
 </header>
 
 <!-- HERO BANNER CAROUSEL -->
+<!-- Os banners serão carregados dinamicamente via JavaScript da API -->
 <section class="hero-banner-section">
     <div class="banner-carousel" id="bannerCarousel">
-        <div class="banner-slide" data-index="0">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800" alt="Banner 1" class="banner-image">
-            <div class="banner-overlay">
-                <div class="banner-title">🎉 Frete Grátis Todo Dia!</div>
-                <div class="banner-subtitle">Em pedidos acima de R$ 30,00</div>
-            </div>
-        </div>
-        <div class="banner-slide" data-index="1">
-            <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800" alt="Banner 2" class="banner-image">
-            <div class="banner-overlay">
-                <div class="banner-title">🍕 20% OFF em Pizzas</div>
-                <div class="banner-subtitle">Use o cupom: PIZZA20</div>
-            </div>
-        </div>
-        <div class="banner-slide" data-index="2">
-            <img src="https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=800" alt="Banner 3" class="banner-image">
-            <div class="banner-overlay">
-                <div class="banner-title">🎵 Reserve sua Mesa</div>
-                <div class="banner-subtitle">Shows ao vivo todos os fins de semana</div>
-            </div>
-        </div>
+        <!-- Banners serão inseridos aqui via JavaScript -->
     </div>
     <div class="banner-dots" id="bannerDots">
-        <span class="banner-dot active" data-index="0"></span>
-        <span class="banner-dot" data-index="1"></span>
-        <span class="banner-dot" data-index="2"></span>
+        <!-- Dots serão inseridos aqui via JavaScript -->
     </div>
 </section>
 
