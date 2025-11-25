@@ -1383,7 +1383,43 @@ Os links dos restaurantes não estavam funcionando - ao clicar nos cards de rest
 
 **Resultado:**
 Todos os links de restaurantes agora funcionam corretamente:
-- Cards da lista principal redirecionam para `/restaurante/{slug}/` ou `/restaurante/{id}/`
+- Cards da lista principal redirecionam para `/restaurante/{id}/`
 - Cards em destaque funcionam da mesma forma
 - Resultados de busca redirecionam corretamente
 - Botões de favorito e reserva não interferem na navegação
+
+## v0.50 - Padronização de URLs de Restaurantes para /restaurante/{id}/
+
+**Problema identificado:**
+As URLs de restaurantes estavam usando o padrão `/restaurant/{slug}/` (em inglês, com slug), mas o padrão desejado é `/restaurante/{id}/` (em português, usando ID numérico).
+
+**Solução implementada:**
+- **Mudança de Slug do CPT**: Alterado de `'restaurant'` para `'restaurante'` (português, singular)
+- **Rewrite Rule Customizado**: Criado rewrite rule `^restaurante/([0-9]+)/?$` para aceitar apenas IDs numéricos
+- **Template Redirect**: Implementado `template_redirect_by_id()` para buscar restaurante por ID e carregar o template correto
+- **Filtro de Permalink**: Adicionado filtro `post_type_link` para que `get_permalink()` sempre retorne `/restaurante/{id}/`
+- **JavaScript Atualizado**: Todas as referências no JavaScript agora usam `/restaurante/{id}/` ao invés de slug
+
+**Arquivos modificados:**
+- `inc/Model/CPT_Restaurant.php` - Mudança de slug, rewrite rules, template redirect e filtro de permalink
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - URLs atualizadas para usar ID
+
+**O que mudou:**
+1. **Slug do CPT**: De `'restaurant'` para `'restaurante'` (português)
+2. **Padrão de URL**: De `/restaurant/{slug}/` para `/restaurante/{id}/`
+3. **Rewrite Rule**: Nova regra que aceita apenas números no lugar do slug
+4. **Template Redirect**: Busca restaurante por ID e carrega template single
+5. **get_permalink()**: Agora sempre retorna URL com ID, mesmo quando chamado no PHP
+
+**Importante:**
+Após esta atualização, é necessário fazer **flush das rewrite rules**:
+1. Acesse **Configurações → Links Permanentes** no WordPress
+2. Clique em **Salvar alterações** (sem mudar nada)
+3. Isso irá regenerar as rewrite rules e aplicar as mudanças
+
+**Resultado:**
+Todas as URLs de restaurantes agora seguem o padrão `/restaurante/{id}/`:
+- Exemplo: `https://seusite.com.br/restaurante/51/` ao invés de `https://seusite.com.br/restaurant/cantina-da-praca-1/`
+- URLs mais limpas e consistentes
+- Funciona com `get_permalink()` em todo o código PHP
+- JavaScript atualizado para usar o novo padrão
