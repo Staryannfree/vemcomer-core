@@ -207,6 +207,42 @@ Quando um restaurante é aprovado:
 
 ## Changelog
 
+### v0.35 - Página de Teste de Reverse Geocoding no Admin
+
+**Nova implementação:**
+- **Página de Teste no Admin**: Interface para testar o reverse geocoding (conversão de coordenadas em endereço)
+- **Formulário de Coordenadas**: Campos para inserir latitude e longitude
+- **Exibição de Resultados**: Mostra rua, número, bairro, cidade, estado, CEP, país e endereço completo
+- **Integração com Nominatim**: Usa a mesma API do OpenStreetMap usada no frontend
+- **Dados Brutos**: Exibe JSON completo retornado pela API em um detalhes colapsável
+
+**Arquivos criados:**
+- `inc/Admin/Geocoding_Test.php` - Classe para renderizar a página de teste
+
+**Arquivos modificados:**
+- `vemcomer-core.php` - Inicialização da classe `Geocoding_Test`
+- `README.md` - Documentação da funcionalidade
+
+**Funcionalidades implementadas:**
+- Formulário com validação de coordenadas (lat: -90 a 90, lng: -180 a 180)
+- Botão "Testar Geocoding" que faz requisição à API Nominatim
+- Exibição de resultados formatados (rua, cidade, estado, etc.)
+- Tratamento de erros com mensagens amigáveis
+- Loading state durante processamento
+- Reutiliza a função `VemComerReverseGeocode.reverseGeocode()` se disponível, ou faz requisição direta
+
+**Como usar:**
+1. Acesse o admin do WordPress
+2. Vá em **Pedevem → Teste Geocoding**
+3. Informe a latitude e longitude (ex: -16.6864, -49.2643 para Goiânia)
+4. Clique em "Testar Geocoding"
+5. Veja os resultados exibidos abaixo do formulário
+
+**Exemplo de coordenadas para teste:**
+- Goiânia: Lat: -16.6864, Lng: -49.2643
+- São Paulo: Lat: -23.5505, Lng: -46.6333
+- Rio de Janeiro: Lat: -22.9068, Lng: -43.1729
+
 ### v0.34 - Mobile UI Moderno (Design Estilo iFood)
 
 **Nova implementação:**

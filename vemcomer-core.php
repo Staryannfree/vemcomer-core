@@ -226,6 +226,7 @@ add_action( 'plugins_loaded', function () {
 
     // Pacote 8 — Instalador de Páginas
     if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); }
+    if ( class_exists( '\\VC\\Admin\\Geocoding_Test' ) )        { ( new \VC\Admin\Geocoding_Test() )->init(); }
 
     // Seed automático de planos (uma vez)
     if ( class_exists( '\\VC\\Utils\\Plan_Seeder' ) ) {

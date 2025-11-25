@@ -99,5 +99,6 @@ class Menu_Restaurant {
                 'edit.php?post_type=' . \VC\Model\CPT_SubscriptionPlan::SLUG
             );
         }
+
     }
 }
