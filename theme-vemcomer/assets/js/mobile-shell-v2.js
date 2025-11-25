@@ -618,28 +618,15 @@ async function renderBanners() {
     }
     
     // Renderizar banners
-    if (banners.length > 0) {
-        container.innerHTML = banners.map((banner, index) => `
-            <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
-                <img src="${banner.image}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
-                <div class="banner-overlay">
-                    <div class="banner-title">${banner.title}</div>
-                    ${banner.subtitle ? `<div class="banner-subtitle">${banner.subtitle}</div>` : ''}
-                </div>
+    container.innerHTML = banners.map((banner, index) => `
+        <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
+            <img src="${banner.image || PLACEHOLDER_IMAGE}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'">
+            <div class="banner-overlay">
+                <div class="banner-title">${banner.title || 'Bem-vindo ao VemComer'}</div>
+                ${banner.subtitle ? `<div class="banner-subtitle">${banner.subtitle}</div>` : ''}
             </div>
-        `).join('');
-    } else {
-        // Se não houver banners, mostrar placeholder
-        container.innerHTML = `
-            <div class="banner-slide" data-index="0">
-                <img src="${PLACEHOLDER_IMAGE}" alt="Sem banners" class="banner-image">
-                <div class="banner-overlay">
-                    <div class="banner-title">Bem-vindo ao VemComer</div>
-                    <div class="banner-subtitle">Cadastre banners no painel administrativo</div>
-                </div>
-            </div>
-        `;
-    }
+        </div>
+    `).join('');
     
     // Renderizar dots (apenas se houver mais de 1 banner)
     if (banners.length > 1) {
