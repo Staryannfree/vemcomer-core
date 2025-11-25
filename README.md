@@ -1328,3 +1328,30 @@ Na lista de **Restaurantes** (`Pedevem > Restaurantes`), há uma coluna **"⭐ E
 
 **Resultado:**
 Clientes que acessam o link do cardápio digital veem apenas o restaurante específico, sem opções de navegação para outros restaurantes, focando no pedido rápido.
+
+## v0.48 - Correção Force Feed para Placeholders
+
+**Problema identificado:**
+Os placeholders não estavam funcionando corretamente - restaurantes sem imagem continuavam aparecendo com espaço em branco ou ícone de imagem quebrada. O problema estava na ordem de execução: o código dependia apenas do `onerror` (reativo), que não disparava como esperado.
+
+**Solução implementada:**
+- **Abordagem "Force Feed"**: Os placeholders agora são aplicados ANTES da renderização, não dependendo apenas do `onerror`
+- **Função `isValidImage()` robusta**: Validação prévia que verifica se URL é válida (não aceita strings vazias, null, undefined, ou "placeholder")
+- **Fallback na Origem**: Funções de mapeamento (`mapApiRestaurantToRestaurant`, `mapApiProductToDish`) agora decidem a imagem ANTES de criar o HTML
+- **Logo Wrapper**: Container HTML específico para o logo (`card-logo-wrapper`) com lógica CSS inline para garantir que, se a imagem falhar, a "bolinha colorida com a letra" apareça no lugar exato
+- **CSS Aprimorado**: 
+  - `min-height: 100%` nas imagens para forçar altura
+  - `background-color: #eee` enquanto carrega
+  - Estilos específicos para `.card-logo-wrapper` com posicionamento absoluto
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Função `isValidImage()`, refatoração de `mapApiRestaurantToRestaurant()`, atualização de `renderRestaurants()`, `renderFeatured()`, `renderDishes()`
+- `theme-vemcomer/assets/css/mobile-shell-v2.css` - CSS aprimorado para logo fallback e imagens
+
+**O que mudou:**
+1. **Validação Prévia**: Antes, o código podia aceitar uma string vazia `""` ou `null` como URL válida. Agora ele checa explicitamente.
+2. **Fallback na Origem**: A função `mapApi...` agora decide a imagem. Se não tiver na API, ela **já injeta o placeholder** antes mesmo de criar o HTML. O `onerror` vira apenas uma rede de segurança para links quebrados (404).
+3. **Logo Wrapper**: Container HTML específico para o logo com lógica CSS inline para garantir que, se a imagem falhar, o avatar com inicial apareça no lugar exato.
+
+**Resultado:**
+Todas as imagens agora têm garantia de exibição - se não tiverem URL válida na API, o placeholder inteligente é aplicado imediatamente, antes da renderização. O `onerror` funciona como backup secundário apenas para links quebrados (404).
