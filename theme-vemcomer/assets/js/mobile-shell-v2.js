@@ -1204,16 +1204,6 @@ window.openEvent = function(id) {
     window.location.href = `/evento/${id}`;
 };
 
-// ============ EVENT HANDLERS ============
-// Garantir que as funções estejam no escopo global
-window.openDish = function(id) {
-    window.location.href = `/prato/${id}`;
-};
-
-window.openEvent = function(id) {
-    window.location.href = `/evento/${id}`;
-};
-
 window.openRestaurant = function(id, slug = null) {
     // 1. Tentar usar a URL salva no card (data-attribute)
     const card = document.querySelector(`[data-restaurant-id="${id}"]`);
@@ -1228,9 +1218,7 @@ window.openRestaurant = function(id, slug = null) {
         return;
     }
 
-    // 3. Fallback final: Tentar construir com ID, mas sabendo que idealmente seria slug
-    // Se você tiver certeza que o backend envia slug na lista principal, 
-    // isso só acontece se o card não estiver na tela (ex: link direto)
+    // 3. Fallback final: Tentar construir com ID
     window.location.href = `/restaurant/${id}/`;
 };
 
@@ -1921,4 +1909,3 @@ async function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
-
