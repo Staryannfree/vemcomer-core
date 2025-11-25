@@ -132,11 +132,19 @@ class CPT_Restaurant {
             return;
         }
         
-        // Flush rewrite rules apenas uma vez por requisição (evitar múltiplos flushes)
-        if ( ! wp_get_schedule( 'vc_flush_rewrite_rules_once' ) ) {
-            // Agendar flush para próxima requisição (evita fazer durante save_post)
-            add_action( 'shutdown', function() {
+        // Verificar se o post foi publicado ou atualizado
+        if ( 'publish' !== $restaurant->post_status ) {
+            return;
+        }
+        
+        // Usar transient para evitar múltiplos flushes na mesma requisição
+        $transient_key = 'vc_flush_rewrite_rules_' . get_current_user_id();
+        if ( false === get_transient( $transient_key ) ) {
+            // Agendar flush para shutdown (evita fazer durante save_post)
+            add_action( 'shutdown', function() use ( $transient_key ) {
                 flush_rewrite_rules( false );
+                // Marcar como feito por 5 segundos (evita múltiplos flushes)
+                set_transient( $transient_key, true, 5 );
             }, 999 );
         }
     }
