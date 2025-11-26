@@ -586,7 +586,7 @@ function renderStories() {
     if (!container) return;
     
     container.innerHTML = storiesData.map(story => `
-        <div class="story-item" onclick="openStory(${story.id})">
+        <div class="story-item" onclick="window.location.href='story-viewer-cliente.html'" style="cursor: pointer;">
             <div class="story-avatar-wrapper">
                 <div class="story-ring ${story.viewed ? 'viewed' : ''}">
                     <div class="story-avatar-container">
@@ -607,6 +607,10 @@ let storyTimer = null;
 let progressInterval = null;
 
 function openStory(groupId) {
+    // Redirecionar para o HTML estático do story viewer
+    window.location.href = 'story-viewer-cliente.html';
+    return;
+    
     const storyGroup = storiesData.find(s => s.id === groupId);
     if (!storyGroup) return;
 
@@ -808,7 +812,7 @@ async function renderBanners() {
     
     // Renderizar banners
     container.innerHTML = banners.map((banner, index) => `
-        <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'" style="cursor: pointer;"` : ''}>
+        <div class="banner-slide" data-index="${index}" onclick="window.location.href='feed-eventos.html'" style="cursor: pointer;">
             <img src="${banner.image || PLACEHOLDERS.default}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
             <div class="banner-overlay">
                 <div class="banner-title">${banner.title || 'Bem-vindo ao VemComer'}</div>
@@ -973,7 +977,7 @@ async function renderDishes() {
             : getSmartImage(contextText); // Força o fallback aqui!
         
         return `
-        <div class="dish-card" onclick="window.location.href='/restaurant/${dish.restaurant_slug || dish.restaurant_id}/?item=${dish.id}'">
+        <div class="dish-card" onclick="window.location.href='modal-detalhes-produto.html'" style="cursor: pointer;">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
@@ -1076,7 +1080,7 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurant/${restaurant.slug || restaurant.id}/`}">
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="perfil-restaurante.html" onclick="window.location.href='perfil-restaurante.html'" style="cursor: pointer;">
             <div class="featured-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1139,7 +1143,7 @@ async function renderRestaurants() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurant.url || `/restaurant/${restaurant.slug || restaurant.id}/`}">
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="perfil-restaurante.html" onclick="window.location.href='perfil-restaurante.html'" style="cursor: pointer;">
             <div class="card-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1197,7 +1201,7 @@ async function renderRestaurants() {
 // ============ EVENT HANDLERS ============
 // Garantir que as funções estejam no escopo global
 window.openDish = function(id) {
-    window.location.href = `/prato/${id}`;
+    window.location.href = 'modal-detalhes-produto.html';
 };
 
 window.openEvent = function(id) {
@@ -1205,19 +1209,7 @@ window.openEvent = function(id) {
 };
 
 window.openRestaurant = function(id) {
-    // Tentar usar slug se disponível, senão usar ID
-    const card = document.querySelector(`[data-restaurant-id="${id}"]`);
-    if (card && card.dataset.restaurantUrl) {
-        window.location.href = card.dataset.restaurantUrl;
-    } else {
-        // Tentar usar slug se disponível, senão usar ID
-        const card = document.querySelector(`[data-restaurant-id="${id}"]`);
-        if (card && card.dataset.restaurantUrl) {
-            window.location.href = card.dataset.restaurantUrl;
-        } else {
-            window.location.href = `/restaurant/${id}/`;
-        }
-    }
+    window.location.href = 'perfil-restaurante.html';
 };
 
 window.openReservation = function(id, event) {
@@ -1255,8 +1247,7 @@ function attachRestaurantCardListeners() {
             }
             
             // Redirecionar para o restaurante
-            const url = restaurantCard.dataset.restaurantUrl || `/restaurant/${restaurantCard.dataset.restaurantId}/`;
-            window.location.href = url;
+            window.location.href = 'perfil-restaurante.html';
         }
     });
 }
@@ -1281,8 +1272,7 @@ function attachFeaturedCardListeners() {
             }
             
             // Redirecionar para o restaurante
-            const url = featuredCard.dataset.restaurantUrl || `/restaurant/${featuredCard.dataset.restaurantId}/`;
-            window.location.href = url;
+            window.location.href = 'perfil-restaurante.html';
         }
     });
 }

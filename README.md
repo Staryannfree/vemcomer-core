@@ -1509,3 +1509,77 @@ Agora os restaurantes podem ser acessados tanto por slug quanto por ID, garantin
 - URLs mais flexíveis e amigáveis
 - Atualização automática sem intervenção manual
 - SEO-friendly (slug) e compatibilidade (ID)
+
+## v0.54 - Biblioteca Completa de Telas do Marketplace
+
+**Nova implementação:**
+Criação de uma biblioteca completa de telas HTML/CSS/JS para o marketplace, replicando o design fornecido e organizadas na pasta `theme-vemcomer/templates/marketplace/`.
+
+### Telas de Cliente (Frontend)
+
+#### Navegação e Descoberta
+- ✅ **Busca Avançada** (`busca-avancada.html`) - Busca com autocomplete, filtros e resultados
+- ✅ **Todas as Categorias** (`todas-as-categorias.html`) - Grid de categorias de restaurantes
+- ✅ **Perfil do Restaurante** (`perfil-restaurante.html`) - Página completa do restaurante com cardápio, avaliações e informações
+- ✅ **Cardápio Digital Standalone** (`cardapio-digital-standalone.html`) - Modo standalone para cardápio isolado
+
+#### Produtos e Pedidos
+- ✅ **Modal de Detalhes do Produto** (`modal-detalhes-produto.html`) - Bottom sheet com modificadores, observações e adicionar ao carrinho
+- ✅ **Carrinho Lateral** (`carrinho-side-cart.html`) - Side cart com itens, quantidades e totais
+- ✅ **Checkout Simplificado** (`checkout-simplificado.html`) - Checkout com delivery/pickup, endereços e resumo
+
+#### Conta e Perfil
+- ✅ **Minha Conta Cliente** (`minha-conta-cliente.html`) - Perfil do cliente com links para sub-páginas
+- ✅ **Meus Endereços** (`meus-enderecos.html`) - Gerenciamento de endereços salvos
+- ✅ **Meus Favoritos** (`meus-favoritos.html`) - Lista de restaurantes e itens favoritos
+- ✅ **Meus Pedidos** (`meus-pedidos.html`) - Histórico de pedidos do cliente
+- ✅ **Minhas Reservas** (`minhas-reservas.html`) - Lista de reservas com status
+- ✅ **Pagamentos e Cartões** (`pagamentos-e-cartoes.html`) - Gerenciamento de métodos de pagamento
+- ✅ **Dados Pessoais** (`dados-pessoais.html`) - Formulário de edição de dados pessoais
+- ✅ **Segurança da Conta** (`seguranca-da-conta.html`) - Alteração de senha e exclusão de conta
+- ✅ **Notificações** (`notificacoes.html`) - Feed de notificações do cliente
+
+#### Eventos e Stories
+- ✅ **Feed de Eventos** (`feed-eventos.html`) - Lista de eventos gastronômicos com filtros
+- ✅ **Detalhes de Evento** (`detalhes-evento.html`) - Página completa de um evento
+- ✅ **Story Viewer Cliente** (`story-viewer-cliente.html`) - Visualizador de stories estilo Instagram
+
+#### Outros
+- ✅ **Seção de Avaliações** (`secao-avaliacoes.html`) - Lista de avaliações com formulário
+- ✅ **Modal de Informações do Restaurante** (`modal-informacoes-restaurante.html`) - Modal com endereço, mapa e horários
+- ✅ **Offline PWA** (`offline-pwa.html`) - Tela de offline para PWA
+
+### Telas de Restaurante (Backend/Admin)
+
+#### Onboarding e Configuração
+- ✅ **Wizard de Onboarding** (`wizard-onboarding.html`) - Onboarding completo em 5 steps
+- ✅ **Configuração de Loja** (`configuracao-loja.html`) - Configurações completas (logo, capa, horários, frete)
+
+#### Painéis por Plano
+- ✅ **Painel Lojista - Plano Grátis** (`painel-lojista-plano-gratis.html`) - Dashboard básico para plano Vitrine
+- ✅ **Painel Lojista - Plano Delivery Pro** (`painel-lojista-plano-delivery-pro.html`) - Dashboard PRO com analytics
+- ✅ **Painel Lojista - Plano Growth Master** (`painel-lojista-plano-growth-master.html`) - Dashboard premium completo
+
+#### Gestão
+- ✅ **Painel de Pedidos** (`painel-pedidos.html`) - Kanban completo para gestão de pedidos
+- ✅ **Gestão de Cardápio** (`gestao-cardapio.html`) - Gerenciamento de itens por categoria
+- ✅ **Gestor de Eventos** (`gestor-eventos.html`) - Criação e gestão de eventos gastronômicos
+- ✅ **Criador de Stories** (`criador-stories-restaurantes.html`) - Interface para criar stories
+
+#### Marketing e Crescimento
+- ✅ **Central Marketing** (`central-marketing.html`) - Dashboard de marketing com analytics, destaques e cupons
+- ✅ **Popup com Planos Disponíveis** (`popup-planos-disponiveis.html`) - Comparativo de planos
+
+**Total de telas criadas:** 28 telas completas
+
+**Estrutura:**
+- Todas as telas estão em `theme-vemcomer/templates/marketplace/`
+- Cada tela é um arquivo HTML standalone com CSS e JavaScript inline
+- Design replicado exatamente como fornecido, sem alterações
+- Prontas para integração com backend via REST API
+
+**Próximos passos:**
+- Integrar telas com templates PHP do WordPress
+- Conectar com endpoints REST API existentes
+- Implementar navegação entre telas
+- Adicionar autenticação e controle de acesso

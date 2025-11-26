@@ -17,7 +17,7 @@
   <!-- Modal Detalhes Produto (deve ficar fora do fluxo, pode ser incluído no HTML principal ou via JS) -->
   <div id="modalProduto" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:#0008;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:16px;max-width:380px;width:96vw;padding:0 0 24px 0;box-shadow:0 8px 38px #2d865955;position:relative;animation:fadeIn .3s;">
-      <button style="position:absolute;right:13px;top:12px;background:none;border:none;font-size:1.27em;color:#bbbbbb;z-index:3;cursor:pointer" onclick="document.getElementById('modalProduto').style.display='none'">×</button>
+      <button style="position:absolute;right:13px;top:12px;background:none;border:none;font-size:1.27em;color:#bbbbbb;z-index:3;cursor:pointer" onclick="history.back()">×</button>
       <img id="imgProduto" src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=400&q=80" alt="Foto Produto" style="width:100%;height:150px;object-fit:cover;border-radius:16px 16px 0 0;">
       <div style="padding:18px 18px 0 18px;">
         <div id="tituloProduto" style="font-size:1.16em;font-weight:700;color:#222;margin-bottom:3px;">Bruschetta Vegana</div>
@@ -46,7 +46,7 @@
             <span id="qtdProduto" style="font-size:1.13em;font-weight:700;">1</span>
             <button type="button" onclick="alteraQtd(1)" style="background:var(--primary);border:none;width:32px;height:32px;border-radius:8px;font-size:1.3em;color:#fff;font-weight:700;cursor:pointer;">+</button>
           </div>
-          <button id="btnAddCarrinho" style="background:var(--primary);color:#fff;font-weight:700;border:none;padding:10px 26px;border-radius:10px;font-size:1.02em;box-shadow:0 2px 9px #2d865913;cursor:pointer;transition:background .17s;">Adicionar <span id="precoTotal">R$ 12,90</span></button>
+          <button id="btnAddCarrinho" onclick="window.location.href='carrinho-side-cart.html'" style="background:var(--primary);color:#fff;font-weight:700;border:none;padding:10px 26px;border-radius:10px;font-size:1.02em;box-shadow:0 2px 9px #2d865913;cursor:pointer;transition:background .17s;">Adicionar <span id="precoTotal">R$ 12,90</span></button>
         </div>
       </div>
     </div>
