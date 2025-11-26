@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Configurações da Loja</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #2d8659;
+      --primary-light: #eaf8f1;
+      --accent: #45c676;
+      --gray: #f6f9f6;
+      --danger: #ea5252;
+      --meta: #6b7672;
+      --text: #232a2c;
+      --star: #facb32;
+    }
+    body {
+      background: var(--gray);
+      font-family: 'Montserrat', Arial, sans-serif;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 690px;
+      margin: 34px auto 60px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 3px 16px #2d865914;
+      padding: 30px 26px 36px 26px;
+    }
+    h1 {
+      font-weight: 700;
+      font-size: 1.48rem;
+      color: var(--primary);
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    section {margin-bottom: 35px;}
+    section h2 {
+      font-weight: 700;
+      font-size: 1.14rem;
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 7px;
+      margin-bottom: 21px;
+    }
+    .upload-group {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .upload-box {
+      width: 120px; height: 120px; background: var(--primary-light); border-radius: 16px;
+      border: 2px dashed #cdf9e0; display: flex; align-items: center; justify-content: center;
+      position: relative; cursor: pointer; overflow: hidden;
+      box-shadow: 0 2px 12px #45c67613;
+    }
+    .upload-box img { width: 120px; height: 120px; object-fit: cover; border-radius: 16px; }
+    .upload-box input[type="file"] { position: absolute; width: 120px; height: 120px; opacity: 0; cursor: pointer; }
+    .upload-label { text-align: center; font-weight: 600; color: var(--primary); margin-top: 6px; user-select: none; }
+    textarea, input[type="text"] { width: 100%; border-radius: 13px; border: 1.2px solid #cdf9e0;
+      padding: 15px 14px; font-size: 1em; color: var(--text); font-family: inherit; }
+    textarea {height: 70px; resize: vertical;}
+    .input-row {display:flex;gap:13px;margin-bottom:8px;}
+    .badge-selo {background:var(--primary-light);color:var(--primary);font-size:.88em;border-radius:12px;padding:3px 13px;font-weight:600;border:1px solid #b9eacd;}
+    .banners-group {display:flex;gap:11px;flex-wrap:wrap;margin-bottom:9px;}
+    .banner-thumb {
+      width:88px;height:34px;object-fit:cover;border-radius:10px;box-shadow:0 1px 7px #2d865913;margin-right:6px;
+    }
+    .banner-actions{display:flex;gap:7px;}
+    .banner-btn{background:#2d8659;color:#fff;border:none;font-weight:700;padding:4px 10px;border-radius:6px;font-size:.95em;cursor:pointer;}
+    .banner-btn.remove{background:#ffe7e7;color:#ea5252;}
+    .switch-row {display: flex;align-items: center;gap:14px;margin-bottom:13px;}
+    .switch-label{font-size:1.03em;font-weight:700;color:var(--primary);}
+    .switch {position:relative;display:inline-block;width:44px;height:23px;}
+    .switch input {opacity:0;width:0;height:0;}
+    .slider {position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#eaf8f1;border-radius:23px;transition:.23s;}
+    .slider:before {position:absolute;content:"";height:17px;width:17px;left:3px;bottom:3px;background:#2d8659;border-radius:50%;transition:.23s;}
+    .switch input:checked + .slider {background:#45c676;}
+    .switch input:checked + .slider:before {transform:translateX(21px);}
+    /* Horários */
+    .horarios-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px 32px;
+    }
+    .dia-item {
+      display: flex; align-items: center; gap: 14px; font-weight: 700; color: var(--primary); font-size: 1.03em;
+    }
+    .dia-item input[type="checkbox"] {transform: scale(1.2);}
+    .horario-inputs {display: flex; gap: 14px; margin-left: auto;}
+    .horario-inputs input {
+      width: 87px; padding: 8px 12px; border-radius: 7px; border: 1.1px solid #cdf9e0; font-family: inherit;
+      color: var(--text); font-size: 1em;
+    }
+    /* Frete */
+    .frete-section {margin-top:8px;}
+    .frete-option {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 18px; font-weight: 700; color: var(--primary); font-size: 1.05em;
+    }
+    .frete-option input[type="radio"] {transform: scale(1.15);}
+    .frete-inputs {margin-left:auto;display:flex;gap:11px;align-items:center;flex-wrap:wrap;}
+    .frete-inputs input {
+      width: 90px; border-radius: 7px; border: 1.1px solid #cdf9e0; padding: 8px 10px; font-size: 1em; color: var(--text);
+    }
+    .bairro-list {
+      max-height: 130px; overflow-y: auto; background: var(--primary-light); border: 1.1px solid #cdf9e0;
+      border-radius: 9px; padding: 10px 12px; margin-top: 10px;
+    }
+    .bairro-list-item {
+      display: flex; justify-content: space-between; margin-bottom: 11px; font-weight: 600; color: var(--primary); font-size: 1em;
+    }
+    .bairro-list-item input[type="number"] {
+      width: 63px; padding: 5px 7px; border-radius: 8px; border: 1.1px solid #cdf9e0; text-align:center;
+      font-family: inherit; font-size: .97em; color: var(--text);
+    }
+    .btn-save {
+      background: var(--primary); color: #fff; font-weight: 700; font-size: 1.12em; width: 100%; padding: 14px 0;
+      border-radius: 14px; border: none; cursor: pointer; box-shadow: 0 4px 22px #45c67633; transition: background 0.22s;
+    }
+    .btn-save:hover {background: var(--accent);}
+    @media (max-width: 650px) {
+      .horarios-grid { grid-template-columns: 1fr; gap: 11px 12px;}
+      .frete-inputs {flex-wrap: wrap;}
+      .frete-inputs input {width: 100%;}
+      .upload-group {gap: 17px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Configurações da Loja</h1>
+    <section>
+      <h2>Dados Básicos & Destaques</h2>
+      <div class="upload-group">
+        <div>
+          <div class="upload-box" id="logo-box">
+            <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=96&q=80" alt="Logo da loja" id="logo-preview" />
+            <input type="file" accept="image/*" id="upload-logo" />
+          </div>
+          <label class="upload-label" for="upload-logo">Logo</label>
+        </div>
+        <div>
+          <div class="upload-box" id="capa-box">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=80" alt="Capa" id="capa-preview" style="height:100px;width:120px;object-fit:cover;" />
+            <input type="file" accept="image/*" id="upload-capa" />
+          </div>
+          <label class="upload-label" for="upload-capa">Capa</label>
+        </div>
+      </div>
+      <div class="input-row">
+        <input type="text" id="nomeRestaurante" placeholder="Nome do restaurante" value="Restaurante Raízes da África"/>
+        <span class="badge-selo">Destaque</span>
+      </div>
+      <div class="banners-group">
+        <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=120&q=60" alt="Banner 1" class="banner-thumb">
+        <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=120&q=60" alt="Banner 2" class="banner-thumb">
+        <div class="banner-actions">
+          <button class="banner-btn" onclick="alert('Adicionar Banner')">+ Banner</button>
+          <button class="banner-btn remove" onclick="alert('Remover Banner')">Remover</button>
+        </div>
+      </div>
+      <textarea placeholder="Descrição breve do restaurante" id="descricao"></textarea>
+    </section>
+    <section>
+      <h2>Opções do Perfil</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:15px 18px;">
+        <span class="badge-selo">Entrega Própria</span>
+        <span class="badge-selo" style="background:var(--accent);color:#fff;">Entrega Grátis acima de R$60</span>
+        <span class="badge-selo">Africana</span>
+        <span class="badge-selo">Vegana</span>
+        <span class="badge-selo">Feijoada especial</span>
+        <span class="badge-selo">Eventos & Reservas</span>
+      </div>
+      <div class="switch-row">
+        <label for="switchReserva" class="switch-label">Permitir reservas online?</label>
+        <label class="switch">
+          <input type="checkbox" id="switchReserva" checked>
+          <span class="slider"></span>
+        </label>
+        <input type="text" style="flex:2;" placeholder="Mensagem na opção de reservar mesa" value="Reserve online para aniversário, reunião ou grupos." />
+      </div>
+    </section>
+    <section>
+      <h2>Horários de Funcionamento</h2>
+      <div class="horarios-grid">
+        <div class="dia-item"><input type="checkbox" id="seg-checkbox" checked />
+          <label for="seg-checkbox">Segunda</label>
+          <div class="horario-inputs">
+            <input type="time" id="seg-abre" value="10:00" />
+            <input type="time" id="seg-fecha" value="22:00" />
+          </div>
+        </div>
+        <div class="dia-item"><input type="checkbox" id="ter-checkbox" checked />
+          <label for="ter-checkbox">Terça</label>
+          <div class="horario-inputs">
+            <input type="time" id="ter-abre" value="10:00" />
+            <input type="time" id="ter-fecha" value="22:00" />
+          </div>
+        </div>
+        <div class="dia-item"><input type="checkbox" id="qua-checkbox" checked />
+          <label for="qua-checkbox">Quarta</label>
+          <div class="horario-inputs">
+            <input type="time" id="qua-abre" value="10:00" />
+            <input type="time" id="qua-fecha" value="22:00" />
+          </div>
+        </div>
+        <div class="dia-item"><input type="checkbox" id="qui-checkbox" checked />
+          <label for="qui-checkbox">Quinta</label>
+          <div class="horario-inputs">
+            <input type="time" id="qui-abre" value="10:00" />
+            <input type="time" id="qui-fecha" value="22:00" />
+          </div>
+        </div>
+        <div class="dia-item"><input type="checkbox" id="sex-checkbox" checked />
+          <label for="sex-checkbox">Sexta</label>
+          <div class="horario-inputs">
+            <input type="time" id="sex-abre" value="10:00" />
+            <input type="time" id="sex-fecha" value="22:00" />
+          </div>
+        </div>
+        <div class="dia-item"><input type="checkbox" id="sab-checkbox" checked />
+          <label for="sab-checkbox">Sábado</label>
+          <div class="horario-inputs">
+            <input type="time" id="sab-abre" value="11:00" />
+            <input type="time" id="sab-fecha" value="21:00" />
+          </div>
+        </div>
+        <div class="dia-item"><input type="checkbox" id="dom-checkbox" />
+          <label for="dom-checkbox">Domingo</label>
+          <div class="horario-inputs">
+            <input type="time" id="dom-abre" disabled />
+            <input type="time" id="dom-fecha" disabled />
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Configuração de Frete</h2>
+      <div class="frete-options">
+        <div class="frete-option">
+          <input type="radio" id="frete-raio" name="frete" checked />
+          <label for="frete-raio">Por Raio/KM</label>
+          <div class="frete-inputs">
+            <input type="number" id="kmRaio" min="1" max="30" step="1" placeholder="Raio (km)" value="7" />
+            <input type="number" id="taxaBase" min="0" step="0.1" placeholder="Taxa base (R$)" value="5.00" />
+          </div>
+        </div>
+        <div class="frete-option">
+          <input type="radio" id="frete-bairro" name="frete" />
+          <label for="frete-bairro">Por Bairro</label>
+        </div>
+        <div id="bairroConfig" class="bairro-list" style="display:none;">
+          <div class="bairro-list-item">Jardim Curitiba <input type="number" min="0" max="20" step="0.1" value="4.5" /></div>
+          <div class="bairro-list-item">Setor Central <input type="number" min="0" max="20" step="0.1" value="3.9" /></div>
+          <div class="bairro-list-item">Vila Nova <input type="number" min="0" max="20" step="0.1" value="6.2" /></div>
+        </div>
+      </div>
+    </section>
+    <button class="btn-save" onclick="salvar()">Salvar Configurações</button>
+  </div>
+  <script>
+    document.getElementById('upload-logo').addEventListener('change', e => {
+      const reader = new FileReader();
+      reader.onload = ev => document.getElementById('logo-preview').src = ev.target.result;
+      if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+    });
+    document.getElementById('upload-capa').addEventListener('change', e => {
+      const reader = new FileReader();
+      reader.onload = ev => document.getElementById('capa-preview').src = ev.target.result;
+      if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+    });
+    ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'].forEach(day => {
+      const cb = document.getElementById(day + '-checkbox');
+      cb.addEventListener('change', () => {
+        const abre = document.getElementById(day + '-abre');
+        const fecha = document.getElementById(day + '-fecha');
+        if (cb.checked) { abre.disabled = false; fecha.disabled = false; }
+        else { abre.disabled = true; fecha.disabled = true; }
+      });
+    });
+    document.getElementById('frete-raio').addEventListener('change', () => {
+      document.getElementById('bairroConfig').style.display = 'none';
+    });
+    document.getElementById('frete-bairro').addEventListener('change', () => {
+      document.getElementById('bairroConfig').style.display = 'block';
+    });
+    function salvar() {
+      alert('Configurações salvas com sucesso!');
+    }
+  </script>
+</body>
+</html>
+
