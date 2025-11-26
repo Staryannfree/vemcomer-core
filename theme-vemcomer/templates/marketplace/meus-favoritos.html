@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus Favoritos</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; color: #232a2c; margin: 0; }
+
+    .fav-container { max-width: 430px; margin: 0 auto; padding: 26px 10px 36px 10px; background: #fff; border-radius: 0 0 18px 18px; box-shadow: 0 7px 32px #232a2c16;}
+
+    h1 { font-size: 1.11em; font-weight: 700; color: #2d8659; margin-bottom: 18px;}
+
+    .fav-block { margin-bottom: 29px;}
+
+    .fav-titulo { font-size: 1.04em; color: #232a2c; font-weight:700; margin-bottom: 10px; margin-top:14px;}
+
+    .fav-list { display: flex; flex-direction: column; gap: 13px; }
+
+    .fav-rest, .fav-item {
+
+      background: #f7fcf9; border-radius: 11px; box-shadow: 0 1px 7px #2d865916; padding: 10px 12px 10px 10px; display: flex; gap: 10px; align-items:center; border:1px solid #eaf8f1; position: relative;
+
+    }
+
+    .fav-imgrest { width:48px;height:48px;border-radius:16px;object-fit:cover;background:#eaf8f1;}
+
+    .fav-imgitem { width:38px;height:38px;border-radius:8px;object-fit:cover;background:#eaf8f1;}
+
+    .fav-infos { flex:1; min-width: 0;}
+
+    .fav-nome { font-size: 1.01em; font-weight: 700; color: #2d8659; line-height:1.15;}
+
+    .fav-meta { color: #666; font-size:.93em; margin-top:1px; }
+
+    .fav-remove {background:none;border:none;color:#ea5252;font-size:1.25em;cursor:pointer;position:absolute;top:9px;right:10px;}
+
+    .fav-remove:hover { color: #b83939;}
+
+    .fav-acessar { background: #2d8659; color: #fff; border: none; font-weight:700; font-size:.97em; border-radius:8px; padding:7px 13px; cursor:pointer; margin-left:9px;}
+
+    .fav-acessar:hover { background:#45c676;}
+
+  </style>
+</head>
+<body>
+  <div class="fav-container">
+    <h1>Meus Favoritos</h1>
+    
+    <!-- Restaurantes Favoritos -->
+    <div class="fav-block">
+      <div class="fav-titulo">Restaurantes Favoritos</div>
+      <div class="fav-list">
+        <div class="fav-rest">
+          <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=96&q=60" class="fav-imgrest" alt="Verde Vida">
+          <div class="fav-infos">
+            <div class="fav-nome">Verde Vida</div>
+            <div class="fav-meta">Vegano • Goiânia</div>
+            <button class="fav-acessar" onclick="window.location.href='/restaurante/verde-vida'">Acessar</button>
+          </div>
+          <button class="fav-remove" title="Remover dos favoritos" onclick="this.closest('.fav-rest').remove();">♥</button>
+        </div>
+        <div class="fav-rest">
+          <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=96&q=60" class="fav-imgrest" alt="Raízes da África">
+          <div class="fav-infos">
+            <div class="fav-nome">Raízes da África</div>
+            <div class="fav-meta">Africana • Jardim Curitiba</div>
+            <button class="fav-acessar" onclick="window.location.href='/restaurante/raizes-da-africa'">Acessar</button>
+          </div>
+          <button class="fav-remove" title="Remover dos favoritos" onclick="this.closest('.fav-rest').remove();">♥</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Itens do Cardápio Favoritos -->
+    <div class="fav-block">
+      <div class="fav-titulo">Itens do Cardápio Favoritos</div>
+      <div class="fav-list">
+        <div class="fav-item">
+          <img src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=64&q=60" class="fav-imgitem" alt="Bruschetta Vegana">
+          <div class="fav-infos">
+            <div class="fav-nome">Bruschetta Vegana</div>
+            <div class="fav-meta">Verde Vida</div>
+            <button class="fav-acessar" onclick="window.location.href='/restaurante/verde-vida?item=bruschetta-vegana'">Adicionar</button>
+          </div>
+          <button class="fav-remove" title="Remover dos favoritos" onclick="this.closest('.fav-item').remove();">♥</button>
+        </div>
+        <div class="fav-item">
+          <img src="https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=64&q=60" class="fav-imgitem" alt="Moamba de Frango">
+          <div class="fav-infos">
+            <div class="fav-nome">Moamba de Frango</div>
+            <div class="fav-meta">Raízes da África</div>
+            <button class="fav-acessar" onclick="window.location.href='/restaurante/raizes-da-africa?item=moamba'">Adicionar</button>
+          </div>
+          <button class="fav-remove" title="Remover dos favoritos" onclick="this.closest('.fav-item').remove();">♥</button>
+        </div>
+      </div>
+    </div>
+    <!-- Exemplo lista vazia -->
+    <!--
+    <div class="fav-block"><div class="fav-titulo">Restaurantes Favoritos</div>
+      <div style="color:#7c948b;padding:30px 0 10px 0;text-align:center;">Você ainda não tem restaurantes favoritos.</div>
+    </div>
+    -->
+  </div>
+</body>
+</html>
+
