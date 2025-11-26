@@ -1581,5 +1581,61 @@ Criação de uma biblioteca completa de telas HTML/CSS/JS para o marketplace, re
 **Próximos passos:**
 - Integrar telas com templates PHP do WordPress
 - Conectar com endpoints REST API existentes
-- Implementar navegação entre telas
 - Adicionar autenticação e controle de acesso
+
+## v0.55 - Navegação Completa entre Telas do Marketplace
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Implementar navegação funcional entre todas as telas do marketplace, conectando os elementos clicáveis do JavaScript dinâmico com os templates HTML estáticos.
+
+**Implementação:**
+
+### 1. Atualização do JavaScript (`mobile-shell-v2.js`)
+- ✅ **Cards de Restaurante**: Redirecionam para `perfil-restaurante.html`
+- ✅ **Cards de Pratos**: Redirecionam para `modal-detalhes-produto.html`
+- ✅ **Banners**: Redirecionam para `feed-eventos.html`
+- ✅ **Stories**: Redirecionam para `story-viewer-cliente.html`
+- ✅ **Eventos**: Corrigido para redirecionar para `detalhes-evento.html`
+
+### 2. Atualização dos Templates HTML
+- ✅ **Bottom Navigation**: Adicionada em todas as páginas principais:
+  - `busca-avancada.html`
+  - `todas-as-categorias.html`
+  - `perfil-restaurante.html`
+  - `minha-conta-cliente.html`
+- ✅ **Links Corrigidos**:
+  - `checkout-simplificado.html`: Botão "Enviar" agora redireciona para `meus-pedidos.html`
+  - `content-mobile-home.php`: Bottom navigation atualizada com links corretos
+
+### 3. Fluxo de Navegação Implementado
+
+**Home → Detalhes:**
+- Cards de Restaurante → `perfil-restaurante.html`
+- Cards de Pratos → `modal-detalhes-produto.html`
+- Banners → `feed-eventos.html`
+- Stories → `story-viewer-cliente.html`
+- Eventos → `detalhes-evento.html`
+
+**Fluxo de Pedido:**
+- `perfil-restaurante.html` → `modal-detalhes-produto.html` → `carrinho-side-cart.html` → `checkout-simplificado.html` → `meus-pedidos.html`
+
+**Bottom Navigation (todas as páginas):**
+- Início → `index.html` (home)
+- Buscar → `busca-avancada.html`
+- Categorias → `todas-as-categorias.html`
+- Pedidos → `meus-pedidos.html`
+- Perfil → `minha-conta-cliente.html`
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Links de navegação atualizados
+- `theme-vemcomer/template-parts/content-mobile-home.php` - Bottom navigation corrigida
+- `theme-vemcomer/templates/marketplace/checkout-simplificado.html` - Link de redirecionamento corrigido
+- `theme-vemcomer/templates/marketplace/busca-avancada.html` - Bottom navigation adicionada
+- `theme-vemcomer/templates/marketplace/todas-as-categorias.html` - Bottom navigation adicionada
+- `theme-vemcomer/templates/marketplace/minha-conta-cliente.html` - Bottom navigation adicionada
+- `theme-vemcomer/templates/marketplace/perfil-restaurante.html` - Bottom navigation adicionada
+
+**Resultado:**
+Protótipo navegável completo - todos os elementos clicáveis agora redirecionam corretamente para as telas correspondentes, criando uma experiência de navegação fluida entre todas as 28 telas do marketplace.

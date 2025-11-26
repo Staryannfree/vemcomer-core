@@ -1030,7 +1030,7 @@ async function renderEvents() {
     }
     
     container.innerHTML = events.map(event => `
-        <div class="event-card" onclick="window.location.href='/evento/${event.id}'">
+        <div class="event-card" onclick="window.location.href='detalhes-evento.html'" style="cursor: pointer;">
             <div class="event-image-wrapper">
                 <img src="${event.image || PLACEHOLDERS.default}" alt="${event.title}" class="event-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 <div class="event-date-badge">
