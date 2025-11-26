@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todas as Categorias | Marketplace</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2d8659;
+      --primary-light: #eaf8f1;
+      --accent: #45c676;
+      --gray: #f7f8f9;
+      --card-radius: 18px;
+      --shadow: 0 4px 16px #2d865926;
+      --text: #232a2c;
+      --badge-bg: #eaf8f1;
+      --badge-color: #178753;
+    }
+
+    body {
+      background: var(--gray);
+      font-family: 'Montserrat', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 18px 3vw 48px 3vw;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 22px;
+      margin-top: 10px;
+      letter-spacing: 0.01em;
+    }
+
+    .grid-categorias {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 21px;
+      margin-top: 0;
+      /* iFood espaçamento mais amplo e cards grandes */
+    }
+
+    @media (min-width: 600px) { .container { max-width: 700px; } .grid-categorias {grid-template-columns: repeat(3,1fr);} }
+
+    .card-categoria {
+      background: #fff;
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+      padding: 14px 10px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: box-shadow .15s, border .13s, transform .13s;
+      border: 2px solid transparent;
+      position: relative;
+      text-align: center;
+      animation: fadeIn .8s;
+    }
+
+    .card-categoria:active,
+    .card-categoria:hover {
+      border: 2px solid var(--primary);
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 30px #2d86593b;
+    }
+
+    @keyframes fadeIn { from {opacity:0; transform:scale(.96);} to {opacity:1;} }
+
+    .cat-img-wrap {
+      position: relative;
+      margin-bottom: 13px;
+    }
+
+    .cat-img {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--primary-light);
+      border: 2.7px solid #f2f9f4;
+      box-shadow: 0 2px 10px #2d865910;
+      transition: box-shadow .18s, border .18s;
+    }
+
+    .card-categoria:hover .cat-img {
+      border-color: var(--primary);
+      box-shadow: 0 3px 15px #2d865931;
+    }
+
+    .cat-badge {
+      position: absolute;
+      top: 59px;
+      right: -5px;
+      background: var(--badge-bg);
+      color: var(--badge-color);
+      font-size: .81em;
+      font-weight: 700;
+      border-radius: 13px;
+      padding: 3px 11px 2px 11px;
+      box-shadow: 0 1px 6px #2d86590f;
+      border: 1px solid #c1e8d8;
+    }
+
+    .cat-title {
+      font-size: 1.16rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.17;
+      letter-spacing: 0.01em;
+    }
+
+    .cat-meta {
+      font-size: 0.94rem;
+      color: #5b665e;
+      margin-bottom: 3px;
+      font-weight: 500;
+      opacity: .93;
+    }
+
+    /* micro badge opcional com emoji */
+    .emoji-badge {
+      font-size: 1.13em;
+      background: #f2fcf6;
+      color: var(--primary);
+      border-radius: 10px;
+      padding: 2px 7px;
+      margin-top: 12px;
+      display: inline-block;
+    }
+
+    @media (max-width:430px){
+      .container{ padding-top:8px; }
+      .grid-categorias{ gap:13px;}
+      .cat-img{ width:60px; height:60px; }
+      .cat-title{ font-size:1.05rem;}
+      .card-categoria{padding:10px 4px 6px 4px;}
+      .cat-badge{top:43px; right:-4px; font-size:.75em;}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Categorias de Cozinha</h1>
+    <div class="grid-categorias">
+      <div class="card-categoria" tabindex="0">
+        <div class="cat-img-wrap">
+          <img class="cat-img" src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=128&q=60" alt="Italiana">
+          <span class="cat-badge">32</span>
+        </div>
+        <div class="cat-title">Italiana</div>
+        <div class="cat-meta">🍝 Massa e pizzas</div>
+      </div>
+      <div class="card-categoria" tabindex="0">
+        <div class="cat-img-wrap">
+          <img class="cat-img" src="https://images.unsplash.com/photo-1432139555190-58524dae6a55?auto=format&fit=crop&w=128&q=60" alt="Brasileira">
+          <span class="cat-badge">54</span>
+        </div>
+        <div class="cat-title">Brasileira</div>
+        <div class="cat-meta">🥘 Feijoada, caseiro</div>
+      </div>
+      <div class="card-categoria" tabindex="0">
+        <div class="cat-img-wrap">
+          <img class="cat-img" src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=128&q=60" alt="Japonesa">
+          <span class="cat-badge">18</span>
+        </div>
+        <div class="cat-title">Japonesa</div>
+        <div class="cat-meta">🍣 Sushi, temaki</div>
+      </div>
+      <div class="card-categoria" tabindex="0">
+        <div class="cat-img-wrap">
+          <img class="cat-img" src="https://images.unsplash.com/photo-1523983300230-8247bee76c8e?auto=format&fit=crop&w=128&q=60" alt="Africana">
+          <span class="cat-badge">9</span>
+        </div>
+        <div class="cat-title">Africana</div>
+        <div class="cat-meta">🍲 Moamba, braseado</div>
+      </div>
+      <div class="card-categoria" tabindex="0">
+        <div class="cat-img-wrap">
+          <img class="cat-img" src="https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=format&fit=crop&w=128&q=60" alt="Vegetariana">
+          <span class="cat-badge">24</span>
+        </div>
+        <div class="cat-title">Vegetariana</div>
+        <div class="cat-meta">🥗 Vegano, leve</div>
+      </div>
+      <div class="card-categoria" tabindex="0">
+        <div class="cat-img-wrap">
+          <img class="cat-img" src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=128&q=60" alt="Padaria">
+          <span class="cat-badge">44</span>
+        </div>
+        <div class="cat-title">Padaria</div>
+        <div class="cat-meta">🍞 Pão & doces</div>
+      </div>
+      <!-- Adicione mais categorias conforme seu backend -->
+    </div>
+  </div>
+</body>
+</html>
+
