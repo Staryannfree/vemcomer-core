@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparativo de Planos • Marketplace Restaurante</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f7f9f6; font-family: 'Montserrat', Arial, sans-serif; color: #232a2c; margin: 0; }
+
+    .planos-container { max-width: 900px; margin: 0 auto; padding: 32px 8px 40px 8px;}
+
+    .planos-title {font-size:1.23em;font-weight:700;color:#2d8659;margin-bottom:24px;text-align:center;}
+
+    .planos-table {
+
+      width: 100%; background: #fff; border-radius: 16px;
+
+      box-shadow:0 8px 27px #2d865116; border-collapse:collapse; margin-bottom:29px;
+
+    }
+
+    .planos-table th, .planos-table td { padding: 13px 5px; text-align:center; font-size:1em;}
+
+    .planos-table th { color:#2d8659; background:#eaf8f1;}
+
+    .plano-col-vitrine { background:#f5f6f4; }
+
+    .plano-col-pro { background:#fffbe2; font-weight:700; border-left: 3px solid #facb32;}
+
+    .plano-col-growth { background:#ebfff5; font-weight:800; border-left: 3px solid #45c676;}
+
+    .plano-pro-badge {background:#facb32;color:#232a2c;padding:3px 13px;border-radius:11px;font-weight:800;margin-left:7px;}
+
+    .plano-growth-badge {background:#45c676;color:#fff;padding:3px 14px;border-radius:11px;font-weight:900;margin-left:7px;}
+
+    .planos-table tr:not(:first-child) { border-top:1px solid #eaf8f1; }
+
+    .plan-check { color:#2d8659; font-size:1.1em; font-weight:900;}
+
+    .plan-cross { color:#ea5252; font-size:1.21em;}
+
+    .plan-row-titulo { text-align:left; padding-left:16px;font-weight:600; color: #2d8659;}
+
+    .plano-desc {color: #6b7672;font-size:1.01em;padding:10px 0 17px 0;text-align:center;}
+
+    .plano-cta {text-align:center;}
+
+    .btn-upgrade {background:#2d8659;color:#fff;font-weight:900;font-size:1.09em;padding:14px 38px;border:none;border-radius:26px;cursor:pointer;box-shadow:0 3px 22px #45c6761a;transition:.14s;}
+
+    .btn-upgrade:hover { background:#facb32;color:#232a2c;}
+
+    .btn-upgrade-premium {background:#45c676;color:#fff;padding:14px 38px;font-weight:900;margin-left:12px;}
+
+    .pro-highlight {color:#2d8659;font-weight:800;}
+
+    .growth-highlight {color:#45c676;font-weight:900;}
+
+    .plano-extras {background:#fffde8;font-size:1em;border-radius:13px;box-shadow:0 4px 25px #ffc75113;margin:27px auto 0 auto;max-width:660px;padding:17px 17px;}
+
+    .plano-extras-tit {color:#232a2c; font-weight:900; font-size:1.12em; margin-bottom:7px;}
+
+    .plano-extras ul {padding-left:18px;}
+
+    .plano-extras li {margin-bottom:4px;}
+
+    .story-highlight{background:#ffe2e2;color:#ea5252;font-weight:700;border-radius:10px;padding:4px 12px;margin-left:6px;}
+
+    @media (max-width:900px) { .planos-container{padding:14px 1vw 35px 1vw;}.planos-table th,.planos-table td{font-size:.97em;}}
+
+    @media (max-width:650px) {.planos-table th,.planos-table td{padding:9px 2vw;}}
+
+  </style>
+</head>
+<body>
+  <div class="planos-container">
+    <div class="planos-title">Compare Planos do Marketplace</div>
+    <div class="plano-desc">
+      Evolua do <b>perfil básico Vitrine</b> para automação PRO ou destaque máximo em <span class="growth-highlight">Gestão & Growth</span>.
+    </div>
+    <table class="planos-table">
+      <tr>
+        <th></th>
+        <th class="plano-col-vitrine">Vitrine<br><small>(Grátis)</small></th>
+        <th class="plano-col-pro">Delivery PRO <span class="plano-pro-badge">RECOMENDADO</span><br><small>(R$ 49,90/mês)</small></th>
+        <th class="plano-col-growth">Gestão & Growth <span class="plano-growth-badge">PREMIUM</span><br><small>(R$ 129,90/mês)</small></th>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Perfil Completo, logo e capa</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Cardápio Online</td>
+        <td class="plan-check">até 20 itens</td>
+        <td class="plan-check"><b>Ilimitado</b></td>
+        <td class="plan-check"><b>Ilimitado</b></td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">WhatsApp: mensagem de pedido</td>
+        <td class="plan-check">Simples</td>
+        <td class="plan-check"><b>Automação PRO</b></td>
+        <td class="plan-check"><b>Automação PRO</b></td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Modificadores/Complementos</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Cálculo de Frete Inteligente</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Gestão de Horários</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Analytics Express (visualizações, Whats, conversão)</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check"><b>Gráficos Avançados</b></td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Responder avaliações</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Painel de Analytics completo (v0.24)</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Destaque na busca/categoria</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check growth-highlight"><b>TOPO + Prioridade</b></td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Selos Premium: Verificado, Top, Premium, etc.</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check"><span style="background:#45c676;color:#fff;padding:1.5px 11px;border-radius:8px;">Premium</span></td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Suporte Prioritário (whatsapp direto com time)</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check">✔️</td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Banner Rotativo na Home (Incluído/Desconto)</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check"><b>INCLUÍDO</b></td>
+      </tr>
+      <tr>
+        <td class="plan-row-titulo">Publicar Stories no app Marketplace</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-cross">✘</td>
+        <td class="plan-check story-highlight">✔️</td>
+      </tr>
+    </table>
+    <div class="plano-cta">
+      <div style="margin-bottom:15px;font-size:1.1em;">
+        WhatsApp, automação e destaque? Escolha o <span class="pro-highlight">PRO</span>.<br>
+        Quer <span class="growth-highlight">dominar o app e vender como gigante</span>? Só o plano Gestão & Growth entrega tudo!
+      </div>
+      <button class="btn-upgrade" onclick="alert('Solicitar upgrade para Delivery PRO!')">Quero ser Delivery PRO</button>
+      <button class="btn-upgrade btn-upgrade-premium" onclick="alert('Solicitar upgrade para Growth!')">Quero o Growth Premium</button>
+      <div style="color:#6b7672;font-size:.97em;margin-top:9px;">Sem taxas por venda • Cancele a qualquer momento</div>
+    </div>
+    <div class="plano-extras" style="margin-top:35px;">
+      <div class="plano-extras-tit growth-highlight">Produto Extra: VemComer Ads</div>
+      <ul>
+        <li>Banner Principal (Topo do app): <b>contrate por semana</b> ou <b>ganhe no Premium</b>.</li>
+        <li>Banner <i>Destaques da Semana</i>: mais vendas, +85% de cliques.</li>
+        <li>Notificação Push (em breve): envie promo diretamente para clientes da região.</li>
+        <li>VemComer <b>Story</b>: publique stories para vender eventos, combos ou novidades para todo o marketplace!</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
+
