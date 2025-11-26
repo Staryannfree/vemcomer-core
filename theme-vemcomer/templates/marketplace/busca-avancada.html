@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Busca Avançada | Marketplace</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2d8659;
+      --primary-light: #eaf8f1;
+      --accent: #45c676;
+      --gray: #f7f8f9;
+      --danger: #ec5a5a;
+      --card-radius: 16px;
+      --input-radius: 12px;
+      --shadow: 0 3px 18px #2d86591a;
+      --text: #222;
+      --meta: #6b7672;
+    }
+
+    body {
+      background: var(--gray);
+      font-family: 'Montserrat', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      background: none;
+      padding: 0 0 80px 0;
+      min-height: 100vh;
+    }
+
+    .searchbar-section {
+      background: #fff;
+      border-radius: 0 0 var(--card-radius) var(--card-radius);
+      padding: 13px 16px 0 16px;
+      box-shadow: 0 4px 18px #2d865913;
+    }
+
+    .searchbar-wrap {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .searchbar {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px 15px;
+      border: 1.3px solid #dbe5dd;
+      border-radius: var(--input-radius);
+      font-size: 1.03rem;
+      outline: none;
+      background: #fafbfa;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .searchbar:focus { border: 1.5px solid var(--primary);}
+
+    .autocomplete-list, .history-list {
+      position: absolute;
+      z-index: 10;
+      left: 0; right: 0;
+      top: 46px;
+      background: #fff;
+      border: 1px solid #e4efe9;
+      border-radius: 0 0 var(--input-radius) var(--input-radius);
+      box-shadow: 0 5px 12px #2d865911;
+      max-height: 145px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .autocomplete-list li, .history-list li {
+      padding: 9px 14px;
+      font-size: 0.99rem;
+      cursor: pointer;
+      transition: background 0.13s;
+      color: var(--primary);
+      border-bottom: 1px solid #f3f7f5;
+      display: flex;
+      align-items: center;
+    }
+
+    .autocomplete-list li:last-child, .history-list li:last-child { border: none; }
+
+    .autocomplete-list li:hover, .history-list li:hover { background: var(--primary-light);}
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 4px;
+      margin-top: 9px;
+      align-items: center;
+      position: relative;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 14px;
+      padding: 4px 10px 3px 12px;
+      font-size: 0.92rem;
+      margin-right: 5px;
+      margin-bottom: 3px;
+      font-weight: 500;
+      border: 1px solid var(--primary);
+    }
+
+    .chip .closechip {
+      margin-left: 6px;
+      color: #53a470;
+      font-size: 1.16em;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .filter-switch {
+      display: flex;
+      align-items: center;
+      background: #f3f6f5;
+      border-radius: 10px;
+      padding: 5px 14px 5px 9px;
+      font-size: 0.98rem;
+      color: var(--meta);
+      font-family: 'Montserrat', Arial, sans-serif;
+      margin-right: 2px;
+    }
+
+    .filter-switch input[type="checkbox"] {
+      appearance: none;
+      width: 34px;
+      height: 15px;
+      background: #ccdcd3;
+      border-radius: 8px;
+      outline: none;
+      position: relative;
+      margin-right: 7px;
+      transition: background 0.13s;
+      cursor: pointer;
+    }
+
+    .filter-switch input[type="checkbox"]:checked { background: var(--primary);}
+
+    .filter-switch input[type="checkbox"]::before {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 12px; height: 11px;
+      background: #fff;
+      border-radius: 7px;
+      box-shadow: 0 1px 3px #2d865909;
+      transition: left 0.17s;
+    }
+
+    .filter-switch input[type="checkbox"]:checked::before { left: 19px;}
+
+    .filter-drop {
+      position: relative;
+      background: #f3f6f5;
+      border-radius: 10px;
+      padding: 5px 11px;
+      color: var(--primary);
+      font-size: 0.98em;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      border: 1px solid var(--primary-light);
+    }
+
+    .filter-drop .dropdown {
+      position: absolute;
+      top: 32px;
+      left: 0;
+      z-index: 15;
+      background: #fff;
+      box-shadow: 0 3px 12px #2d865917;
+      padding: 9px 12px;
+      border-radius: var(--input-radius);
+      min-width: 110px;
+      font-size: 0.95em;
+      display: none;
+    }
+
+    .filter-drop:hover .dropdown,
+    .filter-drop:focus-within .dropdown { display: block; }
+
+    .clear-filters {
+      color: var(--danger);
+      font-size: 0.93rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      margin-left: 5px;
+      font-weight: 600;
+      font-family: 'Montserrat', Arial, sans-serif;
+      transition: color 0.15s;
+    }
+
+    .clear-filters:hover { color: #bb3535; text-decoration: underline;}
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin: 18px 7px 0 7px;
+      border-bottom: 1.6px solid #eceeed;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 8px 0 7px 0;
+      font-size: 0.99rem;
+      font-weight: 600;
+      color: var(--primary);
+      opacity: 0.87;
+      letter-spacing: 0.01em;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      outline: none;
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: none;
+      transition: color .18s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--accent);
+      opacity: 1;
+    }
+
+    .tab-count {
+      font-size: 0.82em;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      margin-left: 4px;
+      padding: 1.5px 5px;
+    }
+
+    .results-content { min-height: 110px; margin-bottom:40px;}
+
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-top: 4px;
+    }
+
+    .result-card {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+      background: #fff;
+      border-radius: var(--card-radius);
+      padding: 14px 10px 14px 10px;
+      box-shadow: var(--shadow);
+      border: 1.1px solid #ecf6f1;
+      transition: box-shadow 0.10s;
+      position: relative;
+    }
+
+    .result-img {
+      width: 54px; height: 54px;
+      min-width: 54px; min-height:54px;
+      border-radius: 13px;
+      object-fit: cover;
+      background: #e4efe9;
+      margin-right: 5px;
+    }
+
+    .result-info { flex: 1; min-width: 0; font-family: 'Montserrat', Arial, sans-serif;}
+
+    .result-title {
+      font-weight: 700; margin-bottom: 3px;
+      color: var(--primary); font-size: 1.04rem; line-height: 1.16;
+    }
+
+    .result-meta {
+      color: var(--meta);
+      font-size: 0.90rem;
+      margin-bottom: 3px;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .badge {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.82em;
+      font-weight: 500;
+      margin-right: 4px;
+      padding: 2px 7px;
+      position: relative;
+      top: -1px;
+    }
+
+    .badge-promo {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.85em;
+      margin-left: 7px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .result-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 2px;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .tag {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.88em;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top:3px;
+    }
+
+    .action-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 0.92em;
+      transition: background 0.17s;
+    }
+
+    .action-btn.outline {
+      background: none;
+      color: var(--primary);
+      border: 1.2px solid var(--primary);
+    }
+
+    .fav-btn {
+      position: absolute;
+      top: 16px; right: 17px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.13em;
+      color: var(--primary);
+      padding: 0;
+      line-height: 1;
+    }
+
+    .fav-btn.active { color: var(--accent); }
+
+    .result-dist-time {
+      font-size: 0.92em;
+      color: var(--meta);
+      margin-bottom: 4px;
+    }
+
+    .loader {
+      text-align: center;
+      padding: 22px 0 15px 0;
+      color: #bca9ae;
+      font-size: 1.08rem;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .skeleton {
+      height: 54px;
+      background: linear-gradient(90deg,#ddeee6 30%,#f3faf6 50%,#ddeee6 70%);
+      border-radius: 15px;
+      animation: shimmer 1.4s infinite linear;
+      margin-bottom: 11px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -100px 0;}
+      100% { background-position: 200px 0;}
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #92bcac;
+      margin-top: 25px;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .empty-state img { width: 58px; opacity: 0.7;}
+
+    @media (max-width: 540px) {
+      .container { padding-bottom:75px; }
+      .result-card { flex-direction: row;}
+      .results-list { gap: 7px;}
+      .searchbar-section {padding:13px 8px 0 8px;}
+    }
+
+    @media (max-width: 410px) {
+      .result-card { flex-direction: column; align-items: flex-start;}
+      .result-img { margin: 0 0 7px 0;}
+      .container {padding-bottom:65px;}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="searchbar-section">
+      <div class="searchbar-wrap">
+        <input class="searchbar" type="text" placeholder="Busque restaurantes, pratos ou categorias..." aria-label="Busca" autocomplete="off" id="searchInput">
+        <ul class="autocomplete-list" id="autocompleteList"></ul>
+        <ul class="history-list" id="historyList"></ul>
+      </div>
+      <form class="filters" onsubmit="return false;">
+        <span class="filter-switch">
+          <input type="checkbox" id="filtro-aberto">
+          Aberto agora
+        </span>
+        <span class="filter-switch">
+          <input type="checkbox" id="filtro-entrega">
+          Entrega Grátis
+        </span>
+        <span class="filter-switch">
+          <input type="checkbox" id="filtro-rating">
+          Rating 4.5+
+        </span>
+        <span class="filter-drop">
+          Faixa de Preço ▼
+          <div class="dropdown" id="precoDropdown">
+            <label><input type="checkbox" name="price[]" value="R$"> Barato (R$)</label><br>
+            <label><input type="checkbox" name="price[]" value="R$$"> Médio (R$$)</label><br>
+            <label><input type="checkbox" name="price[]" value="R$$$"> Caro (R$$$)</label>
+          </div>
+        </span>
+        <button type="button" class="clear-filters">Limpar</button>
+      </form>
+      <div id="activeChips"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabRestaurantes">Restaurantes <span class="tab-count" id="countRestaurantes">8</span></button>
+      <button class="tab-btn" id="tabItens">Itens <span class="tab-count" id="countItens">38</span></button>
+    </div>
+    <div class="results-content" id="resultsContent">
+      <div class="results-list" id="resultsListRestaurantes">
+        <div class="result-card">
+          <img class="result-img" src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=64&q=60" alt="Restaurante A">
+          <div class="result-info">
+            <span class="badge">Entrega 30-45 min</span>
+            <span class="badge-promo">Promo: -10%</span>
+            <div class="result-title">Restaurante Verde Vida <button title="Favoritar" class="fav-btn" onclick="this.classList.toggle('active')">♥</button></div>
+            <div class="result-dist-time">1.2 km • $$ • Aberto até 23:45</div>
+            <div class="result-meta">⭐ 4.8 (780 avaliações) · Entrega Grátis</div>
+            <div class="result-tags">
+              <span class="tag">Vegano</span>
+              <span class="tag">Refeição</span>
+              <span class="tag">Popular</span>
+            </div>
+            <div class="result-actions">
+              <button class="action-btn">Ver Cardápio</button>
+              <button class="action-btn outline">Promoção</button>
+            </div>
+          </div>
+        </div>
+        <!-- ... outros restaurantes -->
+      </div>
+      <div class="results-list" id="resultsListItens" style="display:none;">
+        <div class="result-card">
+          <img class="result-img" src="https://images.unsplash.com/photo-1481931715705-36f63e4b4d01?auto=format&fit=crop&w=64&q=60" alt="Item A">
+          <div class="result-info">
+            <span class="badge-promo">20% OFF</span>
+            <div class="result-title">Tapioca Vegana <button title="Favoritar" class="fav-btn" onclick="this.classList.toggle('active')">♥</button></div>
+            <div class="result-dist-time">Restaurante VidaGo • 0.7 km</div>
+            <div class="result-meta">⭐ 4.7 · R$19,90 · Entrega Grátis</div>
+            <div class="result-tags">
+              <span class="tag">Vegano</span>
+              <span class="tag">Doce</span>
+            </div>
+            <div class="result-actions">
+              <button class="action-btn">Adicionar ao Carrinho</button>
+              <button class="action-btn outline">Ver Mais</button>
+            </div>
+          </div>
+        </div>
+        <!-- ... outros itens -->
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <img src="https://cdn.lordicon.com/kbtmbyzy.json" alt=""><br>
+        Nenhum resultado encontrado
+      </div>
+      <div class="loader" id="loader" style="display:none;">
+        Carregando resultados...
+        <div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Tabs mobile touch
+    document.getElementById('tabRestaurantes').onclick = function() {
+      this.classList.add('active');
+      document.getElementById('tabItens').classList.remove('active');
+      document.getElementById('resultsListRestaurantes').style.display = '';
+      document.getElementById('resultsListItens').style.display = 'none';
+    }
+    document.getElementById('tabItens').onclick = function() {
+      this.classList.add('active');
+      document.getElementById('tabRestaurantes').classList.remove('active');
+      document.getElementById('resultsListRestaurantes').style.display = 'none';
+      document.getElementById('resultsListItens').style.display = '';
+    }
+
+    // Limpar filtros
+    document.querySelector('.clear-filters').onclick = function() {
+      document.querySelectorAll('.filters input[type="checkbox"]').forEach(e => e.checked = false);
+      updateChips();
+    }
+
+    // Filtros ativos em chips
+    const filtroMap = {
+      "filtro-aberto": "Aberto agora",
+      "filtro-entrega": "Entrega Grátis",
+      "filtro-rating": "Rating 4.5+"
+    }
+
+    function updateChips() {
+      const chipCont = document.getElementById('activeChips');
+      chipCont.innerHTML = '';
+      Object.keys(filtroMap).forEach(id => {
+        const el = document.getElementById(id);
+        if(el.checked){
+          let div = document.createElement('div');
+          div.className = 'chip';
+          div.innerHTML = filtroMap[id] + '<span class="closechip" onclick="document.getElementById(\''+id+'\').checked=false;updateChips()">×</span>';
+          chipCont.appendChild(div);
+        }
+      });
+    }
+
+    Object.keys(filtroMap).forEach(id => {
+      document.getElementById(id).onchange = updateChips;
+    })
+
+    // Autocomplete e histórico mobile demo
+    const auto = document.getElementById('autocompleteList');
+    const histo = document.getElementById('historyList');
+    const searchEl = document.getElementById('searchInput');
+    let searchHistory = ["pizza quatro queijos", "vegano", "hambúrguer artesanal"];
+
+    searchEl.onfocus = function() {
+      if (!searchEl.value) {
+        histo.innerHTML = '';
+        searchHistory.slice(-5).reverse().forEach(t=>{
+          let li = document.createElement('li');
+          li.textContent = t;
+          li.onclick = () => {
+            searchEl.value = t;
+            histo.style.display = 'none';
+          }
+          histo.appendChild(li);
+        });
+        if(searchHistory.length) histo.style.display = 'block';
+      }
+    }
+
+    searchEl.oninput = function(e) {
+      const val = e.target.value.trim().toLowerCase();
+      histo.style.display = 'none';
+      const terms = ["Pizza", "Hambúrguer", "Marmita vegana", "Açaí", "Quiche", "Pastel de forno"];
+      auto.innerHTML = '';
+      if(val && val.length > 1){
+        auto.style.display = 'block';
+        terms.filter(t=>t.toLowerCase().includes(val))
+          .forEach(t => {
+            let li = document.createElement('li');
+            li.textContent = t;
+            li.onclick = () => {
+              searchEl.value = t;
+              auto.style.display = 'none';
+              if(!searchHistory.includes(t)) searchHistory.push(t);
+            };
+            auto.appendChild(li);
+          });
+      } else {
+        auto.style.display = 'none';
+      }
+    }
+
+    document.body.onclick = function(e){
+      if (!searchEl.contains(e.target)) {
+        auto.style.display = 'none';
+        histo.style.display = 'none';
+      }
+    };
+
+    // Update chips on first load
+    updateChips();
+  </script>
+</body>
+</html>
+
