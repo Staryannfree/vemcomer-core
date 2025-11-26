@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrinho (Side Cart)</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2d8659; --primary-light: #eaf8f1; --accent: #45c676; --gray: #f6f9f6; --danger: #ea5252; --meta: #6b7672; --text: #232a2c; --star: #facb32;}
+
+    body {background:var(--gray);font-family:'Montserrat',Arial,sans-serif;color:var(--text);margin:0;padding:0;}
+
+    #sideCart {display:flex;flex-direction:column;}
+
+    .cart-item {display:flex;align-items:flex-start;gap:9px;padding-bottom:12px;margin-bottom:10px;border-bottom:1px solid #f2f5f2;}
+
+    .cart-item:last-child {border:none;margin-bottom:0;}
+
+    .cart-img {width:52px;height:52px;border-radius:13px;object-fit:cover;background:#eaf8f1;}
+
+    .cart-infos {flex:1;min-width:0;}
+
+    .cart-nome {font-weight:700;color:#232a2c;font-size:1.02em;margin-bottom:2px;}
+
+    .cart-mods {color:#2d8659;font-size:.93em;margin-bottom:1px;}
+
+    .cart-qtdpreco {display:flex;align-items:center;justify-content:space-between;}
+
+    .cart-qtdbtns {display:inline-flex;align-items:center;gap:4px;}
+
+    .cart-qtdbtns button {background:#eaf8f1;border:none;width:26px;height:26px;border-radius:6px;color:#2d8659;font-weight:900;font-size:1.1em;cursor:pointer;}
+
+    .cart-qtdbtns span {margin:0 3px;font-weight:700;}
+
+    .cart-item-preco {font-weight:700;color:#2d8659;}
+
+    .cart-remove {background:none;border:none;color:#e06262;font-size:1.05em;cursor:pointer;margin-left:2px;padding:2px;}
+
+    @media (max-width:480px){
+      #sideCart{right:0;max-width:100vw;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Carrinho Lateral -->
+  <div id="sideCart" style="display:none;position:fixed;z-index:9999;top:0;right:0;width:95vw;max-width:370px;height:100vh;background:#fff;border-radius:18px 0 0 18px;box-shadow:-4px 0 18px #232a2c33;transition:right .22s;padding:0;flex-direction:column;">
+    <div style="padding:20px 18px 14px 18px; border-bottom:1.5px solid #f2f5f2;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:1.13em;font-weight:700;color:#232a2c;">Seu Carrinho</span>
+      <button onclick="document.getElementById('sideCart').style.display='none'" style="background:none;border:none;font-size:1.28em;color:#bbb;cursor:pointer;">×</button>
+    </div>
+    <!-- Itens -->
+    <div id="sideCartItens" style="padding:9px 14px 0 14px;max-height:59vh;overflow-y:auto;">
+      <!-- Exemplo de item no carrinho: cada bloco abaixo repete por item -->
+      <div class="cart-item">
+        <img src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=52&q=80" alt="Foto Prato" class="cart-img">
+        <div class="cart-infos">
+          <div class="cart-nome">Bruschetta Vegana</div>
+          <div class="cart-mods">Tofu Crocante, +Queijo vegano</div>
+          <div class="cart-qtdpreco">
+            <span class="cart-qtdbtns"><button onclick="alterarQtd(this, -1)">-</button><span>1</span><button onclick="alterarQtd(this, 1)">+</button></span>
+            <span class="cart-item-preco">R$ 15,90</span>
+          </div>
+        </div>
+        <button onclick="removerItem(this)" class="cart-remove">🗑️</button>
+      </div>
+      <!-- ...outros itens -->
+    </div>
+    <!-- Subtotal e ação -->
+    <div style="margin-top:auto;padding:16px 18px 18px 18px;background:#f8faf8;border-top:1.5px solid #f2f5f2;">
+      <div style="display:flex;justify-content:space-between;font-size:1.07em;font-weight:700;color:#232a2c;">
+        <span>Subtotal</span>
+        <span id="sideCartSubtotal">R$ 35,80</span>
+      </div>
+      <button style="margin-top:16px;width:100%;background:#2d8659;color:#fff;font-weight:700;font-size:1.04em;padding:13px 0;border:none;border-radius:9px;box-shadow:0 2px 18px #45c67617;cursor:pointer;">Finalizar Pedido</button>
+    </div>
+  </div>
+
+  <script>
+    // Exemplo de lógica JS para aumentar/diminuir/remover (substitua pelos dados do seu carrinho real)
+    function alterarQtd(btn, dif) {
+      let span = btn.parentNode.querySelector('span');
+      let qtd = parseInt(span.textContent) + dif;
+      if (qtd < 1) return;
+      span.textContent = qtd;
+      // Atualize valores totais reais aqui e via API/back
+      atualizarSubtotal();
+    }
+
+    function removerItem(btn) {
+      btn.closest('.cart-item').remove();
+      atualizarSubtotal();
+    }
+
+    function atualizarSubtotal() {
+      // Exemplo básico - na real, percorra itens e some valores
+      let total = 15.90 + 19.90; // Substitua pelo real
+      document.getElementById('sideCartSubtotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+
+    // Para abrir o carrinho: document.getElementById('sideCart').style.display='flex'
+  </script>
+</body>
+</html>
+
