@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Restaurante - Delivery Pro</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; margin: 0; color: #232a2c;}
+
+    .dash-container { max-width: 560px; margin: 0 auto; padding: 17px 10px 38px 10px; }
+
+    .dash-title { font-size: 1.21em; font-weight: 700; color: #2d8659; margin-bottom: 17px;}
+
+    .dash-row { display: flex; flex-wrap: wrap; gap:18px;margin-bottom:19px;}
+
+    .dash-card {
+
+      background: #fff; border-radius: 14px; box-shadow: 0 2px 18px #2d865910;
+
+      padding: 15px 15px 13px 15px; min-width: 0; flex: 1 1 168px; display:flex;flex-direction:column;align-items:flex-start;
+
+    }
+
+    .card-label { color:#6b7672;font-size:.97em;margin-bottom:5px;}
+
+    .card-value { font-size: 1.36em; font-weight: 700; color: #2d8659;}
+
+    .card-sub { font-size:.99em; color: #b5c6ae; margin-top:2px;}
+
+    .card-btn { background: #2d8659; color: #fff; border:none; border-radius: 8px; font-size: .98em; padding: 7px 13px; cursor:pointer;font-weight:700;margin-top:8px;}
+
+    .card-btn.toggle { background: #facb32; color: #232a2c;}
+
+    .card-status {margin-top:8px;font-weight:700;font-size:.99em;}
+
+    .st-aberto { color:#2d8659;}
+
+    .st-fechado { color:#ea5252;}
+
+    .card-bar {background:#eaf8f1;height:10px;width:100%;border-radius:9px;margin:8px 0 1px 0;position:relative;}
+
+    .card-bar-inner {height:100%;background:#2d8659;border-radius:9px;transition:width .21s;}
+
+    .bar-text {font-size:.96em;color:#333;position:absolute;top:10px;left:2px;}
+
+    .analytics-wrap {background:#fff;border-radius:14px;box-shadow:0 2px 18px #2d865916;padding:14px 12px 10px 12px;margin-bottom:19px;}
+
+    .analytics-title {color:#6b7672;font-weight:700;font-size:1.05em;margin-bottom:9px;}
+
+    .analytics-row {display:flex;gap:18px;}
+
+    .analytics-metric{flex:1;text-align:center;}
+
+    .metric-main {font-size:1.22em;font-weight:700;color:#2d8659;}
+
+    .metric-label {color:#6b7672;font-size:.97em;}
+
+    .metric-sub {font-size:.97em;color:#3176da;margin-top:2px;}
+
+    .pro-features {background:#fffbe8;border-radius:13px;box-shadow:0 1px 18px #facb3212;padding:14px 16px 10px 16px;margin-bottom:23px;}
+
+    .pro-features-title {color:#b09126;font-weight:900;font-size:1.09em;margin-bottom:9px;}
+
+    .pro-features-list {margin:0;padding-left:0; list-style:none;}
+
+    .pro-features-list li {margin-bottom:10px;display:flex;align-items:flex-start;gap:7px;font-size:1em;}
+
+    .pro-icon {font-size:1.19em;margin-right:2px;}
+
+    .feature-widgets {display:grid;grid-template-columns:1fr 1fr;gap:17px;}
+
+    .ft-widget {background:#f7fcf7;border-radius:9px;padding:12px 11px 11px 11px;box-shadow:0 1px 8px #42c6760e;min-height:100px;}
+
+    .ft-title{font-weight:700;color:#2d8659;font-size:1em;margin-bottom:3px;}
+
+    .ft-desc{font-size:.97em;color:#444;}
+
+    .not-included {color:#ea5252;font-weight:700;margin:14px 0 10px 0;}
+
+    .btn-growth {background:#45c676;color:#fff;border:none;border-radius:24px;font-weight:800;font-size:1em;padding:11px 31px;margin-top:11px;cursor:pointer;}
+
+    @media (max-width:580px) {
+
+      .dash-container {padding:8px 2vw;}
+
+      .dash-row{flex-direction:column;gap:8px;}
+
+      .feature-widgets{grid-template-columns:1fr;}
+
+      .pro-features{padding:10px 5vw;}
+
+    }
+
+  </style>
+</head>
+<body>
+  <div class="dash-container">
+    <div class="dash-title">Painel Delivery Pro</div>
+    <!-- Resumo de vendas -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Vendas Hoje</div>
+        <div class="card-value">R$ 489,00</div>
+        <div class="card-sub">12 pedidos</div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Semana</div>
+        <div class="card-value">R$ 3.210,60</div>
+        <div class="card-sub">49 pedidos</div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Mês</div>
+        <div class="card-value">R$ 12.978,20</div>
+        <div class="card-sub">237 pedidos</div>
+      </div>
+    </div>
+    <!-- Status loja -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Status da Loja</div>
+        <div class="card-status st-aberto" id="lojaStatusTxt">ABERTO</div>
+        <button class="card-btn toggle" onclick="toggleLojaStatus()">Fechar Agora</button>
+      </div>
+      <div class="dash-card" style="flex:2;">
+        <div class="card-label">Cardápio do Plano PRO</div>
+        <div class="card-bar">
+          <div class="card-bar-inner" id="planoBar" style="width:34%"></div>
+          <span class="bar-text">34 itens adicionados</span>
+        </div>
+        <div class="card-sub" style="margin:7px 0 2px 0;">Aqui não tem limite para seus pratos e combos!</div>
+        <div class="plan-info" id="planoInfo">
+          Você está no plano <span class="plan-type">Delivery Pro</span>.
+        </div>
+      </div>
+    </div>
+    <!-- Analytics rápidos -->
+    <div class="analytics-wrap">
+      <div class="analytics-title">WhatsApp Analytics Pro</div>
+      <div class="analytics-row">
+        <div class="analytics-metric">
+          <div class="metric-main" style="color:#3176da;">1361</div>
+          <div class="metric-label">Visualizações</div>
+        </div>
+        <div class="analytics-metric">
+          <div class="metric-main">221</div>
+          <div class="metric-label">Cliques no WhatsApp</div>
+        </div>
+        <div class="analytics-metric">
+          <div class="metric-main" style="color:#ea5252;">16,2%</div>
+          <div class="metric-label">Conversão</div>
+          <div class="metric-sub">Zaps/Visualizações</div>
+        </div>
+      </div>
+    </div>
+    <!-- Diferenciais e widgets -->
+    <div class="pro-features">
+      <div class="pro-features-title">O Que só o Delivery Pro tem:</div>
+      <ul class="pro-features-list">
+        <li><span class="pro-icon">🤖</span> Pedido WhatsApp 100% automatizado</li>
+        <li><span class="pro-icon">📅</span> Gestão de reservas fácil pelo painel e WhatsApp</li>
+        <li><span class="pro-icon">🍔</span> Cardápio COMPLETO: Modificadores, adicionais, combos e tudo ilimitado</li>
+        <li><span class="pro-icon">🕙</span> Horários automáticos e agendamento de pedidos</li>
+        <li><span class="pro-icon">🛵</span> Frete calculado por bairro/KM, direto no painel</li>
+      </ul>
+      <div class="feature-widgets">
+        <div class="ft-widget">
+          <div class="ft-title">Solicitação de Reserva</div>
+          <div class="ft-desc">Cliente seleciona data/hora e recebe mensagem pronta no WhatsApp:<br>
+            <span style="color:#232a2c;"><i>"Quero reservar 4 pessoas para hoje às 20h."</i></span>
+          </div>
+        </div>
+        <div class="ft-widget">
+          <div class="ft-title">Comanda WhatsApp Automática</div>
+          <div class="ft-desc">Pedido já soma valor, taxas e endereço — pronto para impressão!</div>
+        </div>
+        <div class="ft-widget">
+          <div class="ft-title">Cardápio Ilimitado e Modificadores</div>
+          <div class="ft-desc">Configure combos, adicionais e características (ponto, tamanho, etc.).</div>
+        </div>
+        <div class="ft-widget">
+          <div class="ft-title">Entrega Inteligente</div>
+          <div class="ft-desc">Frete calculado e incluído automaticamente no pedido do cliente.</div>
+        </div>
+      </div>
+      <div class="not-included">
+        <span>❌ Não inclui:</span>
+        <ul style="margin-top:7px;margin-bottom:0">
+          <li>Relatórios de vendas/analytics detalhados</li>
+          <li>Desconto especial em Ads, Banners ou Stories</li>
+        </ul>
+        <div style="margin-top:5px;font-size:.98em;color:#232a2c;">Para isso, faça upgrade para o Growth Premium.</div>
+        <button class="btn-growth" onclick="alert('Solicite upgrade para Growth Premium!')">Quero o Growth/Premium</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Status Aberto/Fechado simulado
+    let aberto = true;
+    function toggleLojaStatus() {
+      aberto = !aberto;
+      document.getElementById("lojaStatusTxt").textContent = aberto ? "ABERTO" : "FECHADO";
+      document.getElementById("lojaStatusTxt").className = aberto?"card-status st-aberto":"card-status st-fechado";
+      document.querySelector(".card-btn.toggle").textContent = aberto ? "Fechar Agora" : "Abrir Agora";
+    }
+  </script>
+</body>
+</html>
+

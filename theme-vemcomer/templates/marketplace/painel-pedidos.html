@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Pedidos - Kanban Completo</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:600,500&display=swap" rel="stylesheet">
+  <style>
+    body {background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; margin: 0; color: #232a2c;}
+
+    .header-main { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 13px 5px 13px;}
+
+    .kanban-title { font-size:1.17em;font-weight:900;color:#2d8659; letter-spacing:.01em;}
+
+    .kanban-controls {display:flex;gap:17px;flex-wrap:wrap;}
+
+    .kanban-controls input, .kanban-controls select {border:1px solid #cdf9e0;border-radius:6px;padding:7px 9px;font-size:.99em;}
+
+    .action-btn {background:#2d8659;color:#fff;font-weight:700;border:none;border-radius:8px;padding:7px 15px;cursor:pointer;box-shadow:0 2px 7px #2d865925;}
+
+    .action-btn:active {background:#45c676;}
+
+    .kanban-board {
+
+      display: flex; gap:22px; padding: 6px 0 38px 0; overflow-x: auto; min-height: 580px;
+
+    }
+
+    .kanban-column {
+
+      background: #fff; border-radius: 16px; box-shadow: 0 4px 16px #2d865916; min-width: 292px; max-width:370px;
+
+      padding: 15px 13px 13px 13px; display: flex; flex-direction: column;position:relative;
+
+    }
+
+    .kanban-col-title {
+
+      font-weight: 900; color: #2d8659; font-size: 1.07em; margin-bottom:10px; letter-spacing:.01em; display: flex; align-items: center; gap:9px;
+
+    }
+
+    .kanban-col-title .alert-dot {
+
+      width:12px; height:12px; border-radius:50%;background:#fa7e1e;
+
+      animation:pulse 1.3s infinite; display: inline-block; }
+
+    @keyframes pulse {0%,100%{opacity:.35;} 50%{opacity:1;}}
+
+    .kanban-actions-right {
+
+      position:absolute;top:14px;right:11px;display:flex;gap:7px;
+
+    }
+
+    .filter-badge {
+
+      background:#eaf8f1;color:#2d8659;padding:2px 11px;border-radius:7px;font-size:.97em;margin-left:4px;font-weight:700;cursor:pointer;
+
+      user-select:none;border:2px solid #fff;
+
+    }
+
+    .filter-badge.selected,.filter-badge:hover{background:#2d8659;color:#fff;}
+
+    .pedido-card {
+
+      border-radius: 13px; background: #fff; box-shadow: 0 1px 13px #eaf8f11a;
+
+      padding: 14px 13px 10px 13px; margin-bottom: 13px; position: relative;
+
+      border-left: 5px solid #2d8659; display: flex; flex-direction: column; cursor:pointer;transition:.15s;}
+
+    .pedido-card:hover {box-shadow:0 3px 17px #2d86592b;background:#f7fcf7;}
+
+    .pedido-header {font-weight:800; color:#3176da; font-size:1em;}
+
+    .pedido-horario {color:#6b7672;font-size:.92em;}
+
+    .pedido-info {font-size:.97em;color:#888;margin-bottom:2px;}
+
+    .pedido-itens {font-size:.97em;color:#232a2c; margin:6px 0 2px 0;}
+
+    .pedido-mods { color: #45c676; font-size: .93em;}
+
+    .pedido-total {font-weight:900;color:#2d8659;font-size:1.07em;}
+
+    .pedido-badges {margin:4px 0 2px 0;}
+
+    .badge {display:inline-block;background:#eaf8f1;color:#2d8659;font-weight:700;border-radius:7px;font-size:.92em;padding:2px 10px;margin-right:3px;}
+
+    .badge.urgente {background:#fa7e1e;color:#fff;}
+
+    .badge.agendado {background:#3176da;color:#fff;}
+
+    .badge.retirada {background:#f6f9f6;color:#2d8659;border:1px solid #2d8659;}
+
+    .badge.entregue {background:#facb32;color:#232a2c;}
+
+    .badge.pago {background:#cdf9e0;color:#24624c;}
+
+    .badge.pag-pendente {background:#ffe7e7;color:#ea5252;}
+
+    .badge.novo {background:#fffbe2;color:#fa7e1e;}
+
+    .pedido-actions {display:flex;gap:7px;margin-top:8px;}
+
+    .pe-btn {background:#2d8659;color:#fff;font-weight:700;border:none;border-radius:7px;padding:6px 14px;cursor:pointer;font-size:.98em;transition:.11s;}
+
+    .pe-btn.ret {background:#fa8888;color:#fff;}
+
+    .pe-btn.done {background:#facb32;color:#232a2c;}
+
+    .pe-btn.info {background:#3176da;color:#fff;}
+
+    .pedido-alerta {background:#fffae1;color:#b47c07;border-radius:8px;padding:3px 9px;font-size:.95em;font-weight:800;display:inline-block;margin-bottom:4px;}
+
+    .pedido-observacao{background:#eaf8f1;color:#2d8659;border-radius:5px;padding:4px 7px;font-size:.95em;margin-top:3px;}
+
+    /* Histórico */
+
+    .kanban-history {background:#f8faf8;}
+
+    .pedido-card.hist {border-left:4px solid #b5c6ae;background:#f5f6f4;}
+
+    /* Modal */
+
+    .modal-bg {display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0007;z-index:9999;align-items:center;justify-content:center;}
+
+    .modal-wrap { background:#fff;border-radius:15px;max-width:350px;width:93vw;padding:22px 22px 20px 22px;box-shadow:0 9px 38px #2d865955;position:relative;}
+
+    .modal-close {position:absolute;right:11px;top:10px;background:none;border:none;font-size:1.29em;color:#aaa;cursor:pointer;}
+
+    .modal-title {font-weight:700;color:#2d8659;font-size:1.11em;margin-bottom:11px;}
+
+    .modal-content {color:#232a2c;font-size:.98em;}
+
+    @media (max-width:1050px){.kanban-board{gap:14px;}}
+
+    @media (max-width:670px){.kanban-board{gap:7px;min-width:480px;}}
+
+    @media (max-width:600px){.kanban-column{min-width:84vw;}}
+
+  </style>
+</head>
+<body>
+  <div class="header-main">
+    <span class="kanban-title">Gestão de Pedidos (Kanban)</span>
+    <div class="kanban-controls">
+      <input type="text" placeholder="Buscar cliente, ID, item..." oninput="filtraPedidos(this.value)">
+      <select onchange="filtroEntrega(this.value)">
+        <option value="">Todos os tipos</option>
+        <option value="delivery">Só Delivery</option>
+        <option value="retirada">Só Retirada</option>
+      </select>
+      <button class="action-btn" onclick="finalizarTudo()">Finalizar Todos</button>
+    </div>
+  </div>
+  <div class="kanban-board">
+    <!-- Novos -->
+    <div class="kanban-column" id="col-novos">
+      <div class="kanban-col-title">
+        Novos Pedidos
+        <span class="alert-dot"></span>
+        <button style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1.1em;" title="Tocar alerta sonoro" onclick="playAlert()">🔔</button>
+      </div>
+      <!-- Exemplo -->
+      <div class="pedido-card" id="pedido1" data-tipo="delivery">
+        <div class="pedido-badges">
+          <span class="badge novo">Novo</span>
+          <span class="badge urgente">Urgente</span>
+          <span class="badge">Delivery</span>
+          <span class="badge pag-pendente">Pagamento: Pix pendente</span>
+        </div>
+        <div class="pedido-header">#2782 • João Silva</div>
+        <span class="pedido-horario">Hoje, 12:42</span>
+        <div class="pedido-info">Rua 10, Centro • (62) 90000-0000</div>
+        <div class="pedido-itens">- [translate:Pizza Marguerita] x1 
+          <span class="pedido-mods">[Borda Recheada]</span><br>
+          - [translate:Limonada] x1
+        </div>
+        <span class="pedido-observacao">Observação: sem cebola</span>
+        <div class="pedido-total">Total: R$ 59,80</div>
+        <div class="pedido-actions">
+          <button class="pe-btn info" onclick="showModal('pedido1', event)">Detalhes</button>
+          <button class="pe-btn" onclick="avancaStatus(this, 'col-preparo')">Em Preparo</button>
+        </div>
+      </div>
+      <!-- Outro pedido -->
+      <div class="pedido-card" id="pedido2" data-tipo="retirada">
+        <div class="pedido-badges">
+          <span class="badge novo">Novo</span>
+          <span class="badge agendado">Agendado</span>
+          <span class="badge retirada">Retirada</span>
+          <span class="badge pago">Pago: Cartão</span>
+        </div>
+        <div class="pedido-header">#2783 • Carlos Lacerda</div>
+        <span class="pedido-horario">Hoje, 12:48</span>
+        <div class="pedido-info">Av. Brás, Loja 7 • (62) 91111-1111</div>
+        <div class="pedido-itens">- [translate:Tapioca] x2 <span class="pedido-mods">[Coco, Mel]</span></div>
+        <span class="pedido-observacao">Observação: chegada em 13:00</span>
+        <div class="pedido-total">Total: R$ 19,90</div>
+        <div class="pedido-actions">
+          <button class="pe-btn info" onclick="showModal('pedido2', event)">Detalhes</button>
+          <button class="pe-btn" onclick="avancaStatus(this, 'col-preparo')">Em Preparo</button>
+        </div>
+      </div>
+    </div>
+    <!-- Em Preparo -->
+    <div class="kanban-column" id="col-preparo">
+      <div class="kanban-col-title">Em Preparo 🍳</div>
+      <div class="pedido-card" id="pedido3" data-tipo="retirada">
+        <div class="pedido-badges">
+          <span class="badge retirada">Retirada</span>
+          <span class="badge pago">Pago: Pix</span>
+        </div>
+        <div class="pedido-header">#2780 • Mariana Souza</div>
+        <span class="pedido-horario">Hoje, 12:28</span>
+        <div class="pedido-info">Rua B, Setor Oeste</div>
+        <div class="pedido-itens">- [translate:Feijoada Vegana] x1 </div>
+        <div class="pedido-total">Total: R$ 29,00</div>
+        <div class="pedido-actions">
+          <button class="pe-btn ret" onclick="avancaStatus(this, 'col-novos')">Voltar</button>
+          <button class="pe-btn" onclick="avancaStatus(this, 'col-saiu')">Saiu/Pronto</button>
+        </div>
+      </div>
+      <div class="pedido-card" id="pedido4" data-tipo="delivery">
+        <div class="pedido-badges">
+          <span class="badge urgente">Urgente</span>
+          <span class="badge">Delivery</span>
+          <span class="badge pag-pendente">Pagamento: Dinheiro</span>
+        </div>
+        <div class="pedido-header">#2781 • Carla Beatriz</div>
+        <span class="pedido-horario">Hoje, 12:34</span>
+        <div class="pedido-info">Av. Goiás, 1052</div>
+        <div class="pedido-itens">- [translate:Marmitex Fitness] x1 <span class="pedido-mods">[Salada extra]</span></div>
+        <span class="pedido-observacao"> deixar na portaria</span>
+        <div class="pedido-total">Total: R$ 42,00</div>
+        <div class="pedido-actions">
+          <button class="pe-btn ret" onclick="avancaStatus(this, 'col-novos')">Voltar</button>
+          <button class="pe-btn" onclick="avancaStatus(this, 'col-saiu')">Saiu/Pronto</button>
+        </div>
+      </div>
+    </div>
+    <!-- Saiu/Pronto -->
+    <div class="kanban-column" id="col-saiu">
+      <div class="kanban-col-title">Saiu/Pronto 🛵</div>
+      <div class="pedido-card" id="pedido5" data-tipo="delivery">
+        <div class="pedido-badges">
+          <span class="badge">Delivery</span>
+          <span class="badge pago">Pago: Cartão</span>
+          <span class="badge">Motoboy: José</span>
+        </div>
+        <div class="pedido-header">#2779 • Vinicius Pires</div>
+        <span class="pedido-horario">Hoje, 12:17</span>
+        <div class="pedido-info">Rua ZYX, Ap 404</div>
+        <div class="pedido-itens">- [translate:Moamba de Frango] x2</div>
+        <span class="pedido-observacao"> Avisar ao chegar</span>
+        <div class="pedido-total">Total: R$ 57,90</div>
+        <div class="pedido-actions">
+          <button class="pe-btn ret" onclick="avancaStatus(this, 'col-preparo')">Voltar</button>
+          <button class="pe-btn done" onclick="avancaStatus(this, 'col-history', true)">Finalizar</button>
+        </div>
+      </div>
+    </div>
+    <!-- Concluídos -->
+    <div class="kanban-column kanban-history" id="col-history">
+      <div class="kanban-col-title">Histórico ✅</div>
+      <div class="pedido-card hist" id="pedido6" data-tipo="delivery">
+        <div class="pedido-badges">
+          <span class="badge entregue">Entregue</span>
+          <span class="badge pago">Pago: Cartão</span>
+        </div>
+        <div class="pedido-header">#2777 • Daniel Lima</div>
+        <span class="pedido-horario">Hoje, 11:55</span>
+        <div class="pedido-itens">- [translate:Risoto de Cogumelos] x1</div>
+        <div class="pedido-info">Rua 5, Setor Central</div>
+        <div class="pedido-total">Total: R$ 34,90</div>
+      </div>
+      <div class="pedido-card hist" id="pedido7" data-tipo="retirada">
+        <div class="pedido-badges">
+          <span class="badge retirada">Retirada</span>
+          <span class="badge entregue">Pronto</span>
+          <span class="badge pago">Pago: Pix</span>
+        </div>
+        <div class="pedido-header">#2776 • Laura S.</div>
+        <span class="pedido-horario">Hoje, 11:41</span>
+        <div class="pedido-itens">- [translate:Bruschetta] x2</div>
+        <div class="pedido-total">Total: R$ 18,00</div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal Detalhes Pedido -->
+  <div class="modal-bg" id="detalheModalBg">
+    <div class="modal-wrap">
+      <button class="modal-close" onclick="fechaModal()">×</button>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+  <!-- Alerta sonoro -->
+  <audio id="alertaSonoro" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12c3b0dc4b.mp3"></audio>
+  <script>
+    // Troca coluna
+    function avancaStatus(btn, target, historico){
+      var pedido = btn.closest('.pedido-card');
+      pedido.classList.toggle('hist', target === 'col-history');
+      document.getElementById(target).appendChild(pedido);
+      var alerta = pedido.querySelector('.pedido-alerta');
+      if(alerta) alerta.remove();
+    }
+    // Alerta sonoro
+    function playAlert(){ document.getElementById('alertaSonoro').play(); }
+    // Detalhes do pedido
+    function showModal(pid, event){
+      event.stopPropagation();
+      const card = document.getElementById(pid);
+      document.getElementById('modalTitle').textContent = card.querySelector('.pedido-header').textContent;
+      let content = '';
+      content += '<b>Cliente:</b> ' + (card.querySelector('.pedido-header').textContent.split('•')[1]||'') + '<br>';
+      content += '<b>Horário:</b> ' + card.querySelector('.pedido-horario').textContent + '<br>';
+      content += '<b>Itens:</b> <div>' + card.querySelector('.pedido-itens').innerHTML + '</div>';
+      const mods = card.querySelector('.pedido-mods'); if(mods) content += '<div style="color:#45c676">' + mods.textContent + '</div>';
+      const obs = card.querySelector('.pedido-observacao'); if(obs) content += '<div style="color:#2d8659;">Obs.: ' + obs.textContent + '</div>';
+      content += (card.querySelector('.pedido-info')?'<div style="margin-top:5px;"><b>Contato:</b> '+card.querySelector('.pedido-info').textContent+'</div>':'');
+      content += '<b>Total:</b> ' + card.querySelector('.pedido-total').textContent + '<br>';
+      document.getElementById('modalContent').innerHTML = content;
+      document.getElementById('detalheModalBg').style.display = 'flex';
+    }
+    function fechaModal(){document.getElementById('detalheModalBg').style.display = 'none';}
+    // Filtro pesquisa geral
+    function filtraPedidos(val){
+      val = val.trim().toLowerCase();
+      Array.from(document.querySelectorAll('.pedido-card')).forEach(card => {
+        card.style.display = (!val || card.textContent.toLowerCase().includes(val)) ? '' : 'none';
+      });
+    }
+    // Filtro tipo entrega
+    function filtroEntrega(tipo){
+      Array.from(document.querySelectorAll('.pedido-card')).forEach(card => {
+        card.style.display = (!tipo || card.getAttribute('data-tipo') === tipo) ? '' : 'none';
+      });
+    }
+    // Finaliza todos
+    function finalizarTudo(){
+      document.querySelectorAll('#col-preparo .pedido-card, #col-saiu .pedido-card').forEach(card=>{
+        card.classList.add('hist');
+        document.getElementById('col-history').appendChild(card);
+      });
+      playAlert();
+      alert('Todos os pedidos em preparo/saíram foram finalizados (simulação)');
+    }
+  </script>
+</body>
+</html>
+
