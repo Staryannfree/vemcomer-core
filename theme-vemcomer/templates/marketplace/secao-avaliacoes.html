@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seção de Avaliações</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2d8659; --primary-light: #eaf8f1; --accent: #45c676; --gray: #f6f9f6; --danger: #ea5252; --meta: #6b7672; --text: #232a2c; --star: #facb32;}
+
+    body {background:var(--gray);font-family:'Montserrat',Arial,sans-serif;color:var(--text);margin:0;padding:0;}
+
+    .avaliacao-card {
+      background: #fff;
+      border-radius: 9px;
+      padding: 11px 10px 7px 10px;
+      margin-bottom: 13px;
+      box-shadow: 0 1px 5px #0001;
+      border: 1px solid #eff6f1;
+      font-size: 1em;
+    }
+
+    .avaliador-nome{font-weight:700;color:var(--primary);}
+
+    .avaliador-rating{color:#facb32;font-size:1.08em;}
+
+    .avaliacao-texto{color:#444;margin-top:3px;}
+
+    .rest-resposta{background:#eaf8f1;color:#2d8659;border-radius:7px;padding:5px 8px;margin-top:8px;font-size:.98em;}
+  </style>
+</head>
+<body>
+  <section style="max-width:480px;margin:0 auto 28px auto;padding:0 8px;">
+    <h2 style="font-size:1.1em;font-weight:700;color:#2d8659;">Avaliações</h2>
+    <!-- Lista de Avaliações -->
+    <div id="avaliacoesLista">
+      <div class="avaliacao-card">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span class="avaliador-nome">Carlos Silva</span>
+          <span class="avaliador-rating">★★★★★</span>
+          <span style="color:#aaa;font-size:.9em;">há 2 dias</span>
+          <span style="background:#cdf9e0;color:#2d8659;font-size:.8em;border-radius:7px;padding:1px 9px;margin-left:5px;">Verificada</span>
+        </div>
+        <div class="avaliacao-texto">Comida deliciosa, chegou rápido e atendimento ótimo!</div>
+        <div class="rest-resposta">Restaurante: Obrigado! Volte sempre!</div>
+      </div>
+      <div class="avaliacao-card">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span class="avaliador-nome">Juliana Bento</span>
+          <span class="avaliador-rating">★★★★☆</span>
+          <span style="color:#aaa;font-size:.9em;">há 7 dias</span>
+        </div>
+        <div class="avaliacao-texto">Risoto estava excelente, só o suco veio morno.</div>
+      </div>
+      <!-- ... outras avaliações -->
+    </div>
+    <!-- Formulário Avaliação -->
+    <div id="formAvaliacaoBloco" style="background:#f7fcf6;border-radius:12px;padding:16px 14px;margin-top:20px;box-shadow:0 1px 7px #2d865914;display:none;">
+      <form id="formAvaliacao" style="display:flex;flex-direction:column;gap:11px;">
+        <div style="font-weight:700;color:#2d8659;">Avalie sua experiência</div>
+        <div>
+          <label>
+            <input type="radio" name="estrela" value="5" checked> ★★★★★
+          </label>
+          <label>
+            <input type="radio" name="estrela" value="4"> ★★★★☆
+          </label>
+          <label>
+            <input type="radio" name="estrela" value="3"> ★★★☆☆
+          </label>
+          <label>
+            <input type="radio" name="estrela" value="2"> ★★☆☆☆
+          </label>
+          <label>
+            <input type="radio" name="estrela" value="1"> ★☆☆☆☆
+          </label>
+        </div>
+        <textarea required placeholder="Comentário (opcional)" style="border-radius:7px;border:1.1px solid #cdf9e0;padding:8px 9px;min-height:35px;"></textarea>
+        <button type="submit" style="background:#2d8659;color:#fff;font-weight:700;border:none;padding:10px 0;border-radius:8px;font-size:1.01em;cursor:pointer;">Enviar Avaliação</button>
+      </form>
+      <div id="avalOk" style="display:none;color:#2d8659;text-align:center;font-weight:700;margin-top:12px;">Avaliação enviada, obrigado!</div>
+    </div>
+    <!-- Botão para simular "pedido finalizado" -->
+    <div style="margin:18px 0 0 0;text-align:right;">
+      <button onclick="document.getElementById('formAvaliacaoBloco').style.display='block'" style="background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;font-weight:600;">Avaliar restaurante</button>
+    </div>
+  </section>
+
+  <script>
+    // Envio fake do formulário para simulação
+    document.getElementById('formAvaliacao').onsubmit = function(e){
+      e.preventDefault();
+      document.getElementById('avalOk').style.display = '';
+      setTimeout(function(){
+        document.getElementById('avalOk').style.display = 'none';
+        document.getElementById('formAvaliacaoBloco').style.display = 'none';
+        document.getElementById('formAvaliacao').reset();
+        // Aqui você pode adicionar lógica para atualizar lista/buscar novas avaliações via API
+      },1400);
+    };
+  </script>
+</body>
+</html>
+
