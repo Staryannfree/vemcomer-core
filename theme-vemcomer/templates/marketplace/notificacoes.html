@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notificações</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; color: #232a2c; margin: 0;}
+
+    .notif-container { max-width: 430px; margin: 0 auto; padding: 28px 12px 35px 12px; background: #fff; border-radius: 0 0 20px 20px; box-shadow: 0 7px 32px #232a2c13;}
+
+    h1 { font-size: 1.13em; font-weight: 700; color: #2d8659; margin-bottom: 18px;}
+
+    .notif-list {display: flex; flex-direction: column; gap: 14px;}
+
+    .notif-card {
+
+      background: #f8faf8; border-radius: 12px; box-shadow: 0 1px 8px #2d865910;
+
+      padding: 12px 11px; border:1px solid #eaf8f1; display:flex; gap:11px;
+
+      align-items:flex-start; position:relative;
+
+      animation:fadeIn .5s;
+
+    }
+
+    .notif-icone { font-size: 1.33em; width:40px; text-align:center; color: #2d8659; flex-shrink:0; margin-top:2px;}
+
+    .notif-content { flex:1;}
+
+    .notif-titulo { font-weight:700; color:#232a2c; font-size:1em; margin-bottom:3px;}
+
+    .notif-msg { color:#444; font-size:.98em;}
+
+    .notif-time { color:#999; font-size:.91em; margin-top:4px;}
+
+    .notif-status {display:inline-block;font-size:.92em;font-weight:600;border-radius:8px;padding:2px 10px;margin-top:3px;}
+
+    .notif-status.st-preparando { background:#eaf8f1; color:#2d8659;}
+
+    .notif-status.st-pronto { background:#e5f7dc; color:#35ad51;}
+
+    .notif-status.st-transito { background:#e5edff; color:#3176da;}
+
+    .notif-status.st-entregue { background:#dbf7ea; color:#35ad51;}
+
+    .notif-status.st-cancelado { background:#ffe1e1; color:#ea5252;}
+
+    .notif-close {position:absolute;right:7px;top:7px;background:none;border:none;color:#bbb;font-size:1.2em;cursor:pointer;}
+
+    .notif-close:hover { color:#ea5252;}
+
+    @media (max-width:430px) {.notif-container{padding:15px 3vw 26px 3vw;}.notif-card{padding:10px 6px;}}
+
+    @keyframes fadeIn {from { opacity: 0;} to { opacity: 1;}}
+
+  </style>
+</head>
+<body>
+  <div class="notif-container">
+    <h1>Notificações</h1>
+    <div class="notif-list" id="notifList">
+      <div class="notif-card">
+        <span class="notif-icone">🛵</span>
+        <div class="notif-content">
+          <div class="notif-titulo">Pedido #12802</div>
+          <span class="notif-status st-pronto">Pronto para retirada</span>
+          <div class="notif-msg">Seu pedido no Raízes da África está pronto na loja.<br>Dirija-se ao balcão ou aguarde chamada.</div>
+          <div class="notif-time">há 2 min</div>
+        </div>
+        <button class="notif-close" onclick="this.closest('.notif-card').remove()">×</button>
+      </div>
+      <div class="notif-card">
+        <span class="notif-icone">🍔</span>
+        <div class="notif-content">
+          <div class="notif-titulo">Pedido #12801</div>
+          <span class="notif-status st-transito">Saiu para entrega</span>
+          <div class="notif-msg">Motoboy: André | Chegada prevista: 19 min<br>
+            <small>Rastrear pedido: <a href="#" style="color:#3176da;text-decoration:underline;">ver mapa</a></small></div>
+          <div class="notif-time">há 7 min</div>
+        </div>
+        <button class="notif-close" onclick="this.closest('.notif-card').remove()">×</button>
+      </div>
+      <div class="notif-card">
+        <span class="notif-icone">🔔</span>
+        <div class="notif-content">
+          <div class="notif-titulo">Promoção ativa</div>
+          <div class="notif-msg">Ganhe 10% OFF usando o cupom <b>PRIMEIRA10</b> em qualquer pedido!</div>
+          <div class="notif-time">há 20 min</div>
+        </div>
+        <button class="notif-close" onclick="this.closest('.notif-card').remove()">×</button>
+      </div>
+      <div class="notif-card">
+        <span class="notif-icone">🍽️</span>
+        <div class="notif-content">
+          <div class="notif-titulo">Pedido #12800</div>
+          <span class="notif-status st-entregue">Entregue</span>
+          <div class="notif-msg">Esperamos que tenha gostado da refeição! Avalie sua experiência :)</div>
+          <div class="notif-time">há 40 min</div>
+        </div>
+        <button class="notif-close" onclick="this.closest('.notif-card').remove()">×</button>
+      </div>
+      <div class="notif-card">
+        <span class="notif-icone">🛑</span>
+        <div class="notif-content">
+          <div class="notif-titulo">Pedido #12799</div>
+          <span class="notif-status st-cancelado">Cancelado</span>
+          <div class="notif-msg">Seu pedido foi cancelado pelo restaurante (motivo: estoque esgotado).</div>
+          <div class="notif-time">há 2h</div>
+        </div>
+        <button class="notif-close" onclick="this.closest('.notif-card').remove()">×</button>
+      </div>
+    </div>
+    <!-- Exemplo vazio:
+    <div style="color:#7c948b;padding:35px 0 10px 0;text-align:center;">Nenhuma notificação no momento.</div>
+    -->
+  </div>
+</body>
+</html>
+
