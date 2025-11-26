@@ -1,5 +1,6 @@
 // ============ CONFIGURAÇÃO ============
 const API_BASE = '/wp-json/vemcomer/v1';
+const TEMPLATE_PATH = '/wp-content/themes/theme-vemcomer/templates/marketplace/';
 
 // ============ PLACEHOLDERS INTELIGENTES POR CATEGORIA ============
 const PLACEHOLDERS = {
@@ -266,6 +267,7 @@ async function fetchRestaurants(params = {}) {
         if (params.search) queryParams.append('search', params.search);
         
         const url = `${API_BASE}/restaurants${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        console.log('🔍 mobile-shell-v2.js: Buscando restaurantes em:', url);
         
         const response = await fetch(url, {
             headers: {
@@ -273,12 +275,19 @@ async function fetchRestaurants(params = {}) {
             }
         });
         
+        console.log('📡 mobile-shell-v2.js: Resposta da API:', response.status, response.statusText);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        if (!Array.isArray(data)) return [];
+        console.log('📦 mobile-shell-v2.js: Dados recebidos:', Array.isArray(data) ? `${data.length} restaurantes` : 'Não é array');
+        
+        if (!Array.isArray(data)) {
+            console.warn('⚠️ mobile-shell-v2.js: Resposta da API não é um array:', data);
+            return [];
+        }
         
         // Mapear restaurantes
         const restaurants = data.map(mapApiRestaurantToRestaurant);
@@ -586,7 +595,7 @@ function renderStories() {
     if (!container) return;
     
     container.innerHTML = storiesData.map(story => `
-        <div class="story-item" onclick="window.location.href='story-viewer-cliente.html'" style="cursor: pointer;">
+        <div class="story-item" onclick="window.location.href='${TEMPLATE_PATH}story-viewer-cliente.html'" style="cursor: pointer;">
             <div class="story-avatar-wrapper">
                 <div class="story-ring ${story.viewed ? 'viewed' : ''}">
                     <div class="story-avatar-container">
@@ -812,7 +821,7 @@ async function renderBanners() {
     
     // Renderizar banners
     container.innerHTML = banners.map((banner, index) => `
-        <div class="banner-slide" data-index="${index}" onclick="window.location.href='feed-eventos.html'" style="cursor: pointer;">
+        <div class="banner-slide" data-index="${index}" onclick="window.location.href='${TEMPLATE_PATH}feed-eventos.html'" style="cursor: pointer;">
             <img src="${banner.image || PLACEHOLDERS.default}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
             <div class="banner-overlay">
                 <div class="banner-title">${banner.title || 'Bem-vindo ao VemComer'}</div>
@@ -977,7 +986,7 @@ async function renderDishes() {
             : getSmartImage(contextText); // Força o fallback aqui!
         
         return `
-        <div class="dish-card" onclick="window.location.href='modal-detalhes-produto.html'" style="cursor: pointer;">
+        <div class="dish-card" onclick="window.location.href='${TEMPLATE_PATH}modal-detalhes-produto.html'" style="cursor: pointer;">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
@@ -1030,7 +1039,7 @@ async function renderEvents() {
     }
     
     container.innerHTML = events.map(event => `
-        <div class="event-card" onclick="window.location.href='detalhes-evento.html'" style="cursor: pointer;">
+        <div class="event-card" onclick="window.location.href='${TEMPLATE_PATH}detalhes-evento.html'" style="cursor: pointer;">
             <div class="event-image-wrapper">
                 <img src="${event.image || PLACEHOLDERS.default}" alt="${event.title}" class="event-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 <div class="event-date-badge">
@@ -1080,7 +1089,7 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="perfil-restaurante.html" onclick="window.location.href='perfil-restaurante.html'" style="cursor: pointer;">
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${TEMPLATE_PATH}perfil-restaurante.html" onclick="window.location.href='${TEMPLATE_PATH}perfil-restaurante.html'" style="cursor: pointer;">
             <div class="featured-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1130,20 +1139,34 @@ async function renderFeatured() {
 
 async function renderRestaurants() {
     const container = document.getElementById('restaurantsGrid');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ mobile-shell-v2.js: Container #restaurantsGrid não encontrado!');
+        return;
+    }
+    
+    console.log('✅ mobile-shell-v2.js: Iniciando renderRestaurants()...');
     
     // Mostrar skeleton loading
     container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando restaurantes...</div>';
     
-    const restaurants = await fetchRestaurants({ per_page: 20 });
+    let restaurants = [];
+    try {
+        restaurants = await fetchRestaurants({ per_page: 20 });
+        console.log('✅ mobile-shell-v2.js: Restaurantes recebidos:', restaurants.length);
+    } catch (error) {
+        console.error('❌ mobile-shell-v2.js: Erro ao buscar restaurantes:', error);
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #f44336;">Erro ao carregar restaurantes. Verifique o console.</div>';
+        return;
+    }
     
     if (restaurants.length === 0) {
+        console.warn('⚠️ mobile-shell-v2.js: Nenhum restaurante encontrado na API');
         container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum restaurante encontrado.</div>';
         return;
     }
     
     container.innerHTML = restaurants.map(restaurant => `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="perfil-restaurante.html" onclick="window.location.href='perfil-restaurante.html'" style="cursor: pointer;">
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${TEMPLATE_PATH}perfil-restaurante.html" onclick="window.location.href='${TEMPLATE_PATH}perfil-restaurante.html'" style="cursor: pointer;">
             <div class="card-image-wrapper">
                 <img 
                     src="${restaurant.image}" 
@@ -1201,22 +1224,22 @@ async function renderRestaurants() {
 // ============ EVENT HANDLERS ============
 // Garantir que as funções estejam no escopo global
 window.openDish = function(id) {
-    window.location.href = 'modal-detalhes-produto.html';
+    window.location.href = TEMPLATE_PATH + 'modal-detalhes-produto.html';
 };
 
 window.openEvent = function(id) {
-    window.location.href = `/evento/${id}`;
+    window.location.href = TEMPLATE_PATH + 'detalhes-evento.html';
 };
 
 window.openRestaurant = function(id) {
-    window.location.href = 'perfil-restaurante.html';
+    window.location.href = TEMPLATE_PATH + 'perfil-restaurante.html';
 };
 
 window.openReservation = function(id, event) {
     if (event) {
         event.stopPropagation();
     }
-    window.location.href = `/reservar/${id}/`;
+    window.location.href = TEMPLATE_PATH + 'minhas-reservas.html';
 };
 
 window.toggleFavorite = function(event, id) {

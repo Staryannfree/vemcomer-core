@@ -1639,3 +1639,66 @@ Implementar navegação funcional entre todas as telas do marketplace, conectand
 
 **Resultado:**
 Protótipo navegável completo - todos os elementos clicáveis agora redirecionam corretamente para as telas correspondentes, criando uma experiência de navegação fluida entre todas as 28 telas do marketplace.
+
+## v0.56 - Navegação Híbrida: Home WordPress ↔ Páginas HTML Estáticas
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Conectar a Home Page gerada pelo WordPress (`front-page.php`) com as páginas HTML estáticas na pasta `templates/marketplace/`, garantindo navegação bidirecional funcional.
+
+**Implementação:**
+
+### 1. Constante de Caminho no JavaScript
+- ✅ **Constante `TEMPLATE_PATH`**: Definida no topo de `mobile-shell-v2.js`
+  - Valor: `/wp-content/themes/theme-vemcomer/templates/marketplace/`
+  - Usada em todas as funções de navegação e renders dinâmicos
+
+### 2. Funções Globais de Navegação Atualizadas
+- ✅ `window.openRestaurant(id)` → Redireciona para `perfil-restaurante.html`
+- ✅ `window.openDish(id)` → Redireciona para `modal-detalhes-produto.html`
+- ✅ `window.openEvent(id)` → Redireciona para `detalhes-evento.html`
+- ✅ `window.openReservation(id)` → Redireciona para `minhas-reservas.html`
+
+### 3. Renders Dinâmicos Atualizados
+- ✅ **Banners**: `onclick` aponta para `feed-eventos.html`
+- ✅ **Stories**: `onclick` aponta para `story-viewer-cliente.html`
+- ✅ **Cards de Restaurantes**: Usam `TEMPLATE_PATH` para links
+- ✅ **Cards de Pratos**: Usam `TEMPLATE_PATH` para links
+- ✅ **Cards de Eventos**: Usam `TEMPLATE_PATH` para links
+- ✅ **Cards em Destaque**: Usam `TEMPLATE_PATH` para links
+
+### 4. Template PHP (`content-mobile-home.php`) Atualizado
+- ✅ **Quick Actions**: Todos os links agora usam caminhos absolutos
+  - Delivery → `busca-avancada.html`
+  - Reservas → `minhas-reservas.html`
+  - Eventos → `feed-eventos.html`
+  - Promoções → `todas-as-categorias.html`
+- ✅ **Links "Ver todos"**: Atualizados para apontar para templates corretos
+- ✅ **Bottom Navigation**: Links atualizados com caminhos absolutos
+  - Início → `/?mode=app` (volta para home WordPress)
+  - Outros → Caminhos absolutos para templates
+
+### 5. Arquivos HTML Estáticos Atualizados
+- ✅ **Bottom Navigation**: Em todos os 4 arquivos principais
+  - Link "Início" → `/?mode=app` (volta para home WordPress)
+  - Outros links → Caminhos relativos (já estão na mesma pasta)
+- ✅ **Fluxo de Compra**: Links internos já corretos
+  - Carrinho → `checkout-simplificado.html` (relativo)
+  - Checkout → `meus-pedidos.html` (relativo)
+- ✅ **Botões Voltar**: `history.back()` já implementado nos modais
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Constante TEMPLATE_PATH e todas as funções de navegação
+- `theme-vemcomer/template-parts/content-mobile-home.php` - Quick Actions, seções e bottom nav
+- `theme-vemcomer/templates/marketplace/busca-avancada.html` - Bottom nav atualizada
+- `theme-vemcomer/templates/marketplace/todas-as-categorias.html` - Bottom nav atualizada
+- `theme-vemcomer/templates/marketplace/minha-conta-cliente.html` - Bottom nav atualizada
+- `theme-vemcomer/templates/marketplace/perfil-restaurante.html` - Bottom nav atualizada
+
+**Estrutura de Navegação:**
+- **Home (WordPress)** → Usa caminhos **absolutos** para acessar templates HTML
+- **Templates HTML** → Usam caminhos **relativos** entre si, **absoluto** (`/?mode=app`) para voltar à home
+
+**Resultado:**
+Navegação híbrida funcional - usuários podem navegar da Home WordPress para qualquer página HTML estática e voltar para a Home usando o botão "Início" na bottom navigation.

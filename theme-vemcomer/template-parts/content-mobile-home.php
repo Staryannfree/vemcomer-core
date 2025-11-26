@@ -94,28 +94,28 @@
 
 <!-- QUICK ACTIONS -->
 <div class="quick-actions">
-    <a href="/delivery" class="quick-action-btn">
+    <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/busca-avancada.html" class="quick-action-btn">
         <svg class="quick-action-icon" viewBox="0 0 24 24">
             <path d="M18 18.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm1.5-9H17V12h4.46L19.5 9.5zM6 18.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zM20 8l3 4v5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H9c0 1.66-1.34 3-3 3s-3-1.34-3-3H1V6c0-1.11.89-2 2-2h14v4h3zM3 6v9h.76c.55-.61 1.35-1 2.24-1s1.69.39 2.24 1H15V6H3z"/>
         </svg>
         <span class="quick-action-label">Delivery</span>
     </a>
     
-    <a href="/reservas" class="quick-action-btn">
+    <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/minhas-reservas.html" class="quick-action-btn">
         <svg class="quick-action-icon" viewBox="0 0 24 24">
             <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zm0-12H5V5h14v2zM7 11h5v5H7z"/>
         </svg>
         <span class="quick-action-label">Reservas</span>
     </a>
     
-    <a href="/eventos" class="quick-action-btn">
+    <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/feed-eventos.html" class="quick-action-btn">
         <svg class="quick-action-icon" viewBox="0 0 24 24">
             <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
         </svg>
         <span class="quick-action-label">Eventos</span>
     </a>
     
-    <a href="/promocoes" class="quick-action-btn">
+    <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/todas-as-categorias.html" class="quick-action-btn">
         <svg class="quick-action-icon" viewBox="0 0 24 24">
             <path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
         </svg>
@@ -155,7 +155,7 @@
                 </svg>
                 Pratos do Dia
             </h2>
-            <a href="/pratos-do-dia" class="section-link">
+            <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/busca-avancada.html" class="section-link">
                 Ver todos
                 <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
@@ -174,7 +174,7 @@
                 </svg>
                 Programações de Hoje
             </h2>
-            <a href="/eventos" class="section-link">
+            <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/feed-eventos.html" class="section-link">
                 Ver agenda
                 <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
@@ -193,7 +193,7 @@
                 </svg>
                 Restaurantes em Destaque
             </h2>
-            <a href="/destaques" class="section-link">
+            <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/busca-avancada.html" class="section-link">
                 Ver todos
                 <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
@@ -228,35 +228,35 @@
 <!-- BOTTOM NAVIGATION -->
 <nav class="bottom-nav">
     <div class="nav-items">
-        <a href="/" class="nav-item active">
+        <a href="/?mode=app" class="nav-item active">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
             <span>Início</span>
         </a>
         
-        <a href="busca-avancada.html" class="nav-item">
+        <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/busca-avancada.html" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
             </svg>
             <span>Buscar</span>
         </a>
         
-        <a href="todas-as-categorias.html" class="nav-item">
+        <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/todas-as-categorias.html" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zm0-12H5V5h14v2zM7 11h5v5H7z"/>
             </svg>
             <span>Categorias</span>
         </a>
         
-        <a href="meus-pedidos.html" class="nav-item">
+        <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/meus-pedidos.html" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
             </svg>
             <span>Pedidos</span>
         </a>
         
-        <a href="minha-conta-cliente.html" class="nav-item">
+        <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/minha-conta-cliente.html" class="nav-item">
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
