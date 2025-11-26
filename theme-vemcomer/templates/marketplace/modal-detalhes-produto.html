@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modal Detalhes Produto</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2d8659; --primary-light: #eaf8f1; --accent: #45c676; --gray: #f6f9f6; --danger: #ea5252; --meta: #6b7672; --text: #232a2c; --star: #facb32;}
+
+    body {background:var(--gray);font-family:'Montserrat',Arial,sans-serif;color:var(--text);margin:0;padding:0;}
+
+    @keyframes fadeIn { from {opacity:0; transform:scale(.96);} to {opacity:1; transform:scale(1);} }
+  </style>
+</head>
+<body>
+  <!-- Modal Detalhes Produto (deve ficar fora do fluxo, pode ser incluído no HTML principal ou via JS) -->
+  <div id="modalProduto" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:#0008;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;max-width:380px;width:96vw;padding:0 0 24px 0;box-shadow:0 8px 38px #2d865955;position:relative;animation:fadeIn .3s;">
+      <button style="position:absolute;right:13px;top:12px;background:none;border:none;font-size:1.27em;color:#bbbbbb;z-index:3;cursor:pointer" onclick="document.getElementById('modalProduto').style.display='none'">×</button>
+      <img id="imgProduto" src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=400&q=80" alt="Foto Produto" style="width:100%;height:150px;object-fit:cover;border-radius:16px 16px 0 0;">
+      <div style="padding:18px 18px 0 18px;">
+        <div id="tituloProduto" style="font-size:1.16em;font-weight:700;color:#222;margin-bottom:3px;">Bruschetta Vegana</div>
+        <div id="descProduto" style="color:#4d5252;font-size:.98em;margin-bottom:8px;">Pão crocante, pasta de tomate, manjericão e azeite extra virgem.</div>
+        <div style="font-size:1.13em;font-weight:700;color:var(--primary);margin-bottom:10px;">R$ <span id="precoBase">12,90</span></div>
+        <!-- Modificadores obrigatórios -->
+        <div style="margin-bottom:10px;">
+          <b style="font-size:.98em;color:var(--primary);">Escolha uma Proteína <span style="color:#ea5252">*</span></b><br>
+          <label><input type="radio" name="proteina" checked> Tofu Crocante (+R$ 3,00)</label><br>
+          <label><input type="radio" name="proteina"> Grão-de-Bico (incluso)</label>
+        </div>
+        <!-- Modificadores opcionais -->
+        <div style="margin-bottom:10px;">
+          <b style="font-size:.98em;color:var(--primary);">Adicionais</b><br>
+          <label><input type="checkbox" name="adicional"> Tomate seco (+R$ 2,00)</label><br>
+          <label><input type="checkbox" name="adicional"> Queijo vegano (+R$ 3,00)</label>
+        </div>
+        <!-- Observação -->
+        <div style="margin-bottom:13px;">
+          <textarea id="obsProduto" placeholder="Observação para o restaurante..." style="width:100%;min-height:34px;border-radius:7px;border:1.1px solid #d7e6df;padding:8px 9px;font-family:Montserrat,sans-serif;"></textarea>
+        </div>
+        <!-- Contador quantidade e botão -->
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <button type="button" onclick="alteraQtd(-1)" style="background:var(--primary-light);border:none;width:32px;height:32px;border-radius:8px;font-size:1.3em;color:var(--primary);font-weight:700;cursor:pointer;">-</button>
+            <span id="qtdProduto" style="font-size:1.13em;font-weight:700;">1</span>
+            <button type="button" onclick="alteraQtd(1)" style="background:var(--primary);border:none;width:32px;height:32px;border-radius:8px;font-size:1.3em;color:#fff;font-weight:700;cursor:pointer;">+</button>
+          </div>
+          <button id="btnAddCarrinho" style="background:var(--primary);color:#fff;font-weight:700;border:none;padding:10px 26px;border-radius:10px;font-size:1.02em;box-shadow:0 2px 9px #2d865913;cursor:pointer;transition:background .17s;">Adicionar <span id="precoTotal">R$ 12,90</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Lógica de quantidade no modal
+    let qtd = 1, precoBase = 12.9, precoMods = 0;
+
+    function alteraQtd(v) {
+      qtd = Math.max(1, qtd + v);
+      document.getElementById('qtdProduto').textContent = qtd;
+      atualizaTotal();
+    }
+
+    function atualizaTotal() {
+      // Exemplo de cálculo dinâmico: base + modificadores (Ajuste para integrar com seu backend/API)
+      let total = (precoBase + precoMods) * qtd;
+      document.getElementById('precoTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+
+    // Chame essa função ao abrir o modal, preenchendo os campos conforme o produto selecionado do backend/API.
+    function abrirModalProduto(produto) {
+      document.getElementById('imgProduto').src = produto.img;
+      document.getElementById('tituloProduto').textContent = produto.titulo;
+      document.getElementById('descProduto').textContent = produto.descricao;
+      precoBase = produto.preco;
+      qtd = 1;
+      precoMods = 0;
+      document.getElementById('precoBase').textContent = produto.preco.toLocaleString('pt-BR', {minimumFractionDigits:2});
+      alteraQtd(0);
+      document.getElementById('obsProduto').value = '';
+      document.getElementById('modalProduto').style.display='flex';
+    }
+
+    // Para modificadores reais e obrigatórios, ajuste os eventos para atualizar precoMods e acionar atualizaTotal() ao selecionar/deselecionar.
+  </script>
+</body>
+</html>
+
