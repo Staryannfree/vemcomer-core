@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Central de Crescimento - Restaurante</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --primary: #2d8659; --accent: #45c676; --gray: #f6f9f6; --star: #facb32; --meta: #6b7672; --primary-light: #eaf8f1; --danger: #ea5252;}
+    body{background:var(--gray);font-family:'Montserrat',Arial,sans-serif;color:#232a2c;}
+    .container{max-width:690px;margin:35px auto 55px auto;background:#fff;border-radius:19px;box-shadow:0 2px 15px #2d865914;padding:34px 21px 33px 21px;}
+    h1{font-weight:700;color:var(--primary);font-size:1.34em;margin-bottom:24px;text-align:center;}
+    .performance-box{background:var(--primary-light);border-radius:13px;padding:17px 11px;margin-bottom:22px;display:flex;flex-direction:column;align-items:center;}
+    .performance-val{font-size:2em;font-weight:900;color:var(--primary);}
+    .performance-label{font-size:1em;font-weight:700;color:var(--meta);margin-bottom:8px;}
+    .performance-row{display:flex;gap:25px;}
+    .performance-metric{color:var(--primary);font-weight:700;}
+    .tools-group{margin-bottom:29px;}
+    .tools-tit{font-weight:700;color:var(--primary);font-size:1.08em;margin-bottom:8px;}
+    .destaque-tool{background:var(--primary-light);border-radius:13px;padding:14px 17px;margin-bottom:15px;box-shadow:0 1px 8px #2d865913;}
+    .destaque-row{display:flex;gap:17px;align-items:center;margin-bottom:9px;}
+    .destaque-opt{font-weight:700;color:var(--primary);}
+    .destaque-price{color:var(--accent);font-weight:900;}
+    .destaque-btn{background:var(--primary);color:#fff;font-weight:800;border:none;border-radius:10px;padding:7px 23px;font-size:1em;cursor:pointer;margin-left:10px;}
+    .destaque-btn.banner{background:var(--star);color:#232a2c;}
+    /* cupom */
+    .cupom-tool{background:var(--primary-light);border-radius:13px;padding:14px 17px;margin-bottom:14px;}
+    .cupom-form-row{display:flex;gap:11px;margin-bottom:9px;}
+    .cupom-form-row input[type="text"], 
+    .cupom-form-row input[type="number"]{
+      border:1px solid #cdf9e0;border-radius:8px;padding:7px 12px;font-size:1em;width:150px;color:#232a2c;
+    }
+    .cupom-btn{background:var(--primary);color:#fff;font-weight:700;border:none;border-radius:10px;padding:8px 22px;font-size:1em;cursor:pointer;}
+    /* Checkout */
+    .checkout-tool{background:var(--primary-light);border-radius:13px;padding:14px 17px;margin-bottom:9px;}
+    .checkout-tit{font-weight:700;color:var(--accent);margin-bottom:7px;}
+    .checkout-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+    .checkout-label{font-weight:700;color:var(--primary);}
+    .checkout-price{font-weight:900;color:var(--star);font-size:1.09em;}
+    .checkout-btn{background:var(--accent);color:#fff;font-weight:900;border:none;border-radius:13px;padding:11px 43px;font-size:1.1em;cursor:pointer;}
+    @media(max-width:480px){.container{padding:8px 2vw 22px 2vw;}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Central de Crescimento & Marketing</h1>
+    <!-- Painel Performance -->
+    <div class="performance-box">
+      <div class="performance-label">Quantas pessoas viram sua loja hoje?</div>
+      <div class="performance-val">527</div>
+      <div class="performance-row">
+        <span class="performance-metric">Cliques: 91</span>
+        <span class="performance-metric">Conversão: 17%</span>
+      </div>
+    </div>
+    <!-- Ferramenta colocar em destaque -->
+    <div class="tools-group">
+      <div class="tools-tit">Destaques & Promoções</div>
+      <div class="destaque-tool">
+        <div class="destaque-row">
+          <span class="destaque-opt">Aparecer no Topo da Busca</span>
+          <span class="destaque-price">3 dias por R$ 29,90</span>
+          <button class="destaque-btn" onclick="checkout('Busca')">Solicitar</button>
+        </div>
+        <div style="font-size:.98em;color:#2d8659;">Ganhe até 3x mais visualizações e pedidos ao destacar sua loja!</div>
+      </div>
+      <div class="destaque-tool">
+        <div class="destaque-row">
+          <span class="destaque-opt">Banner na Home</span>
+          <span class="destaque-price">R$ 19,90 / dia</span>
+          <button class="destaque-btn banner" onclick="checkout('Banner')">Reservar espaço</button>
+        </div>
+        <div style="font-size:.98em;color:#2d8659;">Apareça para todos os clientes assim que eles abrem o app.</div>
+      </div>
+    </div>
+    <!-- Cupons inteligentes -->
+    <div class="cupom-tool">
+      <div style="font-weight:700;color:var(--primary);margin-bottom:5px;">Criar Cupom Inteligente</div>
+      <form id="cupomForm" autocomplete="off">
+        <div class="cupom-form-row">
+          <input type="text" placeholder="Nome do Cupom" id="cupomNome" required>
+          <input type="number" placeholder="Desconto (%)" id="cupomDesc" min="5" max="95" required>
+          <input type="number" placeholder="Válido (dias)" id="cupomDias" min="1" max="90" value="7">
+          <button class="cupom-btn" type="submit">Criar Cupom</button>
+        </div>
+      </form>
+      <div style="color:#6b7672;font-size:.97em;">
+        Sugestão: envie para clientes que não compram há mais de 30 dias, ou destaque em stories/banners.
+      </div>
+    </div>
+    <!-- Checkout de mídia -->
+    <div class="checkout-tool" id="checkoutBox" style="display:none;">
+      <div class="checkout-tit">Checkout de Mídia</div>
+      <div class="checkout-row">
+        <span class="checkout-label" id="checkoutTipo"></span>
+        <span class="checkout-price" id="checkoutValor"></span>
+      </div>
+      <button class="checkout-btn" onclick="alert('Pagamento realizado!')">Pagar & Destacar</button>
+      <div style="color:#2d8659;font-size:.97em;margin-top:7px;">Comprovante automático no WhatsApp e painel</div>
+    </div>
+  </div>
+  <script>
+    function checkout(tipo){
+      document.getElementById('checkoutBox').style.display = '';
+      if(tipo==='Busca'){
+        document.getElementById('checkoutTipo').textContent = 'Topo da Busca (3 dias)';
+        document.getElementById('checkoutValor').textContent = 'R$ 29,90';
+      } else if(tipo==='Banner'){
+        document.getElementById('checkoutTipo').textContent = 'Banner na Home (1 dia)';
+        document.getElementById('checkoutValor').textContent = 'R$ 19,90';
+      }
+    }
+    document.getElementById('cupomForm').onsubmit = function(e){
+      e.preventDefault();
+      alert('Cupom criado e enviado!');
+      this.reset();
+    }
+  </script>
+</body>
+</html>
+

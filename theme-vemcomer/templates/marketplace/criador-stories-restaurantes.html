@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Criador de Stories</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --primary: #2d8659; --accent: #45c676; --gray: #f6f9f6; --meta: #6b7672;}
+    body{background:var(--gray);font-family:'Montserrat',Arial,sans-serif;color:#232a2c;}
+    .container{max-width:410px;margin:37px auto 55px auto;background:#fff;border-radius:18px;box-shadow:0 2px 14px #2d865913;padding:31px 17px 22px 17px;}
+    h1{font-weight:700;color:var(--primary);font-size:1.19em;margin-bottom:19px;text-align:center;}
+    .form-row{margin-bottom:17px;}
+    .form-label{font-weight:700;color:var(--primary);font-size:1em;margin-bottom:6px;display:block;}
+    .media-upload-box{height:292px;background:#eaf8f1;border-radius:15px;border:2.5px dashed #cdf9e0;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;overflow:hidden;margin-bottom:6px;}
+    .media-upload-box img,.media-upload-box video{max-height:100%;max-width:100%;object-fit:cover;border-radius:15px;}
+    .crop-hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--meta);font-size:1.22em;font-weight:500;pointer-events:none;}
+    .media-upload-box input[type="file"]{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+    .crop-btn{background:#2d8659;color:#fff;font-weight:700;border:none;border-radius:8px;padding:6px 13px;cursor:pointer;font-size:.97em;margin-left:9px;}
+    .selector-box{margin-bottom:7px;}
+    .selector-select{width:100%;padding:8px 12px;border-radius:11px;border:1.2px solid #cdf9e0;font-family:inherit;font-size:1.01em;}
+    .exp-row{display:flex;align-items:center;gap:15px;}
+    .exp-radio{margin-right:6px;}
+    .btn-confirm{background:var(--primary);color:#fff;font-weight:800;font-size:1em;border:none;border-radius:12px;padding:12px 0;margin-top:7px;width:100%;cursor:pointer;box-shadow:0 2px 8px #45c67612;}
+    .btn-confirm:hover{background:var(--accent);}
+    @media(max-width:440px){.container{padding:8px 2vw 18px 2vw;}.media-upload-box{height:47vw;}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Criar Novo Story</h1>
+    <form id="formStory">
+      <div class="form-row">
+        <span class="form-label">Mídia: Foto ou Vídeo (vertical)</span>
+        <div class="media-upload-box" id="mediaBox">
+          <span class="crop-hint">Clique para selecionar<br>Foto/Vídeo 9:16</span>
+          <input type="file" accept="image/*,video/*" id="mediaInput" />
+        </div>
+        <button type="button" class="crop-btn" onclick="alert('Ferramenta de Crop 9:16 (simulação)')">Crop 9:16</button>
+      </div>
+      <div class="form-row selector-box">
+        <span class="form-label">Adicionar Link/Produto</span>
+        <select class="selector-select" id="itemSelect">
+          <option value="">Selecione um item do cardápio</option>
+          <option value="/cardapio/moamba-frango">Moamba de Frango</option>
+          <option value="/cardapio/feijoada-vegana">Feijoada Vegana</option>
+          <option value="/cardapio/suco-hibisco">Suco de Hibisco</option>
+        </select>
+      </div>
+      <div class="form-row exp-row">
+        <span class="form-label">Expiração</span>
+        <label><input type="radio" class="exp-radio" name="expira" value="24" checked>24h padrão</label>
+        <label><input type="radio" class="exp-radio" name="expira" value="12">12h</label>
+        <label><input type="radio" class="exp-radio" name="expira" value="48">48h</label>
+      </div>
+      <button class="btn-confirm" type="submit">Publicar Story</button>
+    </form>
+  </div>
+  <script>
+    document.getElementById('mediaInput').addEventListener('change', e => {
+      const box = document.getElementById('mediaBox');
+      const hint = box.querySelector('.crop-hint');
+      if (e.target.files[0]) {
+        const fr = new FileReader();
+        fr.onload = function(ev) {
+          let node;
+          if(e.target.files[0].type.startsWith('video')) {
+            node = document.createElement('video');
+            node.src = ev.target.result; node.controls = true;
+          } else {
+            node = document.createElement('img');
+            node.src = ev.target.result;
+          }
+          node.style.maxHeight='100%'; node.style.borderRadius='15px';
+          box.innerHTML = ''; box.appendChild(node);
+        }
+        fr.readAsDataURL(e.target.files[0]);
+      }
+    });
+    document.getElementById('formStory').onsubmit = function(e){
+      e.preventDefault();
+      alert('Story criado!'); // Aqui, implementar envio real/backend
+    }
+  </script>
+</body>
+</html>
+

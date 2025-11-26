@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Eventos Gastronômicos</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #2d8659;
+      --primary-light: #eaf8f1;
+      --accent: #45c676;
+      --gray: #f6f9f6;
+      --star: #facb32;
+      --meta: #6b7672;
+      --text: #232a2c;
+    }
+    body {
+      background: var(--gray);
+      font-family: 'Montserrat', Arial, sans-serif;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 720px;
+      margin: 32px auto 60px auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 3px 14px #2d865914;
+      padding: 32px 20px 36px 20px;
+    }
+    h1 {
+      font-weight: 700;
+      font-size: 1.38rem;
+      color: var(--primary);
+      margin-bottom: 28px;
+      text-align: center;
+      letter-spacing:.01em;
+    }
+    .filtros-eventos {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 21px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .filtro-btn {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+      border: none;
+      border-radius: 11px;
+      padding: 8px 22px 7px 22px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background .14s,color .11s;
+    }
+    .filtro-btn.active,
+    .filtro-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .event-card {
+      display: flex;
+      gap: 18px;
+      background: var(--primary-light);
+      border-radius: 13px;
+      box-shadow: 0 1px 8px #2d865910;
+      padding: 16px 17px 14px 18px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      position:relative;
+    }
+    .event-img {
+      width: 92px;
+      height: 92px;
+      border-radius: 13px;
+      object-fit: cover;
+      background: #eaf8f1;
+      box-shadow: 0 1px 11px #2d865912;
+      flex-shrink:0;
+    }
+    .event-info {
+      flex:1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .event-titulo {
+      font-weight: 900;
+      color: var(--primary);
+      font-size: 1.13em;
+      margin-bottom: 1px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .event-data {
+      color: var(--meta);
+      font-size: .99em;
+      font-weight: 700;
+      display: flex;
+      gap: 13px;
+      align-items: center;
+    }
+    .event-local {
+      color: var(--meta);
+      font-size: .97em;
+      font-weight: 700;
+    }
+    .event-desc {
+      color: var(--text);
+      font-size: .99em;
+      margin-bottom: 3px;
+    }
+    .badge-gratis {
+      background: var(--star);
+      color: #232a2c;
+      font-weight: 800;
+      border-radius: 8px;
+      font-size: .91em;
+      padding: 3px 13px;
+      letter-spacing:.03em;
+      margin-left:6px;
+    }
+    .btn-interest {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1em;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 21px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px #45c6761e;
+      transition: background .17s;
+      margin-top: 5px;
+      align-self: flex-start;
+    }
+    .btn-interest:hover {
+      background: var(--accent);
+    }
+    @media(max-width:430px){
+      .container{padding:14px 2vw 22px 2vw;}
+      .event-card{flex-direction:column;align-items:flex-start;}
+      .event-img{width:100%;height:80vw;max-height:131px;margin-bottom:8px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Eventos Gastronômicos</h1>
+    <div class="filtros-eventos">
+      <button class="filtro-btn active" onclick="filtraEventos('hoje')">Hoje</button>
+      <button class="filtro-btn" onclick="filtraEventos('fimsemana')">Fim de Semana</button>
+      <button class="filtro-btn" onclick="filtraEventos('gratis')">Gratuito</button>
+    </div>
+    <div class="event-list" id="eventList">
+      <!-- Evento 1 -->
+      <div class="event-card" data-tags="hoje gratis">
+        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=220&q=60" alt="Festival de Inverno" class="event-img"/>
+        <div class="event-info">
+          <div class="event-titulo">Festival de Inverno <span class="badge-gratis">Gratuito</span></div>
+          <div class="event-data">⏰ Hoje, 19h | 🎤 Música ao Vivo</div>
+          <div class="event-local">🍽️ Restaurante Raízes da África</div>
+          <div class="event-desc">
+            Venha curtir o festival de sabores e música na casa! Degustação especial de caldos e vinhos.
+          </div>
+          <button class="btn-interest" onclick="alert('Interesse registrado!')">Tenho Interesse</button>
+        </div>
+      </div>
+      <!-- Evento 2 -->
+      <div class="event-card" data-tags="fimsemana">
+        <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=240&q=60" alt="Noite de Vinhos" class="event-img"/>
+        <div class="event-info">
+          <div class="event-titulo">Noite de Vinhos</div>
+          <div class="event-data">⏰ Sexta, 20h | 🥂 Happy Hour</div>
+          <div class="event-local">🍽️ Raízes da África</div>
+          <div class="event-desc">
+            Harmonização de vinhos selecionados e pratos típicos da culinária africana.
+          </div>
+          <button class="btn-interest" onclick="alert('Interesse registrado!')">Tenho Interesse</button>
+        </div>
+      </div>
+      <!-- Evento 3 -->
+      <div class="event-card" data-tags="fimsemana gratis">
+        <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=220&q=60" alt="Feijoada & Samba" class="event-img"/>
+        <div class="event-info">
+          <div class="event-titulo">Feijoada & Samba <span class="badge-gratis">Gratuito</span></div>
+          <div class="event-data">⏰ Sábado, 12h | 🎶 Música ao Vivo</div>
+          <div class="event-local">🍽️ Jardim Curitiba</div>
+          <div class="event-desc">
+            Feijoada especial de sábado com roda de samba e petiscos veganos!
+          </div>
+          <button class="btn-interest" onclick="alert('Interesse registrado!')">Tenho Interesse</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function filtraEventos(tag) {
+      document.querySelectorAll('.filtro-btn').forEach(btn=>{
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tag));
+      });
+      document.querySelectorAll('.event-card').forEach(card=>{
+        card.style.display = (tag==='hoje' && card.dataset.tags.includes('hoje'))
+          || (tag==='fimsemana' && card.dataset.tags.includes('fimsemana'))
+          || (tag==='gratis' && card.dataset.tags.includes('gratis'))
+          ? '' : (tag==='hoje'||tag==='fimsemana'||tag==='gratis') ? 'none' : '';
+      });
+    }
+  </script>
+</body>
+</html>
+
