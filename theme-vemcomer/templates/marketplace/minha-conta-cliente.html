@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minha Conta • Cliente</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #f6f9f6;
+      font-family: 'Montserrat', Arial, sans-serif;
+      color: #232a2c;
+      margin: 0; padding: 0;
+    }
+
+    .conta-container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 30px 12px 38px 12px;
+      background: #fff;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 6px 36px #232a2c0f;
+    }
+
+    .perfil-user {
+      display: flex;
+      align-items: center;
+      gap: 17px;
+      margin-bottom: 19px;
+    }
+
+    .perfil-foto {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #eaf8f1;
+      border: 2.5px solid #d3ece2;
+      box-shadow: 0 1px 5px #2d865918;
+    }
+
+    .perfil-dados {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .perfil-nome {
+      font-size: 1.10em;
+      font-weight: 700;
+      color: #2d8659;
+    }
+
+    .perfil-email {
+      color: #6b7672;
+      font-size: .97em;
+      margin-bottom: 2px;
+    }
+
+    .perfil-editar {
+      display:inline-block;
+      color: #45c676;
+      font-size:.97em;
+      text-decoration: underline;
+      cursor:pointer;
+      margin-top:2px;
+    }
+
+    .perfil-lista {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      border-top: 1.2px solid #eaf8f1;
+    }
+
+    .perfil-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 5px 13px 4px;
+      border-bottom: 1px solid #f3f6f4;
+      font-size: 1em;
+      color: #232a2c;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .12s;
+    }
+
+    .perfil-item:last-child { border: none;}
+
+    .perfil-item:hover { background: #f2fdf7;}
+
+    .perfil-item-icone {
+      font-size: 1.4em;
+      width:32px; text-align:center;
+      color:#2d8659;
+    }
+
+    .perfil-sair {
+      display: block;
+      background: none;
+      border: none;
+      color: #ea5252;
+      font-weight: 700;
+      font-size: 1em;
+      margin: 22px 0 0 0;
+      width: 100%;
+      cursor: pointer;
+      padding: 10px 0;
+      border-radius: 7px;
+      transition: background .13s;
+    }
+
+    .perfil-sair:hover { background: #ffeaea; }
+  </style>
+</head>
+<body>
+  <div class="conta-container">
+    <!-- Perfil do Usuário -->
+    <div class="perfil-user">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" class="perfil-foto" alt="Foto do Usuário">
+      <div class="perfil-dados">
+        <div class="perfil-nome">João Silva</div>
+        <div class="perfil-email">joao.silva@email.com</div>
+        <span class="perfil-editar" onclick="alert('Abrir modal/rota para edição')">Editar perfil</span>
+      </div>
+    </div>
+    <!-- Links para sub-páginas -->
+    <ul class="perfil-lista">
+      <li class="perfil-item" onclick="window.location.href='/meus-pedidos'">
+        <span class="perfil-item-icone">🧾</span> Meus Pedidos
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/enderecos'">
+        <span class="perfil-item-icone">🏠</span> Meus Endereços
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/pagamentos'">
+        <span class="perfil-item-icone">💳</span> Pagamentos & Cartões
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/favoritos'">
+        <span class="perfil-item-icone">❤️</span> Favoritos
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/reservas'">
+        <span class="perfil-item-icone">📆</span> Minhas Reservas
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/dados'">
+        <span class="perfil-item-icone">📝</span> Dados Pessoais
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/seguranca'">
+        <span class="perfil-item-icone">🔒</span> Segurança
+      </li>
+      <li class="perfil-item" onclick="window.location.href='/ajuda'">
+        <span class="perfil-item-icone">❓</span> Ajuda e Suporte
+      </li>
+    </ul>
+    <button class="perfil-sair" onclick="alert('Fazer logout do usuário')">Sair da conta</button>
+  </div>
+</body>
+</html>
+
