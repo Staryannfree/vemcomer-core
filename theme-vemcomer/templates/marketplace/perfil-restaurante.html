@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil do Restaurante</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2d8659; --primary-light: #eaf8f1; --accent: #45c676; --gray: #f6f9f6; --danger: #ea5252; --meta: #6b7672; --text: #232a2c; --star: #facb32;}
+
+    body {background:var(--gray);font-family:'Montserrat',Arial,sans-serif;color:var(--text);margin:0;padding:0;}
+
+    .header-capa {width:100vw;max-width:660px;min-height:130px;height:33vw;max-height:190px; background:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=80') center/cover no-repeat;
+      border-radius:0 0 18px 18px;position:relative;margin:0 auto;overflow:hidden;box-shadow:0 3px 14px #2d865914;}
+
+    .rest-logo {position: absolute; left: 50%; bottom: -33px; transform: translateX(-50%); width: 90px; height:90px; background: #fff; border-radius: 50%;
+      border: 3px solid #fff; box-shadow: 0 2px 9px #2d865930; overflow: hidden; z-index: 3;}
+
+    .rest-logo img {width: 82px; height: 82px; object-fit: cover; border-radius: 50%;}
+
+    .header-content {margin-top:70px;text-align:center;}
+
+    .nome-restaurante {font-size:1.25rem; font-weight:700;margin:0 0 6px 0; letter-spacing:.01em;display:flex;gap:7px;justify-content:center;align-items:center;}
+
+    .badge-selo {background:var(--primary-light);color:var(--primary);font-size:.81em;border-radius:11px;padding:3px 13px;font-weight:600;border:1px solid #b9eacd;}
+
+    .favorito-btn {background:none;border:none;color:var(--primary);font-size:1.33em;margin-left:8px;cursor:pointer;transition:color .17s;}
+
+    .favorito-btn.active {color:var(--accent);}
+
+    .banners {display:flex;gap:9px;margin:12px 0 9px 0;justify-content:center;}
+
+    .banner-img {width:90px;height:36px;object-fit:cover;border-radius:10px;box-shadow:0 1px 8px #2d865914;}
+
+    .restaurant-info {display:flex;flex-wrap:wrap;justify-content:center;gap:16px;font-size:1.04em;margin-top:6px;color:var(--meta);}
+
+    .info-attr {display:flex;align-items:center;gap:4px;}
+
+    .star {color:var(--star);}
+
+    .tag-aberto, .tag-fechado {font-size:.98em;padding:2.5px 14px;border-radius:13px;font-weight:650;background:var(--primary-light);color:var(--primary);margin-left:11px;box-shadow:0 1px 4px #2d865912;border:1px solid #caf4de;}
+
+    .tag-fechado {background:#ffe9ea;color:var(--danger);border-color:#ffd8da;}
+
+    .horario {font-size:.94em;color:var(--meta);}
+
+    .badges {display:flex;gap:10px;justify-content:center;margin:6px 0 5px 0;}
+
+    .badge-delivery,.badge-frete-gratis{background:var(--primary);color:#fff;font-size:.85em;border-radius:12px;padding:2.5px 13px;font-weight:700;box-shadow:0 1px 4px #2d865914;}
+
+    .badge-frete-gratis{background:var(--accent);}
+
+    .destaques {display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:6px; }
+
+    .destaque-tag {background:var(--primary-light);color:var(--primary);border-radius:8px;font-size:.92em;padding:2px 11px;font-weight:600;border:1.2px solid #eaf8f1;}
+
+    /* Abas */
+
+    .tabs {display:flex;gap:2px;margin:22px 0 16px 0;border-bottom:2px solid #dde4de;background:#fff;position:sticky;top:0;z-index:10;}
+
+    .tab-btn {flex:1;padding:13px 0 10px 0;background:none;border:none;font-size:1.06rem;font-weight:700;color:var(--meta);border-bottom:3px solid transparent;cursor:pointer;transition:color .17s,border .19s,background .18s;}
+
+    .tab-btn .tab-indicador {background:var(--primary-light);color:var(--primary);font-weight:700;border-radius:8px;font-size:.83em;padding:1px 7px 0 7px;margin-left:2px;}
+
+    .tab-btn.active {color:var(--primary);border-bottom:3px solid var(--primary);background:var(--primary-light);}
+
+    .aba-content {margin-bottom:28px;margin-top:8px;}
+
+    /* RESERVAS */
+
+    .reserva-bloco {background:var(--primary-light);border-radius:12px;padding:14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+
+    .reserva-bloco .item-btn{margin-left:13px;font-size:1em;}
+
+    /* Cardápio/Categorias */
+
+    .busca-categoria {width:100%;margin-bottom:13px;display:flex;align-items:center;gap:8px;}
+
+    .busca-categoria input {flex:1;padding:8px 11px;border-radius:7px;border:1.1px solid #cdeee2;font-size:1em;background:#fff;}
+
+    .filtro-alim {margin-left:3px;color:var(--primary);}
+
+    .filtro-alim label {margin-right:7px;}
+
+    .categoria-cardapio {margin-bottom:22px;}
+
+    .catapio-titulo {font-size:1.09rem;font-weight:700;color:var(--primary);margin-bottom:9px;margin-top:0;display:flex;align-items:center;gap:6px;}
+
+    .itens-categoria {display:flex;flex-direction:column;gap:13px;}
+
+    .item-cardapio {display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:10px;padding:11px 9px;box-shadow:0 1px 8px #2d865912;border:1px solid #e9f7ef;min-height:62px;position:relative;}
+
+    .img-prato {width:48px;height:48px;border-radius:10px;object-fit:cover;background:#eaf8f1;display:block;}
+
+    .item-info {flex:1;min-width:0;}
+
+    .item-nome {font-weight:700;color:#232a2c;font-size:1.01em;margin-bottom:1px;display:flex;align-items:center;gap:4px;}
+
+    .item-nome .mod-tags {margin-left:4px;font-size:.88em;color:var(--primary);}
+
+    .item-nome .selo {background:#eaf8f1;color:var(--primary);border-radius:5px;font-size:.81em;padding:0.6px 5px;}
+
+    .item-meta {color:var(--primary);font-size:.98em;font-weight:700;}
+
+    .item-desc {color:var(--meta);font-size:.93em;margin-bottom:1px;}
+
+    .item-btn {background:var(--primary);color:#fff;border:none;border-radius:7px;padding:5px 11px;cursor:pointer;font-weight:700;font-size:0.90em;margin-left:5px;margin-top:7px;}
+
+    /* Modal de Reserva */
+
+    #modalReserva {display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0005;z-index:999;align-items:center;justify-content:center;}
+
+    #modalReserva .modal-wrap {background:#fff;border-radius:15px;max-width:340px;width:92vw;padding:21px 15px;box-shadow:0 10px 28px #2d865958;position:relative;}
+
+    #modalReserva .close-modal {position:absolute;right:11px;top:11px;background:none;border:none;font-size:1.25em;color:var(--primary);cursor:pointer;}
+
+    #modalReserva input, #modalReserva select, #modalReserva textarea {
+
+      padding:8px 11px;border-radius:6px;border:1.12px solid #d7e6df;font-size:.98em;margin-bottom:3px
+
+    }
+
+    #modalReserva input[type="date"], #modalReserva input[type="time"] {padding-right:4px;}
+
+    #modalReserva form {display:flex;flex-direction:column;gap:7px;}
+
+    #modalReserva .reserva-opcoes {display:flex;gap:7px;}
+
+    #modalReserva .reserva-opcoes label{flex:1;}
+
+    #reservaOk{text-align:center;margin-top:11px;color:var(--primary);font-weight:600;}
+
+    /* Avaliações - similar ao padrão pedido */
+
+    .avaliacao-filtros {margin-bottom:9px;display:flex;gap:7px;flex-wrap:wrap;}
+
+    .filtro-aval {background:var(--primary-light);color:var(--primary);border-radius:6px;padding:3px 11px;border:none;cursor:pointer;font-weight:600;}
+
+    .filtro-aval.active{background:var(--primary);color:#fff;}
+
+    .avaliacao-card {background:#fff;border-radius:9px;padding:9px 10px;margin-bottom:11px;box-shadow:0 1px 5px #0001;border:1px solid #eff6f1;position:relative;}
+
+    .avaliador-nome{font-weight:700;color:var(--primary);}
+
+    .avaliador-rating{color:var(--star);font-size:1em;}
+
+    .avaliacao-texto{color:#444;margin-top:5px;}
+
+    .aval-data{font-size:0.87em;color:var(--meta);}
+
+    .rest-resposta{background:var(--primary-light);color:var(--primary);border-radius:7px;padding:5px 8px;margin-top:8px;font-size:0.97em;}
+
+    /* Informações detalhadas */
+
+    .infos{padding:11px 8px;background:#fff;border-radius:10px;margin-bottom:10px;font-size:.99em;color:var(--meta);line-height:1.59;box-shadow:0 1px 5px #2d86590b;}
+
+    .infos strong{color:var(--primary);}
+
+    .infos-tags{margin-top:7px;}
+
+    .infos-tag{display:inline-block;background:var(--primary-light);color:var(--primary);border-radius:8px;padding:2.5px 10px;margin:2px 3px 2px 0;font-size:0.93em;}
+
+    iframe{width:100%;height:140px;border:0;border-radius:9px;margin:5px 0 10px 0;}
+
+    @media (max-width:430px) {
+
+      .container{padding:9px 2vw 22px 2vw;}
+
+      .header-capa{min-height:70px;}
+
+      .rest-logo{width:58px;height:58px;left:50%;bottom:-18px;}
+
+      .rest-logo img{width:52px;height:52px;}
+
+      .header-content{margin-top:32px;}
+
+      #modalReserva .modal-wrap{padding:10px 2vw;}
+
+    }
+
+  </style>
+</head>
+<body>
+  <div class="header-capa">
+    <div class="rest-logo">
+      <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=96&q=80" alt="Logo Restaurante" />
+    </div>
+  </div>
+  <div class="container">
+    <div class="header-content">
+      <div class="nome-restaurante">
+        Restaurante Raízes da África
+        <span class="badge-selo">Destaque</span>
+        <button title="Favoritar" class="favorito-btn" onclick="this.classList.toggle('active')">♥</button>
+      </div>
+      <div class="banners">
+        <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=120&q=60" alt="Banner 1" class="banner-img">
+        <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=120&q=60" alt="Banner 2" class="banner-img">
+      </div>
+      <div class="restaurant-info">
+        <span class="info-attr" title="Nota dos clientes"><span class="star">★</span> 4.9</span>
+        <span class="info-attr" title="Total de pedidos">1234 pedidos</span>
+        <span class="info-attr" title="Tempo de entrega">⏱️ 35-50 min</span>
+        <span class="info-attr" title="Taxa de entrega">R$ 5,00</span>
+        <span class="tag-aberto">Aberto</span>
+      </div>
+      <div class="horario">
+        Hoje: 10h00 - 22h00 | Delivery, Retirada e Reserva
+      </div>
+      <div class="badges">
+        <span class="badge-delivery">Entrega Própria</span>
+        <span class="badge-frete-gratis">Entrega Grátis acima de R$60</span>
+      </div>
+      <div class="destaques">
+        <span class="destaque-tag">Africana</span>
+        <span class="destaque-tag">Vegana</span>
+        <span class="destaque-tag">Feijoada especial</span>
+        <span class="destaque-tag">Eventos & Reservas</span>
+      </div>
+    </div>
+    <!-- Abas -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabCardapio">Cardápio</button>
+      <button class="tab-btn" id="tabAvaliacoes">Avaliações <span class="tab-indicador">44</span></button>
+      <button class="tab-btn" id="tabInfo">Informações</button>
+    </div>
+    <div class="aba-content" id="abaCardapio">
+      <div class="busca-categoria">
+        <input type="search" placeholder="Buscar prato ou bebida..." id="searchMenu">
+        <span class="filtro-alim">
+          <label><input type="checkbox">Vegano</label>
+          <label><input type="checkbox">Sem glúten</label>
+          <label><input type="checkbox">Promo</label>
+        </span>
+      </div>
+      <!-- RESERVA (mostre se restaurante permite) -->
+      <div class="reserva-bloco">
+        <div>
+          <div style="font-weight:700;font-size:1.07em;color:var(--primary);margin-bottom:2px;">Reservar Mesa</div>
+          <div style="color:var(--meta);font-size:.97em;">Reserve online para aniversário, reunião ou grupos.</div>
+        </div>
+        <button class="item-btn" onclick="document.getElementById('modalReserva').style.display='flex'">Reservar</button>
+      </div>
+      <!-- Categorias e itens -->
+      <div class="categoria-cardapio">
+        <div class="catapio-titulo">Entradas</div>
+        <div class="itens-categoria">
+          <div class="item-cardapio">
+            <img class="img-prato" src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=160&q=60" alt="">
+            <div class="item-info">
+              <div class="item-nome">Dadinho de tapioca <span class="mod-tags">veg</span></div>
+              <div class="item-desc">Cubos fritos de tapioca e queijo coalho com molho agridoce de pimenta.</div>
+              <div class="item-meta">R$ 16,90</div>
+            </div>
+            <button class="item-btn">Adicionar</button>
+          </div>
+        </div>
+      </div>
+      <div class="categoria-cardapio">
+        <div class="catapio-titulo">Pratos principais</div>
+        <div class="itens-categoria">
+          <div class="item-cardapio">
+            <img class="img-prato" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=160&q=60">
+            <div class="item-info">
+              <div class="item-nome">Moamba de Frango <span class="selo">Mais pedido</span></div>
+              <div class="item-desc">Prato tradicional africano com molho de amendoim, frango e quiabo.</div>
+              <div class="item-meta">R$ 39,90</div>
+            </div>
+            <button class="item-btn">Adicionar</button>
+          </div>
+          <div class="item-cardapio">
+            <img class="img-prato" src="https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=160&q=60">
+            <div class="item-info">
+              <div class="item-nome">Feijoada Vegana <span class="mod-tags">veg sem glúten</span></div>
+              <div class="item-desc">Feijoada com cogumelos, tofu defumado e acompanhamentos típicos.</div>
+              <div class="item-meta">R$ 35,90</div>
+            </div>
+            <button class="item-btn">Adicionar</button>
+          </div>
+        </div>
+      </div>
+      <div class="categoria-cardapio">
+        <div class="catapio-titulo">Bebidas</div>
+        <div class="itens-categoria">
+          <div class="item-cardapio">
+            <img class="img-prato" src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=160&q=60">
+            <div class="item-info">
+              <div class="item-nome">Suco de Hibisco</div>
+              <div class="item-desc">Refrescante feito com hibisco, limão e toque de gengibre.</div>
+              <div class="item-meta">R$ 9,90</div>
+            </div>
+            <button class="item-btn">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="aba-content" id="abaAvaliacoes" style="display:none;">
+      <div class="avaliacao-filtros">
+        <button class="filtro-aval active">Mais recentes</button>
+        <button class="filtro-aval">5 estrelas</button>
+        <button class="filtro-aval">Ruins</button>
+        <button class="filtro-aval">Com resposta</button>
+      </div>
+      <div class="avaliacao-card">
+        <span class="avaliador-nome">Carlos Silva</span>
+        <span class="avaliador-rating">★★★★★</span>
+        <span class="aval-data">há 1 dia</span>
+        <div class="avaliacao-texto">Comida deliciosa, ambiente acolhedor, staff super simpático. Recomendo!</div>
+        <div class="rest-resposta">Raízes da África: Muito obrigado! Esperamos que volte sempre ☺️</div>
+      </div>
+      <div class="avaliacao-card">
+        <span class="avaliador-nome">Juliana Bento</span>
+        <span class="avaliador-rating">★★★★☆</span>
+        <span class="aval-data">há 4 dias</span>
+        <div class="avaliacao-texto">A feijoada vegana é maravilhosa!</div>
+      </div>
+    </div>
+    <div class="aba-content" id="abaInfo" style="display:none;">
+      <div class="infos">
+        <strong>Endereço:</strong> R. Culturas Africanas, 200, Goiânia/GO<br>
+        <strong>Contato:</strong> (62) 98888-8888<br>
+        <strong>Entrega:</strong> Delivery próprio para Jardim Curitiba e bairros próximos<br>
+        <strong>Horário de funcionamento:</strong>
+        <ul style="padding-left:17px;line-height:1.3;">
+          <li>Seg-Sex: 10h00 - 22h00</li>
+          <li>Sábado: 11h00 - 21h00</li>
+          <li>Domingo: Fechado</li>
+        </ul>
+        <strong>Formas de pagamento:</strong> Cartão, Pix, Dinheiro, VR/VA.<br>
+        <strong>Instagram:</strong> @raizes.africa
+        <div class="infos-tags">
+          <span class="infos-tag">Acessibilidade</span>
+          <span class="infos-tag">Wi-Fi grátis</span>
+          <span class="infos-tag">Espaço Eventos</span>
+          <span class="infos-tag">Feijoada toda sexta</span>
+        </div>
+      </div>
+      <iframe title="Mapa" loading="lazy" allowfullscreen
+        src="https://www.openstreetmap.org/export/embed.html?bbox=-49.2643,-16.6864,-49.2543,-16.6764&layer=mapnik">
+      </iframe>
+      <div class="infos">
+        <strong>Observações:</strong> Trabalhamos com reservas para eventos, datas comemorativas e grupos. Consulte disponibilidade via WhatsApp!
+      </div>
+      <div class="infos">
+        <strong>FAQ:</strong><br>
+        <b>O restaurante aceita reservas online?</b> Sim, utilize o botão "Reservar" no início do Cardápio.<br>
+        <b>Pedidos via WhatsApp?</b> Após montar seu pedido, clique em "Finalizar Pedido" para abrir o WhatsApp auto-preenchido.<br>
+        <b>Como funciona o delivery?</b> Entregamos em bairros próximos (raio ~7km) ou via retirada.<br>
+        <b>Cartão Digital?</b> Peça o link do cardápio digital por WhatsApp para compartilhar com convidados.
+      </div>
+    </div>
+  </div>
+  <!-- Modal Reserva -->
+  <div id="modalReserva">
+    <div class="modal-wrap">
+      <button class="close-modal" onclick="document.getElementById('modalReserva').style.display='none'">×</button>
+      <div style="font-weight:700;font-size:1.1em;color:var(--primary);margin-bottom:8px;">Reservar Mesa</div>
+      <form id="formReserva">
+        <input type="text" required placeholder="Nome completo">
+        <input type="tel" required placeholder="Celular">
+        <div style="display:flex; gap:8px;">
+          <input type="date" required>
+          <input type="time" required>
+        </div>
+        <select required>
+          <option value="">Nº de pessoas</option>
+          <option>1 pessoa</option>
+          <option>2 pessoas</option>
+          <option>3 pessoas</option>
+          <option>4 pessoas</option>
+          <option>5 pessoas</option>
+          <option>6 ou mais</option>
+        </select>
+        <textarea placeholder="Comentário especial (opcional)"></textarea>
+        <button type="submit" class="item-btn" style="width:100%;margin-top:5px;">Confirmar Reserva</button>
+      </form>
+      <div id="reservaOk" style="display:none;">Reserva enviada! A confirmação chegará no seu WhatsApp.</div>
+    </div>
+  </div>
+  <script>
+    // Abas dinâmicas
+    const tabs = [
+      { btn: document.getElementById('tabCardapio'), content: document.getElementById('abaCardapio') },
+      { btn: document.getElementById('tabAvaliacoes'), content: document.getElementById('abaAvaliacoes') },
+      { btn: document.getElementById('tabInfo'), content: document.getElementById('abaInfo') },
+    ];
+
+    tabs.forEach((tab, idx) => {
+      tab.btn.onclick = () => {
+        tabs.forEach((t, i) => {
+          t.btn.classList.toggle('active', i === idx);
+          t.content.style.display = i === idx ? '' : 'none';
+        });
+        window.scrollTo({ top: 160, behavior: "smooth"});
+      }
+    });
+
+    // Modal reserva
+    document.getElementById('formReserva').onsubmit = function(e){
+      e.preventDefault();
+      document.getElementById('reservaOk').style.display = '';
+      setTimeout(()=>{
+        document.getElementById('modalReserva').style.display = 'none';
+        document.getElementById('reservaOk').style.display = 'none';
+        document.getElementById('formReserva').reset();
+      },1800);
+    }
+  </script>
+</body>
+</html>
+
