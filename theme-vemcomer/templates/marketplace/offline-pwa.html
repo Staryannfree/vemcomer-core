@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sem conexão - Restaurante</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #2d8659;
+      --primary-light: #eaf8f1;
+      --gray: #f6f9f6;
+      --accent: #45c676;
+      --danger: #ea5252;
+    }
+    body {background:var(--gray);font-family:'Montserrat', Arial, sans-serif;color:#232a2c; margin:0; padding:0;}
+
+    .offline-wrap {
+
+      max-width: 340px;
+
+      margin: 60px auto 0 auto;
+
+      background: #fff;
+
+      border-radius: 18px;
+
+      box-shadow: 0 3px 14px #2d865914;
+
+      padding: 38px 22px 28px 22px;
+
+      text-align: center;
+
+      position: relative;
+
+    }
+
+    .offline-logo {
+
+      width: 77px; height: 77px; background: #fff; border-radius: 50%; border: 2.5px solid #eaf8f1; margin: 0 auto 18px auto; box-shadow: 0 2px 9px #2d865940; overflow: hidden;
+
+      display: flex; align-items: center; justify-content: center;
+
+    }
+
+    .offline-logo img {width: 67px; height: 67px; object-fit: cover; border-radius: 50%;}
+
+    .offline-title {
+
+      font-weight: 700;
+
+      color: var(--primary);
+
+      font-size: 1.25em;
+
+      margin-bottom: 14px;
+
+    }
+
+    .offline-desc {
+
+      color: #345;
+
+      font-size:1em;
+
+      margin-bottom:19px;
+
+    }
+
+    .offline-warn {
+
+      color: var(--danger);
+
+      font-size: .98em;
+
+      background: #ffecec;
+
+      border-radius: 7px;
+
+      padding: 8px 9px;
+
+      margin: 13px 0 22px 0;
+
+      font-weight: 700;
+
+    }
+
+    .btn-try {
+
+      background: var(--primary);
+
+      color: #fff;
+
+      font-weight: 700;
+
+      font-size: 1.07em;
+
+      border: none;
+
+      border-radius: 12px;
+
+      padding: 13px 0;
+
+      width: 85%;
+
+      box-shadow: 0 2px 13px #45c6761c;
+
+      cursor: pointer;
+
+      transition: background .23s;
+
+      margin-top: 7px;
+
+    }
+
+    .btn-try:hover {background:var(--accent);}
+
+    .offline-tip {
+
+      font-size:.97em;
+
+      color: #6b7672;
+
+      margin:17px 0 2px 0;
+
+    }
+
+  </style>
+</head>
+<body>
+  <div class="offline-wrap">
+    <div class="offline-logo">
+      <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=96&q=80" alt="Logo Restaurante"/>
+    </div>
+    <div class="offline-title">Você está offline</div>
+    <div class="offline-desc">
+      Não foi possível carregar os dados do <b>Restaurante Raízes da África</b>.<br>
+      Por favor, verifique sua conexão com a internet.
+    </div>
+    <div class="offline-warn">
+      Algumas funções ficarão indisponíveis.<br>
+      Pedidos e reservas precisam de conexão.
+    </div>
+    <button class="btn-try" onclick="window.location.reload()">Tentar Novamente</button>
+    <div class="offline-tip">
+      Se você já visitou esta página, alguns dados podem aparecer.<br>
+      Assim que a internet voltar, tudo será atualizado automaticamente.
+    </div>
+  </div>
+</body>
+</html>
+
