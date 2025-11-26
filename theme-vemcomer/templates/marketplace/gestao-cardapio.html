@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestão de Cardápio</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,600,500&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; margin:0; color: #232a2c;}
+
+    .menu-gestao-container {max-width: 1000px; margin:0 auto; padding:22px 7px 42px 7px;}
+
+    .menu-top {display:flex;align-items:center;gap:17px;margin-bottom:9px;}
+
+    .menu-title {font-size:1.18em;font-weight:900;color:#2d8659;}
+
+    .menu-btn {background:#2d8659;color:#fff;font-weight:800;border:none;border-radius:8px;padding:10px 18px;font-size:1em;cursor:pointer;box-shadow:0 2px 8px #2d865918;}
+
+    .menu-btn.secondary {background:#facb32;color:#232a2c;}
+
+    .tabs-cat {display:flex;gap:5px;border-bottom:2px solid #eaf8f1;margin:12px 0 19px 0;}
+
+    .cat-tab-btn {background:none;border:none;color:#6b7672;padding:10px 19px 7px 19px;font-size:1em;font-weight:700;cursor:pointer;transition:color .12s;}
+
+    .cat-tab-btn.active {color:#2d8659;border-bottom:3px solid #2d8659;background:#eaf8f1;}
+
+    .tab-content {margin-bottom:24px;}
+
+    .prod-list {display:flex;flex-wrap:wrap;gap:20px;}
+
+    .prod-card {
+
+      background:#fff;border-radius:13px;box-shadow:0 1px 14px #2d865914;
+
+      min-width:295px;max-width:309px;flex:1 1 315px;position:relative;
+
+      padding:16px 12px 13px 16px;margin-bottom:9px;display:flex;flex-direction:column;align-items:flex-start;
+
+    }
+
+    .prod-img {width:63px;height:63px;object-fit:cover;border-radius:9px;background:#f5f6f4;box-shadow:0 2px 8px #bbb1;}
+
+    .prod-info {margin-left:14px;min-width:0;flex:1;}
+
+    .prod-nome {font-weight:900;color:#232a2c;font-size:1.08em;}
+
+    .prod-ativo {background:#cdf9e0;color:#23863b;padding:4px 12px;border-radius:9px;font-size:.92em;margin-left:9px;font-weight:700;}
+
+    .prod-pausado {background:#ffe7e7;color:#ea5252;padding:4px 12px;border-radius:9px;font-size:.92em;margin-left:9px;font-weight:700;}
+
+    .prod-preco {color:#2d8659;font-size:1.03em;font-weight:900;margin-top:2px;}
+
+    .prod-desc {color:#6b7672;margin:2px 0 2px 0;font-size:.98em;}
+
+    .prod-actions {display:flex;gap:9px;margin-top:7px;}
+
+    .pedit-btn {background:#fff;color:#2d8659;border:1.5px solid #cdf9e0;font-weight:700;padding:6px 12px;border-radius:7px;font-size:.96em;cursor:pointer;}
+
+    .pedit-btn.pause {background:#facb32;color:#232a2c;}
+
+    .pedit-btn.del {background:#ffe7e7;color:#ea5252;border-color:#ffe7e7;}
+
+    .prod-alerta {color:#e99326;margin-left:8px;font-size:1.05em;}
+
+    .modif-box {background:#eaf8f1;border-radius:8px;padding:6px 10px;font-size:.98em;margin-top:11px;width:100%;}
+
+    .modif-title {font-weight:700;color:#3176da;font-size:.96em;margin-bottom:3px;}
+
+    .modif-list {margin:0;padding:0;display:flex;gap:9px;flex-wrap:wrap;}
+
+    .modif-badge {background:#fffbe2;color:#fa7e1e;border-radius:7px;padding:3px 9px;margin:0 0 4px 0; font-weight:700;font-size:.94em;}
+
+    .modif-edit {margin-left:11px;color:#2d8659;text-decoration:underline;cursor:pointer;font-size:.97em;}
+
+    @media (max-width:720px){.prod-list{flex-direction:column}.prod-card{min-width:96vw;max-width:98vw;}}
+
+  </style>
+</head>
+<body>
+<div class="menu-gestao-container">
+  <div class="menu-top">
+    <div class="menu-title">Gestão de Cardápio</div>
+    <button class="menu-btn" onclick="alert('Adicionar Produto')">+ Adicionar Produto</button>
+    <button class="menu-btn secondary" onclick="alert('Nova Categoria')">+ Categoria</button>
+  </div>
+  <div class="tabs-cat">
+    <button class="cat-tab-btn active" onclick="showTab('entradas')">Entradas</button>
+    <button class="cat-tab-btn" onclick="showTab('pratos')">Pratos Principais</button>
+    <button class="cat-tab-btn" onclick="showTab('bebidas')">Bebidas</button>
+    <button class="cat-tab-btn" onclick="showTab('sobremesas')">Sobremesas</button>
+  </div>
+  <!-- Categorias -->
+  <div class="tab-content" id="cat-entradas" style="">
+    <div class="prod-list">
+      <div class="prod-card">
+        <div style="display:flex;align-items:center;">
+          <img src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=160&q=60" class="prod-img" alt="">
+          <div class="prod-info">
+            <div class="prod-nome">Dadinho de Tapioca <span class="prod-ativo">Ativo</span></div>
+            <div class="prod-desc">Cubos fritos com queijo coalho e molho de pimenta.</div>
+            <div class="prod-preco">R$ 16,90</div>
+          </div>
+        </div>
+        <div class="prod-actions">
+          <button class="pedit-btn" onclick="alert('Editar Produto')">Editar</button>
+          <button class="pedit-btn pause" onclick="alert('Produto pausado')">Pausar</button>
+          <button class="pedit-btn del" onclick="alert('Deletar produto')">Deletar</button>
+        </div>
+        <div class="modif-box">
+          <div class="modif-title">Modificadores:</div>
+          <div class="modif-list">
+            <div class="modif-badge">Adicionar Mel</div>
+            <div class="modif-badge">Sem Lactose</div>
+            <div class="modif-edit" onclick="alert('Editar modificadores')">+ Modificadores</div>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div style="display:flex;align-items:center;">
+          <img src="" class="prod-img" style="background:#ffe7e7;" alt="Sem foto" />
+          <div class="prod-info">
+            <div class="prod-nome">Coxinha Vegana <span class="prod-pausado">Pausado</span><span class="prod-alerta" title="Sem foto">⚠️</span></div>
+            <div class="prod-desc">Feita com mandioca, carne de jaca e temperos naturais.</div>
+            <div class="prod-preco">R$ 9,90</div>
+          </div>
+        </div>
+        <div class="prod-actions">
+          <button class="pedit-btn" onclick="alert('Editar Produto')">Editar</button>
+          <button class="pedit-btn" style="background:#cdf9e0;color:#24624c;" onclick="alert('Produto ativado')">Ativar</button>
+          <button class="pedit-btn del" onclick="alert('Deletar produto')">Deletar</button>
+        </div>
+        <div class="modif-box">
+          <div class="modif-title">Modificadores:</div>
+          <div class="modif-list">
+            <div class="modif-badge">Ketchup</div>
+            <div class="modif-badge">Barbecue</div>
+            <div class="modif-edit" onclick="alert('Editar modificadores')">+ Modificadores</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Exemplo para outras categorias (inicialmente escondido) -->
+  <div class="tab-content" id="cat-pratos" style="display:none;">
+    <div class="prod-list">
+      <div class="prod-card">
+        <div style="display:flex;align-items:center;">
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=160&q=60" class="prod-img" alt="">
+          <div class="prod-info">
+            <div class="prod-nome">Moamba de Frango <span class="prod-ativo">Ativo</span></div>
+            <div class="prod-desc">Tradicional africano com amendoim e quiabo.</div>
+            <div class="prod-preco">R$ 39,90</div>
+          </div>
+        </div>
+        <div class="prod-actions">
+          <button class="pedit-btn" onclick="alert('Editar Produto')">Editar</button>
+          <button class="pedit-btn pause" onclick="alert('Produto pausado')">Pausar</button>
+          <button class="pedit-btn del" onclick="alert('Deletar produto')">Deletar</button>
+        </div>
+        <div class="modif-box">
+          <div class="modif-title">Modificadores:</div>
+          <div class="modif-list">
+            <div class="modif-badge">Sem Quiabo</div>
+            <div class="modif-badge">Bem Passado</div>
+            <div class="modif-edit" onclick="alert('Editar modificadores')">+ Modificadores</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-content" id="cat-bebidas" style="display:none;">
+    <div class="prod-list">
+      <div class="prod-card">
+        <div style="display:flex;align-items:center;">
+          <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=160&q=60" class="prod-img" alt="">
+          <div class="prod-info">
+            <div class="prod-nome">Suco de Hibisco <span class="prod-ativo">Ativo</span></div>
+            <div class="prod-desc">Hibisco, limão e gengibre.</div>
+            <div class="prod-preco">R$ 9,90</div>
+          </div>
+        </div>
+        <div class="prod-actions">
+          <button class="pedit-btn" onclick="alert('Editar Produto')">Editar</button>
+          <button class="pedit-btn pause" onclick="alert('Produto pausado')">Pausar</button>
+          <button class="pedit-btn del" onclick="alert('Deletar produto')">Deletar</button>
+        </div>
+        <div class="modif-box">
+          <div class="modif-title">Modificadores:</div>
+          <div class="modif-list">
+            <div class="modif-badge">Sem Gelo</div>
+            <div class="modif-badge">Limão Extra</div>
+            <div class="modif-edit" onclick="alert('Editar modificadores')">+ Modificadores</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-content" id="cat-sobremesas" style="display:none;">
+    <div class="prod-list">
+      <div class="prod-card">
+        <div style="display:flex;align-items:center;">
+          <img src="https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=160&q=60" class="prod-img">
+          <div class="prod-info">
+            <div class="prod-nome">Brownie <span class="prod-ativo">Ativo</span></div>
+            <div class="prod-desc">Brownie artesanal de chocolate meio amargo.</div>
+            <div class="prod-preco">R$ 8,00</div>
+          </div>
+        </div>
+        <div class="prod-actions">
+          <button class="pedit-btn" onclick="alert('Editar Produto')">Editar</button>
+          <button class="pedit-btn pause" onclick="alert('Produto pausado')">Pausar</button>
+          <button class="pedit-btn del" onclick="alert('Deletar produto')">Deletar</button>
+        </div>
+        <div class="modif-box">
+          <div class="modif-title">Modificadores:</div>
+          <div class="modif-list">
+            <div class="modif-badge">Com Sorvete</div>
+            <div class="modif-badge">Nuts</div>
+            <div class="modif-edit" onclick="alert('Editar modificadores')">+ Modificadores</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function showTab(tab) {
+    ['entradas','pratos','bebidas','sobremesas'].forEach(id => {
+      document.getElementById('cat-'+id).style.display = (id===tab)?'':'none';
+      document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.replace(/\s+/g,'').toLowerCase().includes(tab));
+      });
+    });
+  }
+</script>
+</body>
+</html>
+
