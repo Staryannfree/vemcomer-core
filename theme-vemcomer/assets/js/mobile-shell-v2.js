@@ -985,8 +985,14 @@ async function renderDishes() {
             ? dish.image 
             : getSmartImage(contextText); // Força o fallback aqui!
         
+        // Escapar aspas e caracteres especiais para JSON seguro
+        const safeName = (dish.name || 'Prato').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeDesc = (dish.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const safePrice = parseFloat((dish.price || '0').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        const safeImage = finalImage.replace(/'/g, "\\'");
+        
         return `
-        <div class="dish-card" onclick="abrirModalProduto({img: '${finalImage}', titulo: '${dish.name || 'Prato'}', descricao: '${(dish.description || '').replace(/'/g, "\\'")}', preco: ${parseFloat((dish.price || '0').replace(/[^\d,]/g, '').replace(',', '.')) || 0}})" style="cursor: pointer;">
+        <div class="dish-card" data-dish-id="${dish.id || ''}" data-dish-name="${safeName}" data-dish-desc="${safeDesc}" data-dish-price="${safePrice}" data-dish-image="${safeImage}" style="cursor: pointer;">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
@@ -2006,8 +2012,8 @@ function atualizaTotal() {
     }
 }
 
-// Função para abrir o modal com dados do produto
-function abrirModalProduto(produto) {
+// Função para abrir o modal com dados do produto (global)
+window.abrirModalProduto = function(produto) {
     const imgEl = document.getElementById('imgProduto');
     const tituloEl = document.getElementById('tituloProduto');
     const descEl = document.getElementById('descProduto');
@@ -2045,11 +2051,18 @@ function abrirModalProduto(produto) {
     atualizaTotal();
 }
 
-function fecharModalProduto() {
+window.fecharModalProduto = function() {
     const modalEl = document.getElementById('modalProduto');
     if (modalEl) {
         modalEl.classList.remove('show');
     }
+}
+
+window.alteraQtd = function(v) {
+    qtdProduto = Math.max(1, qtdProduto + v);
+    const qtdEl = document.getElementById('qtdProduto');
+    if (qtdEl) qtdEl.textContent = qtdProduto;
+    atualizaTotal();
 }
 
 // Atualiza preço quando opções mudam

@@ -268,7 +268,7 @@
 <!-- MODAL DETALHES PRODUTO -->
 <div id="modalProduto">
     <div class="prod-modal-content">
-        <button class="prod-close" onclick="fecharModalProduto()">×</button>
+                <button class="prod-close" onclick="window.fecharModalProduto()">×</button>
         <img id="imgProduto" class="prod-img" src="" alt="Foto Produto">
         <div class="prod-details">
             <div id="tituloProduto" class="prod-title"></div>
@@ -293,9 +293,9 @@
             <!-- Contador quantidade e botão -->
             <div class="prod-actions">
                 <div class="prod-qtd-btns">
-                    <button type="button" onclick="alteraQtd(-1)">-</button>
+                    <button type="button" onclick="window.alteraQtd(-1)">-</button>
                     <span id="qtdProduto">1</span>
-                    <button type="button" class="plus" onclick="alteraQtd(1)">+</button>
+                    <button type="button" class="plus" onclick="window.alteraQtd(1)">+</button>
                 </div>
                 <button id="btnAddCarrinho" onclick="window.location.href='/wp-content/themes/theme-vemcomer/templates/marketplace/carrinho-side-cart.html'">Adicionar <span id="precoTotal"></span></button>
             </div>
