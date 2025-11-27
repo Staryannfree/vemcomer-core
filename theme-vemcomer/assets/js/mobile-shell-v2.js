@@ -1533,11 +1533,11 @@ async function requestLocationPermission() {
         
         let errorMsg = 'Não foi possível obter sua localização.';
         if (error.code === error.PERMISSION_DENIED || error.code === 1) {
-            errorMsg = 'Permissão de localização negada. Por favor, permita o acesso nas configurações do navegador e tente novamente.';
+            errorMsg = 'Permissão de localização negada. Você pode permitir nas configurações do navegador ou pular esta etapa.';
         } else if (error.code === error.POSITION_UNAVAILABLE || error.code === 2) {
-            errorMsg = 'Localização indisponível. Verifique se o GPS está ativado.';
+            errorMsg = 'Localização indisponível. Verifique se o GPS está ativado ou pule esta etapa.';
         } else if (error.code === error.TIMEOUT || error.code === 3) {
-            errorMsg = 'Tempo de espera esgotado. Tente novamente.';
+            errorMsg = 'Tempo de espera esgotado. Tente novamente ou pule esta etapa.';
         } else if (error.message) {
             errorMsg = error.message;
         }
@@ -1610,6 +1610,15 @@ async function tryAutoLocation() {
 }
 
 function checkLocationAndShowModal() {
+    // Verificar se o usuário já pulou a localização
+    const locationSkipped = localStorage.getItem('vc_location_skipped') === 'true';
+    if (locationSkipped) {
+        // Se pulou, não mostrar modal novamente
+        updateLocationText();
+        hideLocationModal();
+        return;
+    }
+    
     // Verificar se já tem localização salva e válida
     const neighborhood = localStorage.getItem('vc_user_neighborhood') || getCookie('vc_user_neighborhood');
     const city = localStorage.getItem('vc_user_city') || getCookie('vc_user_city');
@@ -1660,6 +1669,15 @@ function checkLocationAndShowModal() {
         // Garantir que o modal está escondido
         hideLocationModal();
     }
+}
+
+function skipLocation() {
+    // Marcar que o usuário pulou a localização
+    localStorage.setItem('vc_location_skipped', 'true');
+    // Fechar modal
+    hideLocationModal();
+    // Atualizar texto do locationText (mostrar "Endereço" ou padrão)
+    updateLocationText();
 }
 
 // ============ SEARCH FUNCTIONALITY ============
@@ -1964,6 +1982,12 @@ async function initApp() {
     const locationModalBtn = document.getElementById('locationModalBtn');
     if (locationModalBtn) {
         locationModalBtn.addEventListener('click', requestLocationPermission);
+    }
+    
+    // Event listener para o botão "Pular por enquanto"
+    const locationModalSkipBtn = document.getElementById('locationModalSkipBtn');
+    if (locationModalSkipBtn) {
+        locationModalSkipBtn.addEventListener('click', skipLocation);
     }
     
     // Inicializar busca
