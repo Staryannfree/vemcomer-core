@@ -268,36 +268,43 @@
 <!-- MODAL DETALHES PRODUTO -->
 <div id="modalProduto">
     <div class="prod-modal-content">
-                <button class="prod-close" onclick="window.fecharModalProduto()">×</button>
+        <button class="prod-close" onclick="window.fecharModalProduto()">×</button>
+        
         <img id="imgProduto" class="prod-img" src="" alt="Foto Produto">
+        
         <div class="prod-details">
             <div id="tituloProduto" class="prod-title"></div>
             <div id="descProduto" class="prod-desc"></div>
             <div class="prod-price">R$ <span id="precoBase"></span></div>
-            <!-- Modificadores obrigatórios -->
+            
             <div class="prod-mod-group">
-                <b>Escolha uma Proteína <span style="color:#ea5252">*</span></b><br>
-                <label><input type="radio" name="proteina" checked> Tofu Crocante (+R$ 3,00)</label>
-                <label><input type="radio" name="proteina"> Grão-de-Bico (incluso)</label>
+                <b>Escolha uma Proteína <span>*</span></b>
+                <label><input type="radio" name="proteina" value="0" checked> Grão-de-Bico (incluso)</label>
+                <label><input type="radio" name="proteina" value="3.00"> Tofu Crocante (+ R$ 3,00)</label>
             </div>
-            <!-- Modificadores opcionais -->
+            
             <div class="prod-mod-group">
-                <b>Adicionais</b><br>
-                <label><input type="checkbox" name="adicional"> Tomate seco (+R$ 2,00)</label>
-                <label><input type="checkbox" name="adicional"> Queijo vegano (+R$ 3,00)</label>
+                <b>Adicionais</b>
+                <label><input type="checkbox" name="adicional" value="2.00"> Tomate seco (+ R$ 2,00)</label>
+                <label><input type="checkbox" name="adicional" value="3.00"> Queijo vegano (+ R$ 3,00)</label>
+                <label><input type="checkbox" name="adicional" value="1.50"> Molho extra (+ R$ 1,50)</label>
             </div>
-            <!-- Observação -->
-            <div>
-                <textarea id="obsProduto" placeholder="Observação para o restaurante..."></textarea>
+            
+            <div style="margin-bottom: 20px;">
+                <b>Observações</b>
+                <textarea id="obsProduto" placeholder="Ex: Tirar cebola, caprichar no molho..."></textarea>
             </div>
-            <!-- Contador quantidade e botão -->
+            
             <div class="prod-actions">
                 <div class="prod-qtd-btns">
                     <button type="button" onclick="window.alteraQtd(-1)">-</button>
                     <span id="qtdProduto">1</span>
-                    <button type="button" class="plus" onclick="window.alteraQtd(1)">+</button>
+                    <button type="button" onclick="window.alteraQtd(1)">+</button>
                 </div>
-                <button id="btnAddCarrinho" onclick="window.location.href='/wp-content/themes/theme-vemcomer/templates/marketplace/carrinho-side-cart.html'">Adicionar <span id="precoTotal"></span></button>
+                <button id="btnAddCarrinho" onclick="window.adicionarAoCarrinho()">
+                    <span>Adicionar</span>
+                    <span id="precoTotal"></span>
+                </button>
             </div>
         </div>
     </div>

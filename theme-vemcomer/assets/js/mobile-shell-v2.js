@@ -1991,24 +1991,23 @@ function alteraQtd(v) {
 }
 
 function atualizaTotal() {
-    // Cálculo de modificadores
-    precoModsProduto = 0;
-    // Proteína (Tofu Crocante)
-    const proteinaChecked = document.querySelector('input[name="proteina"]:checked');
-    if (proteinaChecked && proteinaChecked.parentElement.textContent.includes('Tofu')) {
-        precoModsProduto += 3;
+    let precoAdicionais = 0;
+    
+    // Soma Radio (Proteína)
+    const radioChecked = document.querySelector('input[name="proteina"]:checked');
+    if (radioChecked) {
+        precoAdicionais += parseFloat(radioChecked.value || 0);
     }
-    // Adicionais
-    const adicionais = document.querySelectorAll('input[name="adicional"]:checked');
-    adicionais.forEach((el) => {
-        if (el.parentElement.textContent.includes('Tomate seco')) precoModsProduto += 2;
-        if (el.parentElement.textContent.includes('Queijo vegano')) precoModsProduto += 3;
+    
+    // Soma Checkboxes (Adicionais)
+    document.querySelectorAll('input[name="adicional"]:checked').forEach(el => {
+        precoAdicionais += parseFloat(el.value || 0);
     });
-    // Total
-    const total = (precoBaseProduto + precoModsProduto) * qtdProduto;
+    
+    const total = (precoBaseProduto + precoAdicionais) * qtdProduto;
     const precoTotalEl = document.getElementById('precoTotal');
     if (precoTotalEl) {
-        precoTotalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+        precoTotalEl.textContent = 'R$ ' + formatMoney(total);
     }
 }
 
@@ -2028,34 +2027,50 @@ window.abrirModalProduto = function(produto) {
         return;
     }
     
+    // Popula os dados
     imgEl.src = produto.img || PLACEHOLDERS.default;
     tituloEl.textContent = produto.titulo || produto.name || 'Produto';
     descEl.textContent = produto.descricao || produto.description || '';
+    
     precoBaseProduto = produto.preco || produto.price || 0;
-    precoBaseEl.textContent = precoBaseProduto.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    precoBaseEl.textContent = formatMoney(precoBaseProduto);
+    
+    // Reseta estado
     qtdProduto = 1;
-    precoModsProduto = 0;
     qtdEl.textContent = qtdProduto;
-    precoTotalEl.textContent = 'R$ ' + precoBaseProduto.toFixed(2).replace('.', ',');
     obsEl.value = '';
     
-    // Reseta modificadores
+    // Reseta checkboxes
+    document.querySelectorAll('input[name="adicional"]').forEach(el => el.checked = false);
     const proteinas = document.querySelectorAll('input[name="proteina"]');
     if (proteinas.length > 0) {
         proteinas[0].checked = true;
-        if (proteinas.length > 1) proteinas[1].checked = false;
     }
-    document.querySelectorAll('input[name="adicional"]').forEach(el => el.checked = false);
     
+    // Mostra modal
     modalEl.classList.add('show');
+    
+    // Calcula total inicial
     atualizaTotal();
+}
+
+// Função auxiliar para formatar dinheiro
+function formatMoney(val) {
+    return val.toFixed(2).replace('.', ',');
 }
 
 window.fecharModalProduto = function() {
     const modalEl = document.getElementById('modalProduto');
     if (modalEl) {
         modalEl.classList.remove('show');
+        // Não volta para página anterior se estiver na home
+        // setTimeout(() => { history.back(); }, 200);
     }
+}
+
+window.adicionarAoCarrinho = function() {
+    // Redireciona para o carrinho
+    window.location.href = TEMPLATE_PATH + 'carrinho-side-cart.html';
 }
 
 window.alteraQtd = function(v) {
@@ -2065,7 +2080,27 @@ window.alteraQtd = function(v) {
     atualizaTotal();
 }
 
-// Atualiza preço quando opções mudam
+// Event delegation para cliques nos cards de pratos
+document.addEventListener('click', function(e) {
+    const dishCard = e.target.closest('.dish-card');
+    if (dishCard && dishCard.dataset.dishName) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dishData = {
+            img: dishCard.dataset.dishImage || PLACEHOLDERS.default,
+            titulo: dishCard.dataset.dishName || 'Prato',
+            descricao: dishCard.dataset.dishDesc || '',
+            preco: parseFloat(dishCard.dataset.dishPrice || '0')
+        };
+        if (window.abrirModalProduto) {
+            window.abrirModalProduto(dishData);
+        } else {
+            console.error('Função abrirModalProduto não encontrada');
+        }
+    }
+});
+
+// Listeners para recalcular preço ao clicar nas opções
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[name="proteina"],input[name="adicional"]').forEach(function(el) {
         el.addEventListener('change', atualizaTotal);
