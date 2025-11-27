@@ -1702,3 +1702,36 @@ Conectar a Home Page gerada pelo WordPress (`front-page.php`) com as páginas HT
 
 **Resultado:**
 Navegação híbrida funcional - usuários podem navegar da Home WordPress para qualquer página HTML estática e voltar para a Home usando o botão "Início" na bottom navigation.
+
+## v0.57 - Correção Crítica: Caminhos Absolutos para Templates HTML
+
+**Data:** 2024-12-XX
+
+**Problema identificado:**
+Links gerados pelo JavaScript estavam apontando para a raiz do site (ex: `/perfil-restaurante.html`), gerando erro 404. O padrão correto deve ser o caminho completo do tema.
+
+**Solução implementada:**
+
+### 1. Constante TEMPLATE_PATH
+- ✅ Constante definida no topo de `mobile-shell-v2.js`
+- ✅ Valor: `/wp-content/themes/theme-vemcomer/templates/marketplace/`
+
+### 2. Correções no JavaScript
+- ✅ **Função `openStory()`**: Corrigida para usar `TEMPLATE_PATH + 'story-viewer-cliente.html'`
+- ✅ **Função `attachRestaurantCardListeners()`**: Corrigida para usar `TEMPLATE_PATH + 'perfil-restaurante.html'`
+- ✅ **Função `attachFeaturedCardListeners()`**: Corrigida para usar `TEMPLATE_PATH + 'perfil-restaurante.html'`
+- ✅ **Função `renderSearchResults()`**: 
+  - Restaurantes: Corrigido para usar `TEMPLATE_PATH + 'perfil-restaurante.html'`
+  - Itens do cardápio: Corrigido para usar `TEMPLATE_PATH + 'modal-detalhes-produto.html'`
+- ✅ **Todos os renders dinâmicos**: Já estavam usando TEMPLATE_PATH corretamente
+
+### 3. Verificação do PHP
+- ✅ **Quick Actions**: Todos os links já usam caminhos absolutos completos
+- ✅ **Bottom Navigation**: Todos os links já usam caminhos absolutos completos
+- ✅ **Links "Ver todos"**: Todos os links já usam caminhos absolutos completos
+
+**Arquivos modificados:**
+- `theme-vemcomer/assets/js/mobile-shell-v2.js` - Correção de 4 funções que não usavam TEMPLATE_PATH
+
+**Resultado:**
+Todos os links agora usam caminhos absolutos completos (`/wp-content/themes/theme-vemcomer/templates/marketplace/`), eliminando erros 404 e garantindo navegação funcional entre Home WordPress e páginas HTML estáticas.

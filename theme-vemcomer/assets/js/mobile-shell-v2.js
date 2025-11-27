@@ -617,7 +617,7 @@ let progressInterval = null;
 
 function openStory(groupId) {
     // Redirecionar para o HTML estático do story viewer
-    window.location.href = 'story-viewer-cliente.html';
+    window.location.href = TEMPLATE_PATH + 'story-viewer-cliente.html';
     return;
     
     const storyGroup = storiesData.find(s => s.id === groupId);
@@ -1270,7 +1270,7 @@ function attachRestaurantCardListeners() {
             }
             
             // Redirecionar para o restaurante
-            window.location.href = 'perfil-restaurante.html';
+            window.location.href = TEMPLATE_PATH + 'perfil-restaurante.html';
         }
     });
 }
@@ -1295,7 +1295,7 @@ function attachFeaturedCardListeners() {
             }
             
             // Redirecionar para o restaurante
-            window.location.href = 'perfil-restaurante.html';
+            window.location.href = TEMPLATE_PATH + 'perfil-restaurante.html';
         }
     });
 }
@@ -1810,7 +1810,7 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                 }
             }
             
-            const restaurantUrl = `/restaurant/${restaurant.slug || restaurant.id}/`;
+            const restaurantUrl = TEMPLATE_PATH + 'perfil-restaurante.html';
             html += `
                 <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
                     <div class="search-result-icon restaurant">
@@ -1856,7 +1856,7 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
             if (!itemTitle) return;
             
             html += `
-                <div class="search-result-item" onclick="window.location.href='/?s=${encodeURIComponent(itemTitle)}&post_type=vc_menu_item'">
+                <div class="search-result-item" onclick="window.location.href='${TEMPLATE_PATH}modal-detalhes-produto.html'">
                     <div class="search-result-icon dish">
                         <svg viewBox="0 0 24 24">
                             <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
