@@ -1,207 +1,95 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout Simplificado</title>
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700&display=swap" rel="stylesheet">
+  <!-- Fonte Montserrat (opcional) -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
   <style>
     body {
-      background: #f6f9f6;
-      font-family: 'Montserrat', Arial, sans-serif;
-      color: #232a2c;
+      background: #f9fbfa;
+      font-family: Montserrat, Arial, sans-serif;
       margin: 0;
       padding: 0;
     }
-
     section {
       max-width: 470px;
       margin: 0 auto;
       padding: 20px 10px 50px 10px;
+      font-family: Montserrat, Arial, sans-serif;
       background: #fff;
-      border-radius: 0 0 18px 18px;
-      box-shadow: 0 4px 16px #2d865920;
+      border-radius: 15px;
+      box-shadow: 0 2px 16px #45c67620;
+      margin-top: 30px;
     }
-
-    h2 {
-      font-size: 1.12em;
-      font-weight: 700;
-      color: #2d8659;
-      margin-bottom: 16px;
-    }
-
-    /* Toggle */
-    .entrega-toggle {
-      display: flex;
-      gap: 18px;
-      margin-bottom: 17px;
-    }
-
-    .entrega-toggle label {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: #eaf8f1;
-      padding: 10px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .entrega-toggle label:last-child {
-      background: #f3f6f5;
-    }
-
-    /* Endereço */
-    #entregaEnderecoBloco {
-      margin-bottom: 16px;
-    }
-
-    #entregaEnderecoBloco select, #entregaEnderecoBloco button {
-      width: 100%;
-      margin-bottom: 7px;
-      font-size: 1em;
-    }
-
-    #entregaEnderecoBloco select {
-      padding: 8px 13px;
-      border-radius: 7px;
-      border: 1.1px solid #cdeee2;
-    }
-
-    #entregaEnderecoBloco button {
-      background: #eaf8f1;
-      color: #2d8659;
-      font-weight: 600;
-      border: none;
-      padding: 7px 10px;
-      border-radius: 8px;
-      font-size: .97em;
-      cursor: pointer;
-    }
-
-    /* Resumo */
-    .checkout-resumo {
-      background: #f7fcf6;
-      border-radius: 13px;
-      box-shadow: 0 1px 7px #2d865914;
-      padding: 16px 14px;
-      margin-bottom: 17px;
-    }
-
-    .checkout-resumo div {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .checkout-resumo .total {
-      font-size: 1.17em;
-      font-weight: 700;
-      color: #2d8659;
-      margin-bottom: 2px;
-    }
-
-    .checkout-resumo .linha {
-      border-top: 1px dashed #cdf9e0;
-      margin: 9px 0;
-      height: 0;
-    }
-
-    .checkout-resumo .detalhe {
-      color: #aaa;
-      font-size: .92em;
-      text-align: right;
-      display: block;
-      margin-top: 5px;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 38px;
-      border-radius: 7px;
-      border: 1.1px solid #d7e6df;
-      padding: 8px 9px;
-      font-family: Montserrat, sans-serif;
-      margin-bottom: 15px;
-      font-size: .97em;
-    }
-
-    .btn-whatsapp {
-      width: 100%;
-      background: #2d8659;
-      color: #fff;
-      font-weight: 700;
-      font-size: 1.08em;
-      padding: 16px 0;
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 18px #45c67617;
-      cursor: pointer;
-      margin-top: 4px;
-    }
-
     @media (max-width: 430px) {
       section { padding-bottom: 26px !important; }
     }
   </style>
 </head>
 <body>
+  <!-- Checkout Simplificado -->
   <section>
-    <h2>Finalizar Pedido</h2>
+    <h2 style="font-size:1.12em;font-weight:700;color:#2d8659;margin-bottom:16px;">Finalizar Pedido</h2>
+  
     <!-- Toggle entre Delivery/Retirada -->
-    <div class="entrega-toggle">
-      <label>
+    <div style="display:flex;gap:18px;margin-bottom:17px;">
+      <label style="flex:1;display:flex;align-items:center;gap:6px;background:#eaf8f1;padding:10px;border-radius:10px;cursor:pointer;">
         <input type="radio" name="tipoEntrega" value="delivery" checked onchange="toggleEntrega(true)" style="accent-color:#2d8659;">
-        <span style="color:#2d8659;">Delivery</span>
+        <span style="font-weight:700;color:#2d8659;">Delivery</span>
       </label>
-      <label>
+      <label style="flex:1;display:flex;align-items:center;gap:6px;background:#f3f6f5;padding:10px;border-radius:10px;cursor:pointer;">
         <input type="radio" name="tipoEntrega" value="pickup" onchange="toggleEntrega(false)" style="accent-color:#2d8659;">
-        <span style="color:#2d8659;">Retirada</span>
+        <span style="font-weight:700;color:#2d8659;">Retirada</span>
       </label>
     </div>
     <!-- Endereço de entrega -->
-    <div id="entregaEnderecoBloco">
+    <div id="entregaEnderecoBloco" style="margin-bottom:16px;">
       <div style="font-weight:700;color:#2d8659;margin-bottom:7px;">Endereço para entrega</div>
-      <select>
+      <select style="width:100%;padding:8px 13px;border-radius:7px;border:1.1px solid #cdeee2;font-size:1em;margin-bottom:7px;">
         <option>Minha Casa: R. XX, nº 111, Jardim Curitiba</option>
         <option>Trabalho: Av. YY, nº 221, St. Central</option>
         <option selected>Usar localização atual</option>
       </select>
-      <button type="button">Escolher no mapa</button>
+      <button type="button" style="background:#eaf8f1;color:#2d8659;font-weight:600;border:none;padding:7px 10px;border-radius:8px;font-size:.97em;cursor:pointer;">Escolher no mapa</button>
     </div>
     <!-- Resumo do pedido -->
-    <div class="checkout-resumo">
-      <div>
+    <div style="background:#f7fcf6;border-radius:13px;box-shadow:0 1px 7px #2d865914;padding:16px 14px;margin-bottom:17px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px;font-size:.98em;">
         <span>Itens (2)</span>
         <span>R$ 35,80</span>
       </div>
-      <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.98em;">
         <span>Taxa de entrega</span>
         <span id="taxaEntrega">R$ 4,90</span>
       </div>
-      <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.98em;">
         <span style="color:#45c676;">Desconto</span>
         <span style="color:#45c676;">-R$ 5,00</span>
       </div>
-      <div class="linha"></div>
-      <div class="total">
+      <div style="border-top:1px dashed #cdf9e0;margin:9px 0;"></div>
+      <div style="display:flex;justify-content:space-between;font-size:1.17em;font-weight:700;color:#2d8659;">
         <span>Total</span>
         <span id="checkoutTotal">R$ 35,70</span>
       </div>
-      <span class="detalhe">Bairro: Jardim Curitiba • Distância: 2,8km</span>
+      <div style="margin-top:5px;color:#aaa;font-size:.92em;text-align:right;">Bairro: Jardim Curitiba • Distância: 2,8km</div>
     </div>
     <!-- Observações finais (opcional) -->
-    <textarea placeholder="Observação para o restaurante"></textarea>
+    <textarea placeholder="Observação para o restaurante" style="width:100%;min-height:38px;border-radius:7px;border:1.1px solid #d7e6df;padding:8px 9px;font-family:Montserrat,sans-serif;margin-bottom:15px;"></textarea>
+  
     <!-- Ação: Enviar para WhatsApp -->
-    <button class="btn-whatsapp" onclick="window.location.href='meus-pedidos.html'">Enviar pedido no WhatsApp</button>
+    <button onclick="window.location.href='meus-pedidos.html'" style="width:100%;background:#2d8659;color:#fff;font-weight:700;font-size:1.08em;padding:16px 0;border:none;border-radius:10px;box-shadow:0 2px 18px #45c67617;cursor:pointer;">
+      Enviar pedido no WhatsApp
+    </button>
   </section>
   <script>
+    // Alterna campos conforme tipo
     function toggleEntrega(isDelivery) {
       document.getElementById('entregaEnderecoBloco').style.display = isDelivery ? '' : 'none';
+      // Atualize taxa, resumo, valores...
       document.getElementById('taxaEntrega').textContent = isDelivery ? "R$ 4,90" : "R$ 0,00";
     }
   </script>
 </body>
 </html>
-
