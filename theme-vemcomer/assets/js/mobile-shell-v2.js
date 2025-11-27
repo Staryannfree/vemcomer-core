@@ -832,18 +832,29 @@ function previousStory() {
  * Lida com o clique no botão CTA do story
  */
 function handleStoryCta(story) {
+    console.log('handleStoryCta chamado:', {
+        link_type: story.link_type,
+        story_restaurant_id: story.restaurant_id,
+        currentStoryGroup: currentStoryGroup
+    });
+    
     if (story.link_type === 'profile') {
         // Redirecionar para perfil do restaurante
-        if (story.restaurant_id) {
-            window.location.href = `${TEMPLATE_PATH}restaurante-cliente.html?id=${story.restaurant_id}`;
-        } else if (currentStoryGroup && currentStoryGroup.restaurant) {
-            window.location.href = `${TEMPLATE_PATH}restaurante-cliente.html?id=${currentStoryGroup.restaurant.id}`;
+        const restaurantId = story.restaurant_id || (currentStoryGroup && currentStoryGroup.restaurant ? currentStoryGroup.restaurant.id : null);
+        if (restaurantId) {
+            window.location.href = `${TEMPLATE_PATH}restaurante-cliente.html?id=${restaurantId}`;
+        } else {
+            console.error('❌ Restaurant ID não encontrado para perfil');
         }
     } else if (story.link_type === 'menu') {
         // Mostrar modal de cardápio para escolher um item
         const restaurantId = story.restaurant_id || (currentStoryGroup && currentStoryGroup.restaurant ? currentStoryGroup.restaurant.id : null);
+        console.log('Restaurant ID para cardápio:', restaurantId);
         if (restaurantId) {
             showStoryMenuModal(restaurantId);
+        } else {
+            console.error('❌ Restaurant ID não encontrado para cardápio');
+            alert('Erro: Restaurante não identificado. Não foi possível carregar o cardápio.');
         }
     }
 }
@@ -852,35 +863,65 @@ function handleStoryCta(story) {
  * Mostra modal com cardápio do restaurante para escolher um item
  */
 async function showStoryMenuModal(restaurantId) {
+    console.log('showStoryMenuModal chamado com restaurantId:', restaurantId);
+    
     const modal = document.getElementById('storyMenuModal');
     const modalBody = document.getElementById('storyMenuModalBody');
     const modalTitle = document.getElementById('storyMenuModalTitle');
     
-    if (!modal || !modalBody) return;
+    if (!modal) {
+        console.error('❌ Modal storyMenuModal não encontrado no DOM!');
+        return;
+    }
+    
+    if (!modalBody) {
+        console.error('❌ Modal body storyMenuModalBody não encontrado no DOM!');
+        return;
+    }
+    
+    console.log('✅ Elementos do modal encontrados');
     
     // Buscar nome do restaurante
-    if (currentStoryGroup && currentStoryGroup.restaurant) {
-        modalTitle.textContent = `Escolha um item - ${currentStoryGroup.restaurant.name}`;
+    if (modalTitle) {
+        if (currentStoryGroup && currentStoryGroup.restaurant) {
+            modalTitle.textContent = `Escolha um item - ${currentStoryGroup.restaurant.name}`;
+        } else {
+            modalTitle.textContent = 'Escolha um item do cardápio';
+        }
     }
     
     // Mostrar loading
     modalBody.innerHTML = '<div class="story-menu-loading">Carregando cardápio...</div>';
     modal.classList.add('active');
+    console.log('✅ Modal aberto, carregando cardápio...');
     
     try {
         // Buscar cardápio da API (usar endpoint de categorias)
-        const response = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu-categories`, {
+        const url = `${API_BASE}/restaurants/${restaurantId}/menu-categories`;
+        console.log('Buscando cardápio da API:', url);
+        
+        const response = await fetch(url, {
             headers: { 'Accept': 'application/json' }
         });
         
+        console.log('Resposta da API:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+        });
+        
         if (!response.ok) {
-            throw new Error('Erro ao carregar cardápio');
+            const errorText = await response.text();
+            console.error('Erro HTTP:', errorText);
+            throw new Error(`Erro ao carregar cardápio: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log('Dados recebidos da API:', data);
         
         // A API retorna { restaurant_id, categories: [...] }
         const categories = data.categories || [];
+        console.log('Categorias encontradas:', categories.length);
         
         // Renderizar cardápio com botões para escolher item
         if (categories && categories.length > 0) {
@@ -914,12 +955,14 @@ async function showStoryMenuModal(restaurantId) {
                 html += `</div></div>`;
             });
             modalBody.innerHTML = html;
+            console.log('✅ Cardápio renderizado com sucesso');
         } else {
-            modalBody.innerHTML = '<div class="story-menu-empty">Cardápio não disponível</div>';
+            console.warn('⚠️ Nenhuma categoria encontrada no cardápio');
+            modalBody.innerHTML = '<div class="story-menu-empty">Cardápio não disponível ou vazio</div>';
         }
     } catch (error) {
-        console.error('Erro ao carregar cardápio:', error);
-        modalBody.innerHTML = '<div class="story-menu-error">Erro ao carregar cardápio. Tente novamente.</div>';
+        console.error('❌ Erro ao carregar cardápio:', error);
+        modalBody.innerHTML = `<div class="story-menu-error">Erro ao carregar cardápio: ${error.message}. Tente novamente.</div>`;
     }
 }
 
