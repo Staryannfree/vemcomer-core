@@ -617,6 +617,7 @@ body {
     position: absolute;
     inset: 0;
     display: flex;
+    z-index: 1; /* Abaixo do botão CTA */
 }
 
 .story-tap-left,
