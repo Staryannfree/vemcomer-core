@@ -435,6 +435,10 @@ body {
     display: block;
 }
 
+.story-cta-btn.is-visible {
+    display: block;
+}
+
 .story-cta-btn:hover {
     background: var(--primary-hover, #45c676);
     transform: translateX(-50%);
