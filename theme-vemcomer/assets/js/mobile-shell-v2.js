@@ -348,18 +348,36 @@ let storiesData = [];
  */
 async function fetchStories() {
     try {
-        const response = await fetch(`${API_BASE}/stories`, {
+        const url = `${API_BASE}/stories`;
+        console.log('Buscando stories da API:', url);
+        
+        const response = await fetch(url, {
             headers: {
                 'Accept': 'application/json'
             }
         });
         
         if (!response.ok) {
+            console.error(`Erro HTTP ao buscar stories: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('Resposta do erro:', errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        return data || [];
+        console.log('Resposta da API de stories:', data);
+        
+        // Verificar se é array ou objeto com propriedade groups
+        if (Array.isArray(data)) {
+            return data;
+        } else if (data && Array.isArray(data.groups)) {
+            return data.groups;
+        } else if (data && Array.isArray(data.data)) {
+            return data.data;
+        }
+        
+        console.warn('Formato de resposta inesperado:', data);
+        return [];
     } catch (error) {
         console.error('Erro ao buscar stories:', error);
         return [];
