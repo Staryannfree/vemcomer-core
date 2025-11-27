@@ -3,259 +3,323 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrinho Lateral com Botão de Abertura</title>
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+  <title>Carrinho de Compras</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap" rel="stylesheet">
   <style>
     body {
-      background: #f8faf8;
-      font-family: Montserrat, Arial, sans-serif;
+      background: rgba(0,0,0,0.5); /* Simula o overlay escuro atrás */
+      font-family: 'Montserrat', Arial, sans-serif;
       margin: 0;
       min-height: 100vh;
+      overflow: hidden; /* Impede rolagem do fundo */
     }
+
     #sideCart {
-      display: none;
+      display: none; /* JS vai ativar */
       position: fixed;
       z-index: 9999;
       top: 0;
-      right: 0;
-      width: 95vw;
-      max-width: 370px;
+      right: 0; /* Vem da direita */
+      width: 100%;
+      max-width: 400px; /* Um pouco mais largo no desktop */
       height: 100vh;
       background: #fff;
-      border-radius: 18px 0 0 18px;
-      box-shadow: -4px 0 18px #232a2c33;
-      transition: right .22s;
-      padding: 0;
+      box-shadow: -5px 0 25px rgba(0,0,0,0.2);
+      animation: slideInRight 0.3s ease-out;
       flex-direction: column;
-      font-size: 1em;
     }
-    #sideCart.show {
-      display: flex;
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
     }
+
+    #sideCart.show { display: flex; }
+
+    /* Header */
     .cart-header {
-      padding: 20px 18px 14px 18px;
-      border-bottom: 1.5px solid #f2f5f2;
+      padding: 20px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+
     .cart-title {
-      font-size: 1.13em;
+      font-size: 1.2em;
       font-weight: 700;
-      color: #232a2c;
+      color: #222;
     }
+
     .cart-close {
       background: none;
       border: none;
-      font-size: 1.28em;
-      color: #bbb;
+      font-size: 2em;
+      color: #888;
       cursor: pointer;
+      line-height: 0.8;
+      padding: 0 10px;
     }
+
+    /* Lista de Itens */
     #sideCartItens {
-      padding: 9px 14px 0 14px;
-      max-height: 59vh;
-      overflow-y: auto;
-    }
-    .cart-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 9px;
-      padding-bottom: 12px;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #f2f5f2;
-    }
-    .cart-item:last-child {
-      border: none;
-      margin-bottom: 0;
-    }
-    .cart-img {
-      width: 52px;
-      height: 52px;
-      border-radius: 13px;
-      object-fit: cover;
-      background: #eaf8f1;
-    }
-    .cart-infos {
       flex: 1;
-      min-width: 0;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f9f9f9;
     }
+
+    .cart-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      gap: 15px;
+      position: relative;
+    }
+
+    .cart-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #eee;
+    }
+
+    .cart-infos { flex: 1; }
+
     .cart-nome {
       font-weight: 700;
-      color: #232a2c;
-      font-size: 1.02em;
-      margin-bottom: 2px;
+      color: #333;
+      font-size: 1em;
+      margin-bottom: 4px;
     }
+
     .cart-mods {
-      color: #2d8659;
-      font-size: .93em;
-      margin-bottom: 1px;
+      color: #666;
+      font-size: 0.85em;
+      margin-bottom: 10px;
+      line-height: 1.3;
     }
-    .cart-qtdpreco {
+
+    .cart-footer-item {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-    }
-    .cart-qtdbtns {
-      display: inline-flex;
       align-items: center;
-      gap: 4px;
     }
-    .cart-qtdbtns button {
-      background: #eaf8f1;
-      border: none;
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      color: #2d8659;
-      font-weight: 900;
-      font-size: 1.1em;
-      cursor: pointer;
-    }
-    .cart-qtdbtns span {
-      margin: 0 3px;
-      font-weight: 700;
-    }
+
     .cart-item-preco {
       font-weight: 700;
       color: #2d8659;
+      font-size: 1em;
     }
-    .cart-remove {
-      background: none;
-      border: none;
-      color: #e06262;
-      font-size: 1.05em;
-      cursor: pointer;
-      margin-left: 2px;
+
+    /* Controles de Qtd */
+    .cart-qtdbtns {
+      display: flex;
+      align-items: center;
+      background: #f0f0f0;
+      border-radius: 8px;
       padding: 2px;
     }
-    .cart-footer {
-      margin-top: auto;
-      padding: 16px 18px 18px 18px;
-      background: #f8faf8;
-      border-top: 1.5px solid #f2f5f2;
+
+    .cart-qtdbtns button {
+      background: #fff;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      color: #2d8659;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+
+    .cart-qtdbtns span {
+      margin: 0 10px;
+      font-weight: 600;
+      font-size: 0.9em;
+      color: #333;
+      min-width: 15px;
+      text-align: center;
+    }
+
+    .cart-remove {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #ff6b6b;
+      cursor: pointer;
+      font-size: 1.1em;
+      opacity: 0.6;
+    }
+    
+    .cart-remove:hover { opacity: 1; }
+
+    /* Footer Fixo */
+    .cart-footer {
+      padding: 20px;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+    }
+
     .cart-subtotal {
       display: flex;
       justify-content: space-between;
-      font-size: 1.07em;
+      font-size: 1.1em;
       font-weight: 700;
-      color: #232a2c;
+      color: #222;
+      margin-bottom: 20px;
     }
+
     .cart-finalizar {
-      margin-top: 16px;
       width: 100%;
       background: #2d8659;
       color: #fff;
       font-weight: 700;
-      font-size: 1.04em;
-      padding: 13px 0;
+      font-size: 1.1em;
+      padding: 15px;
       border: none;
-      border-radius: 9px;
-      box-shadow: 0 2px 18px #45c67617;
+      border-radius: 12px;
       cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 4px 15px rgba(45, 134, 89, 0.3);
     }
-    #cart-fab {
-      position: fixed;
-      right: 22px;
-      bottom: 34px;
-      z-index: 10000;
-      background: #2d8659;
-      color: #fff;
-      font-weight: 700;
-      border: none;
-      border-radius: 50%;
-      box-shadow: 0 2px 8px #45c67644;
-      width: 68px;
-      height: 68px;
-      cursor: pointer;
-      font-size: 2em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background .18s;
-    }
-    #cart-fab:hover {
-      background: #45c676;
-    }
-    @media (max-width:480px){
-      #sideCart{right:0;max-width:100vw;}
-      #cart-fab { width: 56px; height: 56px; font-size: 1.5em; right: 10px; bottom: 16px; }
+
+    .cart-finalizar:hover { background: #246e49; }
+
+    /* Mobile Full Width */
+    @media (max-width: 480px) {
+      #sideCart { max-width: 100%; width: 100%; }
     }
   </style>
 </head>
 <body>
-  <!-- Botão flutuante para abrir carrinho -->
-  <button id="cart-fab" onclick="abrirCarrinho()" title="Abrir Carrinho">🛒</button>
 
-  <!-- Carrinho Lateral -->
   <div id="sideCart">
+    
     <div class="cart-header">
       <span class="cart-title">Seu Carrinho</span>
       <button onclick="fecharCarrinho()" class="cart-close" title="Fechar">×</button>
     </div>
+
     <div id="sideCartItens">
-      <!-- Exemplo de item no carrinho -->
-      <div class="cart-item">
-        <img src="https://images.unsplash.com/photo-1464306076886-2556a2934ec8?auto=format&fit=crop&w=52&q=80" alt="Foto Prato" class="cart-img">
-        <div class="cart-infos">
-          <div class="cart-nome">Bruschetta Vegana</div>
-          <div class="cart-mods">Tofu Crocante, +Queijo vegano</div>
-          <div class="cart-qtdpreco">
-            <span class="cart-qtdbtns">
-              <button onclick="alterarQtd(this, -1)">-</button>
-              <span>1</span>
-              <button onclick="alterarQtd(this, 1)">+</button>
-            </span>
-            <span class="cart-item-preco">R$ 15,90</span>
-          </div>
-        </div>
-        <button onclick="removerItem(this)" class="cart-remove" title="Remover">🗑️</button>
       </div>
-      <!-- Outros itens podem ser adicionados -->
-    </div>
+
     <div class="cart-footer">
       <div class="cart-subtotal">
-        <span>Subtotal</span>
-        <span id="sideCartSubtotal">R$ 15,90</span>
+        <span>Total</span>
+        <span id="sideCartSubtotal">R$ 0,00</span>
       </div>
-      <button class="cart-finalizar" onclick="window.location.href='checkout-simplificado.html'">Finalizar Pedido</button>
+      <button class="cart-finalizar" onclick="irParaCheckout()">Finalizar Pedido</button>
     </div>
+
   </div>
+
   <script>
-    // Funções de abertura e fechamento do carrinho
-    function abrirCarrinho() {
-      document.getElementById('sideCart').style.display = 'flex';
-      document.getElementById('cart-fab').style.display = 'none';
-    }
-    function fecharCarrinho() {
-      document.getElementById('sideCart').style.display = 'none';
-      document.getElementById('cart-fab').style.display = 'flex';
-    }
-    function alterarQtd(btn, dif) {
-      let span = btn.parentNode.querySelector('span');
-      let qtd = parseInt(span.textContent) + dif;
-      if (qtd < 1) return;
-      span.textContent = qtd;
-      atualizarSubtotal();
-    }
-    function removerItem(btn) {
-      btn.closest('.cart-item').remove();
-      atualizarSubtotal();
-    }
-    function atualizarSubtotal() {
-      // Exemplo básico: recalcula o total usando apenas o valor fixo de exemplo
-      let itemNodes = document.querySelectorAll('.cart-item');
+    // DADOS MOCK (Simulando itens adicionados anteriormente)
+    let carrinhoItens = [
+      {
+        id: 1,
+        nome: 'Moamba de Frango',
+        img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=100&q=60',
+        mods: 'Tofu Crocante, +Queijo vegano',
+        precoUnitario: 45.90,
+        qtd: 1
+      },
+      {
+        id: 2,
+        nome: 'Suco de Hibisco',
+        img: 'https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=100&q=60',
+        mods: 'Sem açúcar',
+        precoUnitario: 9.90,
+        qtd: 2
+      }
+    ];
+
+    // INICIALIZAÇÃO AUTOMÁTICA
+    window.onload = function() {
+      renderizarCarrinho();
+      document.getElementById('sideCart').classList.add('show');
+    };
+
+    function renderizarCarrinho() {
+      const container = document.getElementById('sideCartItens');
+      container.innerHTML = '';
+      
       let total = 0;
-      itemNodes.forEach(function(item) {
-        // Extração simples, para produção use valores dinâmicos/data-attributes
-        let preco = item.querySelector('.cart-item-preco').textContent.replace('R$', '').replace(',', '.');
-        let qtd = parseInt(item.querySelector('.cart-qtdbtns span').textContent);
-        total += parseFloat(preco) * qtd;
+
+      if (carrinhoItens.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">Seu carrinho está vazio</div>';
+        document.getElementById('sideCartSubtotal').textContent = 'R$ 0,00';
+        return;
+      }
+
+      carrinhoItens.forEach((item, index) => {
+        const itemTotal = item.precoUnitario * item.qtd;
+        total += itemTotal;
+
+        const html = `
+          <div class="cart-item">
+            <img src="${item.img}" class="cart-img">
+            <div class="cart-infos">
+              <div class="cart-nome">${item.nome}</div>
+              <div class="cart-mods">${item.mods}</div>
+              <div class="cart-footer-item">
+                <div class="cart-qtdbtns">
+                  <button onclick="alterarQtd(${index}, -1)">-</button>
+                  <span>${item.qtd}</span>
+                  <button onclick="alterarQtd(${index}, 1)">+</button>
+                </div>
+                <div class="cart-item-preco">R$ ${formatMoney(itemTotal)}</div>
+              </div>
+            </div>
+            <button onclick="removerItem(${index})" class="cart-remove">×</button>
+          </div>
+        `;
+        container.innerHTML += html;
       });
-      document.getElementById('sideCartSubtotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+
+      document.getElementById('sideCartSubtotal').textContent = 'R$ ' + formatMoney(total);
     }
-    // (Opcional) Inicialize subtotal corretamente no carregamento
-    window.onload = atualizarSubtotal;
+
+    function alterarQtd(index, delta) {
+      const novaQtd = carrinhoItens[index].qtd + delta;
+      if (novaQtd > 0) {
+        carrinhoItens[index].qtd = novaQtd;
+        renderizarCarrinho();
+      }
+    }
+
+    function removerItem(index) {
+      if(confirm('Remover este item?')) {
+        carrinhoItens.splice(index, 1);
+        renderizarCarrinho();
+      }
+    }
+
+    function fecharCarrinho() {
+      document.getElementById('sideCart').classList.remove('show');
+      // Volta para a tela anterior após a animação
+      setTimeout(() => {
+        history.back();
+      }, 250);
+    }
+
+    function irParaCheckout() {
+      // Redireciona para a próxima tela do fluxo
+      window.location.href = 'checkout-simplificado.html';
+    }
+
+    function formatMoney(val) {
+      return val.toFixed(2).replace('.', ',');
+    }
   </script>
 </body>
 </html>
