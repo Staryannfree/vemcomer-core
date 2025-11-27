@@ -410,6 +410,7 @@ body {
 }
 
 .story-cta-btn {
+    display: none;
     position: absolute;
     bottom: 20px;
     left: 50%;
@@ -428,6 +429,10 @@ body {
     visibility: visible;
     opacity: 1;
     pointer-events: auto;
+}
+
+.story-cta-btn.is-visible {
+    display: block;
 }
 
 .story-cta-btn:hover {

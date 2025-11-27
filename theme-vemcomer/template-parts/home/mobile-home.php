@@ -136,6 +136,7 @@ $address_text = ! empty( $user_neighborhood ) ? $user_neighborhood : ( ! empty( 
     </div>
     <div class="story-content" id="storyContent">
         <img src="" alt="Story" class="story-media" id="storyMedia">
+        <button class="story-cta-btn" id="storyCtaBtn"></button>
         <div class="story-tap-areas">
             <div class="story-tap-left" id="storyTapLeft"></div>
             <div class="story-tap-right" id="storyTapRight"></div>
