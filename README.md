@@ -1735,3 +1735,23 @@ Links gerados pelo JavaScript estavam apontando para a raiz do site (ex: `/perfi
 
 **Resultado:**
 Todos os links agora usam caminhos absolutos completos (`/wp-content/themes/theme-vemcomer/templates/marketplace/`), eliminando erros 404 e garantindo navegação funcional entre Home WordPress e páginas HTML estáticas.
+
+## v0.58 - Atualização do Design do Checkout Simplificado
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Atualizar o arquivo `checkout-simplificado.html` com o novo design fornecido pelo usuário.
+
+**Mudanças:**
+- ✅ **Design atualizado**: Novo layout com estilos inline melhorados
+- ✅ **Background**: Alterado de `#f6f9f6` para `#f9fbfa`
+- ✅ **Box shadow**: Atualizado para `0 2px 16px #45c67620`
+- ✅ **Responsividade**: Adicionado media query para telas menores
+- ✅ **Navegação mantida**: Link do botão "Enviar pedido no WhatsApp" mantido para `meus-pedidos.html`
+
+**Arquivos modificados:**
+- `theme-vemcomer/templates/marketplace/checkout-simplificado.html` - Conteúdo completo atualizado
+
+**Resultado:**
+Checkout simplificado com design atualizado e navegação funcional mantida.
