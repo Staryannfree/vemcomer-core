@@ -557,16 +557,16 @@ async function renderStories() {
         
         return `
             <div class="story-item" onclick="window.openStory(${story.id})" style="cursor: pointer;">
-                <div class="story-avatar-wrapper">
-                    <div class="story-ring ${story.viewed ? 'viewed' : ''}">
-                        <div class="story-avatar-container">
+            <div class="story-avatar-wrapper">
+                <div class="story-ring ${story.viewed ? 'viewed' : ''}">
+                    <div class="story-avatar-container">
                             ${avatarHtml}
-                        </div>
                     </div>
-                    ${story.hasNew ? '<div class="story-new-badge">+</div>' : ''}
                 </div>
-                <div class="story-name">${story.restaurant.name}</div>
+                ${story.hasNew ? '<div class="story-new-badge">+</div>' : ''}
             </div>
+            <div class="story-name">${story.restaurant.name}</div>
+        </div>
         `;
     }).join('');
     
@@ -591,7 +591,7 @@ function openStory(groupId) {
     const storyGroup = storiesData.find(s => s.id === groupId);
     if (!storyGroup || !storyGroup.stories || storyGroup.stories.length === 0) {
         console.warn('Story group não encontrado ou sem stories:', groupId);
-        return;
+    return;
     }
 
     currentStoryGroup = storyGroup;
@@ -848,12 +848,31 @@ function handleStoryCta(story) {
         }
     } else if (story.link_type === 'menu') {
         // Mostrar modal de cardápio para escolher um item
-        const restaurantId = story.restaurant_id || (currentStoryGroup && currentStoryGroup.restaurant ? currentStoryGroup.restaurant.id : null);
-        console.log('Restaurant ID para cardápio:', restaurantId);
+        // Tentar obter restaurant_id de várias fontes
+        let restaurantId = story.restaurant_id;
+        
+        if (!restaurantId && currentStoryGroup && currentStoryGroup.restaurant) {
+            restaurantId = currentStoryGroup.restaurant.id;
+        }
+        
+        // Se ainda não tiver, tentar buscar do grupo atual
+        if (!restaurantId && currentStoryGroup) {
+            // O grupo pode ter o restaurant_id diretamente
+            restaurantId = currentStoryGroup.restaurant_id;
+        }
+        
+        console.log('Restaurant ID para cardápio:', {
+            story_restaurant_id: story.restaurant_id,
+            current_group_restaurant_id: currentStoryGroup?.restaurant?.id,
+            final_restaurant_id: restaurantId
+        });
+        
         if (restaurantId) {
             showStoryMenuModal(restaurantId);
         } else {
             console.error('❌ Restaurant ID não encontrado para cardápio');
+            console.error('Story completo:', story);
+            console.error('Current Story Group:', currentStoryGroup);
             alert('Erro: Restaurante não identificado. Não foi possível carregar o cardápio.');
         }
     }
