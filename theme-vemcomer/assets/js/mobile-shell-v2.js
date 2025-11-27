@@ -720,8 +720,15 @@ function showStory(index) {
         console.log('Story data para CTA:', {
             link_type: story.link_type,
             link: story.link,
-            link_text: story.link_text
+            link_text: story.link_text,
+            story_id: story.id
         });
+        
+        // Sempre resetar primeiro
+        ctaBtn.style.display = 'none';
+        ctaBtn.style.visibility = 'hidden';
+        ctaBtn.style.opacity = '0';
+        ctaBtn.onclick = null;
         
         if (story.link_type === 'profile' || story.link_type === 'menu') {
             const btnText = story.link_text || (story.link_type === 'profile' ? 'Ver Perfil' : 'Ver Cardápio');
@@ -729,28 +736,31 @@ function showStory(index) {
             ctaBtn.style.display = 'block';
             ctaBtn.style.visibility = 'visible';
             ctaBtn.style.opacity = '1';
+            ctaBtn.style.pointerEvents = 'auto';
             ctaBtn.onclick = (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 handleStoryCta(story);
             };
-            console.log('Botão CTA configurado:', btnText);
+            console.log('✅ Botão CTA configurado:', btnText, 'link_type:', story.link_type);
         } else if (story.link) {
             // Compatibilidade com link customizado antigo
             ctaBtn.textContent = story.link_text || 'Ver Mais';
             ctaBtn.style.display = 'block';
             ctaBtn.style.visibility = 'visible';
             ctaBtn.style.opacity = '1';
+            ctaBtn.style.pointerEvents = 'auto';
             ctaBtn.onclick = (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 window.location.href = story.link;
             };
-            console.log('Botão CTA configurado (link antigo):', story.link_text);
+            console.log('✅ Botão CTA configurado (link antigo):', story.link_text);
         } else {
-            ctaBtn.style.display = 'none';
-            console.log('Botão CTA ocultado - sem link_type ou link');
+            console.log('⚠️ Botão CTA ocultado - sem link_type ou link');
         }
     } else {
-        console.error('Botão CTA não encontrado no DOM!');
+        console.error('❌ Botão CTA não encontrado no DOM!');
     }
 
     // Reset all progress bars
