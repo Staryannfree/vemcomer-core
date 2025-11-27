@@ -265,3 +265,41 @@
     </div>
 </nav>
 
+<!-- MODAL DETALHES PRODUTO -->
+<div id="modalProduto">
+    <div class="prod-modal-content">
+        <button class="prod-close" onclick="fecharModalProduto()">×</button>
+        <img id="imgProduto" class="prod-img" src="" alt="Foto Produto">
+        <div class="prod-details">
+            <div id="tituloProduto" class="prod-title"></div>
+            <div id="descProduto" class="prod-desc"></div>
+            <div class="prod-price">R$ <span id="precoBase"></span></div>
+            <!-- Modificadores obrigatórios -->
+            <div class="prod-mod-group">
+                <b>Escolha uma Proteína <span style="color:#ea5252">*</span></b><br>
+                <label><input type="radio" name="proteina" checked> Tofu Crocante (+R$ 3,00)</label>
+                <label><input type="radio" name="proteina"> Grão-de-Bico (incluso)</label>
+            </div>
+            <!-- Modificadores opcionais -->
+            <div class="prod-mod-group">
+                <b>Adicionais</b><br>
+                <label><input type="checkbox" name="adicional"> Tomate seco (+R$ 2,00)</label>
+                <label><input type="checkbox" name="adicional"> Queijo vegano (+R$ 3,00)</label>
+            </div>
+            <!-- Observação -->
+            <div>
+                <textarea id="obsProduto" placeholder="Observação para o restaurante..."></textarea>
+            </div>
+            <!-- Contador quantidade e botão -->
+            <div class="prod-actions">
+                <div class="prod-qtd-btns">
+                    <button type="button" onclick="alteraQtd(-1)">-</button>
+                    <span id="qtdProduto">1</span>
+                    <button type="button" class="plus" onclick="alteraQtd(1)">+</button>
+                </div>
+                <button id="btnAddCarrinho" onclick="window.location.href='/wp-content/themes/theme-vemcomer/templates/marketplace/carrinho-side-cart.html'">Adicionar <span id="precoTotal"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+

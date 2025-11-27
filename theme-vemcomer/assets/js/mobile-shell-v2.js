@@ -986,7 +986,7 @@ async function renderDishes() {
             : getSmartImage(contextText); // Força o fallback aqui!
         
         return `
-        <div class="dish-card" onclick="window.location.href='${TEMPLATE_PATH}modal-detalhes-produto.html'" style="cursor: pointer;">
+        <div class="dish-card" onclick="abrirModalProduto({img: '${finalImage}', titulo: '${dish.name || 'Prato'}', descricao: '${(dish.description || '').replace(/'/g, "\\'")}', preco: ${parseFloat((dish.price || '0').replace(/[^\d,]/g, '').replace(',', '.')) || 0}})" style="cursor: pointer;">
             <div class="dish-image-wrapper">
                 <img src="${finalImage}" alt="${dish.name || 'Prato'}" class="dish-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
                 ${dish.badge ? `<div class="dish-badge">${dish.badge}</div>` : ''}
@@ -1224,7 +1224,22 @@ async function renderRestaurants() {
 // ============ EVENT HANDLERS ============
 // Garantir que as funções estejam no escopo global
 window.openDish = function(id) {
-    window.location.href = TEMPLATE_PATH + 'modal-detalhes-produto.html';
+    // Buscar dados do produto e abrir modal
+    fetch(`${API_BASE}/menu-items/${id}`)
+        .then(response => response.json())
+        .then(produto => {
+            abrirModalProduto({
+                img: produto.image || produto.featured_image || PLACEHOLDERS.default,
+                titulo: produto.title || produto.name || 'Produto',
+                descricao: produto.description || produto.excerpt || '',
+                preco: parseFloat(produto.price || produto.meta?._vc_menu_item_price || 0)
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao buscar produto:', error);
+            // Fallback: redirecionar para página estática
+            window.location.href = TEMPLATE_PATH + 'modal-detalhes-produto.html';
+        });
 };
 
 window.openEvent = function(id) {
@@ -1958,6 +1973,96 @@ async function initApp() {
         renderRestaurants()
     ]);
 }
+
+// ============ MODAL DETALHES PRODUTO ============
+let qtdProduto = 1, precoBaseProduto = 12.90, precoModsProduto = 0;
+
+function alteraQtd(v) {
+    qtdProduto = Math.max(1, qtdProduto + v);
+    const qtdEl = document.getElementById('qtdProduto');
+    if (qtdEl) qtdEl.textContent = qtdProduto;
+    atualizaTotal();
+}
+
+function atualizaTotal() {
+    // Cálculo de modificadores
+    precoModsProduto = 0;
+    // Proteína (Tofu Crocante)
+    const proteinaChecked = document.querySelector('input[name="proteina"]:checked');
+    if (proteinaChecked && proteinaChecked.parentElement.textContent.includes('Tofu')) {
+        precoModsProduto += 3;
+    }
+    // Adicionais
+    const adicionais = document.querySelectorAll('input[name="adicional"]:checked');
+    adicionais.forEach((el) => {
+        if (el.parentElement.textContent.includes('Tomate seco')) precoModsProduto += 2;
+        if (el.parentElement.textContent.includes('Queijo vegano')) precoModsProduto += 3;
+    });
+    // Total
+    const total = (precoBaseProduto + precoModsProduto) * qtdProduto;
+    const precoTotalEl = document.getElementById('precoTotal');
+    if (precoTotalEl) {
+        precoTotalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+}
+
+// Função para abrir o modal com dados do produto
+function abrirModalProduto(produto) {
+    const imgEl = document.getElementById('imgProduto');
+    const tituloEl = document.getElementById('tituloProduto');
+    const descEl = document.getElementById('descProduto');
+    const precoBaseEl = document.getElementById('precoBase');
+    const qtdEl = document.getElementById('qtdProduto');
+    const precoTotalEl = document.getElementById('precoTotal');
+    const obsEl = document.getElementById('obsProduto');
+    const modalEl = document.getElementById('modalProduto');
+    
+    if (!imgEl || !tituloEl || !descEl || !precoBaseEl || !qtdEl || !precoTotalEl || !obsEl || !modalEl) {
+        console.error('Elementos do modal não encontrados');
+        return;
+    }
+    
+    imgEl.src = produto.img || PLACEHOLDERS.default;
+    tituloEl.textContent = produto.titulo || produto.name || 'Produto';
+    descEl.textContent = produto.descricao || produto.description || '';
+    precoBaseProduto = produto.preco || produto.price || 0;
+    precoBaseEl.textContent = precoBaseProduto.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    qtdProduto = 1;
+    precoModsProduto = 0;
+    qtdEl.textContent = qtdProduto;
+    precoTotalEl.textContent = 'R$ ' + precoBaseProduto.toFixed(2).replace('.', ',');
+    obsEl.value = '';
+    
+    // Reseta modificadores
+    const proteinas = document.querySelectorAll('input[name="proteina"]');
+    if (proteinas.length > 0) {
+        proteinas[0].checked = true;
+        if (proteinas.length > 1) proteinas[1].checked = false;
+    }
+    document.querySelectorAll('input[name="adicional"]').forEach(el => el.checked = false);
+    
+    modalEl.classList.add('show');
+    atualizaTotal();
+}
+
+function fecharModalProduto() {
+    const modalEl = document.getElementById('modalProduto');
+    if (modalEl) {
+        modalEl.classList.remove('show');
+    }
+}
+
+// Atualiza preço quando opções mudam
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="proteina"],input[name="adicional"]').forEach(function(el) {
+        el.addEventListener('change', atualizaTotal);
+    });
+    
+    // Inicia com valor atualizado
+    if (document.getElementById('precoTotal')) {
+        atualizaTotal();
+    }
+});
 
 document.addEventListener('DOMContentLoaded', initApp);
 
