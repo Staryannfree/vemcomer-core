@@ -446,16 +446,20 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 10000;
+    z-index: 10001; /* Acima do story viewer (z-index: 10000) */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .story-menu-modal.active {
-    display: flex;
+    display: flex !important;
     align-items: flex-start;
     justify-content: center;
     padding: 20px;
+    opacity: 1;
+    visibility: visible;
 }
 
 .story-menu-modal-content {
