@@ -67,34 +67,26 @@
 </section>
 
 <!-- STORY VIEWER MODAL -->
-<div class="story-viewer" id="storyViewer">
-    <div class="story-progress-bars" id="storyProgressBars">
+<div class="story-viewer story-overlay" id="storyViewer">
+    <div class="story-progress story-progress-bars" id="storyProgressBars">
         <!-- Progress bars will be rendered here -->
     </div>
-    
+
+    <button class="story-close-btn" id="storyCloseBtn">×</button>
+
     <div class="story-header">
-        <div class="story-header-left">
-            <img src="" alt="Avatar" class="story-header-avatar" id="storyHeaderAvatar">
-            <div class="story-header-info">
-                <div class="story-header-name" id="storyHeaderName"></div>
-                <div class="story-header-time" id="storyHeaderTime"></div>
-            </div>
+        <img src="" alt="Avatar" class="story-header-avatar" id="storyHeaderAvatar">
+        <div class="story-header-info">
+            <div class="story-header-name" id="storyHeaderName"></div>
+            <div class="story-header-time" id="storyHeaderTime"></div>
         </div>
-        <button class="story-close-btn" id="storyCloseBtn">
-            <svg class="story-close-icon" viewBox="0 0 24 24">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
     </div>
-    
+
     <div class="story-content" id="storyContent">
         <img src="" alt="Story" class="story-media" id="storyMedia">
-        <button class="story-cta-btn" id="storyCtaBtn" style="display: none;"></button>
-        <div class="story-tap-areas">
-            <div class="story-tap-left" id="storyTapLeft"></div>
-            <div class="story-tap-right" id="storyTapRight"></div>
-        </div>
+        <button class="story-cta story-cta-btn" id="storyCtaBtn"></button>
+        <div class="nav-zone nav-left story-tap-left" id="storyTapLeft"></div>
+        <div class="nav-zone nav-right story-tap-right" id="storyTapRight"></div>
     </div>
 </div>
 
