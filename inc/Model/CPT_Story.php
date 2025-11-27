@@ -73,10 +73,9 @@ class CPT_Story {
 		}
 		$order   = (int) get_post_meta( $post->ID, '_vc_story_order', true );
 		$active  = (bool) get_post_meta( $post->ID, '_vc_story_active', true );
-		$link    = (string) get_post_meta( $post->ID, '_vc_story_link', true );
-		$link_text = (string) get_post_meta( $post->ID, '_vc_story_link_text', true );
-		if ( empty( $link_text ) ) {
-			$link_text = __( 'Ver Cardápio', 'vemcomer' );
+		$link_type = (string) get_post_meta( $post->ID, '_vc_story_link_type', true );
+		if ( empty( $link_type ) ) {
+			$link_type = 'none'; // Padrão: sem link
 		}
 
 		?>
@@ -129,17 +128,25 @@ class CPT_Story {
 				</td>
 			</tr>
 			<tr>
-				<th><label for="vc_story_link"><?php echo esc_html__( 'Link (opcional)', 'vemcomer' ); ?></label></th>
+				<th><label for="vc_story_link_type"><?php echo esc_html__( 'Ação do Botão CTA', 'vemcomer' ); ?></label></th>
 				<td>
-					<input type="url" id="vc_story_link" name="vc_story_link" class="regular-text" value="<?php echo esc_attr( $link ); ?>" placeholder="https://..." />
-					<p class="description"><?php echo esc_html__( 'URL de destino ao clicar no botão CTA do story (ex: link para cardápio).', 'vemcomer' ); ?></p>
+					<select id="vc_story_link_type" name="vc_story_link_type" class="regular-text">
+						<option value="none" <?php selected( $link_type, 'none' ); ?>><?php echo esc_html__( '— Sem botão —', 'vemcomer' ); ?></option>
+						<option value="profile" <?php selected( $link_type, 'profile' ); ?>><?php echo esc_html__( 'Perfil do Restaurante', 'vemcomer' ); ?></option>
+						<option value="menu" <?php selected( $link_type, 'menu' ); ?>><?php echo esc_html__( 'Cardápio', 'vemcomer' ); ?></option>
+					</select>
+					<p class="description"><?php echo esc_html__( 'Ação ao clicar no botão CTA do story. "Cardápio" mostrará uma lista do cardápio do restaurante para o usuário escolher um item.', 'vemcomer' ); ?></p>
 				</td>
 			</tr>
 			<tr>
-				<th><label for="vc_story_link_text"><?php echo esc_html__( 'Texto do Botão CTA', 'vemcomer' ); ?></label></th>
+				<th><label><?php echo esc_html__( 'Formato da Imagem', 'vemcomer' ); ?></label></th>
 				<td>
-					<input type="text" id="vc_story_link_text" name="vc_story_link_text" class="regular-text" value="<?php echo esc_attr( $link_text ); ?>" placeholder="<?php echo esc_attr__( 'Ver Cardápio', 'vemcomer' ); ?>" />
-					<p class="description"><?php echo esc_html__( 'Texto do botão de call-to-action no story.', 'vemcomer' ); ?></p>
+					<p class="description" style="color: #d63638; font-weight: 600;">
+						⚠️ <?php echo esc_html__( 'IMPORTANTE: A imagem deve ser retangular (formato vertical/telefone), proporção aproximada 9:16.', 'vemcomer' ); ?>
+					</p>
+					<p class="description">
+						<?php echo esc_html__( 'Recomendado: 1080x1920px ou proporção similar. Imagens horizontais serão cortadas automaticamente.', 'vemcomer' ); ?>
+					</p>
 				</td>
 			</tr>
 			<tr>
@@ -270,6 +277,48 @@ class CPT_Story {
 				$active = (bool) get_post_meta( $post_id, '_vc_story_active', true );
 				echo $active ? '<span style="color: green;">✓</span>' : '<span style="color: red;">✗</span>';
 				break;
+		}
+	}
+
+	/**
+	 * Valida e ajusta imagem do story para formato retangular (vertical)
+	 */
+	private function validate_story_image( int $attachment_id ): void {
+		$image_path = get_attached_file( $attachment_id );
+		if ( ! $image_path || ! file_exists( $image_path ) ) {
+			return;
+		}
+
+		$image_meta = wp_get_attachment_metadata( $attachment_id );
+		if ( ! $image_meta || ! isset( $image_meta['width'] ) || ! isset( $image_meta['height'] ) ) {
+			return;
+		}
+
+		$width = $image_meta['width'];
+		$height = $image_meta['height'];
+
+		// Calcular proporção
+		$ratio = $width / $height;
+
+		// Proporção ideal para stories: ~0.5625 (9:16) ou mais vertical
+		// Se a imagem for muito horizontal (ratio > 0.7), avisar
+		if ( $ratio > 0.7 ) {
+			// Adicionar notice para o admin
+			add_action( 'admin_notices', function() use ( $ratio ) {
+				?>
+				<div class="notice notice-warning is-dismissible">
+					<p>
+						<strong><?php echo esc_html__( 'Aviso Story:', 'vemcomer' ); ?></strong>
+						<?php 
+						printf(
+							esc_html__( 'A imagem do story não está no formato ideal (retangular vertical). Proporção atual: %.2f. Recomendado: 0.56 (9:16) ou mais vertical.', 'vemcomer' ),
+							$ratio
+						);
+						?>
+					</p>
+				</div>
+				<?php
+			} );
 		}
 	}
 }

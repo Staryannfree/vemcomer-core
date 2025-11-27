@@ -714,6 +714,25 @@ function showStory(index) {
         markStoryAsViewed(story.id);
     }
 
+    // Atualizar botão CTA
+    const ctaBtn = document.getElementById('storyCtaBtn');
+    if (ctaBtn) {
+        if (story.link_type === 'profile' || story.link_type === 'menu') {
+            ctaBtn.textContent = story.link_text || 'Ver Mais';
+            ctaBtn.style.display = 'block';
+            ctaBtn.onclick = () => handleStoryCta(story);
+        } else if (story.link) {
+            // Compatibilidade com link customizado antigo
+            ctaBtn.textContent = story.link_text || 'Ver Mais';
+            ctaBtn.style.display = 'block';
+            ctaBtn.onclick = () => {
+                window.location.href = story.link;
+            };
+        } else {
+            ctaBtn.style.display = 'none';
+        }
+    }
+
     // Reset all progress bars
     for (let i = 0; i < currentStoryGroup.stories.length; i++) {
         const progress = document.getElementById(`storyProgress${i}`);
@@ -776,6 +795,126 @@ function previousStory() {
             currentStoryGroup = prevGroup;
             showStory(prevGroup.stories.length - 1);
         }
+    }
+}
+
+/**
+ * Lida com o clique no botão CTA do story
+ */
+function handleStoryCta(story) {
+    if (story.link_type === 'profile') {
+        // Redirecionar para perfil do restaurante
+        if (story.restaurant_id) {
+            window.location.href = `${TEMPLATE_PATH}restaurante-cliente.html?id=${story.restaurant_id}`;
+        } else if (currentStoryGroup && currentStoryGroup.restaurant) {
+            window.location.href = `${TEMPLATE_PATH}restaurante-cliente.html?id=${currentStoryGroup.restaurant.id}`;
+        }
+    } else if (story.link_type === 'menu') {
+        // Mostrar modal de cardápio para escolher um item
+        const restaurantId = story.restaurant_id || (currentStoryGroup && currentStoryGroup.restaurant ? currentStoryGroup.restaurant.id : null);
+        if (restaurantId) {
+            showStoryMenuModal(restaurantId);
+        }
+    }
+}
+
+/**
+ * Mostra modal com cardápio do restaurante para escolher um item
+ */
+async function showStoryMenuModal(restaurantId) {
+    const modal = document.getElementById('storyMenuModal');
+    const modalBody = document.getElementById('storyMenuModalBody');
+    const modalTitle = document.getElementById('storyMenuModalTitle');
+    
+    if (!modal || !modalBody) return;
+    
+    // Buscar nome do restaurante
+    if (currentStoryGroup && currentStoryGroup.restaurant) {
+        modalTitle.textContent = `Escolha um item - ${currentStoryGroup.restaurant.name}`;
+    }
+    
+    // Mostrar loading
+    modalBody.innerHTML = '<div class="story-menu-loading">Carregando cardápio...</div>';
+    modal.classList.add('active');
+    
+    try {
+        // Buscar cardápio da API
+        const response = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar cardápio');
+        }
+        
+        const data = await response.json();
+        
+        // Renderizar cardápio com botões para escolher item
+        if (data.categories && data.categories.length > 0) {
+            let html = '';
+            data.categories.forEach(category => {
+                html += `<div class="story-menu-category">
+                    <h3 class="story-menu-category-title">${category.name}</h3>
+                    <div class="story-menu-items">`;
+                
+                if (category.items && category.items.length > 0) {
+                    category.items.forEach(item => {
+                        const price = parseFloat(item.price || 0).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        });
+                        const isAvailable = item.is_available !== false;
+                        html += `<div class="story-menu-item ${!isAvailable ? 'unavailable' : ''}" data-item-id="${item.id}" data-item-name="${item.title}" data-item-price="${item.price || 0}" style="cursor: ${isAvailable ? 'pointer' : 'not-allowed'};">
+                            <div class="story-menu-item-info">
+                                <h4 class="story-menu-item-name">${item.title}</h4>
+                                <p class="story-menu-item-price">${price}</p>
+                            </div>
+                            ${item.prep_time ? `<span class="story-menu-item-time">${item.prep_time}min</span>` : ''}
+                            ${isAvailable ? '<button class="story-menu-item-select-btn" onclick="selectMenuItem(' + item.id + ', \'' + item.title.replace(/'/g, "\\'") + '\', ' + (item.price || 0) + ')">Escolher</button>' : '<span class="story-menu-item-unavailable-label">Indisponível</span>'}
+                        </div>`;
+                    });
+                } else {
+                    html += '<p class="story-menu-empty">Nenhum item nesta categoria</p>';
+                }
+                
+                html += `</div></div>`;
+            });
+            modalBody.innerHTML = html;
+        } else {
+            modalBody.innerHTML = '<div class="story-menu-empty">Cardápio não disponível</div>';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar cardápio:', error);
+        modalBody.innerHTML = '<div class="story-menu-error">Erro ao carregar cardápio. Tente novamente.</div>';
+    }
+}
+
+/**
+ * Seleciona um item do cardápio e redireciona para o produto
+ */
+function selectMenuItem(itemId, itemName, itemPrice) {
+    // Fechar modal
+    closeStoryMenuModal();
+    
+    // Redirecionar para página do produto ou abrir modal de detalhes
+    // Por enquanto, vamos redirecionar para a página do produto
+    const productUrl = `${TEMPLATE_PATH}modal-detalhes-produto.html?id=${itemId}`;
+    
+    // Ou se preferir abrir modal diretamente:
+    if (typeof openProductModal === 'function') {
+        openProductModal(itemId);
+    } else {
+        window.location.href = productUrl;
+    }
+}
+
+/**
+ * Fecha modal de cardápio
+ */
+function closeStoryMenuModal() {
+    const modal = document.getElementById('storyMenuModal');
+    if (modal) {
+        modal.classList.remove('active');
     }
 }
 

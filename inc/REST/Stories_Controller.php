@@ -191,14 +191,20 @@ class Stories_Controller {
 			if ( $duration <= 0 ) {
 				$duration = 5000;
 			}
-			$link = (string) get_post_meta( $post->ID, '_vc_story_link', true );
-			$link_text = (string) get_post_meta( $post->ID, '_vc_story_link_text', true );
-			if ( empty( $link_text ) ) {
-				$link_text = __( 'Ver Cardápio', 'vemcomer' );
+			$link_type = (string) get_post_meta( $post->ID, '_vc_story_link_type', true );
+			if ( empty( $link_type ) ) {
+				// Compatibilidade: verificar meta antigo
+				$old_link = (string) get_post_meta( $post->ID, '_vc_story_link', true );
+				if ( $old_link ) {
+					$link_type = 'custom';
+				} else {
+					$link_type = 'none';
+				}
 			}
 
 			$media_url = null;
 			if ( $image_id ) {
+				// Usar tamanho 'large' mas garantir formato retangular
 				$media_url = wp_get_attachment_image_url( $image_id, 'large' );
 			}
 
@@ -212,11 +218,25 @@ class Stories_Controller {
 				'url'       => $media_url,
 				'timestamp' => $timestamp,
 				'duration'  => $duration,
+				'link_type' => $link_type,
 			];
 
-			if ( $link ) {
-				$story_data['link'] = $link;
-				$story_data['link_text'] = $link_text;
+			// Adicionar link baseado no tipo
+			if ( $link_type === 'profile' ) {
+				$story_data['link'] = get_permalink( $restaurant_id );
+				$story_data['link_text'] = __( 'Ver Perfil', 'vemcomer' );
+			} elseif ( $link_type === 'menu' ) {
+				$story_data['link'] = 'menu'; // Especial: será tratado no frontend
+				$story_data['link_text'] = __( 'Ver Cardápio', 'vemcomer' );
+				$story_data['restaurant_id'] = $restaurant_id; // Para buscar cardápio
+			} elseif ( $link_type === 'custom' ) {
+				// Compatibilidade com meta antigo
+				$old_link = (string) get_post_meta( $post->ID, '_vc_story_link', true );
+				$old_link_text = (string) get_post_meta( $post->ID, '_vc_story_link_text', true );
+				if ( $old_link ) {
+					$story_data['link'] = $old_link;
+					$story_data['link_text'] = $old_link_text ?: __( 'Ver Mais', 'vemcomer' );
+				}
 			}
 
 			$stories_by_restaurant[ $restaurant_id ]['stories'][] = $story_data;
@@ -297,8 +317,7 @@ class Stories_Controller {
 		$order         = (int) $request->get_param( 'order' ) ?: 0;
 		$active        = $request->get_param( 'active' ) ?? true;
 		$image_id      = (int) $request->get_param( 'image_id' );
-		$link          = $request->get_param( 'link' );
-		$link_text     = $request->get_param( 'link_text' ) ?: __( 'Ver Cardápio', 'vemcomer' );
+		$link_type     = $request->get_param( 'link_type' ) ?: 'none';
 
 		if ( empty( $title ) ) {
 			return new WP_Error( 'vc_missing_title', __( 'Título é obrigatório.', 'vemcomer' ), [ 'status' => 400 ] );
@@ -342,11 +361,9 @@ class Stories_Controller {
 		update_post_meta( $post_id, '_vc_story_order', $order );
 		update_post_meta( $post_id, '_vc_story_active', $active ? '1' : '0' );
 
-		if ( $link ) {
-			update_post_meta( $post_id, '_vc_story_link', esc_url_raw( $link ) );
-		}
-		if ( $link_text ) {
-			update_post_meta( $post_id, '_vc_story_link_text', sanitize_text_field( $link_text ) );
+		$allowed_link_types = [ 'none', 'profile', 'menu' ];
+		if ( in_array( $link_type, $allowed_link_types, true ) ) {
+			update_post_meta( $post_id, '_vc_story_link_type', $link_type );
 		}
 
 		return new WP_REST_Response( [ 'id' => $post_id ], 201 );
@@ -415,12 +432,11 @@ class Stories_Controller {
 			update_post_meta( $id, '_vc_story_active', $active ? '1' : '0' );
 		}
 
-		if ( null !== $link ) {
-			update_post_meta( $id, '_vc_story_link', esc_url_raw( $link ) );
-		}
-
-		if ( null !== $link_text ) {
-			update_post_meta( $id, '_vc_story_link_text', sanitize_text_field( $link_text ) );
+		if ( null !== $link_type ) {
+			$allowed_link_types = [ 'none', 'profile', 'menu' ];
+			if ( in_array( $link_type, $allowed_link_types, true ) ) {
+				update_post_meta( $id, '_vc_story_link_type', $link_type );
+			}
 		}
 
 		return new WP_REST_Response( [ 'id' => $id ], 200 );

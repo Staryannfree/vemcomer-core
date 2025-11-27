@@ -90,9 +90,23 @@
     
     <div class="story-content" id="storyContent">
         <img src="" alt="Story" class="story-media" id="storyMedia">
+        <button class="story-cta-btn" id="storyCtaBtn" style="display: none;"></button>
         <div class="story-tap-areas">
             <div class="story-tap-left" id="storyTapLeft"></div>
             <div class="story-tap-right" id="storyTapRight"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CARDÁPIO DO STORY (com seleção de item) -->
+<div class="story-menu-modal" id="storyMenuModal">
+    <div class="story-menu-modal-content">
+        <div class="story-menu-modal-header">
+            <h2 id="storyMenuModalTitle">Escolha um item do cardápio</h2>
+            <button class="story-menu-modal-close" id="storyMenuModalClose">×</button>
+        </div>
+        <div class="story-menu-modal-body" id="storyMenuModalBody">
+            <!-- Itens do cardápio serão carregados aqui -->
         </div>
     </div>
 </div>
