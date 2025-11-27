@@ -1755,3 +1755,53 @@ Atualizar o arquivo `checkout-simplificado.html` com o novo design fornecido pel
 
 **Resultado:**
 Checkout simplificado com design atualizado e navegação funcional mantida.
+
+## v0.59 - Atualização de Carrinho Lateral e Seção de Avaliações
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Atualizar os arquivos `carrinho-side-cart.html` e `secao-avaliacoes.html` com novos designs.
+
+**Mudanças:**
+
+### Carrinho Lateral (`carrinho-side-cart.html`)
+- ✅ **Design atualizado**: Novo layout com estilos melhorados
+- ✅ **Botão flutuante**: Adicionado botão FAB (Floating Action Button) para abrir carrinho
+- ✅ **Carrinho lateral**: Modal lateral com animação e transições suaves
+- ✅ **Funcionalidades**: Controle de quantidade, remoção de itens, cálculo de subtotal
+- ✅ **Navegação mantida**: Link do botão "Finalizar Pedido" mantido para `checkout-simplificado.html`
+
+### Seção de Avaliações (`secao-avaliacoes.html`)
+- ✅ **Design atualizado**: Novo layout com cards de avaliação
+- ✅ **Formulário de avaliação**: Sistema de avaliação com estrelas e comentários
+- ✅ **Respostas do restaurante**: Exibição de respostas do restaurante às avaliações
+- ✅ **Badge "Verificada"**: Indicador visual para avaliações verificadas
+
+**Arquivos modificados:**
+- `theme-vemcomer/templates/marketplace/carrinho-side-cart.html` - Conteúdo completo atualizado
+- `theme-vemcomer/templates/marketplace/secao-avaliacoes.html` - Conteúdo completo atualizado
+
+**Resultado:**
+Carrinho lateral e seção de avaliações com designs atualizados e funcionalidades mantidas.
+
+## v0.60 - Atualização do Modal de Informações do Restaurante
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Atualizar o arquivo `modal-informacoes-restaurante.html` com novo design.
+
+**Mudanças:**
+- ✅ **Design atualizado**: Novo layout com modal animado
+- ✅ **Informações estruturadas**: Endereço, mapa, horários e formas de pagamento
+- ✅ **Mapa integrado**: Iframe do OpenStreetMap para exibir localização
+- ✅ **Horários dinâmicos**: Sistema para exibir horários de funcionamento estruturados
+- ✅ **Animação**: Efeito de entrada suave com `modalIn` animation
+- ✅ **Responsividade**: Adaptação para telas menores
+
+**Arquivos modificados:**
+- `theme-vemcomer/templates/marketplace/modal-informacoes-restaurante.html` - Conteúdo completo atualizado
+
+**Resultado:**
+Modal de informações do restaurante com design atualizado e funcionalidades completas.
