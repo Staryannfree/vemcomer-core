@@ -838,8 +838,8 @@ async function showStoryMenuModal(restaurantId) {
     modal.classList.add('active');
     
     try {
-        // Buscar cardápio da API
-        const response = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu`, {
+        // Buscar cardápio da API (usar endpoint de categorias)
+        const response = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu-categories`, {
             headers: { 'Accept': 'application/json' }
         });
         
@@ -850,11 +850,11 @@ async function showStoryMenuModal(restaurantId) {
         const data = await response.json();
         
         // Renderizar cardápio com botões para escolher item
-        if (data.categories && data.categories.length > 0) {
+        if (data && data.length > 0) {
             let html = '';
-            data.categories.forEach(category => {
+            data.forEach(category => {
                 html += `<div class="story-menu-category">
-                    <h3 class="story-menu-category-title">${category.name}</h3>
+                    <h3 class="story-menu-category-title">${category.name || 'Sem categoria'}</h3>
                     <div class="story-menu-items">`;
                 
                 if (category.items && category.items.length > 0) {
@@ -864,13 +864,14 @@ async function showStoryMenuModal(restaurantId) {
                             currency: 'BRL'
                         });
                         const isAvailable = item.is_available !== false;
-                        html += `<div class="story-menu-item ${!isAvailable ? 'unavailable' : ''}" data-item-id="${item.id}" data-item-name="${item.title}" data-item-price="${item.price || 0}" style="cursor: ${isAvailable ? 'pointer' : 'not-allowed'};">
+                        const itemTitleEscaped = (item.title || item.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        html += `<div class="story-menu-item ${!isAvailable ? 'unavailable' : ''}" data-item-id="${item.id}" data-item-name="${itemTitleEscaped}" data-item-price="${item.price || 0}" style="cursor: ${isAvailable ? 'pointer' : 'not-allowed'};">
                             <div class="story-menu-item-info">
-                                <h4 class="story-menu-item-name">${item.title}</h4>
+                                <h4 class="story-menu-item-name">${item.title || item.name || 'Item sem nome'}</h4>
                                 <p class="story-menu-item-price">${price}</p>
                             </div>
                             ${item.prep_time ? `<span class="story-menu-item-time">${item.prep_time}min</span>` : ''}
-                            ${isAvailable ? '<button class="story-menu-item-select-btn" onclick="selectMenuItem(' + item.id + ', \'' + item.title.replace(/'/g, "\\'") + '\', ' + (item.price || 0) + ')">Escolher</button>' : '<span class="story-menu-item-unavailable-label">Indisponível</span>'}
+                            ${isAvailable ? '<button class="story-menu-item-select-btn" onclick="selectMenuItem(' + item.id + ', \'' + itemTitleEscaped + '\', ' + (item.price || 0) + ')">Escolher</button>' : '<span class="story-menu-item-unavailable-label">Indisponível</span>'}
                         </div>`;
                     });
                 } else {
