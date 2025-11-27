@@ -340,127 +340,31 @@ async function fetchFeaturedRestaurants() {
     return restaurants.map(mapApiRestaurantToFeatured);
 }
 
-// ============ DADOS DOS STORIES (Mantido hardcoded por enquanto) ============
-const storiesData = [
-    {
-        id: 1,
-        restaurant: {
-            name: 'Pizzaria Bella',
-            avatar: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200'
-        },
-        stories: [
-            {
-                id: 1,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800',
-                timestamp: '2h',
-                duration: 5000
-            },
-            {
-                id: 2,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800',
-                timestamp: '2h',
-                duration: 5000
+// ============ DADOS DOS STORIES (Carregados da API) ============
+let storiesData = [];
+
+/**
+ * Busca stories da API REST
+ */
+async function fetchStories() {
+    try {
+        const response = await fetch(`${API_BASE}/stories`, {
+            headers: {
+                'Accept': 'application/json'
             }
-        ],
-        viewed: false,
-        hasNew: true
-    },
-    {
-        id: 2,
-        restaurant: {
-            name: 'Sushi House',
-            avatar: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=200'
-        },
-        stories: [
-            {
-                id: 3,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?w=800',
-                timestamp: '4h',
-                duration: 5000
-            }
-        ],
-        viewed: false,
-        hasNew: true
-    },
-    {
-        id: 3,
-        restaurant: {
-            name: 'Churrascaria Premium',
-            avatar: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=200'
-        },
-        stories: [
-            {
-                id: 4,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1558030006-450675393462?w=800',
-                timestamp: '6h',
-                duration: 5000
-            },
-            {
-                id: 5,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=800',
-                timestamp: '6h',
-                duration: 5000
-            },
-            {
-                id: 6,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
-                timestamp: '7h',
-                duration: 5000
-            }
-        ],
-        viewed: true,
-        hasNew: false
-    },
-    {
-        id: 4,
-        restaurant: {
-            name: 'Trattoria Italiana',
-            avatar: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=200'
-        },
-        stories: [
-            {
-                id: 7,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800',
-                timestamp: '8h',
-                duration: 5000
-            }
-        ],
-        viewed: false,
-        hasNew: false
-    },
-    {
-        id: 5,
-        restaurant: {
-            name: 'Açaí da Vila',
-            avatar: 'https://images.unsplash.com/photo-1590301157890-4810ed352733?w=200'
-        },
-        stories: [
-            {
-                id: 8,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1488900128323-21503983a07e?w=800',
-                timestamp: '10h',
-                duration: 5000
-            },
-            {
-                id: 9,
-                type: 'image',
-                url: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=800',
-                timestamp: '11h',
-                duration: 5000
-            }
-        ],
-        viewed: true,
-        hasNew: false
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data || [];
+    } catch (error) {
+        console.error('Erro ao buscar stories:', error);
+        return [];
     }
-];
+}
 
 // ============ OUTROS DADOS ============
 const dishesData = [
@@ -590,23 +494,62 @@ const restaurantsData = [
 ];
 
 // ============ RENDER STORIES ============
-function renderStories() {
+async function renderStories() {
     const container = document.getElementById('storiesScroll');
     if (!container) return;
     
-    container.innerHTML = storiesData.map(story => `
-        <div class="story-item" onclick="window.location.href='${TEMPLATE_PATH}story-viewer-cliente.html'" style="cursor: pointer;">
+    // Mostrar skeleton loading
+    container.innerHTML = `
+        <div class="story-item skeleton">
             <div class="story-avatar-wrapper">
-                <div class="story-ring ${story.viewed ? 'viewed' : ''}">
-                    <div class="story-avatar-container">
-                        <img src="${story.restaurant.avatar}" alt="${story.restaurant.name}" class="story-avatar">
-                    </div>
+                <div class="story-ring">
+                    <div class="story-avatar-container" style="background: #eee; border-radius: 50%; width: 56px; height: 56px;"></div>
                 </div>
-                ${story.hasNew ? '<div class="story-new-badge">+</div>' : ''}
             </div>
-            <div class="story-name">${story.restaurant.name}</div>
+            <div class="story-name" style="background: #eee; height: 12px; width: 60px; border-radius: 4px; margin-top: 4px;"></div>
         </div>
-    `).join('');
+    `.repeat(5);
+    
+    // Buscar stories da API
+    storiesData = await fetchStories();
+    
+    if (storiesData.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    // Renderizar stories
+    container.innerHTML = storiesData.map(story => {
+        // Usar avatar do restaurante ou fallback
+        const avatar = story.restaurant.avatar || getLogoFallback(story.restaurant.name);
+        const avatarHtml = isValidImage(story.restaurant.avatar) 
+            ? `<img src="${story.restaurant.avatar}" alt="${story.restaurant.name}" class="story-avatar" onerror="this.onerror=null; this.parentElement.innerHTML='${getLogoFallback(story.restaurant.name)}';">`
+            : getLogoFallback(story.restaurant.name);
+        
+        return `
+            <div class="story-item" onclick="window.openStory(${story.id})" style="cursor: pointer;">
+                <div class="story-avatar-wrapper">
+                    <div class="story-ring ${story.viewed ? 'viewed' : ''}">
+                        <div class="story-avatar-container">
+                            ${avatarHtml}
+                        </div>
+                    </div>
+                    ${story.hasNew ? '<div class="story-new-badge">+</div>' : ''}
+                </div>
+                <div class="story-name">${story.restaurant.name}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Anexar event listeners após renderização
+    attachStoryListeners();
+}
+
+/**
+ * Anexa event listeners para os stories
+ */
+function attachStoryListeners() {
+    // Event delegation já está no onclick inline, mas podemos adicionar mais lógica aqui se necessário
 }
 
 // ============ STORY VIEWER ============
@@ -616,18 +559,20 @@ let storyTimer = null;
 let progressInterval = null;
 
 function openStory(groupId) {
-    // Redirecionar para o HTML estático do story viewer
-    window.location.href = TEMPLATE_PATH + 'story-viewer-cliente.html';
-    return;
-    
     const storyGroup = storiesData.find(s => s.id === groupId);
-    if (!storyGroup) return;
+    if (!storyGroup || !storyGroup.stories || storyGroup.stories.length === 0) {
+        console.warn('Story group não encontrado ou sem stories:', groupId);
+        return;
+    }
 
     currentStoryGroup = storyGroup;
     currentStoryIndex = 0;
     
     const viewer = document.getElementById('storyViewer');
-    if (!viewer) return;
+    if (!viewer) {
+        console.warn('Story viewer não encontrado no DOM');
+        return;
+    }
     
     viewer.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -635,9 +580,34 @@ function openStory(groupId) {
     renderStoryProgressBars(storyGroup.stories.length);
     showStory(0);
     
-    // Marcar como visto
+    // Marcar como visto via API
+    markStoryAsViewed(storyGroup.stories[0].id);
+    
+    // Atualizar estado local
     storyGroup.viewed = true;
     renderStories();
+}
+
+/**
+ * Marca um story como visto via API
+ */
+async function markStoryAsViewed(storyId) {
+    // Apenas se usuário estiver logado
+    if (!window.VemComer || !window.VemComer.nonce) {
+        return;
+    }
+    
+    try {
+        await fetch(`${API_BASE}/stories/${storyId}/view`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': window.VemComer.nonce
+            }
+        });
+    } catch (error) {
+        console.error('Erro ao marcar story como visto:', error);
+    }
 }
 
 function renderStoryProgressBars(count) {
@@ -658,17 +628,59 @@ function showStory(index) {
     }
     const story = currentStoryGroup.stories[index];
     currentStoryIndex = index;
+    
     // Update header
     const headerAvatar = document.getElementById('storyHeaderAvatar');
     const headerName = document.getElementById('storyHeaderName');
     const headerTime = document.getElementById('storyHeaderTime');
-    if (headerAvatar) headerAvatar.src = currentStoryGroup.restaurant.avatar;
+    
+    if (headerAvatar) {
+        const avatarUrl = currentStoryGroup.restaurant.avatar;
+        if (isValidImage(avatarUrl)) {
+            headerAvatar.src = avatarUrl;
+            headerAvatar.style.display = '';
+        } else {
+            headerAvatar.style.display = 'none';
+        }
+    }
     if (headerName) headerName.textContent = currentStoryGroup.restaurant.name;
-    if (headerTime) headerTime.textContent = `há ${story.timestamp}`;
+    if (headerTime) headerTime.textContent = story.timestamp || 'agora';
 
     // Update media
     const media = document.getElementById('storyMedia');
-    if (media) media.src = story.url;
+    if (media) {
+        if (story.type === 'video') {
+            // Para vídeo, criar elemento <video>
+            if (media.tagName !== 'VIDEO') {
+                const video = document.createElement('video');
+                video.className = 'story-media';
+                video.controls = false;
+                video.autoplay = true;
+                video.muted = true;
+                video.loop = false;
+                media.parentNode.replaceChild(video, media);
+                document.getElementById('storyMedia').src = story.url;
+            } else {
+                media.src = story.url;
+            }
+        } else {
+            // Para imagem, usar <img>
+            if (media.tagName !== 'IMG') {
+                const img = document.createElement('img');
+                img.className = 'story-media';
+                img.alt = 'Story';
+                media.parentNode.replaceChild(img, media);
+                document.getElementById('storyMedia').src = story.url || PLACEHOLDERS.default;
+            } else {
+                media.src = story.url || PLACEHOLDERS.default;
+            }
+        }
+    }
+    
+    // Marcar story atual como visto
+    if (story.id) {
+        markStoryAsViewed(story.id);
+    }
 
     // Reset all progress bars
     for (let i = 0; i < currentStoryGroup.stories.length; i++) {
@@ -1996,7 +2008,7 @@ async function initApp() {
     // Renderizar conteúdo (carregar em paralelo)
     await Promise.all([
         renderBanners(),
-        renderStories(), // Mantido hardcoded por enquanto
+        renderStories(), // Agora busca da API
         renderDishes(), // Agora busca da API
         renderEvents(), // Agora busca da API
         renderFeatured(),

@@ -163,6 +163,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Model\\CPT_AnalyticsEvent' ) ) { ( new \VC\Model\CPT_AnalyticsEvent() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_Banner' ) ) { ( new \VC\Model\CPT_Banner() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_Event' ) ) { ( new \VC\Model\CPT_Event() )->init(); }
+    if ( class_exists( '\\VC\\Model\\CPT_Story' ) ) { ( new \VC\Model\CPT_Story() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_SubscriptionPlan' ) ) { ( new \VC\Model\CPT_SubscriptionPlan() )->init(); }
     if ( class_exists( '\\VC\\Subscription\\Limits_Validator' ) ) { ( new \VC\Subscription\Limits_Validator() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
@@ -172,6 +173,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Favorites_Controller' ) ) { ( new \VC\REST\Favorites_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Banners_Controller' ) ) { ( new \VC\REST\Banners_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Events_Controller' ) ) { ( new \VC\REST\Events_Controller() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Stories_Controller' ) ) { ( new \VC\REST\Stories_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Menu_Items_Controller' ) ) { ( new \VC\REST\Menu_Items_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Quick_Toggle_Controller' ) ) { ( new \VC\REST\Quick_Toggle_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Subscription_Controller' ) ) { ( new \VC\REST\Subscription_Controller() )->init(); }

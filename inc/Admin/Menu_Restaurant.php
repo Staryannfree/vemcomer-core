@@ -90,6 +90,16 @@ class Menu_Restaurant {
             );
         }
 
+        if ( class_exists( '\\VC\\Model\\CPT_Story' ) ) {
+            add_submenu_page(
+                'vemcomer-root',
+                __( 'Stories', 'vemcomer' ),
+                __( 'Stories', 'vemcomer' ),
+                'edit_posts',
+                'edit.php?post_type=' . \VC\Model\CPT_Story::SLUG
+            );
+        }
+
         if ( class_exists( '\\VC\\Model\\CPT_SubscriptionPlan' ) ) {
             add_submenu_page(
                 'vemcomer-root',
