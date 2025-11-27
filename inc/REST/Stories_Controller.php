@@ -395,8 +395,7 @@ class Stories_Controller {
 		$order     = $request->get_param( 'order' );
 		$active    = $request->get_param( 'active' );
 		$image_id  = $request->get_param( 'image_id' );
-		$link      = $request->get_param( 'link' );
-		$link_text = $request->get_param( 'link_text' );
+		$link_type = $request->get_param( 'link_type' );
 
 		if ( null !== $title ) {
 			wp_update_post( [ 'ID' => $id, 'post_title' => sanitize_text_field( $title ) ] );

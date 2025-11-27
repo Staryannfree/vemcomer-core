@@ -896,15 +896,18 @@ function selectMenuItem(itemId, itemName, itemPrice) {
     // Fechar modal
     closeStoryMenuModal();
     
-    // Redirecionar para página do produto ou abrir modal de detalhes
-    // Por enquanto, vamos redirecionar para a página do produto
-    const productUrl = `${TEMPLATE_PATH}modal-detalhes-produto.html?id=${itemId}`;
+    // Fechar também o story viewer
+    closeStoryViewer();
     
-    // Ou se preferir abrir modal diretamente:
+    // Redirecionar para página do produto ou abrir modal de detalhes
+    // Verificar se existe função para abrir modal de produto
     if (typeof openProductModal === 'function') {
         openProductModal(itemId);
+    } else if (typeof showProductDetails === 'function') {
+        showProductDetails(itemId);
     } else {
-        window.location.href = productUrl;
+        // Fallback: redirecionar para página do produto
+        window.location.href = `/produto/?id=${itemId}`;
     }
 }
 
