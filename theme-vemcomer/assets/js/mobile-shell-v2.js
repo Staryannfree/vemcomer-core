@@ -849,10 +849,13 @@ async function showStoryMenuModal(restaurantId) {
         
         const data = await response.json();
         
+        // A API retorna { restaurant_id, categories: [...] }
+        const categories = data.categories || [];
+        
         // Renderizar cardápio com botões para escolher item
-        if (data && data.length > 0) {
+        if (categories && categories.length > 0) {
             let html = '';
-            data.forEach(category => {
+            categories.forEach(category => {
                 html += `<div class="story-menu-category">
                     <h3 class="story-menu-category-title">${category.name || 'Sem categoria'}</h3>
                     <div class="story-menu-items">`;
