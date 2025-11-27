@@ -717,20 +717,40 @@ function showStory(index) {
     // Atualizar botão CTA
     const ctaBtn = document.getElementById('storyCtaBtn');
     if (ctaBtn) {
+        console.log('Story data para CTA:', {
+            link_type: story.link_type,
+            link: story.link,
+            link_text: story.link_text
+        });
+        
         if (story.link_type === 'profile' || story.link_type === 'menu') {
-            ctaBtn.textContent = story.link_text || 'Ver Mais';
+            const btnText = story.link_text || (story.link_type === 'profile' ? 'Ver Perfil' : 'Ver Cardápio');
+            ctaBtn.textContent = btnText;
             ctaBtn.style.display = 'block';
-            ctaBtn.onclick = () => handleStoryCta(story);
+            ctaBtn.style.visibility = 'visible';
+            ctaBtn.style.opacity = '1';
+            ctaBtn.onclick = (e) => {
+                e.stopPropagation();
+                handleStoryCta(story);
+            };
+            console.log('Botão CTA configurado:', btnText);
         } else if (story.link) {
             // Compatibilidade com link customizado antigo
             ctaBtn.textContent = story.link_text || 'Ver Mais';
             ctaBtn.style.display = 'block';
-            ctaBtn.onclick = () => {
+            ctaBtn.style.visibility = 'visible';
+            ctaBtn.style.opacity = '1';
+            ctaBtn.onclick = (e) => {
+                e.stopPropagation();
                 window.location.href = story.link;
             };
+            console.log('Botão CTA configurado (link antigo):', story.link_text);
         } else {
             ctaBtn.style.display = 'none';
+            console.log('Botão CTA ocultado - sem link_type ou link');
         }
+    } else {
+        console.error('Botão CTA não encontrado no DOM!');
     }
 
     // Reset all progress bars

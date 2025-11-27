@@ -422,9 +422,17 @@ body {
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    z-index: 10;
+    z-index: 1000; /* Aumentado para garantir que fique acima de tudo */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: all 0.2s;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.story-cta-btn:hover {
+    background: var(--primary-hover, #45c676);
+    transform: translateX(-50%) scale(1.05);
 }
 
 .story-cta-btn:active {
