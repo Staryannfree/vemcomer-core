@@ -496,7 +496,10 @@ const restaurantsData = [
 // ============ RENDER STORIES ============
 async function renderStories() {
     const container = document.getElementById('storiesScroll');
-    if (!container) return;
+    if (!container) {
+        console.warn('Container storiesScroll não encontrado no DOM');
+        return;
+    }
     
     // Mostrar skeleton loading
     container.innerHTML = `
@@ -511,9 +514,17 @@ async function renderStories() {
     `.repeat(5);
     
     // Buscar stories da API
-    storiesData = await fetchStories();
+    try {
+        storiesData = await fetchStories();
+        console.log('Stories carregados da API:', storiesData);
+    } catch (error) {
+        console.error('Erro ao carregar stories:', error);
+        container.innerHTML = '';
+        return;
+    }
     
-    if (storiesData.length === 0) {
+    if (!storiesData || storiesData.length === 0) {
+        console.log('Nenhum story encontrado na API');
         container.innerHTML = '';
         return;
     }
@@ -587,6 +598,9 @@ function openStory(groupId) {
     storyGroup.viewed = true;
     renderStories();
 }
+
+// Expor função globalmente para onclick inline
+window.openStory = openStory;
 
 /**
  * Marca um story como visto via API
