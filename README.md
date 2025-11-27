@@ -1805,3 +1805,29 @@ Atualizar o arquivo `modal-informacoes-restaurante.html` com novo design.
 
 **Resultado:**
 Modal de informações do restaurante com design atualizado e funcionalidades completas.
+
+## v0.61 - Atualização do Modal de Detalhes do Produto
+
+**Data:** 2024-12-XX
+
+**Objetivo:**
+Atualizar o arquivo `modal-detalhes-produto.html` com novo design e sistema de modificadores.
+
+**Mudanças:**
+- ✅ **Design atualizado**: Novo layout com modal animado e estilos melhorados
+- ✅ **Sistema de modificadores**: 
+  - Modificadores obrigatórios (radio buttons) - exemplo: escolha de proteína
+  - Modificadores opcionais (checkboxes) - exemplo: adicionais
+  - Cálculo dinâmico de preço baseado em modificadores selecionados
+- ✅ **Controle de quantidade**: Botões +/- para ajustar quantidade do produto
+- ✅ **Cálculo de total**: Atualização automática do preço total (base + modificadores) × quantidade
+- ✅ **Campo de observação**: Textarea para observações do cliente
+- ✅ **Navegação mantida**: Link do botão "Adicionar" mantido para `carrinho-side-cart.html`
+- ✅ **Animação**: Efeito de entrada suave com `fadeIn` animation
+- ✅ **Responsividade**: Adaptação para telas menores
+
+**Arquivos modificados:**
+- `theme-vemcomer/templates/marketplace/modal-detalhes-produto.html` - Conteúdo completo atualizado
+
+**Resultado:**
+Modal de detalhes do produto com design atualizado, sistema completo de modificadores e cálculo dinâmico de preços.
