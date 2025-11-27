@@ -118,10 +118,14 @@ $address_text = ! empty( $user_neighborhood ) ? $user_neighborhood : ( ! empty( 
 
 <!-- STORY VIEWER MODAL -->
 <div class="story-viewer story-overlay" id="storyViewer">
-    <div class="story-progress story-progress-bars" id="storyProgressBars"></div>
+    <div class="story-progress story-progress-bars" id="storyProgressBars">
+        <div class="story-progress-bar">
+            <div class="story-progress-fill" id="storyProgress0"></div>
+        </div>
+    </div>
     <button class="story-close-btn" id="storyCloseBtn">×</button>
     <div class="story-header">
-        <img src="" alt="Avatar" class="story-header-avatar" id="storyHeaderAvatar">
+        <img src="" alt="Avatar" class="story-avatar story-header-avatar" id="storyHeaderAvatar">
         <div class="story-header-info">
             <div class="story-header-name" id="storyHeaderName"></div>
             <div class="story-header-time" id="storyHeaderTime"></div>
