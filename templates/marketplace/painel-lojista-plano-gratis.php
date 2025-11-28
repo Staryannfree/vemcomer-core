@@ -264,12 +264,14 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
 <?php
 $current_user = wp_get_current_user();
 
-if ( in_array( 'lojista', (array) $current_user->roles, true ) ) {
-    if ( ! defined( 'VC_WIZARD_INLINE' ) ) {
-        define( 'VC_WIZARD_INLINE', true );
-    }
+if ( ! defined( 'VC_WIZARD_INLINE' ) ) {
+    define( 'VC_WIZARD_INLINE', true );
+}
 
-    locate_template( 'templates/marketplace/wizard-onboarding.php', true, false );
+$wizard_path = VEMCOMER_CORE_DIR . 'templates/marketplace/wizard-onboarding.php';
+
+if ( file_exists( $wizard_path ) ) {
+    include $wizard_path;
 }
 
 if (! $vc_marketplace_inline) {

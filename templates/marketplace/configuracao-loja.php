@@ -25,6 +25,8 @@ vc_marketplace_render_static_template('configuracao-loja.html');
 ?>
 <script>
   window.vcConfigPrefill = <?php echo wp_json_encode( $config_prefill ); ?>;
+  const vcConfigEndpoint = '<?php echo esc_url_raw( rest_url( 'vemcomer/v1/merchant/settings' ) ); ?>';
+  const vcRestNonce = '<?php echo wp_create_nonce( 'wp_rest' ); ?>';
 
   document.addEventListener('DOMContentLoaded', function(){
     const heading = Array.from(document.querySelectorAll('.container h1')).find(function(node){
@@ -252,6 +254,126 @@ vc_marketplace_render_static_template('configuracao-loja.html');
 
     const faq = data.faq ? data.faq : '';
     setValue('vcFaq', faq);
+
+    const saveBtn = document.querySelector('.btn-save');
+    const salvarConfiguracoes = async function(ev){
+      if (ev) ev.preventDefault();
+      const button = ev && ev.currentTarget ? ev.currentTarget : saveBtn;
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Salvando...';
+      }
+
+      const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+      };
+
+      const collectLines = (id) => getVal(id).split(/\n+/).map(t => t.trim()).filter(Boolean);
+
+      const horarios = ['seg','ter','qua','qui','sex','sab','dom'].reduce((acc, slug) => {
+        const enabled = document.getElementById(slug + '-checkbox')?.checked;
+        const open = document.getElementById(slug + '-abre')?.value || '';
+        const close = document.getElementById(slug + '-fecha')?.value || '';
+        acc[slug] = { enabled: !!enabled, ranges: [ { open, close } ] };
+        return acc;
+      }, {});
+
+      const shippingModeBairro = document.getElementById('frete-bairro')?.checked;
+      const neighborhoods = [];
+      if (shippingModeBairro) {
+        document.querySelectorAll('#bairroConfig .bairro-list-item').forEach(function(item){
+          const name = (item.childNodes[0] && item.childNodes[0].textContent) ? item.childNodes[0].textContent.trim() : '';
+          const priceInput = item.querySelector('input[type="number"]');
+          const price = priceInput && priceInput.value !== '' ? parseFloat(priceInput.value) : null;
+          if (name) neighborhoods.push({ name, price });
+        });
+      }
+
+      const shipping = shippingModeBairro ? {
+        mode: 'neighborhood',
+        neighborhoods,
+        base_fee: getVal('taxaBase') || null,
+      } : {
+        mode: 'radius',
+        radius: getVal('kmRaio') || null,
+        base_fee: getVal('taxaBase') || null,
+        price_per_km: getVal('vcPriceKm') || null,
+      };
+
+      shipping.free_above = getVal('vcFreeAbove') || null;
+      shipping.min_order = getVal('vcMinOrder') || null;
+
+      const banners = Array.from(document.querySelectorAll('.banners-group img')).map(img => img.src).filter(Boolean);
+      const reservaMsg = document.querySelector('.switch-row input[type="text"]');
+
+      const payload = {
+        title: getVal('nomeRestaurante'),
+        description: getVal('descricao'),
+        cnpj: getVal('vcCnpj'),
+        whatsapp: getVal('vcWhatsapp'),
+        site: getVal('vcSite'),
+        address: getVal('vcEndereco'),
+        lat: getVal('vcLatitude'),
+        lng: getVal('vcLongitude'),
+        delivery: !!document.getElementById('vcDeliveryFlag')?.checked,
+        delivery_eta: getVal('vcDeliveryEta'),
+        delivery_fee: getVal('vcDeliveryFee'),
+        delivery_type: getVal('vcDeliveryType'),
+        access_url: getVal('vcAccessUrl'),
+        horario_legado: getVal('vcHorarioLegado'),
+        banners,
+        highlights: collectLines('vcHighlights'),
+        filters: collectLines('vcFilters'),
+        payments: collectLines('vcPayments'),
+        facilities: getVal('vcFacilities'),
+        observations: getVal('vcObservations'),
+        faq: getVal('vcFaq'),
+        orders_count: getVal('vcOrdersCount'),
+        plan_name: getVal('vcPlanName'),
+        plan_limit: getVal('vcPlanLimit'),
+        plan_used: getVal('vcPlanUsed'),
+        reservation_enabled: !!document.getElementById('switchReserva')?.checked,
+        reservation_message: reservaMsg ? reservaMsg.value : '',
+        holidays: collectLines('vcHolidays'),
+        shipping,
+        schedule: horarios,
+        logo: (document.getElementById('logo-preview')?.src) || '',
+        cover: (document.getElementById('capa-preview')?.src) || '',
+      };
+
+      try {
+        const res = await fetch(vcConfigEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-WP-Nonce': vcRestNonce,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          throw new Error('Falha ao salvar');
+        }
+
+        alert('Configurações salvas com sucesso!');
+      } catch (err) {
+        console.error(err);
+        alert('Não foi possível salvar as configurações.');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Salvar Configurações';
+        }
+      }
+    };
+
+    if (saveBtn) {
+      saveBtn.removeAttribute('onclick');
+      saveBtn.addEventListener('click', salvarConfiguracoes);
+    }
+
+    window.salvar = salvarConfiguracoes;
   });
 </script>
 <?php
