@@ -8,6 +8,8 @@
 
 namespace VC\Admin;
 
+use VC\Frontend\Marketplace_Templates;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -20,7 +22,7 @@ class Page_Templates {
      * @return array Array de templates com título, conteúdo, slug, etc.
      */
     public static function get_templates(): array {
-        return [
+        $templates = [
             'home' => [
                 'title'       => __( 'Home - Marketplace Completo', 'vemcomer' ),
                 'slug'        => 'inicio',
@@ -110,6 +112,21 @@ class Page_Templates {
                 'featured'    => true,
             ],
         ];
+
+        if ( class_exists( '\\VC\\Frontend\\Marketplace_Templates' ) ) {
+            foreach ( Marketplace_Templates::get_templates() as $key => $config ) {
+                $templates[ 'marketplace_' . $key ] = [
+                    'title'       => __( $config['title'], 'vemcomer' ),
+                    'slug'        => $config['slug'],
+                    'description' => sprintf( __( 'Importa o layout %s diretamente do marketplace.', 'vemcomer' ), $config['title'] ),
+                    'template'    => $config['template'],
+                    'content'     => '<!-- wp:shortcode -->[' . $config['shortcode'] . ']<!-- /wp:shortcode -->',
+                    'featured'    => false,
+                ];
+            }
+        }
+
+        return $templates;
     }
     
     /**
