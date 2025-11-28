@@ -16,6 +16,22 @@ const VC_META_RESTAURANT_FIELDS = [
     'lat'         => 'vc_restaurant_lat',
     'lng'         => 'vc_restaurant_lng',
     'access_url'  => 'vc_restaurant_access_url', // token único para acesso ao painel
+    'orders_count' => 'vc_restaurant_orders_count',
+    'delivery_eta' => 'vc_restaurant_delivery_eta',
+    'delivery_fee' => 'vc_restaurant_delivery_fee',
+    'delivery_type' => 'vc_restaurant_delivery_type',
+    'banners'      => 'vc_restaurant_banners',
+    'highlight_tags' => 'vc_restaurant_highlight_tags',
+    'menu_filters' => 'vc_restaurant_menu_filters',
+    'reservation_enabled' => 'vc_restaurant_reservation_enabled',
+    'reservation_link'    => 'vc_restaurant_reservation_link',
+    'reservation_phone'   => 'vc_restaurant_reservation_phone',
+    'reservation_notes'   => 'vc_restaurant_reservation_notes',
+    'payment_methods' => 'vc_restaurant_payment_methods',
+    'instagram'      => 'vc_restaurant_instagram',
+    'facilities'     => 'vc_restaurant_facilities',
+    'observations'   => 'vc_restaurant_observations',
+    'faq'            => 'vc_restaurant_faq',
     // Configuração de frete por distância
     'delivery_radius'      => '_vc_delivery_radius',
     'delivery_price_per_km' => '_vc_delivery_price_per_km',
@@ -23,6 +39,13 @@ const VC_META_RESTAURANT_FIELDS = [
     'delivery_free_above'   => '_vc_delivery_free_above',
     'delivery_min_order'    => '_vc_delivery_min_order',
     'delivery_neighborhoods' => '_vc_delivery_neighborhoods', // JSON
+    // Campos adicionais de marca e plano
+    'logo'          => 'vc_restaurant_logo',
+    'cover'         => 'vc_restaurant_cover',
+    'featured_badge' => 'vc_restaurant_featured_badge',
+    'plan_name'     => 'vc_restaurant_plan_name',
+    'plan_limit'    => 'vc_restaurant_plan_limit',
+    'plan_used'     => 'vc_restaurant_plan_used',
 ];
 
 add_action( 'add_meta_boxes', function() {
@@ -120,6 +143,20 @@ function vc_render_restaurant_metabox( $post ) {
         <tr>
             <th><label for="vc_restaurant_site"><?php echo esc_html__( 'Site', 'vemcomer' ); ?></label></th>
             <td><input type="url" id="vc_restaurant_site" name="vc_restaurant_site" class="regular-text" value="<?php echo esc_attr( $values['site'] ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_logo"><?php echo esc_html__( 'Logo (URL da imagem)', 'vemcomer' ); ?></label></th>
+            <td><input type="url" id="vc_restaurant_logo" name="vc_restaurant_logo" class="regular-text" placeholder="https://.../logo.png" value="<?php echo esc_attr( $values['logo'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_cover"><?php echo esc_html__( 'Capa/hero (URL)', 'vemcomer' ); ?></label></th>
+            <td><input type="url" id="vc_restaurant_cover" name="vc_restaurant_cover" class="regular-text" placeholder="https://.../capa.jpg" value="<?php echo esc_attr( $values['cover'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_featured_badge"><?php echo esc_html__( 'Selo Destaque', 'vemcomer' ); ?></label></th>
+            <td>
+                <label><input type="checkbox" id="vc_restaurant_featured_badge" name="vc_restaurant_featured_badge" value="1" <?php checked( ! empty( $values['featured_badge'] ) ); ?> /> <?php echo esc_html__( 'Destacar restaurante no perfil', 'vemcomer' ); ?></label>
+            </td>
         </tr>
         <tr>
             <th><label><?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?></label></th>
@@ -321,6 +358,116 @@ function vc_render_restaurant_metabox( $post ) {
             <code style="background: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;"><?php echo esc_html( $cardapio_url ); ?></code>
         </p>
     </div>
+
+    <h3 style="margin-top: 30px; margin-bottom: 10px; "><?php echo esc_html__( 'Experiência do perfil no app/marketplace', 'vemcomer' ); ?></h3>
+    <p class="description" style="margin-top: -4px;"><?php echo esc_html__( 'Preencha estes campos para alimentar o layout completo do perfil (banners, métricas, reservas, FAQ, etc.).', 'vemcomer' ); ?></p>
+    <table class="form-table">
+        <tr>
+            <th><label for="vc_restaurant_banners"><?php echo esc_html__( 'Banners (URLs, um por linha)', 'vemcomer' ); ?></label></th>
+            <td>
+                <textarea id="vc_restaurant_banners" name="vc_restaurant_banners" class="large-text code" rows="3" placeholder="https://..."><?php echo esc_textarea( $values['banners'] ?? '' ); ?></textarea>
+                <p class="description"><?php echo esc_html__( 'Imagens do topo do perfil. Deixe vazio para ocultar.', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_orders_count"><?php echo esc_html__( 'Total de pedidos (número)', 'vemcomer' ); ?></label></th>
+            <td><input type="number" id="vc_restaurant_orders_count" name="vc_restaurant_orders_count" class="small-text" min="0" value="<?php echo esc_attr( $values['orders_count'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_delivery_eta"><?php echo esc_html__( 'Tempo médio de entrega', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_delivery_eta" name="vc_restaurant_delivery_eta" class="regular-text" placeholder="Ex: 35-50 min" value="<?php echo esc_attr( $values['delivery_eta'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_delivery_fee"><?php echo esc_html__( 'Taxa de entrega (texto)', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_delivery_fee" name="vc_restaurant_delivery_fee" class="regular-text" placeholder="Ex: R$ 5,00" value="<?php echo esc_attr( $values['delivery_fee'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_delivery_type"><?php echo esc_html__( 'Tipo de entrega', 'vemcomer' ); ?></label></th>
+            <td>
+                <select id="vc_restaurant_delivery_type" name="vc_restaurant_delivery_type">
+                    <?php $delivery_type = $values['delivery_type'] ?? ''; ?>
+                    <option value="" <?php selected( $delivery_type, '' ); ?>><?php echo esc_html__( 'Não definido', 'vemcomer' ); ?></option>
+                    <option value="own" <?php selected( $delivery_type, 'own' ); ?>><?php echo esc_html__( 'Entrega própria', 'vemcomer' ); ?></option>
+                    <option value="marketplace" <?php selected( $delivery_type, 'marketplace' ); ?>><?php echo esc_html__( 'Parceiro/marketplace', 'vemcomer' ); ?></option>
+                    <option value="pickup" <?php selected( $delivery_type, 'pickup' ); ?>><?php echo esc_html__( 'Somente retirada', 'vemcomer' ); ?></option>
+                </select>
+                <p class="description"><?php echo esc_html__( 'Exibe selos como "Entrega Própria" no perfil.', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_highlight_tags"><?php echo esc_html__( 'Destaques (chips)', 'vemcomer' ); ?></label></th>
+            <td>
+                <textarea id="vc_restaurant_highlight_tags" name="vc_restaurant_highlight_tags" class="large-text" rows="3" placeholder="Africana
+Vegana
+Eventos & Reservas"><?php echo esc_textarea( $values['highlight_tags'] ?? '' ); ?></textarea>
+                <p class="description"><?php echo esc_html__( 'Tags exibidas abaixo do nome (uma por linha).', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_plan_name"><?php echo esc_html__( 'Nome do plano', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_plan_name" name="vc_restaurant_plan_name" class="regular-text" placeholder="Vitrine" value="<?php echo esc_attr( $values['plan_name'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_plan_limit"><?php echo esc_html__( 'Limite de itens do plano', 'vemcomer' ); ?></label></th>
+            <td><input type="number" min="0" step="1" id="vc_restaurant_plan_limit" name="vc_restaurant_plan_limit" class="small-text" value="<?php echo esc_attr( $values['plan_limit'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_plan_used"><?php echo esc_html__( 'Itens usados no plano', 'vemcomer' ); ?></label></th>
+            <td><input type="number" min="0" step="1" id="vc_restaurant_plan_used" name="vc_restaurant_plan_used" class="small-text" value="<?php echo esc_attr( $values['plan_used'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_menu_filters"><?php echo esc_html__( 'Filtros do cardápio', 'vemcomer' ); ?></label></th>
+            <td>
+                <textarea id="vc_restaurant_menu_filters" name="vc_restaurant_menu_filters" class="large-text" rows="2" placeholder="Vegano
+Sem glúten
+Promo"><?php echo esc_textarea( $values['menu_filters'] ?? '' ); ?></textarea>
+                <p class="description"><?php echo esc_html__( 'Opções de filtro exibidas ao lado da busca do cardápio (uma por linha).', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_reservation_enabled"><?php echo esc_html__( 'Reservas de mesa', 'vemcomer' ); ?></label></th>
+            <td>
+                <label><input type="checkbox" id="vc_restaurant_reservation_enabled" name="vc_restaurant_reservation_enabled" value="1" <?php checked( $values['reservation_enabled'] ?? '', '1' ); ?> /> <?php echo esc_html__( 'Habilitar bloco/modal de reserva', 'vemcomer' ); ?></label>
+                <p class="description" style="margin: 6px 0 8px;">
+                    <?php echo esc_html__( 'Informe pelo menos um dos campos abaixo para direcionar o usuário.', 'vemcomer' ); ?>
+                </p>
+                <input type="url" id="vc_restaurant_reservation_link" name="vc_restaurant_reservation_link" class="regular-text" placeholder="https://..." value="<?php echo esc_attr( $values['reservation_link'] ?? '' ); ?>" />
+                <p class="description"><?php echo esc_html__( 'Link externo ou formulário de reservas.', 'vemcomer' ); ?></p>
+                <input type="text" id="vc_restaurant_reservation_phone" name="vc_restaurant_reservation_phone" class="regular-text" placeholder="62988887777" value="<?php echo esc_attr( $values['reservation_phone'] ?? '' ); ?>" style="margin-top:8px;" />
+                <p class="description"><?php echo esc_html__( 'Telefone/WhatsApp para receber reservas.', 'vemcomer' ); ?></p>
+                <textarea id="vc_restaurant_reservation_notes" name="vc_restaurant_reservation_notes" class="large-text" rows="2" placeholder="Detalhes opcionais para o cliente (ex: reserva mínima de 4 pessoas)"><?php echo esc_textarea( $values['reservation_notes'] ?? '' ); ?></textarea>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_payment_methods"><?php echo esc_html__( 'Formas de pagamento', 'vemcomer' ); ?></label></th>
+            <td><textarea id="vc_restaurant_payment_methods" name="vc_restaurant_payment_methods" class="large-text" rows="2" placeholder="Cartão
+Pix
+Dinheiro
+VA/VR"><?php echo esc_textarea( $values['payment_methods'] ?? '' ); ?></textarea></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_instagram"><?php echo esc_html__( 'Instagram', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_instagram" name="vc_restaurant_instagram" class="regular-text" placeholder="@seu_perfil" value="<?php echo esc_attr( $values['instagram'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_facilities"><?php echo esc_html__( 'Facilidades/etiquetas', 'vemcomer' ); ?></label></th>
+            <td><textarea id="vc_restaurant_facilities" name="vc_restaurant_facilities" class="large-text" rows="2" placeholder="Acessibilidade
+Wi-Fi grátis
+Espaço eventos"><?php echo esc_textarea( $values['facilities'] ?? '' ); ?></textarea></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_observations"><?php echo esc_html__( 'Observações extras', 'vemcomer' ); ?></label></th>
+            <td><textarea id="vc_restaurant_observations" name="vc_restaurant_observations" class="large-text" rows="3" placeholder="Informações gerais para clientes."><?php echo esc_textarea( $values['observations'] ?? '' ); ?></textarea></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_faq"><?php echo esc_html__( 'FAQ (Pergunta | Resposta por linha)', 'vemcomer' ); ?></label></th>
+            <td>
+                <textarea id="vc_restaurant_faq" name="vc_restaurant_faq" class="large-text code" rows="4" placeholder="O restaurante aceita reservas online?|Sim, via botão Reservar.
+Como funciona o delivery?|Entregamos em até 7km ou retirada."><?php echo esc_textarea( $values['faq'] ?? '' ); ?></textarea>
+                <p class="description"><?php echo esc_html__( 'Use o separador "|" para dividir pergunta e resposta em cada linha.', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+    </table>
     <?php
 }
 
@@ -481,6 +628,34 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
     } else {
         delete_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_neighborhoods'] );
     }
+
+    // Campos adicionais do layout do perfil
+    $orders_count = isset( $_POST['vc_restaurant_orders_count'] ) ? (int) $_POST['vc_restaurant_orders_count'] : 0;
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['orders_count'], max( 0, $orders_count ) );
+
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_eta'], sanitize_text_field( $_POST['vc_restaurant_delivery_eta'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_fee'], sanitize_text_field( $_POST['vc_restaurant_delivery_fee'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_type'], sanitize_text_field( $_POST['vc_restaurant_delivery_type'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['logo'], esc_url_raw( $_POST['vc_restaurant_logo'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['cover'], esc_url_raw( $_POST['vc_restaurant_cover'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['featured_badge'], isset( $_POST['vc_restaurant_featured_badge'] ) ? '1' : '0' );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['banners'], sanitize_textarea_field( $_POST['vc_restaurant_banners'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['highlight_tags'], sanitize_textarea_field( $_POST['vc_restaurant_highlight_tags'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['plan_name'], sanitize_text_field( $_POST['vc_restaurant_plan_name'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['plan_limit'], absint( $_POST['vc_restaurant_plan_limit'] ?? 0 ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['plan_used'], absint( $_POST['vc_restaurant_plan_used'] ?? 0 ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['menu_filters'], sanitize_textarea_field( $_POST['vc_restaurant_menu_filters'] ?? '' ) );
+
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['reservation_enabled'], isset( $_POST['vc_restaurant_reservation_enabled'] ) ? '1' : '0' );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['reservation_link'], esc_url_raw( $_POST['vc_restaurant_reservation_link'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['reservation_phone'], sanitize_text_field( $_POST['vc_restaurant_reservation_phone'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['reservation_notes'], sanitize_textarea_field( $_POST['vc_restaurant_reservation_notes'] ?? '' ) );
+
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['payment_methods'], sanitize_textarea_field( $_POST['vc_restaurant_payment_methods'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['instagram'], sanitize_text_field( $_POST['vc_restaurant_instagram'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['facilities'], sanitize_textarea_field( $_POST['vc_restaurant_facilities'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['observations'], wp_kses_post( $_POST['vc_restaurant_observations'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['faq'], sanitize_textarea_field( $_POST['vc_restaurant_faq'] ?? '' ) );
 
     if ( $errors->has_errors() ) {
         vc_restaurant_store_errors( $errors );
