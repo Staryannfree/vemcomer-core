@@ -51,15 +51,18 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             'id'          => $restaurant instanceof WP_Post ? $restaurant->ID : 0,
             'nome'        => $restaurant instanceof WP_Post ? get_the_title( $restaurant ) : '',
             'descricao'   => $restaurant instanceof WP_Post ? wp_strip_all_tags( get_the_excerpt( $restaurant ) ) : '',
+            'cnpj'        => '',
             'endereco'    => '',
             'bairro'      => '',
             'cidade'      => '',
             'whatsapp'    => '',
+            'site'        => '',
             'instagram'   => '',
             'logo'        => '',
             'cover'       => '',
             'banners'     => [],
             'fav_bairro'  => false,
+            'destaque'    => false,
             'metodos'     => [
                 'delivery' => false,
                 'retirada' => false,
@@ -68,6 +71,11 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             ],
             'pagamentos'  => [],
             'tipos'       => [],
+            'filters'     => [],
+            'destaques'   => [],
+            'facilities'  => '',
+            'observations' => '',
+            'faq'          => '',
             'horarios'    => [
                 'seg' => [ 'enabled' => false, 'ranges' => [] ],
                 'ter' => [ 'enabled' => false, 'ranges' => [] ],
@@ -78,13 +86,29 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
                 'dom' => [ 'enabled' => false, 'ranges' => [] ],
             ],
             'reservation_message' => '',
+            'holidays'   => [],
+            'horario_legado' => '',
             'shipping'    => [
                 'mode'          => 'radius',
                 'radius'        => null,
                 'base_fee'      => null,
                 'price_per_km'  => null,
+                'free_above'    => null,
+                'min_order'     => null,
                 'neighborhoods' => [],
             ],
+            'geo' => [
+                'lat' => null,
+                'lng' => null,
+            ],
+            'orders_count' => null,
+            'delivery_eta' => '',
+            'delivery_fee' => '',
+            'delivery_type' => '',
+            'access_url' => '',
+            'plan_name'  => '',
+            'plan_limit' => null,
+            'plan_used'  => null,
             'permalink' => $restaurant instanceof WP_Post ? get_permalink( $restaurant ) : '',
         ];
 
@@ -92,8 +116,10 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             return $data;
         }
 
+        $data['cnpj']      = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['cnpj'], true );
         $data['endereco']  = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['address'], true );
         $data['whatsapp']  = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['whatsapp'], true );
+        $data['site']      = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['site'], true );
         $data['instagram'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['instagram'], true );
         $data['logo']      = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['logo'], true );
         $data['cover']     = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['cover'], true );
@@ -115,6 +141,7 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
 
         $highlight = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['featured_badge'], true );
         $data['fav_bairro'] = ! empty( $highlight );
+        $data['destaque']   = ! empty( $highlight );
 
         $delivery_enabled = (bool) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery'], true );
         $reservation_enabled = (bool) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['reservation_enabled'], true );
@@ -134,9 +161,29 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             $data['pagamentos'] = array_filter( array_map( 'trim', $payment_raw ) );
         }
 
+        $data['facilities']   = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['facilities'], true );
+        $data['observations'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['observations'], true );
+        $data['faq']          = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['faq'], true );
+
         $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'names' ] );
         if ( ! is_wp_error( $cuisine_terms ) && $cuisine_terms ) {
             $data['tipos'] = array_values( $cuisine_terms );
+        }
+
+        $filters_raw = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['menu_filters'], true );
+        if ( $filters_raw ) {
+            $filters = array_filter( array_map( 'trim', preg_split( '/[\r\n]+/', $filters_raw ) ?: [] ) );
+            if ( $filters ) {
+                $data['filters'] = $filters;
+            }
+        }
+
+        $destaques_raw = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['highlight_tags'], true );
+        if ( $destaques_raw ) {
+            $tags = array_filter( array_map( 'trim', preg_split( '/[\r\n]+/', $destaques_raw ) ?: [] ) );
+            if ( $tags ) {
+                $data['destaques'] = $tags;
+            }
         }
 
         $location_terms = wp_get_post_terms( $restaurant->ID, 'vc_location', [ 'fields' => 'names' ] );
@@ -177,9 +224,19 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             }
         }
 
+        $holidays_json = get_post_meta( $restaurant->ID, '_vc_restaurant_holidays', true );
+        $holidays      = $holidays_json ? json_decode( $holidays_json, true ) : [];
+        if ( is_array( $holidays ) ) {
+            $data['holidays'] = array_values( array_filter( array_map( 'trim', $holidays ) ) );
+        }
+
+        $data['horario_legado'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['open_hours'], true );
+
         $radius      = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_radius'], true );
         $base_price  = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_base_price'], true );
         $price_per_km = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_price_per_km'], true );
+        $free_above   = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_free_above'], true );
+        $min_order    = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_min_order'], true );
         $neighborhoods = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_neighborhoods'], true );
 
         if ( $neighborhoods ) {
@@ -208,6 +265,30 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
         if ( $price_per_km !== '' ) {
             $data['shipping']['price_per_km'] = (float) $price_per_km;
         }
+        if ( $free_above !== '' ) {
+            $data['shipping']['free_above'] = (float) $free_above;
+        }
+        if ( $min_order !== '' ) {
+            $data['shipping']['min_order'] = (float) $min_order;
+        }
+
+        $data['geo']['lat'] = (float) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['lat'], true );
+        $data['geo']['lng'] = (float) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['lng'], true );
+
+        $orders_count = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['orders_count'], true );
+        $data['orders_count'] = $orders_count !== '' ? (int) $orders_count : null;
+
+        $data['delivery_eta']  = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_eta'], true );
+        $data['delivery_fee']  = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_fee'], true );
+        $data['delivery_type'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['delivery_type'], true );
+
+        $data['access_url'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['access_url'], true );
+
+        $data['plan_name']  = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['plan_name'], true );
+        $plan_limit_meta    = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['plan_limit'], true );
+        $plan_used_meta     = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['plan_used'], true );
+        $data['plan_limit'] = $plan_limit_meta !== '' ? (int) $plan_limit_meta : null;
+        $data['plan_used']  = $plan_used_meta !== '' ? (int) $plan_used_meta : null;
 
         return $data;
     }

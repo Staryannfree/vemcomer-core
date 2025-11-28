@@ -25,9 +25,87 @@ vc_marketplace_render_static_template('configuracao-loja.html');
 ?>
 <script>
   window.vcConfigPrefill = <?php echo wp_json_encode( $config_prefill ); ?>;
-  (function(){
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const container = document.querySelector('.container');
+    if (container) {
+      const saveBtn = container.querySelector('.btn-save');
+      const extraHtml = `
+        <section class="vc-extra-section">
+          <h2>Contato e Documento</h2>
+          <div class="input-row"><input type="text" id="vcCnpj" placeholder="CNPJ"></div>
+          <div class="input-row"><input type="text" id="vcWhatsapp" placeholder="WhatsApp"></div>
+          <div class="input-row"><input type="text" id="vcSite" placeholder="Site"></div>
+        </section>
+        <section class="vc-extra-section">
+          <h2>Localização & Delivery</h2>
+          <textarea id="vcEndereco" placeholder="Endereço completo"></textarea>
+          <div class="input-row">
+            <input type="text" id="vcLatitude" placeholder="Latitude" />
+            <input type="text" id="vcLongitude" placeholder="Longitude" />
+          </div>
+          <div class="switch-row">
+            <label class="switch-label">Oferece delivery?</label>
+            <label class="switch">
+              <input type="checkbox" id="vcDeliveryFlag" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="input-row">
+            <input type="text" id="vcDeliveryEta" placeholder="Tempo médio de entrega (ex: 35-50 min)">
+            <input type="text" id="vcDeliveryFee" placeholder="Taxa de entrega (texto)">
+          </div>
+          <div class="input-row">
+            <input type="text" id="vcDeliveryType" placeholder="Tipo de entrega (ex: Entrega Própria)">
+          </div>
+          <div class="input-row">
+            <input type="number" id="vcPriceKm" step="0.01" placeholder="Preço por km (R$)">
+            <input type="number" id="vcFreeAbove" step="0.01" placeholder="Frete grátis acima de (R$)">
+            <input type="number" id="vcMinOrder" step="0.01" placeholder="Pedido mínimo (R$)">
+          </div>
+          <div class="input-row">
+            <input type="text" id="vcAccessUrl" placeholder="Token de acesso (access_url)">
+          </div>
+        </section>
+        <section class="vc-extra-section">
+          <h2>Horários e Feriados</h2>
+          <textarea id="vcHorarioLegado" placeholder="Horário de funcionamento (texto livre - legado)"></textarea>
+          <textarea id="vcHolidays" placeholder="Feriados (YYYY-MM-DD por linha)"></textarea>
+        </section>
+        <section class="vc-extra-section">
+          <h2>Experiência do Perfil</h2>
+          <div class="input-row">
+            <input type="number" id="vcOrdersCount" placeholder="Total de pedidos">
+            <input type="text" id="vcPlanName" placeholder="Nome do plano">
+          </div>
+          <div class="input-row">
+            <input type="number" id="vcPlanLimit" placeholder="Limite de itens do plano">
+            <input type="number" id="vcPlanUsed" placeholder="Itens usados no plano">
+          </div>
+          <textarea id="vcHighlights" placeholder="Destaques (uma etiqueta por linha)"></textarea>
+          <textarea id="vcFilters" placeholder="Filtros do cardápio (uma opção por linha)"></textarea>
+          <textarea id="vcPayments" placeholder="Formas de pagamento (uma por linha)"></textarea>
+          <textarea id="vcFacilities" placeholder="Facilidades/etiquetas (uma por linha)"></textarea>
+          <textarea id="vcObservations" placeholder="Observações extras"></textarea>
+          <textarea id="vcFaq" placeholder="FAQ (Pergunta | Resposta por linha)"></textarea>
+        </section>
+      `;
+      if (saveBtn) {
+        saveBtn.insertAdjacentHTML('beforebegin', extraHtml);
+      } else {
+        container.insertAdjacentHTML('beforeend', extraHtml);
+      }
+    }
+
     const data = window.vcConfigPrefill || {};
     if (!data || !data.id) return;
+
+    const setValue = (id, value) => {
+      const el = document.getElementById(id);
+      if (el && value !== undefined && value !== null && value !== '') {
+        el.value = value;
+      }
+    };
 
     const logo = document.getElementById('logo-preview');
     if (logo && data.logo) logo.src = data.logo;
@@ -35,11 +113,31 @@ vc_marketplace_render_static_template('configuracao-loja.html');
     const capa = document.getElementById('capa-preview');
     if (capa && data.cover) capa.src = data.cover;
 
-    const nome = document.getElementById('nomeRestaurante');
-    if (nome && data.nome) nome.value = data.nome;
+    setValue('nomeRestaurante', data.nome);
+    setValue('descricao', data.descricao);
+    setValue('vcCnpj', data.cnpj);
+    setValue('vcWhatsapp', data.whatsapp);
+    setValue('vcSite', data.site);
+    setValue('vcEndereco', data.endereco);
+    setValue('vcLatitude', data.geo ? data.geo.lat : '');
+    setValue('vcLongitude', data.geo ? data.geo.lng : '');
+    setValue('vcAccessUrl', data.access_url);
+    setValue('vcDeliveryEta', data.delivery_eta);
+    setValue('vcDeliveryFee', data.delivery_fee);
+    setValue('vcDeliveryType', data.delivery_type);
+    setValue('vcPriceKm', data.shipping ? data.shipping.price_per_km : '');
+    setValue('vcFreeAbove', data.shipping ? data.shipping.free_above : '');
+    setValue('vcMinOrder', data.shipping ? data.shipping.min_order : '');
+    setValue('vcHorarioLegado', data.horario_legado);
+    setValue('vcOrdersCount', data.orders_count);
+    setValue('vcPlanName', data.plan_name);
+    setValue('vcPlanLimit', data.plan_limit);
+    setValue('vcPlanUsed', data.plan_used);
 
-    const desc = document.getElementById('descricao');
-    if (desc && data.descricao) desc.value = data.descricao;
+    const destaqueBadge = document.querySelector('.badge-selo');
+    if (destaqueBadge && data.destaque) {
+      destaqueBadge.textContent = 'Destaque ativo';
+    }
 
     if (Array.isArray(data.banners) && data.banners.length) {
       const group = document.querySelector('.banners-group');
@@ -125,7 +223,33 @@ vc_marketplace_render_static_template('configuracao-loja.html');
         });
       }
     }
-  })();
+
+    const holidays = Array.isArray(data.holidays) ? data.holidays.join("\n") : '';
+    setValue('vcHolidays', holidays);
+
+    const deliveryFlag = document.getElementById('vcDeliveryFlag');
+    if (deliveryFlag && data.metodos) {
+      deliveryFlag.checked = !!data.metodos.delivery;
+    }
+
+    const highlights = Array.isArray(data.destaques) ? data.destaques.join("\n") : '';
+    setValue('vcHighlights', highlights);
+
+    const filters = Array.isArray(data.filters) ? data.filters.join("\n") : '';
+    setValue('vcFilters', filters);
+
+    const payments = Array.isArray(data.pagamentos) ? data.pagamentos.join("\n") : '';
+    setValue('vcPayments', payments);
+
+    const facilities = data.facilities ? data.facilities : '';
+    setValue('vcFacilities', facilities);
+
+    const observations = data.observations ? data.observations : '';
+    setValue('vcObservations', observations);
+
+    const faq = data.faq ? data.faq : '';
+    setValue('vcFaq', faq);
+  });
 </script>
 <?php
 

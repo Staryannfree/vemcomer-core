@@ -307,6 +307,9 @@ if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
     renderStep();
   }
 
+  window.abrirOnboarding = abrirOnboarding;
+  window.fecharOnboarding = fecharOnboarding;
+
   function renderStep(){
     const current = steps[step];
     document.getElementById('onStep').innerHTML = `Passo ${step+1} de ${steps.length}`;

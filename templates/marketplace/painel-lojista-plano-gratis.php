@@ -248,9 +248,17 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
     function vcOpenOnboardingWizard() {
         if (typeof window.abrirOnboarding === 'function') {
             window.abrirOnboarding();
-        } else {
-            window.location.href = '<?php echo esc_js( $quick_links['onboarding'] ); ?>';
+            return;
         }
+
+        var modal = document.getElementById('onboardModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.classList.add('onboard-locked');
+            return;
+        }
+
+        console.warn('Onboarding modal não disponível nesta página.');
     }
 </script>
 <?php
