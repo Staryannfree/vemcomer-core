@@ -74,13 +74,19 @@ if (! function_exists('vc_marketplace_get_restaurant_for_user')) {
 
 $restaurant = vc_marketplace_get_restaurant_for_user();
 
-$menu_items = [];
 $categories = [];
 $default_category = [
     'id'    => 'sem-categoria',
     'name'  => __('Sem categoria', 'vemcomer'),
     'slug'  => 'sem-categoria',
     'items' => [],
+];
+$stats = [
+    'total'       => 0,
+    'active'      => 0,
+    'paused'      => 0,
+    'no_thumb'    => 0,
+    'categories'  => 0,
 ];
 
 if ($restaurant instanceof WP_Post) {
@@ -139,7 +145,8 @@ if ($restaurant instanceof WP_Post) {
                     ];
                 }
 
-                $categories[$term_id]['items'][] = [
+                $item_payload = [
+                    'id'         => $item->ID,
                     'title'      => $item->post_title,
                     'status'     => $available ? 'ativo' : 'pausado',
                     'description'=> $excerpt,
@@ -148,6 +155,19 @@ if ($restaurant instanceof WP_Post) {
                     'edit_url'   => get_edit_post_link($item->ID),
                     'modifiers'  => $modifier_titles,
                 ];
+
+                $categories[$term_id]['items'][] = $item_payload;
+
+                $stats['total']++;
+                $stats['categories'] = count($categories);
+                if ($available) {
+                    $stats['active']++;
+                } else {
+                    $stats['paused']++;
+                }
+                if (! $thumb) {
+                    $stats['no_thumb']++;
+                }
             }
         }
     }
@@ -163,6 +183,8 @@ usort($categories, function ($a, $b) {
 if (empty($categories) && $restaurant instanceof WP_Post) {
     $categories[] = $default_category;
 }
+
+$stats['categories'] = count($categories);
 ?>
 <div class="menu-gestao-container">
     <style>
@@ -196,6 +218,10 @@ if (empty($categories) && $restaurant instanceof WP_Post) {
         .modif-badge {background:#fffbe2;color:#fa7e1e;border-radius:7px;padding:3px 9px;margin:0 0 4px 0; font-weight:700;font-size:.94em;}
         .modif-edit {margin-left:11px;color:#2d8659;text-decoration:underline;cursor:pointer;font-size:.97em;}
         .empty-state {background:#fff;border-radius:12px;padding:18px 16px;box-shadow:0 2px 12px #2d865910;color:#6b7672;font-weight:600;}
+        .menu-stats {display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px 0;}
+        .stat-card {background:#fff;border-radius:12px;box-shadow:0 2px 12px #2d865910;padding:12px 14px;min-width:150px;flex:1 1 160px;}
+        .stat-label {font-size:.95em;color:#6b7672;font-weight:700;}
+        .stat-value {font-size:1.4em;font-weight:900;color:#2d8659;}
         @media (max-width:720px){.prod-list{flex-direction:column}.prod-card{min-width:96vw;max-width:98vw;}}
     </style>
 
@@ -210,6 +236,24 @@ if (empty($categories) && $restaurant instanceof WP_Post) {
     <?php elseif (empty($categories)) : ?>
         <div class="empty-state"><?php echo esc_html__('Nenhum item cadastrado ainda. Adicione produtos para começar.', 'vemcomer'); ?></div>
     <?php else : ?>
+        <div class="menu-stats" aria-label="<?php echo esc_attr__('Resumo do cardápio', 'vemcomer'); ?>">
+            <div class="stat-card">
+                <div class="stat-label"><?php echo esc_html__('Itens ativos', 'vemcomer'); ?></div>
+                <div class="stat-value" data-stat="active"><?php echo esc_html($stats['active']); ?></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><?php echo esc_html__('Pausados', 'vemcomer'); ?></div>
+                <div class="stat-value" data-stat="paused"><?php echo esc_html($stats['paused']); ?></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><?php echo esc_html__('Sem foto', 'vemcomer'); ?></div>
+                <div class="stat-value" data-stat="no-thumb"><?php echo esc_html($stats['no_thumb']); ?></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><?php echo esc_html__('Categorias', 'vemcomer'); ?></div>
+                <div class="stat-value" data-stat="categories"><?php echo esc_html($stats['categories']); ?></div>
+            </div>
+        </div>
         <div class="tabs-cat">
             <?php foreach ($categories as $index => $cat) : ?>
                 <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-<?php echo esc_attr($cat['slug']); ?>"><?php echo esc_html($cat['name']); ?></button>
@@ -223,7 +267,7 @@ if (empty($categories) && $restaurant instanceof WP_Post) {
                         <div class="empty-state" style="width:100%;"><?php echo esc_html__('Nenhum item nesta categoria ainda.', 'vemcomer'); ?></div>
                     <?php else : ?>
                         <?php foreach ($cat['items'] as $item) : ?>
-                            <div class="prod-card">
+                            <div class="prod-card" data-item-id="<?php echo esc_attr($item['id']); ?>" data-available="<?php echo esc_attr('ativo' === $item['status'] ? '1' : '0'); ?>">
                                 <div style="display:flex;align-items:center;">
                                     <?php if ($item['thumb']) : ?>
                                         <img src="<?php echo esc_url($item['thumb']); ?>" class="prod-img" alt="" />
@@ -250,8 +294,8 @@ if (empty($categories) && $restaurant instanceof WP_Post) {
                                     <?php if ($item['edit_url']) : ?>
                                         <button class="pedit-btn" onclick="window.location.href='<?php echo esc_url($item['edit_url']); ?>'"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
                                     <?php endif; ?>
-                                    <button class="pedit-btn pause" disabled><?php echo esc_html__('Pausar/Ativar', 'vemcomer'); ?></button>
-                                    <button class="pedit-btn del" disabled><?php echo esc_html__('Deletar', 'vemcomer'); ?></button>
+                                    <button class="pedit-btn pause js-toggle-availability"><?php echo esc_html__('Pausar/Ativar', 'vemcomer'); ?></button>
+                                    <button class="pedit-btn del js-delete-item"><?php echo esc_html__('Deletar', 'vemcomer'); ?></button>
                                 </div>
                                 <div class="modif-box">
                                     <div class="modif-title"><?php echo esc_html__('Modificadores:', 'vemcomer'); ?></div>
@@ -285,6 +329,124 @@ if (empty($categories) && $restaurant instanceof WP_Post) {
                     tab.style.display = tab.id === target ? '' : 'none';
                 });
                 tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+            });
+        });
+
+        const restBase = '<?php echo esc_js(rest_url('vemcomer/v1/menu-items/')); ?>';
+        const restNonce = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
+
+        const updateStats = () => {
+            const statNodes = {
+                active: document.querySelector('[data-stat="active"]'),
+                paused: document.querySelector('[data-stat="paused"]'),
+                noThumb: document.querySelector('[data-stat="no-thumb"]'),
+            };
+
+            let active = 0; let paused = 0; let noThumb = 0;
+            document.querySelectorAll('.prod-card').forEach(card => {
+                const available = card.getAttribute('data-available') === '1';
+                if (available) { active++; } else { paused++; }
+                const img = card.querySelector('.prod-img');
+                if (img && img.getAttribute('src') === '') { noThumb++; }
+            });
+
+            if (statNodes.active) statNodes.active.textContent = active;
+            if (statNodes.paused) statNodes.paused.textContent = paused;
+            if (statNodes.noThumb) statNodes.noThumb.textContent = noThumb;
+        };
+
+        const toggleButtons = document.querySelectorAll('.js-toggle-availability');
+        toggleButtons.forEach(btn => {
+            btn.addEventListener('click', async (event) => {
+                const card = event.target.closest('.prod-card');
+                if (!card) return;
+                const itemId = card.getAttribute('data-item-id');
+                if (!itemId) return;
+
+                btn.disabled = true;
+                try {
+                    const response = await fetch(`${restBase}${itemId}/toggle-availability`, {
+                        method: 'POST',
+                        headers: {
+                            'X-WP-Nonce': restNonce,
+                        },
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        alert(data?.message || '<?php echo esc_js(__('Não foi possível atualizar o status.', 'vemcomer')); ?>');
+                        return;
+                    }
+
+                    const statusSpan = card.querySelector('.prod-ativo, .prod-pausado');
+                    const statusContainer = card.querySelector('.prod-nome');
+                    if (data.available) {
+                        card.setAttribute('data-available', '1');
+                        if (statusSpan) {
+                            statusSpan.className = 'prod-ativo';
+                            statusSpan.textContent = '<?php echo esc_js(__('Ativo', 'vemcomer')); ?>';
+                        } else if (statusContainer) {
+                            const span = document.createElement('span');
+                            span.className = 'prod-ativo';
+                            span.textContent = '<?php echo esc_js(__('Ativo', 'vemcomer')); ?>';
+                            statusContainer.appendChild(span);
+                        }
+                    } else {
+                        card.setAttribute('data-available', '0');
+                        if (statusSpan) {
+                            statusSpan.className = 'prod-pausado';
+                            statusSpan.textContent = '<?php echo esc_js(__('Pausado', 'vemcomer')); ?>';
+                        } else if (statusContainer) {
+                            const span = document.createElement('span');
+                            span.className = 'prod-pausado';
+                            span.textContent = '<?php echo esc_js(__('Pausado', 'vemcomer')); ?>';
+                            statusContainer.appendChild(span);
+                        }
+                    }
+
+                    updateStats();
+                } catch (e) {
+                    alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        const deleteButtons = document.querySelectorAll('.js-delete-item');
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', async (event) => {
+                const card = event.target.closest('.prod-card');
+                if (!card) return;
+                const itemId = card.getAttribute('data-item-id');
+                if (!itemId) return;
+
+                if (!confirm('<?php echo esc_js(__('Deseja mover este item para a lixeira?', 'vemcomer')); ?>')) {
+                    return;
+                }
+
+                btn.disabled = true;
+                try {
+                    const response = await fetch(`${restBase}${itemId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-WP-Nonce': restNonce,
+                        },
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        alert(data?.message || '<?php echo esc_js(__('Não foi possível deletar este item.', 'vemcomer')); ?>');
+                        return;
+                    }
+
+                    card.remove();
+                    updateStats();
+                } catch (e) {
+                    alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                } finally {
+                    btn.disabled = false;
+                }
             });
         });
     });
