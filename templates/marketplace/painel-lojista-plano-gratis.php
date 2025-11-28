@@ -67,6 +67,13 @@ $current_user = wp_get_current_user();
 $restaurant   = null;
 $public_url   = home_url( '/restaurant/' );
 
+$quick_links = [
+    'config'    => home_url( '/configuracao-loja/' ),
+    'menu'      => home_url( '/gestao-cardapio/' ),
+    'marketing' => home_url( '/central-marketing/' ),
+    'events'    => home_url( '/gestor-eventos/' ),
+];
+
 if ( $current_user instanceof WP_User && $current_user->ID ) {
     $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $current_user );
     if ( $filtered > 0 ) {
@@ -110,11 +117,11 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
 
     <div class="dash-quick">
         <button type="button" class="dash-cta-primary" onclick="openOnboardingModal()">⚡ Configuração Rápida</button>
-        <a href="https://pedevem.com/configuracao-loja/">Editar dados</a>
-        <a href="https://pedevem.com/gestao-cardapio/">Gerenciar cardápio</a>
+        <a href="<?php echo esc_url( $quick_links['config'] ); ?>">Editar dados</a>
+        <a href="<?php echo esc_url( $quick_links['menu'] ); ?>">Gerenciar cardápio</a>
         <a href="<?php echo esc_url( $public_url ); ?>" target="_blank" rel="noopener">Ver página pública</a>
-        <a href="https://pedevem.com/central-marketing/">Marketing</a>
-        <a href="https://pedevem.com/gestor-eventos/">Eventos</a>
+        <a href="<?php echo esc_url( $quick_links['marketing'] ); ?>">Marketing</a>
+        <a href="<?php echo esc_url( $quick_links['events'] ); ?>">Eventos</a>
     </div>
 
     <div class="dash-title">Visão Geral da Loja</div>
