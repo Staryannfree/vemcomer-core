@@ -181,12 +181,13 @@ async function getRestaurantImage(restaurantId, cuisines = [], restaurantName = 
 
 function getRestaurantProfileUrl(slug, id) {
     const slugOrId = slug || id;
+    if (!slugOrId) return '#';
 
-    // Se não tiver slug nem ID, não dá pra montar o link
-    if (!slugOrId) {
-        console.warn('[VemComer] Restaurante sem slug/ID para montar a URL');
-        return '#';
-    }
+    // Se o slug correto for /restaurante/ em vez de /restaurant/, ajuste aqui:
+    // return `/restaurante/${slugOrId}/`;
+    return `/restaurant/${slugOrId}/`;
+}
+
 
     // 👉 Se o slug correto no seu site NÃO for "restaurant", troque aqui:
     // exemplo: return `/restaurante/${slugOrId}/`;
@@ -1122,7 +1123,7 @@ async function renderBanners() {
     
     // Renderizar banners
     container.innerHTML = banners.map((banner, index) => `
-        <div class="banner-slide" data-index="${index}" onclick="window.location.href='${TEMPLATE_PATH}feed-eventos.html'" style="cursor: pointer;">
+    <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'"` : ''} style="cursor: pointer;">
             <img src="${banner.image || PLACEHOLDERS.default}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
             <div class="banner-overlay">
                 <div class="banner-title">${banner.title || 'Bem-vindo ao VemComer'}</div>
