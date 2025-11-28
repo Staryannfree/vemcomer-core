@@ -136,22 +136,25 @@ const isValidImage = (url) => {
 
 // ============ MAPEAMENTO DE DADOS DA API ============
 function mapApiBannerToBanner(apiBanner) {
-    // Se o banner tem restaurant_id, criar link para o restaurante
+    // Se o banner tem restaurant_id/slug, criar link para o restaurante
     let link = apiBanner.link || null;
-    if (!link && apiBanner.restaurant_id) {
-        // Usar slug se disponível, senão usar ID
-        link = `/restaurant/${apiBanner.restaurant_slug || apiBanner.restaurant_id}/`;
+
+    if (!link && (apiBanner.restaurant_id || apiBanner.restaurant_slug)) {
+        // Usa SEMPRE o helper centralizado
+        link = getRestaurantProfileUrl(
+            apiBanner.restaurant_slug,
+            apiBanner.restaurant_id
+        );
     }
-    
-    // Usar imagem da API ou fallback genérico (banners não têm categoria específica)
+
     const image = apiBanner.image && apiBanner.image.trim() !== '' 
         ? apiBanner.image 
         : PLACEHOLDERS.default;
-    
+
     return {
         id: apiBanner.id,
         title: apiBanner.title || '',
-        subtitle: '', // API não retorna subtitle, pode ser adicionado depois
+        subtitle: '',
         image: image,
         link: link,
         restaurantId: apiBanner.restaurant_id || null
@@ -1158,7 +1161,7 @@ async function renderBanners() {
     
     // Renderizar banners
     container.innerHTML = banners.map((banner, index) => `
-        <div class="banner-slide" data-index="${index}" onclick="window.location.href='${TEMPLATE_PATH}feed-eventos.html'" style="cursor: pointer;">
+    <div class="banner-slide" data-index="${index}" ${banner.link ? `onclick="window.location.href='${banner.link}'"` : ''} style="cursor: pointer;">
             <img src="${banner.image || PLACEHOLDERS.default}" alt="${banner.title}" class="banner-image" loading="lazy" onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';">
             <div class="banner-overlay">
                 <div class="banner-title">${banner.title || 'Bem-vindo ao VemComer'}</div>
@@ -1485,6 +1488,7 @@ async function renderFeatured() {
     attachFeaturedCardListeners();
 }
 
+
 async function renderRestaurants() {
     const container = document.getElementById('restaurantsGrid');
     if (!container) {
@@ -1572,6 +1576,7 @@ async function renderRestaurants() {
     // Adicionar event listeners após renderização
     attachRestaurantCardListeners();
 }
+
 
 // ============ EVENT HANDLERS ============
 // Garantir que as funções estejam no escopo global
@@ -1680,6 +1685,7 @@ function attachFeaturedCardListeners() {
     });
 }
 
+
 /**
  * Attach event listeners para resultados de busca
  */
@@ -1698,6 +1704,7 @@ function attachSearchResultListeners() {
         }
     });
 }
+
 
 // ============ LOCATION MANAGEMENT ============
 function getCookie(name) {
