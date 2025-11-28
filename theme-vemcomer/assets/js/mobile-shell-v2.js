@@ -2507,11 +2507,71 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[name="proteina"],input[name="adicional"]').forEach(function(el) {
         el.addEventListener('change', atualizaTotal);
     });
-    
+
     // Inicia com valor atualizado
     if (document.getElementById('precoTotal')) {
         atualizaTotal();
     }
+});
+
+// Modal de perfil (login/cadastro)
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('profileAuthModal');
+    const profileButtons = document.querySelectorAll('.nav-item--profile');
+    if (!modal || profileButtons.length === 0) return;
+
+    const overlay = modal.querySelector('.profile-auth-overlay');
+    const closeBtn = modal.querySelector('.profile-auth-close');
+    const tabButtons = modal.querySelectorAll('[data-auth-tab]');
+    const panels = modal.querySelectorAll('[data-auth-panel]');
+
+    const switchTab = (tab) => {
+        tabButtons.forEach((btn) => {
+            const isActive = btn.dataset.authTab === tab;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        panels.forEach((panel) => {
+            const isActive = panel.dataset.authPanel === tab;
+            panel.classList.toggle('is-active', isActive);
+            panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        });
+    };
+
+    const openModal = (tab = 'login') => {
+        switchTab(tab);
+        modal.classList.add('is-open');
+        document.body.classList.add('auth-modal-open');
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('is-open');
+        document.body.classList.remove('auth-modal-open');
+    };
+
+    profileButtons.forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+            const loggedIn = btn.dataset.loggedIn === '1';
+            if (loggedIn) return; // Navegação normal para usuários autenticados
+
+            event.preventDefault();
+            openModal(btn.dataset.defaultTab || 'login');
+        });
+    });
+
+    tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.authTab));
+    });
+
+    if (overlay) overlay.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+            closeModal();
+        }
+    });
 });
 
 document.addEventListener('DOMContentLoaded', initApp);
