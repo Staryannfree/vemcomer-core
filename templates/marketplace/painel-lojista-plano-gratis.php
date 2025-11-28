@@ -129,4 +129,16 @@ get_header();
     }
 </script>
 <?php
-get_footer();
+$current_user = wp_get_current_user();
+
+if ( in_array( 'lojista', (array) $current_user->roles, true ) ) {
+    if ( ! defined( 'VC_WIZARD_INLINE' ) ) {
+        define( 'VC_WIZARD_INLINE', true );
+    }
+
+    locate_template( 'templates/marketplace/wizard-onboarding.php', true, false );
+}
+
+if (! $vc_marketplace_inline) {
+    get_footer();
+}

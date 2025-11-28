@@ -2038,3 +2038,204 @@ textarea#obsProduto:focus {
     background: #246e49;
 }
 
+/* ==========================
+   Modal de Login/Cadastro Perfil
+   ========================== */
+.nav-item--profile {
+    cursor: pointer;
+}
+
+.profile-auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.profile-auth-modal.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.profile-auth-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+}
+
+.profile-auth-dialog {
+    position: relative;
+    width: min(480px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 20px 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    z-index: 1;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.profile-auth-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 26px;
+    color: #999;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-auth-header h2 {
+    margin: 0 0 12px;
+    font-size: 1.3rem;
+    color: #111827;
+}
+
+.profile-auth-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.profile-auth-tab {
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-auth-tab.is-active {
+    background: #e8f5ef;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.profile-auth-body {
+    position: relative;
+}
+
+.profile-auth-panel {
+    display: none;
+}
+
+.profile-auth-panel.is-active {
+    display: block;
+}
+
+.profile-auth-panel form {
+    display: grid;
+    gap: 12px;
+}
+
+.profile-auth-panel label {
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.profile-auth-panel input[type="text"],
+.profile-auth-panel input[type="password"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.98rem;
+    background: #fff;
+}
+
+.profile-auth-panel input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.profile-auth-panel .submit {
+    width: 100%;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s ease;
+}
+
+.profile-auth-panel .submit:hover {
+    background: #1f5b3a;
+}
+
+.profile-auth-links {
+    margin-top: 8px;
+    text-align: right;
+}
+
+.profile-auth-links a {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.profile-auth-options {
+    display: grid;
+    gap: 12px;
+}
+
+.auth-option-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.auth-option-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.auth-option-icon {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #f3f4f6;
+    font-size: 22px;
+}
+
+.auth-option-info h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.auth-option-info p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.92rem;
+}
+
+body.auth-modal-open {
+    overflow: hidden;
+}
+

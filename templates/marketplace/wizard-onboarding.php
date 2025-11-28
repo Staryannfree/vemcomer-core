@@ -4,6 +4,8 @@
  * Description: Versão dinâmica do layout estático templates/marketplace/wizard-onboarding.html.
  */
 
+$vc_wizard_inline = defined('VC_WIZARD_INLINE') && VC_WIZARD_INLINE;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -259,4 +261,6 @@ get_header();
   document.addEventListener('DOMContentLoaded', renderStep);
 </script>
 <?php
-get_footer();
+if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
+    get_footer();
+}

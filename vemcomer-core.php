@@ -214,6 +214,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Frontend\\RestaurantPanel' ) )   { ( new \VC\Frontend\RestaurantPanel() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\AccessValidation' ) )  { ( new \VC\Frontend\AccessValidation() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Onboarding' ) )       { ( new \VC\Frontend\Onboarding() )->init(); }
+    if ( class_exists( '\\VC\\Frontend\\Marketplace_Templates' ) ) { ( new \VC\Frontend\Marketplace_Templates() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Home_Template' ) )     { ( new \VC\Frontend\Home_Template() )->init(); }
     if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
 
