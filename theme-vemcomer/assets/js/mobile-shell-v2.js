@@ -182,17 +182,44 @@ async function getRestaurantImage(restaurantId, cuisines = [], restaurantName = 
     return getSmartImage(contextText);
 }
 
-function getRestaurantProfileUrl(slug, id) {
-    const slugOrId = slug || id;
+function buildSlugFromName(name) {
+    if (!name) return null;
+    return normalizeString(name)
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function extractSlugFromUrl(url) {
+    if (!url) return null;
+
+    // Captura slug em URLs /restaurant/{slug}/
+    const match = url.match(/\/restaurant\/([^/?#]+)/i);
+    if (match && match[1]) {
+        return match[1];
+    }
+
+    return null;
+}
+
+function getRestaurantProfileUrl(slug, id, name = '') {
+    const slugOrId = slug || id || buildSlugFromName(name);
     if (!slugOrId) return null;
     return `/restaurant/${slugOrId}/`;
 }
 
-function normalizeRestaurantUrl(url, slug, id) {
+function normalizeRestaurantUrl(url, slug, id, name = '') {
     // Evitar links estáticos para o template HTML do marketplace
     const isStaticTemplate = typeof url === 'string' && url.includes('templates/marketplace/perfil-restaurante');
+    const canonicalUrl = getRestaurantProfileUrl(slug, id, name);
+
     if (!url || isStaticTemplate) {
-        return getRestaurantProfileUrl(slug, id);
+        return canonicalUrl;
+    }
+
+    // Se a URL já aponta para /restaurant/{slug}/, usar ela como base
+    const slugFromUrl = extractSlugFromUrl(url);
+    if (slugFromUrl) {
+        return getRestaurantProfileUrl(slugFromUrl, id, name);
     }
 
     return url;
@@ -224,9 +251,17 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     let hasLogo = isValidImage(apiRestaurant.logo);
     let finalLogo = hasLogo ? apiRestaurant.logo : null;
     
-    // URL do restaurante - usar slug (padrão: /restaurant/{slug}/)
-    const slug = apiRestaurant.slug || apiRestaurant.post_name || null;
-    const url = normalizeRestaurantUrl(apiRestaurant.url || apiRestaurant.link, slug, apiRestaurant.id);
+    // URL do restaurante - priorizar slug/ID e evitar templates estáticos
+    const slug = apiRestaurant.slug
+        || apiRestaurant.post_name
+        || apiRestaurant.restaurant_slug
+        || extractSlugFromUrl(apiRestaurant.url || apiRestaurant.link)
+        || null;
+    const id = apiRestaurant.id || apiRestaurant.ID || apiRestaurant.restaurant_id || null;
+    // Sempre priorizar o permalink canônico baseado no slug/ID/nome
+    const url = getRestaurantProfileUrl(slug, id, restaurantName)
+        || normalizeRestaurantUrl(apiRestaurant.url || apiRestaurant.link, slug, id, restaurantName)
+        || '#';
     
     return {
         id: apiRestaurant.id,
@@ -1400,15 +1435,17 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => {
-        const profileUrl = normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id) || '#';
+        const profileUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id)
+            || normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id)
+            || '#';
         return `
         <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
             <div class="featured-image-wrapper">
                 <img
                     src="${restaurant.image}"
-                    alt="${restaurant.name}" 
-                    class="featured-image" 
-                    loading="lazy" 
+                    alt="${restaurant.name}"
+                    class="featured-image"
+                    loading="lazy"
                     onerror="this.onerror=null; this.src='${PLACEHOLDERS.default}';"
                 >
                 <div class="featured-badge">⭐ DESTAQUE</div>
@@ -1424,7 +1461,7 @@ async function renderFeatured() {
                     </div>
                 </div>
                 <div class="featured-tags">
-                    ${restaurant.tags.length > 0 
+                    ${restaurant.tags.length > 0
                         ? restaurant.tags.map(tag => `<span class="featured-tag">${tag}</span>`).join('')
                         : '<span class="featured-tag">Restaurante</span>'
                     }
@@ -1481,7 +1518,9 @@ async function renderRestaurants() {
     }
     
     container.innerHTML = restaurants.map(restaurant => {
-        const profileUrl = normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id) || '#';
+        const profileUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id)
+            || normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id)
+            || '#';
         return `
         <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
             <div class="card-image-wrapper">
