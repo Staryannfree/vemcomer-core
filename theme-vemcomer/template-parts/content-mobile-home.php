@@ -1,3 +1,32 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+// URLs de autenticação e cadastro
+$customer_signup_pages = get_posts(
+    [
+        'post_type'      => 'page',
+        's'              => 'cadastro cliente',
+        'posts_per_page' => 1,
+    ]
+);
+
+$restaurant_signup_pages = get_posts(
+    [
+        'post_type'      => 'page',
+        's'              => 'cadastro restaurante',
+        'posts_per_page' => 1,
+    ]
+);
+
+$customer_signup_url   = ! empty( $customer_signup_pages ) ? get_permalink( $customer_signup_pages[0]->ID ) : home_url( '/cadastro-cliente/' );
+$restaurant_signup_url = ! empty( $restaurant_signup_pages ) ? get_permalink( $restaurant_signup_pages[0]->ID ) : home_url( '/cadastro-restaurante/' );
+$login_url             = wp_login_url( home_url( '/?mode=app' ) );
+$account_url           = home_url( '/minha-conta/' );
+$is_logged_in          = is_user_logged_in();
+?>
+
 <!-- LOCATION PERMISSION MODAL (Obrigatório) -->
 <div class="location-modal" id="locationModal">
     <div class="location-modal-content">
@@ -67,34 +96,25 @@
 </section>
 
 <!-- STORY VIEWER MODAL -->
-<div class="story-viewer" id="storyViewer">
-    <div class="story-progress-bars" id="storyProgressBars">
-        <!-- Progress bars will be rendered here -->
+<div class="story-overlay" id="storyViewer">
+    <div class="story-progress story-progress-bars" id="storyProgressBars">
+        <div class="progress-bar story-progress-bar">
+            <div class="progress-fill story-progress-fill" id="storyProgress0"></div>
+        </div>
     </div>
-    
+    <button class="story-close-btn" id="storyCloseBtn">×</button>
     <div class="story-header">
-        <div class="story-header-left">
-            <img src="" alt="Avatar" class="story-header-avatar" id="storyHeaderAvatar">
-            <div class="story-header-info">
-                <div class="story-header-name" id="storyHeaderName"></div>
-                <div class="story-header-time" id="storyHeaderTime"></div>
-            </div>
+        <img src="" alt="Logo restaurante" class="story-avatar story-header-avatar" id="storyHeaderAvatar">
+        <div class="story-header-info">
+            <div class="story-header-name" id="storyHeaderName"></div>
+            <div class="story-header-time" id="storyHeaderTime"></div>
         </div>
-        <button class="story-close-btn" id="storyCloseBtn">
-            <svg class="story-close-icon" viewBox="0 0 24 24">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
     </div>
-    
     <div class="story-content" id="storyContent">
-        <img src="" alt="Story" class="story-media" id="storyMedia">
-        <button class="story-cta-btn" id="storyCtaBtn" style="display: none;"></button>
-        <div class="story-tap-areas">
-            <div class="story-tap-left" id="storyTapLeft"></div>
-            <div class="story-tap-right" id="storyTapRight"></div>
-        </div>
+        <img src="" alt="Story do restaurante" class="story-media" id="storyMedia">
+        <button class="story-cta story-cta-btn" id="storyCtaBtn"></button>
+        <div class="nav-zone nav-left story-tap-left" id="storyTapLeft" title="Voltar"></div>
+        <div class="nav-zone nav-right story-tap-right" id="storyTapRight" title="Próxima"></div>
     </div>
 </div>
 
@@ -275,7 +295,14 @@
             <span>Pedidos</span>
         </a>
         
-        <a href="/wp-content/themes/theme-vemcomer/templates/marketplace/minha-conta-cliente.html" class="nav-item">
+        <a
+            href="<?php echo esc_url( $is_logged_in ? $account_url : '#' ); ?>"
+            class="nav-item nav-item--profile"
+            id="profileMenuButton"
+            data-logged-in="<?php echo $is_logged_in ? '1' : '0'; ?>"
+            data-profile-url="<?php echo esc_url( $account_url ); ?>"
+            role="button"
+        >
             <svg class="nav-icon" viewBox="0 0 24 24">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
@@ -283,6 +310,62 @@
         </a>
     </div>
 </nav>
+
+<!-- MODAL LOGIN/CADASTRO PERFIL -->
+<div class="profile-auth-modal" id="profileAuthModal">
+    <div class="profile-auth-overlay"></div>
+    <div class="profile-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="profileAuthTitle">
+        <button class="profile-auth-close" type="button" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
+        <div class="profile-auth-header">
+            <h2 id="profileAuthTitle"><?php esc_html_e( 'Acesse sua conta', 'vemcomer' ); ?></h2>
+            <div class="profile-auth-tabs" role="tablist">
+                <button class="profile-auth-tab is-active" type="button" data-auth-tab="login" role="tab" aria-selected="true">
+                    <?php esc_html_e( 'Fazer login', 'vemcomer' ); ?>
+                </button>
+                <button class="profile-auth-tab" type="button" data-auth-tab="signup" role="tab" aria-selected="false">
+                    <?php esc_html_e( 'Cadastrar', 'vemcomer' ); ?>
+                </button>
+            </div>
+        </div>
+        <div class="profile-auth-body">
+            <div class="profile-auth-panel is-active" data-auth-panel="login" role="tabpanel">
+                <?php echo wp_login_form(
+                    [
+                        'echo'           => false,
+                        'redirect'       => home_url( '/?mode=app' ),
+                        'remember'       => true,
+                        'label_username' => __( 'E-mail ou usuário', 'vemcomer' ),
+                        'label_password' => __( 'Senha', 'vemcomer' ),
+                        'label_remember' => __( 'Lembrar de mim', 'vemcomer' ),
+                        'label_log_in'   => __( 'Entrar', 'vemcomer' ),
+                        'id_submit'      => 'profileAuthLoginSubmit',
+                    ]
+                ); ?>
+                <div class="profile-auth-links">
+                    <a href="<?php echo esc_url( wp_lostpassword_url() ); ?>"><?php esc_html_e( 'Esqueci minha senha', 'vemcomer' ); ?></a>
+                </div>
+            </div>
+            <div class="profile-auth-panel" data-auth-panel="signup" role="tabpanel" aria-hidden="true">
+                <div class="profile-auth-options">
+                    <a href="<?php echo esc_url( $customer_signup_url ); ?>" class="auth-option-card">
+                        <div class="auth-option-icon">👤</div>
+                        <div class="auth-option-info">
+                            <h3><?php esc_html_e( 'Sou Cliente', 'vemcomer' ); ?></h3>
+                            <p><?php esc_html_e( 'Quero pedir comida e descobrir restaurantes', 'vemcomer' ); ?></p>
+                        </div>
+                    </a>
+                    <a href="<?php echo esc_url( $restaurant_signup_url ); ?>" class="auth-option-card">
+                        <div class="auth-option-icon">🍽️</div>
+                        <div class="auth-option-info">
+                            <h3><?php esc_html_e( 'Sou Restaurante', 'vemcomer' ); ?></h3>
+                            <p><?php esc_html_e( 'Quero vender meus pratos e receber pedidos', 'vemcomer' ); ?></p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL DETALHES PRODUTO -->
 <div id="modalProduto">
