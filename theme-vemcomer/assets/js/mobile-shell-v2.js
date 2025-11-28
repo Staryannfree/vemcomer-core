@@ -179,6 +179,22 @@ async function getRestaurantImage(restaurantId, cuisines = [], restaurantName = 
     return getSmartImage(contextText);
 }
 
+function getRestaurantProfileUrl(slug, id) {
+    const slugOrId = slug || id;
+    if (!slugOrId) return null;
+    return `/restaurant/${slugOrId}/`;
+}
+
+function normalizeRestaurantUrl(url, slug, id) {
+    // Evitar links estáticos para o template HTML do marketplace
+    const isStaticTemplate = typeof url === 'string' && url.includes('templates/marketplace/perfil-restaurante');
+    if (!url || isStaticTemplate) {
+        return getRestaurantProfileUrl(slug, id);
+    }
+
+    return url;
+}
+
 function mapApiRestaurantToRestaurant(apiRestaurant) {
     const rating = apiRestaurant.rating?.average || 0;
     const ratingCount = apiRestaurant.rating?.count || 0;
@@ -207,7 +223,7 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
     
     // URL do restaurante - usar slug (padrão: /restaurant/{slug}/)
     const slug = apiRestaurant.slug || apiRestaurant.post_name || null;
-    const url = slug ? `/restaurant/${slug}/` : `/restaurant/${apiRestaurant.id}/`;
+    const url = normalizeRestaurantUrl(apiRestaurant.url || apiRestaurant.link, slug, apiRestaurant.id);
     
     return {
         id: apiRestaurant.id,
@@ -647,8 +663,8 @@ function renderStoryProgressBars(count) {
     if (!container) return;
     
     container.innerHTML = Array(count).fill(0).map((_, i) => `
-        <div class="story-progress-bar">
-            <div class="story-progress-fill" id="storyProgress${i}"></div>
+        <div class="progress-bar story-progress-bar">
+            <div class="progress-fill story-progress-fill" id="storyProgress${i}"></div>
         </div>
     `).join('');
 }
@@ -723,17 +739,18 @@ function showStory(index) {
             link_text: story.link_text,
             story_id: story.id
         });
-        
+
         // Sempre resetar primeiro
-        ctaBtn.style.display = 'none';
+        ctaBtn.classList.remove('is-visible');
         ctaBtn.style.visibility = 'hidden';
         ctaBtn.style.opacity = '0';
+        ctaBtn.style.pointerEvents = 'none';
         ctaBtn.onclick = null;
         
         if (story.link_type === 'profile' || story.link_type === 'menu') {
             const btnText = story.link_text || (story.link_type === 'profile' ? 'Ver Perfil' : 'Ver Cardápio');
             ctaBtn.textContent = btnText;
-            ctaBtn.style.display = 'block';
+            ctaBtn.classList.add('is-visible');
             ctaBtn.style.visibility = 'visible';
             ctaBtn.style.opacity = '1';
             ctaBtn.style.pointerEvents = 'auto';
@@ -746,7 +763,7 @@ function showStory(index) {
         } else if (story.link) {
             // Compatibilidade com link customizado antigo
             ctaBtn.textContent = story.link_text || 'Ver Mais';
-            ctaBtn.style.display = 'block';
+            ctaBtn.classList.add('is-visible');
             ctaBtn.style.visibility = 'visible';
             ctaBtn.style.opacity = '1';
             ctaBtn.style.pointerEvents = 'auto';
@@ -841,8 +858,11 @@ function handleStoryCta(story) {
     if (story.link_type === 'profile') {
         // Redirecionar para perfil do restaurante
         const restaurantId = story.restaurant_id || (currentStoryGroup && currentStoryGroup.restaurant ? currentStoryGroup.restaurant.id : null);
-        if (restaurantId) {
-            window.location.href = `${TEMPLATE_PATH}restaurante-cliente.html?id=${restaurantId}`;
+        const restaurantSlug = story.restaurant_slug || currentStoryGroup?.restaurant?.slug;
+        const profileUrl = getRestaurantProfileUrl(restaurantSlug, restaurantId);
+
+        if (profileUrl) {
+            window.location.href = profileUrl;
         } else {
             console.error('❌ Restaurant ID não encontrado para perfil');
         }
@@ -1376,11 +1396,13 @@ async function renderFeatured() {
         return;
     }
     
-    container.innerHTML = restaurants.map(restaurant => `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${TEMPLATE_PATH}perfil-restaurante.html" onclick="window.location.href='${TEMPLATE_PATH}perfil-restaurante.html'" style="cursor: pointer;">
+    container.innerHTML = restaurants.map(restaurant => {
+        const profileUrl = normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id) || '#';
+        return `
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
             <div class="featured-image-wrapper">
-                <img 
-                    src="${restaurant.image}" 
+                <img
+                    src="${restaurant.image}"
                     alt="${restaurant.name}" 
                     class="featured-image" 
                     loading="lazy" 
@@ -1453,11 +1475,13 @@ async function renderRestaurants() {
         return;
     }
     
-    container.innerHTML = restaurants.map(restaurant => `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-url="${TEMPLATE_PATH}perfil-restaurante.html" onclick="window.location.href='${TEMPLATE_PATH}perfil-restaurante.html'" style="cursor: pointer;">
+    container.innerHTML = restaurants.map(restaurant => {
+        const profileUrl = normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id) || '#';
+        return `
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
             <div class="card-image-wrapper">
-                <img 
-                    src="${restaurant.image}" 
+                <img
+                    src="${restaurant.image}"
                     alt="${restaurant.name}" 
                     class="card-image" 
                     loading="lazy"
@@ -1503,7 +1527,7 @@ async function renderRestaurants() {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;}).join('');
     
     // Adicionar event listeners após renderização
     attachRestaurantCardListeners();
@@ -1534,8 +1558,11 @@ window.openEvent = function(id) {
     window.location.href = TEMPLATE_PATH + 'detalhes-evento.html';
 };
 
-window.openRestaurant = function(id) {
-    window.location.href = TEMPLATE_PATH + 'perfil-restaurante.html';
+window.openRestaurant = function(id, slug) {
+    const targetUrl = getRestaurantProfileUrl(slug, id);
+    if (targetUrl) {
+        window.location.href = targetUrl;
+    }
 };
 
 window.openReservation = function(id, event) {
@@ -1572,8 +1599,13 @@ function attachRestaurantCardListeners() {
                 return;
             }
             
-            // Redirecionar para o restaurante
-            window.location.href = TEMPLATE_PATH + 'perfil-restaurante.html';
+            const restaurantId = restaurantCard.dataset.restaurantId;
+            const restaurantSlug = restaurantCard.dataset.restaurantSlug;
+            const targetUrl = normalizeRestaurantUrl(restaurantCard.dataset.restaurantUrl, restaurantSlug, restaurantId);
+
+            if (targetUrl) {
+                window.location.href = targetUrl;
+            }
         }
     });
 }
@@ -1597,8 +1629,13 @@ function attachFeaturedCardListeners() {
                 return;
             }
             
-            // Redirecionar para o restaurante
-            window.location.href = TEMPLATE_PATH + 'perfil-restaurante.html';
+            const restaurantId = featuredCard.dataset.restaurantId;
+            const restaurantSlug = featuredCard.dataset.restaurantSlug;
+            const targetUrl = normalizeRestaurantUrl(featuredCard.dataset.restaurantUrl, restaurantSlug, restaurantId);
+
+            if (targetUrl) {
+                window.location.href = targetUrl;
+            }
         }
     });
 }
@@ -1610,8 +1647,14 @@ function attachSearchResultListeners() {
     // Event delegation para cliques nos resultados de busca
     document.addEventListener('click', function(e) {
         const searchResult = e.target.closest('.search-result-item');
-        if (searchResult && searchResult.dataset.restaurantUrl) {
-            window.location.href = searchResult.dataset.restaurantUrl;
+        if (searchResult) {
+            const restaurantId = searchResult.dataset.restaurantId;
+            const restaurantSlug = searchResult.dataset.restaurantSlug;
+            const targetUrl = normalizeRestaurantUrl(searchResult.dataset.restaurantUrl, restaurantSlug, restaurantId);
+
+            if (targetUrl) {
+                window.location.href = targetUrl;
+            }
         }
     });
 }
@@ -2131,9 +2174,9 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                 }
             }
             
-            const restaurantUrl = TEMPLATE_PATH + 'perfil-restaurante.html';
+            const restaurantUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id) || '#';
             html += `
-                <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-url="${restaurantUrl}">
+                <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${restaurantUrl}">
                     <div class="search-result-icon restaurant">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
