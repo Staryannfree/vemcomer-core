@@ -39,6 +39,13 @@ const VC_META_RESTAURANT_FIELDS = [
     'delivery_free_above'   => '_vc_delivery_free_above',
     'delivery_min_order'    => '_vc_delivery_min_order',
     'delivery_neighborhoods' => '_vc_delivery_neighborhoods', // JSON
+    // Campos adicionais de marca e plano
+    'logo'          => 'vc_restaurant_logo',
+    'cover'         => 'vc_restaurant_cover',
+    'featured_badge' => 'vc_restaurant_featured_badge',
+    'plan_name'     => 'vc_restaurant_plan_name',
+    'plan_limit'    => 'vc_restaurant_plan_limit',
+    'plan_used'     => 'vc_restaurant_plan_used',
 ];
 
 add_action( 'add_meta_boxes', function() {
@@ -136,6 +143,20 @@ function vc_render_restaurant_metabox( $post ) {
         <tr>
             <th><label for="vc_restaurant_site"><?php echo esc_html__( 'Site', 'vemcomer' ); ?></label></th>
             <td><input type="url" id="vc_restaurant_site" name="vc_restaurant_site" class="regular-text" value="<?php echo esc_attr( $values['site'] ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_logo"><?php echo esc_html__( 'Logo (URL da imagem)', 'vemcomer' ); ?></label></th>
+            <td><input type="url" id="vc_restaurant_logo" name="vc_restaurant_logo" class="regular-text" placeholder="https://.../logo.png" value="<?php echo esc_attr( $values['logo'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_cover"><?php echo esc_html__( 'Capa/hero (URL)', 'vemcomer' ); ?></label></th>
+            <td><input type="url" id="vc_restaurant_cover" name="vc_restaurant_cover" class="regular-text" placeholder="https://.../capa.jpg" value="<?php echo esc_attr( $values['cover'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_featured_badge"><?php echo esc_html__( 'Selo Destaque', 'vemcomer' ); ?></label></th>
+            <td>
+                <label><input type="checkbox" id="vc_restaurant_featured_badge" name="vc_restaurant_featured_badge" value="1" <?php checked( ! empty( $values['featured_badge'] ) ); ?> /> <?php echo esc_html__( 'Destacar restaurante no perfil', 'vemcomer' ); ?></label>
+            </td>
         </tr>
         <tr>
             <th><label><?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?></label></th>
@@ -383,6 +404,18 @@ Eventos & Reservas"><?php echo esc_textarea( $values['highlight_tags'] ?? '' ); 
             </td>
         </tr>
         <tr>
+            <th><label for="vc_restaurant_plan_name"><?php echo esc_html__( 'Nome do plano', 'vemcomer' ); ?></label></th>
+            <td><input type="text" id="vc_restaurant_plan_name" name="vc_restaurant_plan_name" class="regular-text" placeholder="Vitrine" value="<?php echo esc_attr( $values['plan_name'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_plan_limit"><?php echo esc_html__( 'Limite de itens do plano', 'vemcomer' ); ?></label></th>
+            <td><input type="number" min="0" step="1" id="vc_restaurant_plan_limit" name="vc_restaurant_plan_limit" class="small-text" value="<?php echo esc_attr( $values['plan_limit'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
+            <th><label for="vc_restaurant_plan_used"><?php echo esc_html__( 'Itens usados no plano', 'vemcomer' ); ?></label></th>
+            <td><input type="number" min="0" step="1" id="vc_restaurant_plan_used" name="vc_restaurant_plan_used" class="small-text" value="<?php echo esc_attr( $values['plan_used'] ?? '' ); ?>" /></td>
+        </tr>
+        <tr>
             <th><label for="vc_restaurant_menu_filters"><?php echo esc_html__( 'Filtros do cardápio', 'vemcomer' ); ?></label></th>
             <td>
                 <textarea id="vc_restaurant_menu_filters" name="vc_restaurant_menu_filters" class="large-text" rows="2" placeholder="Vegano
@@ -603,8 +636,14 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_eta'], sanitize_text_field( $_POST['vc_restaurant_delivery_eta'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_fee'], sanitize_text_field( $_POST['vc_restaurant_delivery_fee'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['delivery_type'], sanitize_text_field( $_POST['vc_restaurant_delivery_type'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['logo'], esc_url_raw( $_POST['vc_restaurant_logo'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['cover'], esc_url_raw( $_POST['vc_restaurant_cover'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['featured_badge'], isset( $_POST['vc_restaurant_featured_badge'] ) ? '1' : '0' );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['banners'], sanitize_textarea_field( $_POST['vc_restaurant_banners'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['highlight_tags'], sanitize_textarea_field( $_POST['vc_restaurant_highlight_tags'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['plan_name'], sanitize_text_field( $_POST['vc_restaurant_plan_name'] ?? '' ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['plan_limit'], absint( $_POST['vc_restaurant_plan_limit'] ?? 0 ) );
+    update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['plan_used'], absint( $_POST['vc_restaurant_plan_used'] ?? 0 ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['menu_filters'], sanitize_textarea_field( $_POST['vc_restaurant_menu_filters'] ?? '' ) );
 
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['reservation_enabled'], isset( $_POST['vc_restaurant_reservation_enabled'] ) ? '1' : '0' );

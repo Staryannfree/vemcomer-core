@@ -67,6 +67,27 @@ $current_user = wp_get_current_user();
 $restaurant   = null;
 $public_url   = home_url( '/restaurant/' );
 
+$stats_defaults = [
+    'today'  => [ 'revenue' => 'R$ 325,00', 'orders' => 8 ],
+    'week'   => [ 'revenue' => 'R$ 2.112,40', 'orders' => 41 ],
+    'month'  => [ 'revenue' => 'R$ 6.871,30', 'orders' => 131 ],
+];
+
+$analytics_defaults = [
+    'views'      => 725,
+    'whatsapp'   => 82,
+    'conversion' => '11,3%',
+];
+
+$plan_name  = 'Vitrine';
+$plan_limit = 20;
+$plan_used  = 14;
+
+$store_status = [
+    'is_open' => true,
+    'label'   => 'ABERTO',
+];
+
 $quick_links = [
     'onboarding' => home_url( '/wizard-onboarding/' ),
     'config'     => home_url( '/configuracao-loja/' ),
@@ -112,8 +133,26 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
 
     if ( $restaurant ) {
         $public_url = get_permalink( $restaurant );
+
+        $stats_defaults = apply_filters( 'vemcomer/dashboard_stats', $stats_defaults, $restaurant );
+        $analytics_defaults = apply_filters( 'vemcomer/dashboard_analytics', $analytics_defaults, $restaurant );
+
+        $plan_name  = get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['plan_name'], true ) ?: $plan_name;
+        $plan_limit = (int) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['plan_limit'], true ) ?: $plan_limit;
+        $plan_used  = (int) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['plan_used'], true ) ?: $plan_used;
+
+        $store_status = apply_filters( 'vemcomer/dashboard_store_status', $store_status, $restaurant );
     }
 }
+
+$plan_limit = max( 0, $plan_limit );
+$plan_used  = max( 0, $plan_used );
+$plan_percent = $plan_limit > 0 ? min( 100, round( ( $plan_used / $plan_limit ) * 100 ) ) : 0;
+$plan_bar_label = $plan_limit > 0 ? sprintf( '%d/%d (%d%%)', $plan_used, $plan_limit, $plan_percent ) : sprintf( '%d itens', $plan_used );
+$plan_items_label = $plan_limit > 0 ? sprintf( '%d/%d itens', $plan_used, $plan_limit ) : sprintf( '%d itens', $plan_used );
+
+$is_open = ! empty( $store_status['is_open'] );
+$status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $is_open ? 'ABERTO' : 'FECHADO' );
 ?>
 
     <div class="dash-quick">
@@ -130,35 +169,35 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
     <div class="dash-row">
         <div class="dash-card">
             <div class="card-label">Vendas Hoje</div>
-            <div class="card-value">R$ 325,00</div>
-            <div class="card-sub">8 pedidos</div>
+            <div class="card-value"><?php echo esc_html( $stats_defaults['today']['revenue'] ); ?></div>
+            <div class="card-sub"><?php echo esc_html( $stats_defaults['today']['orders'] ); ?> pedidos</div>
         </div>
         <div class="dash-card">
             <div class="card-label">Na Semana</div>
-            <div class="card-value">R$ 2.112,40</div>
-            <div class="card-sub">41 pedidos</div>
+            <div class="card-value"><?php echo esc_html( $stats_defaults['week']['revenue'] ); ?></div>
+            <div class="card-sub"><?php echo esc_html( $stats_defaults['week']['orders'] ); ?> pedidos</div>
         </div>
         <div class="dash-card">
             <div class="card-label">No Mês</div>
-            <div class="card-value">R$ 6.871,30</div>
-            <div class="card-sub">131 pedidos</div>
+            <div class="card-value"><?php echo esc_html( $stats_defaults['month']['revenue'] ); ?></div>
+            <div class="card-sub"><?php echo esc_html( $stats_defaults['month']['orders'] ); ?> pedidos</div>
         </div>
     </div>
 
     <div class="dash-row">
         <div class="dash-card">
             <div class="card-label">Status da Loja</div>
-            <div class="card-status st-aberto" id="lojaStatusTxt">ABERTO</div>
-            <button class="card-btn toggle" onclick="toggleLojaStatus()">Fechar Agora</button>
+            <div class="card-status <?php echo $is_open ? 'st-aberto' : 'st-fechado'; ?>" id="lojaStatusTxt"><?php echo esc_html( $status_label ); ?></div>
+            <button class="card-btn toggle" onclick="toggleLojaStatus()" id="lojaStatusBtn"><?php echo $is_open ? 'Fechar Agora' : 'Abrir Agora'; ?></button>
         </div>
         <div class="dash-card" style="flex:2;">
             <div class="card-label">Limite de Itens do Plano</div>
             <div class="card-bar">
-                <div class="card-bar-inner" id="planoBar" style="width:70%"></div>
-                <span class="bar-text">14/20 (70%)</span>
+                <div class="card-bar-inner" id="planoBar" style="width:<?php echo esc_attr( $plan_percent ); ?>%"></div>
+                <span class="bar-text"><?php echo esc_html( $plan_bar_label ); ?></span>
             </div>
             <div class="plan-info" id="planoInfo">
-                Você utiliza o plano <span class="plan-type">Vitrine</span>.
+                Você utiliza o plano <span class="plan-type"><?php echo esc_html( $plan_name ); ?></span>.
                 <a href="#" style="color:#2d8659;font-weight:700;text-decoration:underline;">Upgradar para PRO</a>
             </div>
         </div>
@@ -168,15 +207,15 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
         <div class="analytics-title">Analytics Express</div>
         <div class="analytics-row">
             <div class="analytics-metric">
-                <div class="metric-main" style="color:#3176da;">725</div>
+                <div class="metric-main" style="color:#3176da;"><?php echo esc_html( $analytics_defaults['views'] ); ?></div>
                 <div class="metric-label">Visualizações</div>
             </div>
             <div class="analytics-metric">
-                <div class="metric-main">82</div>
+                <div class="metric-main"><?php echo esc_html( $analytics_defaults['whatsapp'] ); ?></div>
                 <div class="metric-label">Cliques no WhatsApp</div>
             </div>
             <div class="analytics-metric">
-                <div class="metric-main" style="color:#ea5252;">11,3%</div>
+                <div class="metric-main" style="color:#ea5252;"><?php echo esc_html( $analytics_defaults['conversion'] ); ?></div>
                 <div class="metric-label">Conversão</div>
                 <div class="metric-sub">Whats/Visualizações</div>
             </div>
@@ -184,12 +223,12 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
     </div>
 
     <div class="plan-widget">
-        <div class="plan-type">Plano Atual: <b>Vitrine</b></div>
+        <div class="plan-type">Plano Atual: <b><?php echo esc_html( $plan_name ); ?></b></div>
         <div class="plan-bar">
-            <div class="plan-bar-inner" style="width:70%;"></div>
-            <span class="bar-text">14/20 itens</span>
+            <div class="plan-bar-inner" style="width:<?php echo esc_attr( $plan_percent ); ?>%;"></div>
+            <span class="bar-text"><?php echo esc_html( $plan_items_label ); ?></span>
         </div>
-        <div class="plan-info">Seu plano permite até 20 itens no cardápio.<br>
+        <div class="plan-info">Seu plano permite até <?php echo esc_html( $plan_limit ); ?> itens no cardápio.<br>
             Atualize para <b>PRO</b> e desbloqueie funcionalidades avançadas!</div>
         <button class="card-btn" style="background:#facb32;color:#232a2c;font-weight:800;margin-top:7px;">Ver Planos</button>
     </div>
@@ -202,12 +241,15 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
         }
     }
 
-    let aberto = true;
+    let aberto = <?php echo $is_open ? 'true' : 'false'; ?>;
     function toggleLojaStatus() {
         aberto = !aberto;
-        document.getElementById('lojaStatusTxt').textContent = aberto ? 'ABERTO' : 'FECHADO';
-        document.getElementById('lojaStatusTxt').className = aberto ? 'card-status st-aberto' : 'card-status st-fechado';
-        document.querySelector('.card-btn.toggle').textContent = aberto ? 'Fechar Agora' : 'Abrir Agora';
+        var statusTxt = document.getElementById('lojaStatusTxt');
+        var statusBtn = document.getElementById('lojaStatusBtn');
+        if (!statusTxt || !statusBtn) return;
+        statusTxt.textContent = aberto ? 'ABERTO' : 'FECHADO';
+        statusTxt.className = aberto ? 'card-status st-aberto' : 'card-status st-fechado';
+        statusBtn.textContent = aberto ? 'Fechar Agora' : 'Abrir Agora';
     }
 </script>
 <?php
