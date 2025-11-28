@@ -1681,6 +1681,18 @@ function vemcomer_login_header_title() {
 }
 add_filter( 'login_headertext', 'vemcomer_login_header_title' );
 
+function vemcomer_get_marketplace_template_page( $template ) {
+    $pages = get_pages(
+        [
+            'meta_key'   => '_wp_page_template',
+            'meta_value' => $template,
+            'number'     => 1,
+        ]
+    );
+
+    return $pages ? $pages[0] : null;
+}
+
 /**
  * Redireciona lojistas para o painel após o login
  */
@@ -1692,7 +1704,13 @@ function vemcomer_redirect_lojista_after_login( $redirect_to, $request, $user ) 
 
     // Verifica se o usuário tem a role 'lojista'
     if ( in_array( 'lojista', (array) $user->roles ) ) {
-        return home_url( '/painel-do-restaurante-vemcomer/' );
+        $panel_page = vemcomer_get_marketplace_template_page( 'templates/marketplace/painel-lojista-plano-gratis.php' );
+
+        if ( $panel_page ) {
+            return add_query_arg( 'onboarding', '1', get_permalink( $panel_page ) );
+        }
+
+        return home_url( '/painel-restaurante/' );
     }
 
     return $redirect_to;
@@ -1712,14 +1730,17 @@ function vemcomer_block_admin_access_for_restaurant_owners() {
     
     // Se o usuário tiver a role 'lojista'
     if ( in_array( 'lojista', (array) $user->roles ) ) {
-        
+
         // Bloquear acesso ao admin
         if ( is_admin() ) {
             // Redirecionar para o painel do restaurante
-            wp_redirect( home_url( '/painel-do-restaurante-vemcomer/' ) );
+            $panel_page = vemcomer_get_marketplace_template_page( 'templates/marketplace/painel-lojista-plano-gratis.php' );
+            $panel_url  = $panel_page ? get_permalink( $panel_page ) : home_url( '/painel-restaurante/' );
+
+            wp_redirect( add_query_arg( 'onboarding', '1', $panel_url ) );
             exit;
         }
-        
+
         // Remover Admin Bar
         show_admin_bar( false );
     }
