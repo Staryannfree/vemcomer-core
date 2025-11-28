@@ -181,9 +181,18 @@ async function getRestaurantImage(restaurantId, cuisines = [], restaurantName = 
 
 function getRestaurantProfileUrl(slug, id) {
     const slugOrId = slug || id;
-    if (!slugOrId) return null;
+
+    // Se não tiver slug nem ID, não dá pra montar o link
+    if (!slugOrId) {
+        console.warn('[VemComer] Restaurante sem slug/ID para montar a URL');
+        return '#';
+    }
+
+    // 👉 Se o slug correto no seu site NÃO for "restaurant", troque aqui:
+    // exemplo: return `/restaurante/${slugOrId}/`;
     return `/restaurant/${slugOrId}/`;
 }
+
 
 function mapApiRestaurantToRestaurant(apiRestaurant) {
     const rating = apiRestaurant.rating?.average || 0;
