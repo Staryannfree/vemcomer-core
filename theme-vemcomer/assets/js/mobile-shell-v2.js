@@ -1396,9 +1396,10 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => {
-        const profileUrl = restaurant.url || getRestaurantProfileUrl(restaurant.slug, restaurant.id) || '#';
+        const profileUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id);
+
         return `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" style="cursor: pointer;">
             <div class="featured-image-wrapper">
                 <img
                     src="${restaurant.image}"
@@ -1440,11 +1441,13 @@ async function renderFeatured() {
                 ` : ''}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     // Adicionar event listeners após renderização
     attachFeaturedCardListeners();
 }
+
 
 async function renderRestaurants() {
     const container = document.getElementById('restaurantsGrid');
@@ -1475,9 +1478,10 @@ async function renderRestaurants() {
     }
     
     container.innerHTML = restaurants.map(restaurant => {
-        const profileUrl = restaurant.url || getRestaurantProfileUrl(restaurant.slug, restaurant.id) || '#';
+        const profileUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id);
+
         return `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" style="cursor: pointer;">
             <div class="card-image-wrapper">
                 <img
                     src="${restaurant.image}"
@@ -1526,11 +1530,13 @@ async function renderRestaurants() {
                 </div>
             </div>
         </div>
-    `;}).join('');
+    `;
+    }).join('');
     
     // Adicionar event listeners após renderização
     attachRestaurantCardListeners();
 }
+
 
 // ============ EVENT HANDLERS ============
 // Garantir que as funções estejam no escopo global
@@ -1600,9 +1606,9 @@ function attachRestaurantCardListeners() {
             
             const restaurantId = restaurantCard.dataset.restaurantId;
             const restaurantSlug = restaurantCard.dataset.restaurantSlug;
-            const targetUrl = restaurantCard.dataset.restaurantUrl || getRestaurantProfileUrl(restaurantSlug, restaurantId);
+            const targetUrl = getRestaurantProfileUrl(restaurantSlug, restaurantId);
 
-            if (targetUrl) {
+            if (targetUrl && targetUrl !== '#') {
                 window.location.href = targetUrl;
             }
         }
@@ -1630,14 +1636,15 @@ function attachFeaturedCardListeners() {
             
             const restaurantId = featuredCard.dataset.restaurantId;
             const restaurantSlug = featuredCard.dataset.restaurantSlug;
-            const targetUrl = featuredCard.dataset.restaurantUrl || getRestaurantProfileUrl(restaurantSlug, restaurantId);
+            const targetUrl = getRestaurantProfileUrl(restaurantSlug, restaurantId);
 
-            if (targetUrl) {
+            if (targetUrl && targetUrl !== '#') {
                 window.location.href = targetUrl;
             }
         }
     });
 }
+
 
 /**
  * Attach event listeners para resultados de busca
@@ -1649,16 +1656,15 @@ function attachSearchResultListeners() {
         if (searchResult) {
             const restaurantId = searchResult.dataset.restaurantId;
             const restaurantSlug = searchResult.dataset.restaurantSlug;
-            const targetUrl = (searchResult.dataset.restaurantUrl && searchResult.dataset.restaurantUrl !== '#')
-                ? searchResult.dataset.restaurantUrl
-                : getRestaurantProfileUrl(restaurantSlug, restaurantId);
+            const targetUrl = getRestaurantProfileUrl(restaurantSlug, restaurantId);
 
-            if (targetUrl) {
+            if (targetUrl && targetUrl !== '#') {
                 window.location.href = targetUrl;
             }
         }
     });
 }
+
 
 // ============ LOCATION MANAGEMENT ============
 function getCookie(name) {
