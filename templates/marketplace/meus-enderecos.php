@@ -10,14 +10,14 @@ if (!defined('ABSPATH')) {
 
 $vc_marketplace_inline = defined('VC_MARKETPLACE_INLINE') && VC_MARKETPLACE_INLINE;
 
+require_once __DIR__ . '/static-loader.php';
+
 if (! $vc_marketplace_inline) {
     get_header();
 }
-?>
-<div class="vc-marketplace-placeholder">
-    <p><?php esc_html_e('Placeholder for the Meus Endereços template.', 'vemcomer'); ?></p>
-</div>
-<?php
+
+vc_marketplace_render_static_template('meus-enderecos.html');
+
 if (! $vc_marketplace_inline) {
     get_footer();
 }
