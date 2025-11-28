@@ -68,10 +68,11 @@ $restaurant   = null;
 $public_url   = home_url( '/restaurant/' );
 
 $quick_links = [
-    'config'    => home_url( '/configuracao-loja/' ),
-    'menu'      => home_url( '/gestao-cardapio/' ),
-    'marketing' => home_url( '/central-marketing/' ),
-    'events'    => home_url( '/gestor-eventos/' ),
+    'onboarding' => home_url( '/wizard-onboarding/' ),
+    'config'     => home_url( '/configuracao-loja/' ),
+    'menu'       => home_url( '/gestao-cardapio/' ),
+    'marketing'  => home_url( '/central-marketing/' ),
+    'events'     => home_url( '/gestor-eventos/' ),
 ];
 
 if ( $current_user instanceof WP_User && $current_user->ID ) {
@@ -116,7 +117,7 @@ if ( $current_user instanceof WP_User && $current_user->ID ) {
 ?>
 
     <div class="dash-quick">
-        <button type="button" class="dash-cta-primary" onclick="openOnboardingModal()">⚡ Configuração Rápida</button>
+        <a class="dash-cta-primary" href="<?php echo esc_url( $quick_links['onboarding'] ); ?>">⚡ Configuração Rápida</a>
         <a href="<?php echo esc_url( $quick_links['config'] ); ?>">Editar dados</a>
         <a href="<?php echo esc_url( $quick_links['menu'] ); ?>">Gerenciar cardápio</a>
         <a href="<?php echo esc_url( $public_url ); ?>" target="_blank" rel="noopener">Ver página pública</a>
