@@ -210,19 +210,20 @@ function getRestaurantProfileUrl(slug, id, name = '') {
 function normalizeRestaurantUrl(url, slug, id, name = '') {
     // Evitar links estáticos para o template HTML do marketplace
     const isStaticTemplate = typeof url === 'string' && url.includes('templates/marketplace/perfil-restaurante');
-    const canonicalUrl = getRestaurantProfileUrl(slug, id, name);
+    const slugFromUrl = extractSlugFromUrl(url);
+    const derivedSlug = slug || slugFromUrl || buildSlugFromName(name);
+    const canonicalUrl = getRestaurantProfileUrl(derivedSlug, id, name);
 
     if (!url || isStaticTemplate) {
-        return canonicalUrl;
+        return canonicalUrl || '#';
     }
 
     // Se a URL já aponta para /restaurant/{slug}/, usar ela como base
-    const slugFromUrl = extractSlugFromUrl(url);
     if (slugFromUrl) {
-        return getRestaurantProfileUrl(slugFromUrl, id, name);
+        return getRestaurantProfileUrl(slugFromUrl, id, name) || canonicalUrl || url;
     }
 
-    return url;
+    return canonicalUrl || url;
 }
 
 function mapApiRestaurantToRestaurant(apiRestaurant) {
@@ -259,8 +260,8 @@ function mapApiRestaurantToRestaurant(apiRestaurant) {
         || null;
     const id = apiRestaurant.id || apiRestaurant.ID || apiRestaurant.restaurant_id || null;
     // Sempre priorizar o permalink canônico baseado no slug/ID/nome
-    const url = getRestaurantProfileUrl(slug, id, restaurantName)
-        || normalizeRestaurantUrl(apiRestaurant.url || apiRestaurant.link, slug, id, restaurantName)
+    const url = normalizeRestaurantUrl(apiRestaurant.url || apiRestaurant.link, slug, id, restaurantName)
+        || getRestaurantProfileUrl(slug, id, restaurantName)
         || '#';
     
     return {
@@ -1435,11 +1436,11 @@ async function renderFeatured() {
     }
     
     container.innerHTML = restaurants.map(restaurant => {
-        const profileUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id)
-            || normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id)
+        const profileUrl = normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id, restaurant.name)
+            || getRestaurantProfileUrl(restaurant.slug, restaurant.id, restaurant.name)
             || '#';
         return `
-        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
+        <div class="featured-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" data-restaurant-name="${restaurant.name || ''}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
             <div class="featured-image-wrapper">
                 <img
                     src="${restaurant.image}"
@@ -1518,11 +1519,11 @@ async function renderRestaurants() {
     }
     
     container.innerHTML = restaurants.map(restaurant => {
-        const profileUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id)
-            || normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id)
+        const profileUrl = normalizeRestaurantUrl(restaurant.url, restaurant.slug, restaurant.id, restaurant.name)
+            || getRestaurantProfileUrl(restaurant.slug, restaurant.id, restaurant.name)
             || '#';
         return `
-        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
+        <div class="restaurant-card" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${profileUrl}" data-restaurant-name="${restaurant.name || ''}" onclick="window.location.href='${profileUrl}'" style="cursor: pointer;">
             <div class="card-image-wrapper">
                 <img
                     src="${restaurant.image}"
@@ -1646,7 +1647,8 @@ function attachRestaurantCardListeners() {
             
             const restaurantId = restaurantCard.dataset.restaurantId;
             const restaurantSlug = restaurantCard.dataset.restaurantSlug;
-            const targetUrl = normalizeRestaurantUrl(restaurantCard.dataset.restaurantUrl, restaurantSlug, restaurantId);
+            const restaurantName = restaurantCard.dataset.restaurantName || '';
+            const targetUrl = normalizeRestaurantUrl(restaurantCard.dataset.restaurantUrl, restaurantSlug, restaurantId, restaurantName);
 
             if (targetUrl) {
                 window.location.href = targetUrl;
@@ -1676,7 +1678,8 @@ function attachFeaturedCardListeners() {
             
             const restaurantId = featuredCard.dataset.restaurantId;
             const restaurantSlug = featuredCard.dataset.restaurantSlug;
-            const targetUrl = normalizeRestaurantUrl(featuredCard.dataset.restaurantUrl, restaurantSlug, restaurantId);
+            const restaurantName = featuredCard.dataset.restaurantName || '';
+            const targetUrl = normalizeRestaurantUrl(featuredCard.dataset.restaurantUrl, restaurantSlug, restaurantId, restaurantName);
 
             if (targetUrl) {
                 window.location.href = targetUrl;
@@ -1696,7 +1699,8 @@ function attachSearchResultListeners() {
         if (searchResult) {
             const restaurantId = searchResult.dataset.restaurantId;
             const restaurantSlug = searchResult.dataset.restaurantSlug;
-            const targetUrl = normalizeRestaurantUrl(searchResult.dataset.restaurantUrl, restaurantSlug, restaurantId);
+            const restaurantName = searchResult.dataset.restaurantName || '';
+            const targetUrl = normalizeRestaurantUrl(searchResult.dataset.restaurantUrl, restaurantSlug, restaurantId, restaurantName);
 
             if (targetUrl) {
                 window.location.href = targetUrl;
@@ -2221,9 +2225,11 @@ async function renderSearchResults(restaurants, categories, menuItems, query) {
                 }
             }
             
-            const restaurantUrl = getRestaurantProfileUrl(restaurant.slug, restaurant.id) || '#';
+            const restaurantUrl = normalizeRestaurantUrl(restaurant.url || restaurant.link, restaurant.slug, restaurant.id, restaurant.name)
+                || getRestaurantProfileUrl(restaurant.slug, restaurant.id, restaurant.name)
+                || '#';
             html += `
-                <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${restaurantUrl}">
+                <div class="search-result-item" data-restaurant-id="${restaurant.id}" data-restaurant-slug="${restaurant.slug || ''}" data-restaurant-url="${restaurantUrl}" data-restaurant-name="${restaurant.name || ''}">
                     <div class="search-result-icon restaurant">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
