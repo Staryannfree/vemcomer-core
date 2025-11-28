@@ -8,10 +8,16 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-get_header();
+$vc_marketplace_inline = defined('VC_MARKETPLACE_INLINE') && VC_MARKETPLACE_INLINE;
+
+if (! $vc_marketplace_inline) {
+    get_header();
+}
 ?>
 <div class="vc-marketplace-placeholder">
     <p><?php esc_html_e('Placeholder for the Central Marketing template.', 'vemcomer'); ?></p>
 </div>
 <?php
-get_footer();
+if (! $vc_marketplace_inline) {
+    get_footer();
+}
