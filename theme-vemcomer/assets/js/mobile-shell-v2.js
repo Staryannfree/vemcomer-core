@@ -136,22 +136,25 @@ const isValidImage = (url) => {
 
 // ============ MAPEAMENTO DE DADOS DA API ============
 function mapApiBannerToBanner(apiBanner) {
-    // Se o banner tem restaurant_id, criar link para o restaurante
+    // Se o banner tem restaurant_id/slug, criar link para o restaurante
     let link = apiBanner.link || null;
-    if (!link && apiBanner.restaurant_id) {
-        // Usar slug se disponível, senão usar ID
-        link = `/restaurant/${apiBanner.restaurant_slug || apiBanner.restaurant_id}/`;
+
+    if (!link && (apiBanner.restaurant_id || apiBanner.restaurant_slug)) {
+        // Usa SEMPRE o helper centralizado
+        link = getRestaurantProfileUrl(
+            apiBanner.restaurant_slug,
+            apiBanner.restaurant_id
+        );
     }
-    
-    // Usar imagem da API ou fallback genérico (banners não têm categoria específica)
+
     const image = apiBanner.image && apiBanner.image.trim() !== '' 
         ? apiBanner.image 
         : PLACEHOLDERS.default;
-    
+
     return {
         id: apiBanner.id,
         title: apiBanner.title || '',
-        subtitle: '', // API não retorna subtitle, pode ser adicionado depois
+        subtitle: '',
         image: image,
         link: link,
         restaurantId: apiBanner.restaurant_id || null
@@ -183,15 +186,11 @@ function getRestaurantProfileUrl(slug, id) {
     const slugOrId = slug || id;
     if (!slugOrId) return '#';
 
-    // Se o slug correto for /restaurante/ em vez de /restaurant/, ajuste aqui:
-    // return `/restaurante/${slugOrId}/`;
-    return `/restaurant/${slugOrId}/`;
-}
+    // 🔥 AQUI é o single correto de restaurante
+    // Se no teu site é /restaurante/{slug}/, deixa assim:
+    return `/restaurante/${slugOrId}/`;
 
-
-    // 👉 Se o slug correto no seu site NÃO for "restaurant", troque aqui:
-    // exemplo: return `/restaurante/${slugOrId}/`;
-    return `/restaurant/${slugOrId}/`;
+    // Se algum dia mudar o slug base, é só trocar a linha acima.
 }
 
 
