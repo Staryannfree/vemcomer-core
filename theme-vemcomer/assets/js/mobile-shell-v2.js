@@ -647,8 +647,8 @@ function renderStoryProgressBars(count) {
     if (!container) return;
     
     container.innerHTML = Array(count).fill(0).map((_, i) => `
-        <div class="story-progress-bar">
-            <div class="story-progress-fill" id="storyProgress${i}"></div>
+        <div class="progress-bar story-progress-bar">
+            <div class="progress-fill story-progress-fill" id="storyProgress${i}"></div>
         </div>
     `).join('');
 }
@@ -723,17 +723,18 @@ function showStory(index) {
             link_text: story.link_text,
             story_id: story.id
         });
-        
+
         // Sempre resetar primeiro
-        ctaBtn.style.display = 'none';
+        ctaBtn.classList.remove('is-visible');
         ctaBtn.style.visibility = 'hidden';
         ctaBtn.style.opacity = '0';
+        ctaBtn.style.pointerEvents = 'none';
         ctaBtn.onclick = null;
         
         if (story.link_type === 'profile' || story.link_type === 'menu') {
             const btnText = story.link_text || (story.link_type === 'profile' ? 'Ver Perfil' : 'Ver Cardápio');
             ctaBtn.textContent = btnText;
-            ctaBtn.style.display = 'block';
+            ctaBtn.classList.add('is-visible');
             ctaBtn.style.visibility = 'visible';
             ctaBtn.style.opacity = '1';
             ctaBtn.style.pointerEvents = 'auto';
@@ -746,7 +747,7 @@ function showStory(index) {
         } else if (story.link) {
             // Compatibilidade com link customizado antigo
             ctaBtn.textContent = story.link_text || 'Ver Mais';
-            ctaBtn.style.display = 'block';
+            ctaBtn.classList.add('is-visible');
             ctaBtn.style.visibility = 'visible';
             ctaBtn.style.opacity = '1';
             ctaBtn.style.pointerEvents = 'auto';
