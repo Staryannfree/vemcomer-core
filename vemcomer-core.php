@@ -168,6 +168,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Subscription\\Limits_Validator' ) ) { ( new \VC\Subscription\Limits_Validator() )->init(); }
     if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Merchant_Settings_Controller' ) ) { ( new \VC\REST\Merchant_Settings_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Reviews_Controller' ) ) { ( new \VC\REST\Reviews_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Favorites_Controller' ) ) { ( new \VC\REST\Favorites_Controller() )->init(); }
@@ -175,6 +176,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Events_Controller' ) ) { ( new \VC\REST\Events_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Stories_Controller' ) ) { ( new \VC\REST\Stories_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Menu_Items_Controller' ) ) { ( new \VC\REST\Menu_Items_Controller() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Menu_Items_Status_Controller' ) ) { ( new \VC\REST\Menu_Items_Status_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Quick_Toggle_Controller' ) ) { ( new \VC\REST\Quick_Toggle_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Subscription_Controller' ) ) { ( new \VC\REST\Subscription_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Addresses_Controller' ) ) { ( new \VC\REST\Addresses_Controller() )->init(); }
@@ -214,6 +216,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Frontend\\RestaurantPanel' ) )   { ( new \VC\Frontend\RestaurantPanel() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\AccessValidation' ) )  { ( new \VC\Frontend\AccessValidation() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Onboarding' ) )       { ( new \VC\Frontend\Onboarding() )->init(); }
+    if ( class_exists( '\\VC\\Frontend\\Marketplace_Templates' ) ) { ( new \VC\Frontend\Marketplace_Templates() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Home_Template' ) )     { ( new \VC\Frontend\Home_Template() )->init(); }
     if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
 
