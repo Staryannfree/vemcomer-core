@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+$vc_marketplace_inline = defined('VC_MARKETPLACE_INLINE') && VC_MARKETPLACE_INLINE;
+
 wp_enqueue_style(
     'vc-marketplace-wizard-font',
     'https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap',
@@ -17,7 +19,9 @@ wp_enqueue_style(
     null
 );
 
-get_header();
+if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
+    get_header();
+}
 ?>
 <div id="onboardModal">
     <div class="onboard-wrap">

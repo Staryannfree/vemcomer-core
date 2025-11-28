@@ -8,6 +8,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+$vc_marketplace_inline = defined('VC_MARKETPLACE_INLINE') && VC_MARKETPLACE_INLINE;
+
 wp_enqueue_style(
     'vc-marketplace-dashboard-font',
     'https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap',
@@ -15,12 +17,22 @@ wp_enqueue_style(
     null
 );
 
-get_header();
+if (! $vc_marketplace_inline) {
+    get_header();
+}
 ?>
 <div class="dash-container">
     <style>
         body { background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; margin: 0; color: #232a2c; }
         .dash-container { max-width: 474px; margin: 0 auto; padding: 17px 10px 38px 10px; }
+        .dash-quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+        .dash-quick a,
+        .dash-quick button { background:#ffffff; border:1px solid #e2e8e4; border-radius:12px; padding:11px 12px; font-weight:700; color:#2d8659; text-decoration:none; text-align:left; box-shadow:0 2px 12px #2d865910; cursor:pointer; transition:.14s; font-size:.98em; }
+        .dash-quick a:hover,
+        .dash-quick button:hover { box-shadow:0 3px 18px #2d865915; transform:translateY(-1px); }
+        .dash-quick a:active,
+        .dash-quick button:active { transform:translateY(0); box-shadow:0 1px 8px #2d86590d; }
+        .dash-quick .dash-cta-primary { background:#2d8659; color:#ffffff; border-color:#2d8659; text-align:center; }
         .dash-title { font-size: 1.18em; font-weight: 700; color: #2d8659; margin-bottom: 18px; }
         .dash-row { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 19px; }
         .dash-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 18px #2d865910; padding: 15px 15px 13px 15px; min-width: 0; flex: 1 1 137px; display: flex; flex-direction: column; align-items: flex-start; }
@@ -49,6 +61,61 @@ get_header();
         .plan-info { font-size: .98em; color: #777; margin-top: 3px; }
         @media (max-width: 490px) { .dash-row { flex-direction: column; gap: 8px; } }
     </style>
+
+<?php
+$current_user = wp_get_current_user();
+$restaurant   = null;
+$public_url   = home_url( '/restaurant/' );
+
+if ( $current_user instanceof WP_User && $current_user->ID ) {
+    $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $current_user );
+    if ( $filtered > 0 ) {
+        $candidate = get_post( $filtered );
+        if ( $candidate instanceof WP_Post && 'vc_restaurant' === $candidate->post_type ) {
+            $restaurant = $candidate;
+        }
+    }
+
+    if ( ! $restaurant ) {
+        $meta_id = (int) get_user_meta( $current_user->ID, 'vc_restaurant_id', true );
+        if ( $meta_id ) {
+            $candidate = get_post( $meta_id );
+            if ( $candidate instanceof WP_Post && 'vc_restaurant' === $candidate->post_type ) {
+                $restaurant = $candidate;
+            }
+        }
+    }
+
+    if ( ! $restaurant ) {
+        $q = new WP_Query([
+            'post_type'      => 'vc_restaurant',
+            'author'         => $current_user->ID,
+            'posts_per_page' => 1,
+            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'no_found_rows'  => true,
+        ]);
+
+        if ( $q->have_posts() ) {
+            $restaurant = $q->posts[0];
+        }
+
+        wp_reset_postdata();
+    }
+
+    if ( $restaurant ) {
+        $public_url = get_permalink( $restaurant );
+    }
+}
+?>
+
+    <div class="dash-quick">
+        <button type="button" class="dash-cta-primary" onclick="openOnboardingModal()">⚡ Configuração Rápida</button>
+        <a href="https://pedevem.com/configuracao-loja/">Editar dados</a>
+        <a href="https://pedevem.com/gestao-cardapio/">Gerenciar cardápio</a>
+        <a href="<?php echo esc_url( $public_url ); ?>" target="_blank" rel="noopener">Ver página pública</a>
+        <a href="https://pedevem.com/central-marketing/">Marketing</a>
+        <a href="https://pedevem.com/gestor-eventos/">Eventos</a>
+    </div>
 
     <div class="dash-title">Visão Geral da Loja</div>
 
@@ -120,6 +187,13 @@ get_header();
     </div>
 </div>
 <script>
+    function openOnboardingModal() {
+        var modal = document.getElementById('onboardModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
     let aberto = true;
     function toggleLojaStatus() {
         aberto = !aberto;
