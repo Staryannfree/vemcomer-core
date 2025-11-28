@@ -12,6 +12,12 @@ if (!defined('ABSPATH')) {
 
 $vc_marketplace_inline = defined('VC_MARKETPLACE_INLINE') && VC_MARKETPLACE_INLINE;
 
+require_once __DIR__ . '/helpers.php';
+
+$restaurant      = vc_marketplace_current_restaurant();
+$wizard_prefill   = vc_marketplace_collect_restaurant_data( $restaurant );
+$modal_visibility = $vc_wizard_inline ? 'none' : 'flex';
+
 wp_enqueue_style(
     'vc-marketplace-wizard-font',
     'https://fonts.googleapis.com/css?family=Montserrat:700,500&display=swap',
@@ -23,7 +29,7 @@ if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
     get_header();
 }
 ?>
-<div id="onboardModal">
+<div id="onboardModal" style="display: <?php echo esc_attr( $modal_visibility ); ?>;">
     <div class="onboard-wrap">
         <button class="onboard-close" onclick="fecharOnboarding()">×</button>
         <div class="onboard-content">
@@ -41,6 +47,7 @@ if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
 <style>
     body { background: #f5faf7; font-family: 'Montserrat', Arial, sans-serif; color: #232a2c; margin: 0; }
     #onboardModal { display:flex; align-items:center; justify-content:center; position:fixed; top:0;left:0;width:100vw;height:100vh;background:#0007;z-index:9999; }
+    body.onboard-locked { overflow: hidden; }
     .onboard-wrap { background:#fff; border-radius:18px; max-width:418px; width:97vw; box-shadow:0 12px 54px #2d865929; padding:0 0 24px 0; position:relative; }
     .onboard-close {position:absolute;right:14px;top:15px;background:none;border:none;font-size:1.34em;color:#bbb;cursor:pointer;}
     .onboard-content {padding:28px 22px 0 22px;}
@@ -76,13 +83,48 @@ if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
 
 <script>
   let step = 0, errorMsg = '';
-  const dados = {
+  const wizardPrefill = <?php echo wp_json_encode( $wizard_prefill ); ?>;
+  const dadosBase = {
     foto: '', nome:'', bairro:'', cidade:'', endereco:'',
     whatsapp:'', instagram:'', descricao:'', favbairro:false, reserva:false,
     horarios: {seg:"10:00-22:00", ter:"10:00-22:00", qua:"10:00-22:00", qui:"10:00-22:00", sex:"10:00-22:00", sab:"11:00-21:00", dom:""},
     metodos: {delivery:true, retirada:true, local:false, reserva:false},
     pagamentos: [],
     tipos: []
+  };
+  const dados = {
+    ...dadosBase,
+    ...wizardPrefill,
+    foto: wizardPrefill.logo || wizardPrefill.foto || dadosBase.foto,
+    nome: wizardPrefill.nome || dadosBase.nome,
+    bairro: wizardPrefill.bairro || dadosBase.bairro,
+    cidade: wizardPrefill.cidade || dadosBase.cidade,
+    endereco: wizardPrefill.endereco || dadosBase.endereco,
+    whatsapp: wizardPrefill.whatsapp || dadosBase.whatsapp,
+    instagram: wizardPrefill.instagram || dadosBase.instagram,
+    descricao: wizardPrefill.descricao || dadosBase.descricao,
+    favbairro: !!wizardPrefill.fav_bairro || !!wizardPrefill.favbairro,
+    reserva: typeof wizardPrefill.reserva !== 'undefined' ? !!wizardPrefill.reserva : !!(wizardPrefill.metodos && wizardPrefill.metodos.reserva),
+    metodos: {
+      ...dadosBase.metodos,
+      ...(wizardPrefill.metodos || {})
+    },
+    pagamentos: Array.isArray(wizardPrefill.pagamentos) ? wizardPrefill.pagamentos : dadosBase.pagamentos,
+    tipos: Array.isArray(wizardPrefill.tipos) ? wizardPrefill.tipos : dadosBase.tipos,
+    horarios: {
+      ...dadosBase.horarios,
+      ...(wizardPrefill.horarios ? Object.fromEntries(Object.entries(wizardPrefill.horarios).map(([k,v]) => {
+        if (!v) return [k, dadosBase.horarios[k] || ''];
+        const enabled = typeof v.enabled === 'undefined' ? true : !!v.enabled;
+        if (!enabled) return [k, ''];
+        if (typeof v === 'string') return [k, v];
+        if (v.ranges && v.ranges.length) {
+          const first = v.ranges[0];
+          return [k, `${first.open || ''}${first.open && first.close ? '-' : ''}${first.close || ''}`];
+        }
+        return [k, dadosBase.horarios[k] || ''];
+      })) : {})
+    }
   };
   const opcoespag = ['Dinheiro','Cartão','Pix','VR/VA','Mercado Pago'];
   const opcoestipos = ['Africana','Brasileira','Vegana','Japonesa','Lanches','Pizzaria','Doces','Sem Glúten','Árabe','Saladas','Bar','Pastelaria'];
@@ -249,7 +291,21 @@ if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
     if(step < steps.length-1){ step++; renderStep(); }
   }
   function onPrev(){ if(step>0){ step--; renderStep(); } }
-  function fecharOnboarding(){ document.getElementById('onboardModal').style.display='none'; }
+  function fecharOnboarding(){
+    var modal = document.getElementById('onboardModal');
+    if (modal) {
+      modal.style.display='none';
+    }
+    document.body.classList.remove('onboard-locked');
+  }
+  function abrirOnboarding(){
+    var modal = document.getElementById('onboardModal');
+    if (modal) {
+      modal.style.display='flex';
+      document.body.classList.add('onboard-locked');
+    }
+    renderStep();
+  }
 
   function renderStep(){
     const current = steps[step];
@@ -262,7 +318,12 @@ if (!$vc_wizard_inline && ! $vc_marketplace_inline) {
     document.getElementById('onBtnNext').innerText = step===steps.length-1 ? 'Finalizar' : 'Avançar';
     document.getElementById('onBar').style.width = `${((step+1)/steps.length)*100}%`;
   }
-  document.addEventListener('DOMContentLoaded', renderStep);
+  document.addEventListener('DOMContentLoaded', function(){
+    renderStep();
+    if (document.getElementById('onboardModal') && document.getElementById('onboardModal').style.display !== 'none') {
+      document.body.classList.add('onboard-locked');
+    }
+  });
 </script>
 <?php
 if (!$vc_wizard_inline && ! $vc_marketplace_inline) {

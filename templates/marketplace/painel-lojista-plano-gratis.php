@@ -156,7 +156,7 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
 ?>
 
     <div class="dash-quick">
-        <a class="dash-cta-primary" href="<?php echo esc_url( $quick_links['onboarding'] ); ?>">⚡ Configuração Rápida</a>
+        <button type="button" class="dash-cta-primary" onclick="vcOpenOnboardingWizard()">⚡ Configuração Rápida</button>
         <a href="<?php echo esc_url( $quick_links['config'] ); ?>">Editar dados</a>
         <a href="<?php echo esc_url( $quick_links['menu'] ); ?>">Gerenciar cardápio</a>
         <a href="<?php echo esc_url( $public_url ); ?>" target="_blank" rel="noopener">Ver página pública</a>
@@ -234,13 +234,6 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
     </div>
 </div>
 <script>
-    function openOnboardingModal() {
-        var modal = document.getElementById('onboardModal');
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-    }
-
     let aberto = <?php echo $is_open ? 'true' : 'false'; ?>;
     function toggleLojaStatus() {
         aberto = !aberto;
@@ -250,6 +243,14 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
         statusTxt.textContent = aberto ? 'ABERTO' : 'FECHADO';
         statusTxt.className = aberto ? 'card-status st-aberto' : 'card-status st-fechado';
         statusBtn.textContent = aberto ? 'Fechar Agora' : 'Abrir Agora';
+    }
+
+    function vcOpenOnboardingWizard() {
+        if (typeof window.abrirOnboarding === 'function') {
+            window.abrirOnboarding();
+        } else {
+            window.location.href = '<?php echo esc_js( $quick_links['onboarding'] ); ?>';
+        }
     }
 </script>
 <?php
