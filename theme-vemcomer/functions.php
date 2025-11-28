@@ -1710,7 +1710,7 @@ function vemcomer_redirect_lojista_after_login( $redirect_to, $request, $user ) 
             return add_query_arg( 'onboarding', '1', get_permalink( $panel_page ) );
         }
 
-        return home_url( '/painel-do-restaurante-vemcomer/' );
+        return home_url( '/painel-restaurante/' );
     }
 
     return $redirect_to;
@@ -1735,7 +1735,7 @@ function vemcomer_block_admin_access_for_restaurant_owners() {
         if ( is_admin() ) {
             // Redirecionar para o painel do restaurante
             $panel_page = vemcomer_get_marketplace_template_page( 'templates/marketplace/painel-lojista-plano-gratis.php' );
-            $panel_url  = $panel_page ? get_permalink( $panel_page ) : home_url( '/painel-do-restaurante-vemcomer/' );
+            $panel_url  = $panel_page ? get_permalink( $panel_page ) : home_url( '/painel-restaurante/' );
 
             wp_redirect( add_query_arg( 'onboarding', '1', $panel_url ) );
             exit;
