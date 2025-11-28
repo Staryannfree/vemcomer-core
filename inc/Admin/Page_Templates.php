@@ -126,7 +126,7 @@ class Page_Templates {
             }
         }
 
-        return $templates;
+        return self::dedupe_templates( $templates );
     }
     
     /**
@@ -923,10 +923,65 @@ class Page_Templates {
         
         return $page_id;
     }
-    
+
+    /**
+     * Remove templates duplicados com base no slug e no shortcode principal.
+     * Mantém apenas a primeira ocorrência para evitar itens repetidos no importador.
+     *
+     * @param array $templates Lista completa de templates.
+     *
+     * @return array Lista deduplicada.
+     */
+    private static function dedupe_templates( array $templates ): array {
+        $deduped         = [];
+        $seen_slugs      = [];
+        $seen_shortcodes = [];
+
+        foreach ( $templates as $key => $template ) {
+            $slug = $template['slug'] ?? '';
+
+            if ( $slug && isset( $seen_slugs[ $slug ] ) ) {
+                continue;
+            }
+
+            $shortcode = self::extract_shortcode_from_content( $template['content'] ?? '' );
+
+            if ( $shortcode && isset( $seen_shortcodes[ $shortcode ] ) ) {
+                continue;
+            }
+
+            if ( $slug ) {
+                $seen_slugs[ $slug ] = true;
+            }
+
+            if ( $shortcode ) {
+                $seen_shortcodes[ $shortcode ] = true;
+            }
+
+            $deduped[ $key ] = $template;
+        }
+
+        return $deduped;
+    }
+
+    /**
+     * Extrai o primeiro shortcode encontrado em um bloco de conteúdo simples.
+     *
+     * @param string $content Conteúdo a ser inspecionado.
+     *
+     * @return string Nome do shortcode ou string vazia.
+     */
+    private static function extract_shortcode_from_content( string $content ): string {
+        if ( preg_match( '/\[([a-z0-9_\-]+)\]/i', $content, $matches ) ) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
     /**
      * Importa múltiplas páginas de uma vez
-     * 
+     *
      * @param array $template_keys Array de chaves de templates para importar
      * @return array Array com resultados (sucesso/erro) para cada template
      */
