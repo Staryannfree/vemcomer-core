@@ -647,8 +647,8 @@ function renderStoryProgressBars(count) {
     if (!container) return;
     
     container.innerHTML = Array(count).fill(0).map((_, i) => `
-        <div class="story-progress-bar">
-            <div class="story-progress-fill" id="storyProgress${i}"></div>
+        <div class="progress-bar story-progress-bar">
+            <div class="progress-fill story-progress-fill" id="storyProgress${i}"></div>
         </div>
     `).join('');
 }
