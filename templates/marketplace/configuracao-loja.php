@@ -27,7 +27,11 @@ vc_marketplace_render_static_template('configuracao-loja.html');
   window.vcConfigPrefill = <?php echo wp_json_encode( $config_prefill ); ?>;
 
   document.addEventListener('DOMContentLoaded', function(){
-    const container = document.querySelector('.container');
+    const heading = Array.from(document.querySelectorAll('.container h1')).find(function(node){
+      return node.textContent && node.textContent.toLowerCase().includes('configurações da loja');
+    });
+    const container = heading ? heading.closest('.container') : null;
+
     if (container) {
       const saveBtn = container.querySelector('.btn-save');
       const extraHtml = `
@@ -90,10 +94,9 @@ vc_marketplace_render_static_template('configuracao-loja.html');
           <textarea id="vcFaq" placeholder="FAQ (Pergunta | Resposta por linha)"></textarea>
         </section>
       `;
-      if (saveBtn) {
-        saveBtn.insertAdjacentHTML('beforebegin', extraHtml);
-      } else {
-        container.insertAdjacentHTML('beforeend', extraHtml);
+      const insertTarget = saveBtn ? saveBtn : container.lastElementChild;
+      if (insertTarget) {
+        insertTarget.insertAdjacentHTML('beforebegin', extraHtml);
       }
     }
 
