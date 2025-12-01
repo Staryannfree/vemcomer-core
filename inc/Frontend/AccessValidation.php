@@ -331,8 +331,26 @@ class AccessValidation {
             exit;
         }
 
-        // Vincula o usuário ao restaurante
+        // Vincula o usuário ao restaurante (lado do usuário)
         update_user_meta( $user_id, 'vc_restaurant_id', $restaurant->ID );
+
+        // Garante que o restaurante também reconheça este usuário como dono:
+        // - define o autor do post como o lojista recém-criado
+        // - dispara um hook para extensões futuras
+        wp_update_post(
+            [
+                'ID'          => $restaurant->ID,
+                'post_author' => (int) $user_id,
+            ]
+        );
+
+        /**
+         * Dispara quando um usuário lojista é vinculado a um restaurante.
+         *
+         * @param int $restaurant_id ID do restaurante.
+         * @param int $user_id       ID do usuário lojista.
+         */
+        do_action( 'vemcomer/restaurant_owner_linked', (int) $restaurant->ID, (int) $user_id );
 
         // Concede permissões para gerenciar o próprio restaurante e o cardápio
         $this->grant_restaurant_caps( (int) $user_id );

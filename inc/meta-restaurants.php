@@ -130,6 +130,57 @@ function vc_render_restaurant_metabox( $post ) {
     foreach ( VC_META_RESTAURANT_FIELDS as $key => $meta_key ) {
         $values[ $key ] = get_post_meta( $post->ID, $meta_key, true );
     }
+
+    // Categorias de cozinha (vc_cuisine): prepara lista para seleção principal + secundárias
+    $cuisine_terms = get_terms(
+        [
+            'taxonomy'   => 'vc_cuisine',
+            'hide_empty' => false,
+        ]
+    );
+
+    $primary_cuisine   = (int) get_post_meta( $post->ID, '_vc_primary_cuisine', true );
+    $secondary_raw     = get_post_meta( $post->ID, '_vc_secondary_cuisines', true );
+    $secondary_cuisines = [];
+    if ( is_string( $secondary_raw ) && $secondary_raw !== '' ) {
+        $decoded = json_decode( $secondary_raw, true );
+        if ( is_array( $decoded ) ) {
+            $secondary_cuisines = array_map( 'intval', $decoded );
+        }
+    }
+
+    // Fallback: se não houver meta, usa termos atuais da taxonomia
+    if ( ! $primary_cuisine ) {
+        $current_term_ids = wp_get_post_terms(
+            $post->ID,
+            'vc_cuisine',
+            [
+                'fields' => 'ids',
+            ]
+        );
+        if ( ! is_wp_error( $current_term_ids ) && ! empty( $current_term_ids ) ) {
+            $primary_cuisine   = (int) array_shift( $current_term_ids );
+            $secondary_cuisines = array_map( 'intval', $current_term_ids );
+        }
+    }
+
+    // Organiza termos em grupos (pais = termos "grupo-*")
+    $cuisine_groups = [];
+    if ( ! is_wp_error( $cuisine_terms ) ) {
+        foreach ( $cuisine_terms as $term ) {
+            if ( 0 === $term->parent && str_starts_with( (string) $term->slug, 'grupo-' ) ) {
+                $cuisine_groups[ $term->term_id ] = [
+                    'label' => $term->name,
+                    'items' => [],
+                ];
+            }
+        }
+        foreach ( $cuisine_terms as $term ) {
+            if ( $term->parent && isset( $cuisine_groups[ $term->parent ] ) ) {
+                $cuisine_groups[ $term->parent ]['items'][] = $term;
+            }
+        }
+    }
     ?>
     <table class="form-table">
         <tr>
@@ -156,6 +207,46 @@ function vc_render_restaurant_metabox( $post ) {
             <th><label for="vc_restaurant_featured_badge"><?php echo esc_html__( 'Selo Destaque', 'vemcomer' ); ?></label></th>
             <td>
                 <label><input type="checkbox" id="vc_restaurant_featured_badge" name="vc_restaurant_featured_badge" value="1" <?php checked( ! empty( $values['featured_badge'] ) ); ?> /> <?php echo esc_html__( 'Destacar restaurante no perfil', 'vemcomer' ); ?></label>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_primary_cuisine"><?php echo esc_html__( 'Categoria principal', 'vemcomer' ); ?></label></th>
+            <td>
+                <select id="vc_primary_cuisine" name="vc_primary_cuisine" class="regular-text">
+                    <option value=""><?php echo esc_html__( 'Selecione a categoria principal', 'vemcomer' ); ?></option>
+                    <?php foreach ( $cuisine_groups as $group ) : ?>
+                        <?php if ( empty( $group['items'] ) ) { continue; } ?>
+                        <optgroup label="<?php echo esc_attr( $group['label'] ); ?>">
+                            <?php foreach ( $group['items'] as $term ) : ?>
+                                <option value="<?php echo esc_attr( $term->term_id ); ?>" <?php selected( $primary_cuisine, $term->term_id ); ?>>
+                                    <?php echo esc_html( $term->name ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php echo esc_html__( 'Usada como categoria principal do restaurante (aparece primeiro nos filtros).', 'vemcomer' ); ?></p>
+            </td>
+        </tr>
+        <tr>
+            <th><label for="vc_secondary_cuisines"><?php echo esc_html__( 'Categorias secundárias (até 3)', 'vemcomer' ); ?></label></th>
+            <td>
+                <select id="vc_secondary_cuisines" name="vc_secondary_cuisines[]" multiple="multiple" size="8" style="min-width: 260px;">
+                    <?php foreach ( $cuisine_groups as $group ) : ?>
+                        <?php if ( empty( $group['items'] ) ) { continue; } ?>
+                        <optgroup label="<?php echo esc_attr( $group['label'] ); ?>">
+                            <?php foreach ( $group['items'] as $term ) : ?>
+                                <?php
+                                $selected = in_array( (int) $term->term_id, $secondary_cuisines, true );
+                                ?>
+                                <option value="<?php echo esc_attr( $term->term_id ); ?>" <?php selected( $selected, true ); ?>>
+                                    <?php echo esc_html( $term->name ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </optgroup>
+                    <?php endforeach; ?>
+                </select>
+                <p class="description"><?php echo esc_html__( 'Segure CTRL (Windows) ou ⌘ (Mac) para selecionar até 3 categorias extras. Deixe vazio se não precisar.', 'vemcomer' ); ?></p>
             </td>
         </tr>
         <tr>
@@ -501,6 +592,37 @@ add_action( 'save_post_vc_restaurant', function( $post_id ) {
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['whatsapp'], sanitize_text_field( $_POST['vc_restaurant_whatsapp'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['site'], esc_url_raw( $_POST['vc_restaurant_site'] ?? '' ) );
     update_post_meta( $post_id, VC_META_RESTAURANT_FIELDS['open_hours'], wp_kses_post( $_POST['vc_restaurant_open_hours'] ?? '' ) );
+
+    // Salva categoria principal e secundárias (vc_cuisine)
+    $primary_cuisine = isset( $_POST['vc_primary_cuisine'] ) ? (int) $_POST['vc_primary_cuisine'] : 0;
+    $secondary_cuisines = [];
+    if ( isset( $_POST['vc_secondary_cuisines'] ) && is_array( $_POST['vc_secondary_cuisines'] ) ) {
+        $secondary_cuisines = array_map( 'intval', (array) $_POST['vc_secondary_cuisines'] );
+    }
+
+    // Limita secundárias a no máximo 3
+    $secondary_cuisines = array_slice( array_values( array_unique( array_filter( $secondary_cuisines ) ) ), 0, 3 );
+
+    update_post_meta( $post_id, '_vc_primary_cuisine', $primary_cuisine ?: '' );
+    update_post_meta( $post_id, '_vc_secondary_cuisines', wp_json_encode( $secondary_cuisines ) );
+
+    // Sincroniza com a taxonomia vc_cuisine (principal + secundárias)
+    $all_terms = [];
+    if ( $primary_cuisine ) {
+        $all_terms[] = $primary_cuisine;
+    }
+    if ( $secondary_cuisines ) {
+        $all_terms = array_merge( $all_terms, $secondary_cuisines );
+    }
+    $all_terms = array_values( array_unique( array_filter( $all_terms ) ) );
+
+    if ( taxonomy_exists( 'vc_cuisine' ) ) {
+        if ( ! empty( $all_terms ) ) {
+            wp_set_object_terms( $post_id, $all_terms, 'vc_cuisine', false );
+        } else {
+            // Se nada selecionado, não força termos — mantém existente
+        }
+    }
 
     // Salvar horários estruturados (JSON)
     $schedule_data = isset( $_POST['vc_schedule'] ) && is_array( $_POST['vc_schedule'] ) ? $_POST['vc_schedule'] : [];

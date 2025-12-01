@@ -245,6 +245,11 @@ add_action( 'plugins_loaded', function () {
             update_option( 'vemcomer_plans_seeded', true );
         }
     }
+
+    // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez
+    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) ) {
+        \VC\Utils\Cuisine_Seeder::seed();
+    }
 } );
 
 // --- Bootstrap do módulo Restaurantes ---

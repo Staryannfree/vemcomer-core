@@ -165,9 +165,47 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
         $data['observations'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['observations'], true );
         $data['faq']          = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['faq'], true );
 
-        $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'names' ] );
+        // Cozinhas / categorias
+        $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'all' ] );
         if ( ! is_wp_error( $cuisine_terms ) && $cuisine_terms ) {
-            $data['tipos'] = array_values( $cuisine_terms );
+            $data['tipos'] = array_values( array_map( function( $t ) {
+                return $t->name;
+            }, $cuisine_terms ) );
+        }
+
+        // Categoria principal e secundárias (por ID) + lista completa para selects
+        $primary_cuisine   = (int) get_post_meta( $restaurant->ID, '_vc_primary_cuisine', true );
+        $secondary_raw     = get_post_meta( $restaurant->ID, '_vc_secondary_cuisines', true );
+        $secondary_cuisines = [];
+        if ( is_string( $secondary_raw ) && '' !== $secondary_raw ) {
+            $decoded = json_decode( $secondary_raw, true );
+            if ( is_array( $decoded ) ) {
+                $secondary_cuisines = array_map( 'intval', $decoded );
+            }
+        }
+
+        // Se não houver meta, infere a partir da taxonomia
+        if ( ! $primary_cuisine && ! empty( $cuisine_terms ) && ! is_wp_error( $cuisine_terms ) ) {
+            $ids = array_map( fn( $t ) => (int) $t->term_id, $cuisine_terms );
+            if ( $ids ) {
+                $primary_cuisine = (int) array_shift( $ids );
+                $secondary_cuisines = array_slice( $ids, 0, 3 );
+            }
+        }
+
+        $data['primary_cuisine']    = $primary_cuisine ?: null;
+        $data['secondary_cuisines'] = $secondary_cuisines;
+
+        // Lista de termos completos para o painel (id + name)
+        if ( ! is_wp_error( $cuisine_terms ) && $cuisine_terms ) {
+            $data['cuisine_terms'] = array_values( array_map( function( $t ) {
+                return [
+                    'id'   => (int) $t->term_id,
+                    'name' => $t->name,
+                ];
+            }, $cuisine_terms ) );
+        } else {
+            $data['cuisine_terms'] = [];
         }
 
         $filters_raw = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['menu_filters'], true );

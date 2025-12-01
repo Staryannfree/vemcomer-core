@@ -36,7 +36,23 @@ vc_marketplace_render_static_template('configuracao-loja.html');
 
     if (container) {
       const saveBtn = container.querySelector('.btn-save');
+      const firstSection = container.querySelector('section');
       const extraHtml = `
+        <section class="vc-extra-section">
+          <h2>Categoria do Perfil</h2>
+          <div class="input-row">
+            <select id="vcPrimaryCuisine" style="flex:1;">
+              <option value="">Selecione a categoria principal</option>
+            </select>
+          </div>
+          <div class="input-row">
+            <select id="vcSecondaryCuisines" multiple style="flex:1; min-height: 80px;">
+            </select>
+          </div>
+          <p style="font-size: 0.82rem; color: #6b7672; margin-top: 4px;">
+            Escolha 1 categoria principal e até 3 categorias secundárias que melhor descrevem seu estabelecimento.
+          </p>
+        </section>
         <section class="vc-extra-section">
           <h2>Contato e Documento</h2>
           <div class="input-row"><input type="text" id="vcCnpj" placeholder="CNPJ"></div>
@@ -96,9 +112,12 @@ vc_marketplace_render_static_template('configuracao-loja.html');
           <textarea id="vcFaq" placeholder="FAQ (Pergunta | Resposta por linha)"></textarea>
         </section>
       `;
-      const insertTarget = saveBtn ? saveBtn : container.lastElementChild;
-      if (insertTarget) {
-        insertTarget.insertAdjacentHTML('beforebegin', extraHtml);
+      if (firstSection) {
+        firstSection.insertAdjacentHTML('afterend', extraHtml);
+      } else if (saveBtn) {
+        saveBtn.insertAdjacentHTML('beforebegin', extraHtml);
+      } else {
+        container.insertAdjacentHTML('beforeend', extraHtml);
       }
     }
 
@@ -138,6 +157,29 @@ vc_marketplace_render_static_template('configuracao-loja.html');
     setValue('vcPlanName', data.plan_name);
     setValue('vcPlanLimit', data.plan_limit);
     setValue('vcPlanUsed', data.plan_used);
+
+    // Preencher categorias (primary_cuisine + secondary_cuisines)
+    if (Array.isArray(data.cuisine_terms) && data.cuisine_terms.length) {
+      const primarySelect = document.getElementById('vcPrimaryCuisine');
+      const secondarySelect = document.getElementById('vcSecondaryCuisines');
+      data.cuisine_terms.forEach(function(term){
+        const opt1 = document.createElement('option');
+        opt1.value = term.id;
+        opt1.textContent = term.name;
+        if (data.primary_cuisine && term.id === data.primary_cuisine) {
+          opt1.selected = true;
+        }
+        if (primarySelect) primarySelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = term.id;
+        opt2.textContent = term.name;
+        if (Array.isArray(data.secondary_cuisines) && data.secondary_cuisines.includes(term.id)) {
+          opt2.selected = true;
+        }
+        if (secondarySelect) secondarySelect.appendChild(opt2);
+      });
+    }
 
     const destaqueBadge = document.querySelector('.badge-selo');
     if (destaqueBadge && data.destaque) {
@@ -336,6 +378,16 @@ vc_marketplace_render_static_template('configuracao-loja.html');
         reservation_enabled: !!document.getElementById('switchReserva')?.checked,
         reservation_message: reservaMsg ? reservaMsg.value : '',
         holidays: collectLines('vcHolidays'),
+        primary_cuisine: (function(){
+          const el = document.getElementById('vcPrimaryCuisine');
+          return el && el.value ? parseInt(el.value, 10) : null;
+        })(),
+        secondary_cuisines: (function(){
+          const el = document.getElementById('vcSecondaryCuisines');
+          if (!el) return [];
+          const selected = Array.from(el.selectedOptions || []);
+          return selected.slice(0, 3).map(function(opt){ return parseInt(opt.value, 10); }).filter(function(v){ return !isNaN(v); });
+        })(),
         shipping,
         schedule: horarios,
         logo: (document.getElementById('logo-preview')?.src) || '',

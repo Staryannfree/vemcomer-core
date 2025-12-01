@@ -28,8 +28,39 @@ class Merchant_Settings_Controller {
     }
 
     public function can_edit(): bool {
+        // Tenta resolver o restaurante do usuário logado
         $restaurant = $this->get_restaurant_for_user();
-        return $restaurant ? current_user_can( 'edit_post', $restaurant->ID ) : false;
+
+        // Admin sempre pode editar (útil para testes e suporte)
+        if ( current_user_can( 'manage_options' ) ) {
+            return true;
+        }
+
+        if ( ! $restaurant instanceof \WP_Post ) {
+            // Sem restaurante vinculado: bloqueia para lojista / usuários comuns
+            return false;
+        }
+
+        $user_id = get_current_user_id();
+        if ( ! $user_id ) {
+            return false;
+        }
+
+        // Dono do restaurante (autor do post) sempre pode editar
+        if ( (int) $restaurant->post_author === (int) $user_id ) {
+            return true;
+        }
+
+        // Verifica capabilities mapeadas pelo CPT (edit_post) e caps customizadas
+        if ( current_user_can( 'edit_post', $restaurant->ID ) ) {
+            return true;
+        }
+
+        if ( current_user_can( 'edit_vc_restaurant', $restaurant->ID ) ) {
+            return true;
+        }
+
+        return false;
     }
 
     public function update_settings( WP_REST_Request $request ) {
@@ -48,6 +79,14 @@ class Merchant_Settings_Controller {
     }
 
     private function get_restaurant_for_user() {
+        // Se o helper global do marketplace existir, reutiliza a mesma lógica
+        if ( function_exists( '\\vc_marketplace_current_restaurant' ) ) {
+            $candidate = \vc_marketplace_current_restaurant();
+            if ( $candidate instanceof \WP_Post && 'vc_restaurant' === $candidate->post_type ) {
+                return $candidate;
+            }
+        }
+
         $user = wp_get_current_user();
 
         if ( ! ( $user instanceof \WP_User ) || 0 === $user->ID ) {
@@ -234,6 +273,33 @@ class Merchant_Settings_Controller {
 
         if ( isset( $payload['schedule'] ) && is_array( $payload['schedule'] ) ) {
             $this->persist_schedule( $restaurant_id, $payload['schedule'] );
+        }
+
+        // Categoria principal e secundárias (vc_cuisine)
+        if ( taxonomy_exists( 'vc_cuisine' ) ) {
+            $primary   = isset( $payload['primary_cuisine'] ) ? (int) $payload['primary_cuisine'] : 0;
+            $secondary = [];
+            if ( isset( $payload['secondary_cuisines'] ) && is_array( $payload['secondary_cuisines'] ) ) {
+                $secondary = array_map( 'intval', $payload['secondary_cuisines'] );
+            }
+
+            $secondary = array_slice( array_values( array_unique( array_filter( $secondary ) ) ), 0, 3 );
+
+            update_post_meta( $restaurant_id, '_vc_primary_cuisine', $primary ?: '' );
+            update_post_meta( $restaurant_id, '_vc_secondary_cuisines', wp_json_encode( $secondary ) );
+
+            $terms = [];
+            if ( $primary ) {
+                $terms[] = $primary;
+            }
+            if ( $secondary ) {
+                $terms = array_merge( $terms, $secondary );
+            }
+            $terms = array_values( array_unique( array_filter( $terms ) ) );
+
+            if ( ! empty( $terms ) ) {
+                wp_set_object_terms( $restaurant_id, $terms, 'vc_cuisine', false );
+            }
         }
     }
 
