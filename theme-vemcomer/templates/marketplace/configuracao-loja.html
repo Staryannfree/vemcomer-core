@@ -145,6 +145,40 @@
     .slider:before {position:absolute;content:"";height:17px;width:17px;left:3px;bottom:3px;background:#2d8659;border-radius:50%;transition:.23s;}
     .switch input:checked + .slider {background:#45c676;}
     .switch input:checked + .slider:before {transform:translateX(21px);}
+    /* Tabela de horários */
+    .vc-hours-table {
+      border:1px solid #cdf9e0;border-radius:8px;overflow:hidden;
+    }
+    .vc-hours-table td, .vc-hours-table th {
+      border-bottom:1px solid #eaf8f1;
+    }
+    .vc-hours-table tbody tr:last-child td {
+      border-bottom:none;
+    }
+    .vc-hours-table tbody tr:hover {
+      background:#f9f9f9;
+    }
+    .vc-shortcut-btn {
+      background:#fff;border:1.5px solid var(--primary);color:var(--primary);
+      padding:8px 14px;border-radius:8px;font-weight:600;font-size:0.9em;cursor:pointer;
+      transition:all 0.2s;white-space:nowrap;
+    }
+    .vc-shortcut-btn:hover {
+      background:var(--primary-light);transform:translateY(-1px);
+    }
+    .vc-holiday-chip {
+      display:inline-flex;align-items:center;gap:8px;background:var(--primary-light);
+      color:var(--primary);padding:6px 12px;border-radius:20px;font-size:0.9em;font-weight:600;
+      border:1px solid #cdf9e0;
+    }
+    .vc-holiday-chip-remove {
+      background:var(--danger);color:#fff;border:none;width:20px;height:20px;
+      border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;
+      justify-content:center;font-weight:700;line-height:1;padding:0;
+    }
+    .vc-holiday-chip-remove:hover {
+      background:#d43f3f;
+    }
     /* Horários */
     .horarios-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px 32px;

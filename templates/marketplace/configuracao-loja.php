@@ -152,8 +152,86 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
         </section>
         <section class="vc-extra-section">
           <h2>Horários e Feriados</h2>
-          <textarea id="vcHorarioLegado" placeholder="Horário de funcionamento (texto livre - legado)"></textarea>
-          <textarea id="vcHolidays" placeholder="Feriados (YYYY-MM-DD por linha)"></textarea>
+          
+          <!-- Horário de Funcionamento -->
+          <div style="margin-bottom:30px;">
+            <h3 style="font-size:1.05em;font-weight:700;color:var(--primary);margin-bottom:8px;">Horário de funcionamento</h3>
+            <p style="font-size:0.9em;color:#6b7672;margin-bottom:16px;">Defina em quais dias e horários sua loja aceita pedidos. Você pode deixar algum dia fechado se quiser.</p>
+            
+            <!-- Botões de atalho -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <button type="button" class="vc-shortcut-btn" data-shortcut="comercial">⏱ Usar horário comercial (seg–sex, 09:00–18:00)</button>
+              <button type="button" class="vc-shortcut-btn" data-shortcut="jantar">🌙 Só jantar (seg–dom, 18:00–23:00)</button>
+              <button type="button" class="vc-shortcut-btn" data-shortcut="24h">🕛 24 horas (seg–dom, 00:00–23:59)</button>
+            </div>
+            
+            <!-- Checkbox mesmo horário -->
+            <div style="margin-bottom:12px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="vcSameHoursAllDays" style="width:18px;height:18px;cursor:pointer;">
+                <span style="font-weight:600;color:var(--primary);">Mesmo horário todos os dias</span>
+              </label>
+            </div>
+            
+            <!-- Tabela de horários -->
+            <div style="overflow-x:auto;margin-bottom:16px;">
+              <table class="vc-hours-table" style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:var(--primary-light);">
+                    <th style="padding:10px;text-align:left;font-weight:700;color:var(--primary);font-size:0.9em;">Dia</th>
+                    <th style="padding:10px;text-align:center;font-weight:700;color:var(--primary);font-size:0.9em;">Abre às</th>
+                    <th style="padding:10px;text-align:center;font-weight:700;color:var(--primary);font-size:0.9em;">Fecha às</th>
+                    <th style="padding:10px;text-align:center;font-weight:700;color:var(--primary);font-size:0.9em;">Fechado</th>
+                    <th style="padding:10px;text-align:center;font-weight:700;color:var(--primary);font-size:0.9em;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="vcHoursTableBody">
+                  <!-- Linhas serão inseridas via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Configurações avançadas (colapsável) -->
+            <details style="margin-top:16px;">
+              <summary style="cursor:pointer;font-weight:600;color:var(--primary);padding:8px;background:var(--primary-light);border-radius:8px;">Configurações avançadas ▾</summary>
+              <div style="padding:12px;background:#f9f9f9;border-radius:8px;margin-top:8px;">
+                <textarea id="vcHorarioLegado" placeholder="Horário de funcionamento (texto livre - legado)" style="width:100%;min-height:80px;margin-top:8px;"></textarea>
+                <p style="font-size:0.85em;color:#6b7672;margin-top:4px;">Use apenas se precisar de regras especiais que não cabem na tabela acima.</p>
+              </div>
+            </details>
+          </div>
+          
+          <!-- Feriados e Dias Fechados -->
+          <div style="margin-top:30px;padding-top:20px;border-top:2px solid var(--primary-light);">
+            <h3 style="font-size:1.05em;font-weight:700;color:var(--primary);margin-bottom:8px;">Feriados e dias fechados</h3>
+            <p style="font-size:0.9em;color:#6b7672;margin-bottom:16px;">Selecione os dias em que sua loja ficará fechada, além dos domingos (se for o caso).</p>
+            
+            <!-- Toggle feriados nacionais -->
+            <div style="margin-bottom:16px;">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <input type="checkbox" id="vcAutoCloseHolidays" style="width:18px;height:18px;cursor:pointer;">
+                <span style="font-weight:600;color:var(--primary);">Fechar minha loja nos feriados nacionais automaticamente</span>
+              </label>
+            </div>
+            
+            <!-- Adicionar feriado personalizado -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+              <div style="flex:1;min-width:200px;">
+                <label style="display:block;font-weight:600;color:var(--primary);font-size:0.9em;margin-bottom:4px;">Adicionar dia fechado</label>
+                <input type="date" id="vcHolidayDate" style="width:100%;padding:10px;border-radius:8px;border:1.2px solid #cdf9e0;">
+              </div>
+              <div style="flex:1;min-width:200px;">
+                <label style="display:block;font-weight:600;color:var(--primary);font-size:0.9em;margin-bottom:4px;">Descrição (opcional)</label>
+                <input type="text" id="vcHolidayDesc" placeholder="Ex: Aniversário da cidade" style="width:100%;padding:10px;border-radius:8px;border:1.2px solid #cdf9e0;">
+              </div>
+              <button type="button" id="vcAddHolidayBtn" class="vc-btn vc-btn--primary" style="padding:10px 20px;white-space:nowrap;">Adicionar</button>
+            </div>
+            
+            <!-- Lista de feriados adicionados -->
+            <div id="vcHolidaysList" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;">
+              <!-- Chips serão inseridos via JavaScript -->
+            </div>
+          </div>
         </section>
         <section class="vc-extra-section">
           <h2>Experiência do Perfil</h2>
@@ -255,6 +333,272 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
       });
     }
     setValue('vcHorarioLegado', data.horario_legado);
+    
+    // Sistema de Horários e Feriados
+    function initHoursAndHolidays(data) {
+      const days = [
+        { key: 'seg', name: 'Segunda', short: 'Seg' },
+        { key: 'ter', name: 'Terça', short: 'Ter' },
+        { key: 'qua', name: 'Quarta', short: 'Qua' },
+        { key: 'qui', name: 'Quinta', short: 'Qui' },
+        { key: 'sex', name: 'Sexta', short: 'Sex' },
+        { key: 'sab', name: 'Sábado', short: 'Sáb' },
+        { key: 'dom', name: 'Domingo', short: 'Dom' }
+      ];
+      
+      const tableBody = document.getElementById('vcHoursTableBody');
+      if (!tableBody) return;
+      
+      // Parse horários existentes
+      const existingHours = data.horarios || {};
+      
+      // Renderizar tabela
+      tableBody.innerHTML = '';
+      days.forEach(function(day) {
+        const dayData = existingHours[day.key] || { enabled: false, ranges: [{ open: '08:00', close: '18:00' }] };
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td style="padding:10px;font-weight:600;color:var(--primary);">${day.name}</td>
+          <td style="padding:10px;text-align:center;">
+            <input type="time" class="vc-hour-open" data-day="${day.key}" value="${dayData.ranges && dayData.ranges[0] ? dayData.ranges[0].open : '08:00'}" ${!dayData.enabled ? 'disabled' : ''} style="width:100%;max-width:120px;padding:6px;border-radius:6px;border:1.2px solid #cdf9e0;">
+          </td>
+          <td style="padding:10px;text-align:center;">
+            <input type="time" class="vc-hour-close" data-day="${day.key}" value="${dayData.ranges && dayData.ranges[0] ? dayData.ranges[0].close : '18:00'}" ${!dayData.enabled ? 'disabled' : ''} style="width:100%;max-width:120px;padding:6px;border-radius:6px;border:1.2px solid #cdf9e0;">
+          </td>
+          <td style="padding:10px;text-align:center;">
+            <input type="checkbox" class="vc-day-closed" data-day="${day.key}" ${!dayData.enabled ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;">
+          </td>
+          <td style="padding:10px;text-align:center;">
+            <button type="button" class="vc-copy-day-btn" data-day="${day.key}" style="background:var(--primary);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:0.85em;cursor:pointer;font-weight:600;">Copiar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+      
+      // Event listeners para checkboxes "fechado"
+      document.querySelectorAll('.vc-day-closed').forEach(function(cb) {
+        cb.addEventListener('change', function() {
+          const day = this.dataset.day;
+          const openInput = document.querySelector(`.vc-hour-open[data-day="${day}"]`);
+          const closeInput = document.querySelector(`.vc-hour-close[data-day="${day}"]`);
+          openInput.disabled = this.checked;
+          closeInput.disabled = this.checked;
+          if (this.checked) {
+            openInput.value = '';
+            closeInput.value = '';
+          }
+        });
+      });
+      
+      // Event listeners para botões "Copiar"
+      document.querySelectorAll('.vc-copy-day-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const sourceDay = this.dataset.day;
+          const sourceOpen = document.querySelector(`.vc-hour-open[data-day="${sourceDay}"]`).value;
+          const sourceClose = document.querySelector(`.vc-hour-close[data-day="${sourceDay}"]`).value;
+          const sourceClosed = document.querySelector(`.vc-day-closed[data-day="${sourceDay}"]`).checked;
+          
+          days.forEach(function(day) {
+            if (day.key === sourceDay) return;
+            const openInput = document.querySelector(`.vc-hour-open[data-day="${day.key}"]`);
+            const closeInput = document.querySelector(`.vc-hour-close[data-day="${day.key}"]`);
+            const closedCheck = document.querySelector(`.vc-day-closed[data-day="${day.key}"]`);
+            
+            closedCheck.checked = sourceClosed;
+            if (!sourceClosed) {
+              openInput.value = sourceOpen;
+              closeInput.value = sourceClose;
+            }
+            openInput.disabled = sourceClosed;
+            closeInput.disabled = sourceClosed;
+          });
+        });
+      });
+      
+      // Checkbox "Mesmo horário todos os dias"
+      const sameHoursCheck = document.getElementById('vcSameHoursAllDays');
+      if (sameHoursCheck) {
+        sameHoursCheck.addEventListener('change', function() {
+          if (this.checked) {
+            const firstOpen = document.querySelector('.vc-hour-open').value;
+            const firstClose = document.querySelector('.vc-hour-close').value;
+            const firstClosed = document.querySelector('.vc-day-closed').checked;
+            
+            days.forEach(function(day) {
+              const openInput = document.querySelector(`.vc-hour-open[data-day="${day.key}"]`);
+              const closeInput = document.querySelector(`.vc-hour-close[data-day="${day.key}"]`);
+              const closedCheck = document.querySelector(`.vc-day-closed[data-day="${day.key}"]`);
+              
+              closedCheck.checked = firstClosed;
+              if (!firstClosed) {
+                openInput.value = firstOpen;
+                closeInput.value = firstClose;
+              }
+              openInput.disabled = firstClosed;
+              closeInput.disabled = firstClosed;
+            });
+          }
+        });
+      }
+      
+      // Botões de atalho
+      document.querySelectorAll('.vc-shortcut-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const shortcut = this.dataset.shortcut;
+          let openTime = '08:00', closeTime = '18:00', daysToApply = days;
+          
+          if (shortcut === 'comercial') {
+            openTime = '09:00';
+            closeTime = '18:00';
+            daysToApply = days.filter(d => ['seg','ter','qua','qui','sex'].includes(d.key));
+          } else if (shortcut === 'jantar') {
+            openTime = '18:00';
+            closeTime = '23:00';
+          } else if (shortcut === '24h') {
+            openTime = '00:00';
+            closeTime = '23:59';
+          }
+          
+          daysToApply.forEach(function(day) {
+            const openInput = document.querySelector(`.vc-hour-open[data-day="${day.key}"]`);
+            const closeInput = document.querySelector(`.vc-hour-close[data-day="${day.key}"]`);
+            const closedCheck = document.querySelector(`.vc-day-closed[data-day="${day.key}"]`);
+            
+            closedCheck.checked = false;
+            openInput.value = openTime;
+            closeInput.value = closeTime;
+            openInput.disabled = false;
+            closeInput.disabled = false;
+          });
+        });
+      });
+      
+      // Sistema de Feriados
+      const holidaysList = document.getElementById('vcHolidaysList');
+      const addHolidayBtn = document.getElementById('vcAddHolidayBtn');
+      const holidayDateInput = document.getElementById('vcHolidayDate');
+      const holidayDescInput = document.getElementById('vcHolidayDesc');
+      let holidays = [];
+      
+      // Parse feriados existentes
+      if (data.holidays) {
+        let holidaysRaw = [];
+        if (typeof data.holidays === 'string') {
+          holidaysRaw = data.holidays.split('\n').filter(l => l.trim());
+        } else if (Array.isArray(data.holidays)) {
+          holidaysRaw = data.holidays;
+        }
+        
+        holidaysRaw.forEach(function(line) {
+          const trimmed = String(line).trim();
+          if (trimmed) {
+            const parts = trimmed.split('|');
+            const datePart = parts[0].trim();
+            if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              holidays.push({
+                date: datePart,
+                desc: parts[1] ? parts[1].trim() : ''
+              });
+            }
+          }
+        });
+      }
+      
+      // Parse auto_close_holidays
+      const autoCloseCheck = document.getElementById('vcAutoCloseHolidays');
+      if (autoCloseCheck && data.auto_close_holidays !== undefined) {
+        autoCloseCheck.checked = !!data.auto_close_holidays;
+      }
+      
+      function renderHolidays() {
+        if (!holidaysList) return;
+        holidaysList.innerHTML = '';
+        if (holidays.length === 0) {
+          holidaysList.innerHTML = '<p style="color:#6b7672;font-size:0.9em;">Nenhum dia fechado adicionado</p>';
+          return;
+        }
+        
+        holidays.forEach(function(holiday, index) {
+          const chip = document.createElement('div');
+          chip.className = 'vc-holiday-chip';
+          const dateObj = new Date(holiday.date + 'T00:00:00');
+          const formattedDate = dateObj.toLocaleDateString('pt-BR');
+          chip.innerHTML = `
+            <span>${formattedDate}</span>
+            ${holiday.desc ? '<span style="opacity:0.8;">(' + holiday.desc + ')</span>' : ''}
+            <button type="button" class="vc-holiday-chip-remove" data-index="${index}">×</button>
+          `;
+          holidaysList.appendChild(chip);
+        });
+        
+        // Event listeners para remover
+        document.querySelectorAll('.vc-holiday-chip-remove').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index, 10);
+            holidays.splice(index, 1);
+            renderHolidays();
+          });
+        });
+      }
+      
+      renderHolidays();
+      
+      if (addHolidayBtn && holidayDateInput) {
+        addHolidayBtn.addEventListener('click', function() {
+          const date = holidayDateInput.value;
+          const desc = holidayDescInput ? holidayDescInput.value : '';
+          
+          if (!date) {
+            alert('Por favor, selecione uma data.');
+            return;
+          }
+          
+          if (holidays.some(h => h.date === date)) {
+            alert('Esta data já foi adicionada.');
+            return;
+          }
+          
+          holidays.push({ date: date, desc: desc });
+          renderHolidays();
+          
+          holidayDateInput.value = '';
+          if (holidayDescInput) holidayDescInput.value = '';
+        });
+      }
+      
+      // Expor funções para o salvamento
+      window.vcGetHours = function() {
+        const hours = {};
+        days.forEach(function(day) {
+          const closedCheck = document.querySelector(`.vc-day-closed[data-day="${day.key}"]`);
+          const openInput = document.querySelector(`.vc-hour-open[data-day="${day.key}"]`);
+          const closeInput = document.querySelector(`.vc-hour-close[data-day="${day.key}"]`);
+          
+          if (closedCheck && !closedCheck.checked && openInput && closeInput && openInput.value && closeInput.value) {
+            hours[day.key] = {
+              enabled: true,
+              ranges: [{ open: openInput.value, close: closeInput.value }]
+            };
+          } else {
+            hours[day.key] = { enabled: false, ranges: [] };
+          }
+        });
+        return hours;
+      };
+      
+      window.vcGetHolidays = function() {
+        return holidays.map(function(h) {
+          return h.desc ? h.date + ' | ' + h.desc : h.date;
+        }).join('\n');
+      };
+      
+      window.vcGetAutoCloseHolidays = function() {
+        return autoCloseCheck ? autoCloseCheck.checked : false;
+      };
+    }
+    
+    // Inicializar sistema de horários e feriados
+    initHoursAndHolidays(data);
     setValue('vcOrdersCount', data.orders_count);
     setValue('vcPlanName', data.plan_name);
     setValue('vcPlanLimit', data.plan_limit);
@@ -674,13 +1018,16 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
 
       const collectLines = (id) => getVal(id).split(/\n+/).map(t => t.trim()).filter(Boolean);
 
-      const horarios = ['seg','ter','qua','qui','sex','sab','dom'].reduce((acc, slug) => {
-        const enabled = document.getElementById(slug + '-checkbox')?.checked;
-        const open = document.getElementById(slug + '-abre')?.value || '';
-        const close = document.getElementById(slug + '-fecha')?.value || '';
-        acc[slug] = { enabled: !!enabled, ranges: [ { open, close } ] };
-        return acc;
-      }, {});
+      // Usa a nova função de horários se disponível, senão usa o método antigo
+      const horarios = window.vcGetHours ? window.vcGetHours() : (function() {
+        return ['seg','ter','qua','qui','sex','sab','dom'].reduce((acc, slug) => {
+          const enabled = document.getElementById(slug + '-checkbox')?.checked;
+          const open = document.getElementById(slug + '-abre')?.value || '';
+          const close = document.getElementById(slug + '-fecha')?.value || '';
+          acc[slug] = { enabled: !!enabled, ranges: [ { open, close } ] };
+          return acc;
+        }, {});
+      })();
 
       const shippingModeBairro = document.getElementById('frete-bairro')?.checked;
       const neighborhoods = [];
@@ -755,7 +1102,8 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
         plan_used: getVal('vcPlanUsed'),
         reservation_enabled: !!document.getElementById('switchReserva')?.checked,
         reservation_message: reservaMsg ? reservaMsg.value : '',
-        holidays: collectLines('vcHolidays'),
+        holidays: window.vcGetHolidays ? window.vcGetHolidays() : collectLines('vcHolidays'),
+        auto_close_holidays: window.vcGetAutoCloseHolidays ? window.vcGetAutoCloseHolidays() : false,
         primary_cuisine: (function(){
           const el = document.getElementById('vcCuisine1');
           return el && el.value ? parseInt(el.value, 10) : null;
