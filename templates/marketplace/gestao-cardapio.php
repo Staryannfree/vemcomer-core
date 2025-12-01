@@ -333,8 +333,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         
         <div class="tabs-cat">
             <?php foreach ($categories_for_view as $index => $cat) : ?>
-                <?php $safe_slug = sanitize_title($cat['slug'] ? $cat['slug'] : 'cat-' . $index); ?>
-                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-<?php echo esc_attr($safe_slug); ?>">
+                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-index-<?php echo $index; ?>">
                     <?php echo esc_html($cat['name']); ?> 
                     <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
                 </button>
@@ -343,16 +342,13 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
 
         <?php foreach ($categories_for_view as $index => $cat) : ?>
             <?php
-            $safe_slug = sanitize_title($cat['slug'] ? $cat['slug'] : 'cat-' . $index);
-            
             $cat_items = [];
             if (array_key_exists('items', $cat) && is_array($cat['items'])) {
                 $cat_items = $cat['items'];
             }
             ?>
-            <!-- Debug: Iniciando renderização da categoria "<?php echo esc_html($cat['name']); ?>" (Slug: <?php echo $safe_slug; ?>) - Itens: <?php echo count($cat_items); ?> -->
-            
-            <div class="tab-content" id="cat-<?php echo esc_attr($safe_slug); ?>" style="<?php echo 0 === $index ? '' : 'display:none;'; ?>">
+            <!-- Debug: Renderizando conteúdo para índice <?php echo $index; ?> -->
+            <div class="tab-content" id="cat-index-<?php echo $index; ?>" style="<?php echo 0 === $index ? 'display:block;' : 'display:none;'; ?>">
                 <div class="prod-list">
                     <?php if (empty($cat_items)) : ?>
                         <!-- Debug: Categoria vazia -->
@@ -548,8 +544,16 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.getAttribute('data-target');
+                // Debug JS
+                // console.log('Clicou na aba. Alvo:', target);
+                
                 document.querySelectorAll('.tab-content').forEach(tab => {
-                    tab.style.display = tab.id === target ? '' : 'none';
+                    if (tab.id === target) {
+                        tab.style.display = 'block';
+                        // console.log('Mostrando:', tab.id);
+                    } else {
+                        tab.style.display = 'none';
+                    }
                 });
                 tabButtons.forEach(b => b.classList.toggle('active', b === btn));
             });
