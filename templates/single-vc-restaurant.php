@@ -48,9 +48,10 @@ if ( is_user_logged_in() ) {
     }
 }
 
-$cuisine_terms  = wp_get_post_terms( get_the_ID(), 'vc_cuisine', array( 'fields' => 'names' ) );
+// Busca todas as categorias (incluindo secundárias) via taxonomia
+$cuisine_terms  = wp_get_post_terms( get_the_ID(), 'vc_cuisine', array( 'fields' => 'all' ) );
 $location_terms = wp_get_post_terms( get_the_ID(), 'vc_location', array( 'fields' => 'names' ) );
-$cuisine_list   = ! is_wp_error( $cuisine_terms ) ? $cuisine_terms : array();
+$cuisine_list   = ! is_wp_error( $cuisine_terms ) ? array_map( function( $term ) { return $term->name; }, $cuisine_terms ) : array();
 $location_list  = ! is_wp_error( $location_terms ) ? $location_terms : array();
 $site_url       = get_post_meta( get_the_ID(), 'vc_restaurant_site', true );
 $delivery_raw   = get_post_meta( get_the_ID(), 'vc_restaurant_delivery', true );
@@ -275,6 +276,11 @@ $header_bg = $cover_url ?: ( $banner_urls[0] ?? $profile_image_url );
 <?php endif; ?>
 <button title="<?php echo esc_attr__( 'Favoritar', 'vemcomer' ); ?>" class="vc-favorito" type="button" aria-pressed="false">♥</button>
 </div>
+<?php if ( $excerpt ) : ?>
+<div class="vc-descricao" style="margin:12px 0 8px 0;font-size:0.98em;color:var(--meta);line-height:1.5;text-align:center;max-width:600px;margin-left:auto;margin-right:auto;">
+<?php echo wp_kses_post( wpautop( $excerpt ) ); ?>
+</div>
+<?php endif; ?>
 <?php if ( $banner_urls ) : ?>
 <div class="vc-banners">
 <?php foreach ( $banner_urls as $banner_url ) : ?>
