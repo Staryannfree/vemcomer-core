@@ -74,6 +74,7 @@ if (! function_exists('vc_marketplace_get_restaurant_for_user')) {
 
 $restaurant = vc_marketplace_get_restaurant_for_user();
 
+// Inicializar variáveis sempre
 $categories = [];
 $default_category = [
     'id'    => 'sem-categoria',
@@ -159,7 +160,6 @@ if ($restaurant instanceof WP_Post) {
                 $categories[$term_id]['items'][] = $item_payload;
 
                 $stats['total']++;
-                $stats['categories'] = count($categories);
                 if ($available) {
                     $stats['active']++;
                 } else {
@@ -175,16 +175,28 @@ if ($restaurant instanceof WP_Post) {
     wp_reset_postdata();
 }
 
-// Ordena categorias por nome para consistência
-usort($categories, function ($a, $b) {
-    return strcasecmp($a['name'], $b['name']);
-});
+// Converte array associativo para indexado e ordena categorias por nome
+if (!empty($categories) && is_array($categories)) {
+    // Se for array associativo, converte para indexado
+    if (array_keys($categories) !== range(0, count($categories) - 1)) {
+        $categories = array_values($categories);
+    }
+    
+    // Ordena por nome
+    usort($categories, function ($a, $b) {
+        $name_a = isset($a['name']) ? $a['name'] : '';
+        $name_b = isset($b['name']) ? $b['name'] : '';
+        return strcasecmp($name_a, $name_b);
+    });
+}
 
+// Se não houver categorias mas houver restaurante, adiciona categoria padrão
 if (empty($categories) && $restaurant instanceof WP_Post) {
     $categories[] = $default_category;
 }
 
-$stats['categories'] = count($categories);
+// Atualiza estatística de categorias (sempre após processar tudo)
+$stats['categories'] = is_array($categories) ? count($categories) : 0;
 ?>
 <div class="menu-gestao-container">
     <style>
