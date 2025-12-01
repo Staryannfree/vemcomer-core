@@ -8,6 +8,8 @@
 
 namespace VC\Admin;
 
+use VC\Frontend\Marketplace_Templates;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -20,7 +22,7 @@ class Page_Templates {
      * @return array Array de templates com título, conteúdo, slug, etc.
      */
     public static function get_templates(): array {
-        return [
+        $templates = [
             'home' => [
                 'title'       => __( 'Home - Marketplace Completo', 'vemcomer' ),
                 'slug'        => 'inicio',
@@ -110,6 +112,21 @@ class Page_Templates {
                 'featured'    => true,
             ],
         ];
+
+        if ( class_exists( '\\VC\\Frontend\\Marketplace_Templates' ) ) {
+            foreach ( Marketplace_Templates::get_templates() as $key => $config ) {
+                $templates[ 'marketplace_' . $key ] = [
+                    'title'       => __( $config['title'], 'vemcomer' ),
+                    'slug'        => $config['slug'],
+                    'description' => sprintf( __( 'Importa o layout %s diretamente do marketplace.', 'vemcomer' ), $config['title'] ),
+                    'template'    => $config['template'],
+                    'content'     => '<!-- wp:shortcode -->[' . $config['shortcode'] . ']<!-- /wp:shortcode -->',
+                    'featured'    => false,
+                ];
+            }
+        }
+
+        return self::dedupe_templates( $templates );
     }
     
     /**
@@ -906,10 +923,65 @@ class Page_Templates {
         
         return $page_id;
     }
-    
+
+    /**
+     * Remove templates duplicados com base no slug e no shortcode principal.
+     * Mantém apenas a primeira ocorrência para evitar itens repetidos no importador.
+     *
+     * @param array $templates Lista completa de templates.
+     *
+     * @return array Lista deduplicada.
+     */
+    private static function dedupe_templates( array $templates ): array {
+        $deduped         = [];
+        $seen_slugs      = [];
+        $seen_shortcodes = [];
+
+        foreach ( $templates as $key => $template ) {
+            $slug = $template['slug'] ?? '';
+
+            if ( $slug && isset( $seen_slugs[ $slug ] ) ) {
+                continue;
+            }
+
+            $shortcode = self::extract_shortcode_from_content( $template['content'] ?? '' );
+
+            if ( $shortcode && isset( $seen_shortcodes[ $shortcode ] ) ) {
+                continue;
+            }
+
+            if ( $slug ) {
+                $seen_slugs[ $slug ] = true;
+            }
+
+            if ( $shortcode ) {
+                $seen_shortcodes[ $shortcode ] = true;
+            }
+
+            $deduped[ $key ] = $template;
+        }
+
+        return $deduped;
+    }
+
+    /**
+     * Extrai o primeiro shortcode encontrado em um bloco de conteúdo simples.
+     *
+     * @param string $content Conteúdo a ser inspecionado.
+     *
+     * @return string Nome do shortcode ou string vazia.
+     */
+    private static function extract_shortcode_from_content( string $content ): string {
+        if ( preg_match( '/\[([a-z0-9_\-]+)\]/i', $content, $matches ) ) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
     /**
      * Importa múltiplas páginas de uma vez
-     * 
+     *
      * @param array $template_keys Array de chaves de templates para importar
      * @return array Array com resultados (sucesso/erro) para cada template
      */
