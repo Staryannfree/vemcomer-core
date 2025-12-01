@@ -24,21 +24,6 @@
     <a class="skip-link screen-reader-text" href="#main"><?php esc_html_e( 'Pular para o conteúdo', 'vemcomer' ); ?></a>
 
     <?php
-    // Barra de Promoção Fixa
-    $promo_bar_dismissed = isset( $_COOKIE['vc_promo_bar_dismissed'] ) && $_COOKIE['vc_promo_bar_dismissed'] === '1';
-    if ( ! $promo_bar_dismissed ) :
-    ?>
-    <div class="promo-bar" id="promo-bar">
-        <div class="container">
-            <p class="promo-bar__text">
-                🎉 <?php esc_html_e( 'Frete grátis acima de R$ 50 em pedidos selecionados!', 'vemcomer' ); ?>
-            </p>
-            <button class="promo-bar__close" aria-label="<?php esc_attr_e( 'Fechar', 'vemcomer' ); ?>">&times;</button>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <?php
     // Top Bar Minimalista (Mobile Only)
     if ( wp_is_mobile() ) :
         // Priorizar bairro sobre cidade
