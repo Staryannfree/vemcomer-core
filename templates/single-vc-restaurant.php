@@ -75,7 +75,17 @@ $banner_urls      = $list_from_text( (string) get_post_meta( get_the_ID(), 'vc_r
 $highlight_tags   = $list_from_text( (string) get_post_meta( get_the_ID(), 'vc_restaurant_highlight_tags', true ) );
 $menu_filters     = $list_from_text( (string) get_post_meta( get_the_ID(), 'vc_restaurant_menu_filters', true ) );
 $payment_methods  = $list_from_text( (string) get_post_meta( get_the_ID(), 'vc_restaurant_payment_methods', true ) );
-$facilities       = $list_from_text( (string) get_post_meta( get_the_ID(), 'vc_restaurant_facilities', true ) );
+// Facilities: novo sistema (taxonomia) + legado (texto)
+$facilities_terms = wp_get_post_terms( get_the_ID(), 'vc_facility', [ 'fields' => 'all' ] );
+$facilities = [];
+if ( ! is_wp_error( $facilities_terms ) && $facilities_terms ) {
+    $facilities = array_map( function( $term ) {
+        return $term->name;
+    }, $facilities_terms );
+} else {
+    // Fallback para legado (texto livre)
+    $facilities = $list_from_text( (string) get_post_meta( get_the_ID(), 'vc_restaurant_facilities', true ) );
+}
 $observations     = get_post_meta( get_the_ID(), 'vc_restaurant_observations', true );
 $instagram_handle = get_post_meta( get_the_ID(), 'vc_restaurant_instagram', true );
 

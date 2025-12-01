@@ -240,8 +240,27 @@ class Merchant_Settings_Controller {
             update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['payment_methods'], implode( "\n", $lines ) );
         }
 
+        // Facilities: novo sistema (array de IDs de termos da taxonomia vc_facility)
         if ( isset( $payload['facilities'] ) ) {
-            update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['facilities'], wp_kses_post( (string) $payload['facilities'] ) );
+            if ( is_array( $payload['facilities'] ) ) {
+                // Novo sistema: array de IDs de termos
+                $facility_ids = array_map( 'intval', array_filter( $payload['facilities'], 'is_numeric' ) );
+                if ( taxonomy_exists( 'vc_facility' ) ) {
+                    wp_set_object_terms( $restaurant_id, $facility_ids, 'vc_facility', false );
+                }
+                // Mantém legado para compatibilidade
+                $facility_names = [];
+                foreach ( $facility_ids as $term_id ) {
+                    $term = get_term( $term_id, 'vc_facility' );
+                    if ( $term && ! is_wp_error( $term ) ) {
+                        $facility_names[] = $term->name;
+                    }
+                }
+                update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['facilities'], implode( "\n", $facility_names ) );
+            } else {
+                // Legado: texto livre
+                update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['facilities'], wp_kses_post( (string) $payload['facilities'] ) );
+            }
         }
 
         if ( isset( $payload['observations'] ) ) {

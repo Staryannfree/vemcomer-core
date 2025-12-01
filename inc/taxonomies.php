@@ -31,4 +31,16 @@ add_action( 'init', function() {
         'rewrite' => [ 'slug' => 'bairro' ],
         'show_in_rest' => true,
     ]);
+
+    // Facilidades / Etiquetas
+    register_taxonomy( 'vc_facility', [ 'vc_restaurant' ], [
+        'labels' => [
+            'name'          => __( 'Facilidades', 'vemcomer' ),
+            'singular_name' => __( 'Facilidade', 'vemcomer' ),
+        ],
+        'hierarchical' => true,
+        'show_admin_column' => true,
+        'rewrite' => [ 'slug' => 'facilidade' ],
+        'show_in_rest' => true,
+    ]);
 });

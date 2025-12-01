@@ -161,7 +161,46 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             $data['pagamentos'] = array_filter( array_map( 'trim', $payment_raw ) );
         }
 
-        $data['facilities']   = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['facilities'], true );
+        // Facilities (legado: texto livre; novo: taxonomia vc_facility)
+        $facilities_legacy = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['facilities'], true );
+        $facilities_terms = wp_get_post_terms( $restaurant->ID, 'vc_facility', [ 'fields' => 'all' ] );
+        $data['facilities'] = $facilities_legacy; // Mantém legado para compatibilidade
+        $data['facilities_selected'] = [];
+        if ( ! is_wp_error( $facilities_terms ) && $facilities_terms ) {
+            $data['facilities_selected'] = array_map( function( $t ) {
+                return (int) $t->term_id;
+            }, $facilities_terms );
+        }
+        
+        // Busca todas as facilities disponíveis (organizadas por grupo)
+        $all_facilities = get_terms( [
+            'taxonomy'   => 'vc_facility',
+            'hide_empty' => false,
+            'parent'     => 0, // Apenas grupos (pais)
+        ] );
+        $data['facilities_groups'] = [];
+        if ( ! is_wp_error( $all_facilities ) && $all_facilities ) {
+            foreach ( $all_facilities as $group ) {
+                $children = get_terms( [
+                    'taxonomy'   => 'vc_facility',
+                    'hide_empty' => false,
+                    'parent'     => $group->term_id,
+                ] );
+                if ( ! is_wp_error( $children ) && $children ) {
+                    $data['facilities_groups'][] = [
+                        'id'    => $group->term_id,
+                        'name'  => $group->name,
+                        'items' => array_map( function( $child ) {
+                            return [
+                                'id'   => $child->term_id,
+                                'name' => $child->name,
+                            ];
+                        }, $children ),
+                    ];
+                }
+            }
+        }
+        
         $data['observations'] = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['observations'], true );
         $data['faq']          = (string) get_post_meta( $restaurant->ID, VC_META_RESTAURANT_FIELDS['faq'], true );
 

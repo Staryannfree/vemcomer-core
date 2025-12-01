@@ -246,7 +246,16 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
           <textarea id="vcHighlights" placeholder="Destaques (uma etiqueta por linha)"></textarea>
           <textarea id="vcFilters" placeholder="Filtros do cardápio (uma opção por linha)"></textarea>
           <textarea id="vcPayments" placeholder="Formas de pagamento (uma por linha)"></textarea>
-          <textarea id="vcFacilities" placeholder="Facilidades/etiquetas (uma por linha)"></textarea>
+          
+          <!-- Facilidades/Etiquetas (checkboxes organizados por categoria) -->
+          <div id="vcFacilitiesContainer" style="margin-top:20px;">
+            <label class="vc-field-label" style="display:block;margin-bottom:12px;font-weight:700;color:var(--primary);">Facilidades e Etiquetas</label>
+            <p style="font-size:0.9em;color:#6b7672;margin-bottom:16px;">Selecione as facilidades e características do seu restaurante:</p>
+            <div id="vcFacilitiesGroups" style="display:grid;gap:20px;">
+              <!-- Grupos serão inseridos via JavaScript -->
+            </div>
+          </div>
+          
           <textarea id="vcObservations" placeholder="Observações extras"></textarea>
           <textarea id="vcFaq" placeholder="FAQ (Pergunta | Resposta por linha)"></textarea>
         </section>
@@ -888,6 +897,70 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
     
     window.openGaleriaLightbox = openGaleriaLightbox;
     
+    // Função para inicializar as facilities (checkboxes organizados por categoria)
+    function initFacilities(groups, selectedIds) {
+      const container = document.getElementById('vcFacilitiesGroups');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      if (!groups || groups.length === 0) {
+        container.innerHTML = '<p style="color:#6b7672;font-size:0.9em;">Nenhuma facilidade disponível no momento.</p>';
+        return;
+      }
+      
+      groups.forEach(function(group) {
+        if (!group.items || group.items.length === 0) return;
+        
+        const groupDiv = document.createElement('div');
+        groupDiv.style.cssText = 'border:1px solid #eaf8f1;border-radius:8px;padding:16px;background:#f9fcfb;';
+        
+        const groupTitle = document.createElement('h4');
+        groupTitle.textContent = group.name;
+        groupTitle.style.cssText = 'font-size:1em;font-weight:700;color:var(--primary);margin-bottom:12px;';
+        groupDiv.appendChild(groupTitle);
+        
+        const itemsContainer = document.createElement('div');
+        itemsContainer.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;';
+        
+        group.items.forEach(function(item) {
+          const label = document.createElement('label');
+          label.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px;border-radius:4px;transition:background 0.2s;';
+          label.onmouseover = function() { this.style.background = '#f0f9f5'; };
+          label.onmouseout = function() { this.style.background = 'transparent'; };
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = item.id;
+          checkbox.id = 'vc-facility-' + item.id;
+          checkbox.checked = selectedIds.indexOf(item.id) !== -1;
+          checkbox.style.cssText = 'width:18px;height:18px;cursor:pointer;';
+          
+          const span = document.createElement('span');
+          span.textContent = item.name;
+          span.style.cssText = 'font-size:0.9em;color:#2d3e35;';
+          
+          label.appendChild(checkbox);
+          label.appendChild(span);
+          itemsContainer.appendChild(label);
+        });
+        
+        groupDiv.appendChild(itemsContainer);
+        container.appendChild(groupDiv);
+      });
+    }
+    
+    // Função para coletar as facilities selecionadas
+    function getSelectedFacilities() {
+      const checkboxes = document.querySelectorAll('#vcFacilitiesGroups input[type="checkbox"]:checked');
+      return Array.from(checkboxes).map(function(cb) {
+        return parseInt(cb.value, 10);
+      });
+    }
+    
+    window.initFacilities = initFacilities;
+    window.getSelectedFacilities = getSelectedFacilities;
+    
     renderGaleria();
     
     // Mantém compatibilidade com banners antigos (se existir)
@@ -993,8 +1066,10 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
     const payments = Array.isArray(data.pagamentos) ? data.pagamentos.join("\n") : '';
     setValue('vcPayments', payments);
 
-    const facilities = data.facilities ? data.facilities : '';
-    setValue('vcFacilities', facilities);
+    // Preencher facilities (checkboxes)
+    if (data.facilities_groups && data.facilities_groups.length > 0) {
+      initFacilities(data.facilities_groups, data.facilities_selected || []);
+    }
 
     const observations = data.observations ? data.observations : '';
     setValue('vcObservations', observations);
@@ -1093,7 +1168,7 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
         highlights: collectLines('vcHighlights'),
         filters: collectLines('vcFilters'),
         payments: collectLines('vcPayments'),
-        facilities: getVal('vcFacilities'),
+        facilities: getSelectedFacilities(), // Array de IDs das facilities selecionadas
         observations: getVal('vcObservations'),
         faq: getVal('vcFaq'),
         orders_count: getVal('vcOrdersCount'),
