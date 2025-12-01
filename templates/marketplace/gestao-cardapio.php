@@ -98,7 +98,7 @@ if ($restaurant instanceof WP_Post) {
         'order'          => 'ASC',
         'meta_query'     => [
             [
-                'key'   => '_vc_menu_item_restaurant',
+                'key'   => '_vc_restaurant_id',
                 'value' => $restaurant->ID,
             ],
         ],
@@ -265,7 +265,7 @@ $stats['categories'] = count($categories);
     <div class="menu-top">
         <div class="menu-title"><?php echo esc_html__('Gestão de Cardápio', 'vemcomer'); ?></div>
         <button class="menu-btn" onclick="openAddProductModal()">+ <?php echo esc_html__('Adicionar Produto', 'vemcomer'); ?></button>
-        <button class="menu-btn secondary" onclick="window.location.href='<?php echo esc_url(admin_url('edit-tags.php?taxonomy=vc_menu_category&post_type=vc_menu_item')); ?>'">+ <?php echo esc_html__('Categoria', 'vemcomer'); ?></button>
+        <button class="menu-btn secondary" onclick="openAddCategoryModal()">+ <?php echo esc_html__('Categoria', 'vemcomer'); ?></button>
     </div>
 
     <?php if (! $restaurant) : ?>
@@ -354,6 +354,43 @@ $stats['categories'] = count($categories);
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
+</div>
+
+<!-- Modal de Adicionar Categoria -->
+<div id="vcAddCategoryModal" class="vc-modal-overlay">
+    <div class="vc-modal-content">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title"><?php echo esc_html__('Adicionar Nova Categoria', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeAddCategoryModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <form id="vcAddCategoryForm" onsubmit="saveNewCategory(event)">
+            <div class="vc-modal-body">
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Nome da Categoria *', 'vemcomer'); ?></label>
+                    <input type="text" id="vcCategoryName" class="vc-form-input" required placeholder="<?php echo esc_attr__('Ex: Entradas, Pratos Principais, Bebidas', 'vemcomer'); ?>" />
+                </div>
+                
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Ordem de Exibição', 'vemcomer'); ?></label>
+                    <input type="number" id="vcCategoryOrder" class="vc-form-input" min="0" value="0" placeholder="0" />
+                    <p style="font-size:0.85em;color:#6b7672;margin-top:4px;"><?php echo esc_html__('Menor número aparece primeiro', 'vemcomer'); ?></p>
+                </div>
+                
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Imagem da Categoria (opcional)', 'vemcomer'); ?></label>
+                    <div class="vc-image-upload" onclick="document.getElementById('vcCategoryImageInput').click()">
+                        <input type="file" id="vcCategoryImageInput" accept="image/*" style="display:none;" onchange="handleCategoryImageUpload(event)" />
+                        <div id="vcCategoryImageUploadText"><?php echo esc_html__('Clique para adicionar imagem', 'vemcomer'); ?></div>
+                        <img id="vcCategoryImagePreview" class="vc-image-preview" alt="" />
+                    </div>
+                </div>
+            </div>
+            <div class="vc-modal-footer">
+                <button type="button" class="vc-btn-secondary" onclick="closeAddCategoryModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
+                <button type="submit" class="vc-btn-primary" id="vcSaveCategoryBtn"><?php echo esc_html__('Salvar Categoria', 'vemcomer'); ?></button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal de Adicionar Produto -->
@@ -642,6 +679,93 @@ $stats['categories'] = count($categories);
                 alert('<?php echo esc_js(__('Produto criado com sucesso!', 'vemcomer')); ?>');
                 closeAddProductModal();
                 // Recarregar a página para mostrar o novo produto
+                window.location.reload();
+            } catch (e) {
+                console.error(e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
+        // Modal de adicionar categoria
+        let categoryImageData = null;
+
+        window.openAddCategoryModal = function() {
+            document.getElementById('vcAddCategoryModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeAddCategoryModal = function() {
+            document.getElementById('vcAddCategoryModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Resetar formulário
+            document.getElementById('vcAddCategoryForm').reset();
+            categoryImageData = null;
+            document.getElementById('vcCategoryImagePreview').classList.remove('show');
+            document.getElementById('vcCategoryImageUploadText').style.display = 'block';
+        };
+
+        // Fechar modal ao clicar fora
+        document.getElementById('vcAddCategoryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddCategoryModal();
+            }
+        });
+
+        window.handleCategoryImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                categoryImageData = e.target.result;
+                const preview = document.getElementById('vcCategoryImagePreview');
+                preview.src = categoryImageData;
+                preview.classList.add('show');
+                document.getElementById('vcCategoryImageUploadText').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.saveNewCategory = async function(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('vcSaveCategoryBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Salvando...', 'vemcomer')); ?>';
+
+            const payload = {
+                name: document.getElementById('vcCategoryName').value.trim(),
+                order: document.getElementById('vcCategoryOrder').value || 0,
+            };
+
+            if (categoryImageData) {
+                payload.image = categoryImageData;
+            }
+
+            try {
+                const response = await fetch('<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    alert(data?.message || data?.data?.message || '<?php echo esc_js(__('Não foi possível criar a categoria.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Categoria criada com sucesso!', 'vemcomer')); ?>');
+                closeAddCategoryModal();
+                // Recarregar a página para mostrar a nova categoria
                 window.location.reload();
             } catch (e) {
                 console.error(e);
