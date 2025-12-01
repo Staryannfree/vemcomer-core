@@ -180,6 +180,18 @@ class Merchant_Settings_Controller {
         if ( isset( $payload['logo'] ) ) {
             $logo_url = $this->maybe_handle_data_image( $payload['logo'], 'logo', $restaurant_id );
             update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['logo'], esc_url_raw( $logo_url ) );
+            
+            // Define também como featured image (imagem destacada) para aparecer no perfil
+            if ( $logo_url ) {
+                // Tenta encontrar o attachment pela URL (caso tenha sido criado pelo maybe_handle_data_image)
+                $attachment_id = attachment_url_to_postid( $logo_url );
+                if ( $attachment_id ) {
+                    set_post_thumbnail( $restaurant_id, $attachment_id );
+                } else {
+                    // Se não encontrou, tenta criar/definir via método auxiliar
+                    $this->set_logo_as_featured_image( $restaurant_id, $logo_url );
+                }
+            }
         }
 
         if ( isset( $payload['cover'] ) ) {
@@ -352,11 +364,40 @@ class Merchant_Settings_Controller {
             return '';
         }
 
-        $filename = sprintf( '%s-%d-%s.png', $prefix, $restaurant_id, wp_generate_password( 6, false ) );
+        // Detecta o tipo MIME da imagem
+        $mime_type = 'image/png';
+        if ( str_contains( $value, 'data:image/jpeg' ) || str_contains( $value, 'data:image/jpg' ) ) {
+            $mime_type = 'image/jpeg';
+            $ext       = 'jpg';
+        } elseif ( str_contains( $value, 'data:image/webp' ) ) {
+            $mime_type = 'image/webp';
+            $ext       = 'webp';
+        } else {
+            $ext = 'png';
+        }
+
+        $filename = sprintf( '%s-%d-%s.%s', $prefix, $restaurant_id, wp_generate_password( 6, false ), $ext );
         $upload   = wp_upload_bits( $filename, null, $decoded );
 
         if ( $upload['error'] ) {
             return '';
+        }
+
+        // Cria um attachment no WordPress para que possa ser usado como featured image
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        
+        $attachment_data = [
+            'post_mime_type' => $mime_type,
+            'post_title'     => sanitize_file_name( pathinfo( $filename, PATHINFO_FILENAME ) ),
+            'post_content'   => '',
+            'post_status'    => 'inherit',
+        ];
+        
+        $attachment_id = wp_insert_attachment( $attachment_data, $upload['file'], $restaurant_id );
+        
+        if ( ! is_wp_error( $attachment_id ) ) {
+            $attach_data = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
+            wp_update_attachment_metadata( $attachment_id, $attach_data );
         }
 
         return esc_url_raw( $upload['url'] );
@@ -374,6 +415,91 @@ class Merchant_Settings_Controller {
         }
 
         return $decoded;
+    }
+
+    /**
+     * Define o logo como featured image do restaurante.
+     * Se a URL já for de um attachment, usa diretamente. Caso contrário, cria um attachment.
+     *
+     * @param int    $restaurant_id ID do restaurante.
+     * @param string $logo_url      URL do logo.
+     */
+    private function set_logo_as_featured_image( int $restaurant_id, string $logo_url ): void {
+        if ( ! $logo_url ) {
+            return;
+        }
+
+        // Verifica se a URL já é de um attachment existente
+        $attachment_id = attachment_url_to_postid( $logo_url );
+        
+        if ( $attachment_id ) {
+            // Já existe um attachment, apenas define como featured image
+            set_post_thumbnail( $restaurant_id, $attachment_id );
+            return;
+        }
+
+        // Se não for um attachment, tenta criar um a partir da URL
+        // Primeiro, verifica se é uma URL local
+        $upload_dir = wp_upload_dir();
+        $base_url   = $upload_dir['baseurl'];
+        
+        if ( str_starts_with( $logo_url, $base_url ) ) {
+            // É uma URL local, tenta encontrar o arquivo
+            $file_path = str_replace( $base_url, $upload_dir['basedir'], $logo_url );
+            
+            if ( file_exists( $file_path ) ) {
+                // Cria attachment a partir do arquivo local
+                $file_type = wp_check_filetype( basename( $file_path ), null );
+                $attachment_data = [
+                    'post_mime_type' => $file_type['type'],
+                    'post_title'     => sanitize_file_name( pathinfo( $file_path, PATHINFO_FILENAME ) ),
+                    'post_content'   => '',
+                    'post_status'    => 'inherit',
+                ];
+                
+                $attachment_id = wp_insert_attachment( $attachment_data, $file_path, $restaurant_id );
+                
+                if ( ! is_wp_error( $attachment_id ) ) {
+                    require_once ABSPATH . 'wp-admin/includes/image.php';
+                    $attach_data = wp_generate_attachment_metadata( $attachment_id, $file_path );
+                    wp_update_attachment_metadata( $attachment_id, $attach_data );
+                    set_post_thumbnail( $restaurant_id, $attachment_id );
+                }
+            }
+        } else {
+            // É uma URL externa, faz download e cria attachment
+            $this->create_attachment_from_url( $restaurant_id, $logo_url );
+        }
+    }
+
+    /**
+     * Cria um attachment a partir de uma URL externa.
+     *
+     * @param int    $restaurant_id ID do restaurante.
+     * @param string $image_url     URL da imagem.
+     */
+    private function create_attachment_from_url( int $restaurant_id, string $image_url ): void {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        // Faz download temporário da imagem
+        $tmp = download_url( $image_url );
+        
+        if ( is_wp_error( $tmp ) ) {
+            return;
+        }
+
+        $file_array = [
+            'name'     => basename( $image_url ),
+            'tmp_name' => $tmp,
+        ];
+
+        $attachment_id = media_handle_sideload( $file_array, $restaurant_id );
+        
+        if ( ! is_wp_error( $attachment_id ) ) {
+            set_post_thumbnail( $restaurant_id, $attachment_id );
+        }
     }
 }
 

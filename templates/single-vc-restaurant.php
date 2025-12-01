@@ -190,12 +190,34 @@ body.single-vc_restaurant { background: var(--gray); font-family: 'Montserrat', 
 }
 </style>
 <main class="vc-profile__wrap" id="vc-profile">
-<div class="vc-header-capa" style="background-image: url('<?php echo esc_url( $banner_urls[0] ?? ( has_post_thumbnail() ? get_the_post_thumbnail_url( get_the_ID(), 'large' ) : '' ) ); ?>');">
+<?php
+// Tenta obter a foto de perfil: primeiro featured image, depois meta field logo
+$profile_image_url = '';
+$profile_image_id  = 0;
+
+if ( has_post_thumbnail() ) {
+    $profile_image_id  = get_post_thumbnail_id( get_the_ID() );
+    $profile_image_url = get_the_post_thumbnail_url( get_the_ID(), 'full' );
+} else {
+    // Fallback: usa o meta field vc_restaurant_logo
+    $logo_url = get_post_meta( get_the_ID(), VC_META_RESTAURANT_FIELDS['logo'], true );
+    if ( $logo_url ) {
+        $profile_image_url = $logo_url;
+        // Tenta encontrar o attachment ID pela URL
+        $profile_image_id = attachment_url_to_postid( $logo_url );
+    }
+}
+?>
+<div class="vc-header-capa" style="background-image: url('<?php echo esc_url( $banner_urls[0] ?? ( $profile_image_url ?: '' ) ); ?>');">
 <div class="vc-rest-logo">
-<?php if ( has_post_thumbnail() ) : ?>
-<?php the_post_thumbnail( 'thumbnail', array( 'class' => 'vc-rest-logo__img' ) ); ?>
+<?php if ( $profile_image_url ) : ?>
+    <?php if ( $profile_image_id ) : ?>
+        <?php echo wp_get_attachment_image( $profile_image_id, 'thumbnail', false, array( 'class' => 'vc-rest-logo__img' ) ); ?>
+    <?php else : ?>
+        <img src="<?php echo esc_url( $profile_image_url ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" class="vc-rest-logo__img" />
+    <?php endif; ?>
 <?php else : ?>
-<?php echo esc_html( $title_letter ); ?>
+    <?php echo esc_html( $title_letter ); ?>
 <?php endif; ?>
 </div>
 </div>
