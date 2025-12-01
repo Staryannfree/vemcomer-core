@@ -12,6 +12,42 @@ get_header();
 while ( have_posts() ) :
 the_post();
 
+// Verifica se o usuário atual é o dono do restaurante
+$is_owner = false;
+$config_url = '';
+if ( is_user_logged_in() ) {
+    $current_user_id = get_current_user_id();
+    $restaurant_id = get_the_ID();
+    
+    // Verifica se é o autor do post
+    if ( (int) get_post_field( 'post_author', $restaurant_id ) === (int) $current_user_id ) {
+        $is_owner = true;
+    } elseif ( function_exists( 'vc_marketplace_current_restaurant' ) ) {
+        // Verifica via helper do marketplace
+        $user_restaurant = vc_marketplace_current_restaurant();
+        if ( $user_restaurant instanceof \WP_Post && (int) $user_restaurant->ID === (int) $restaurant_id ) {
+            $is_owner = true;
+        }
+    }
+    
+    // Verifica via meta do usuário
+    if ( ! $is_owner ) {
+        $user_restaurant_id = (int) get_user_meta( $current_user_id, 'vc_restaurant_id', true );
+        if ( $user_restaurant_id === (int) $restaurant_id ) {
+            $is_owner = true;
+        }
+    }
+    
+    // Verifica capabilities
+    if ( ! $is_owner && current_user_can( 'edit_post', $restaurant_id ) ) {
+        $is_owner = true;
+    }
+    
+    if ( $is_owner ) {
+        $config_url = home_url( '/configuracao-loja/' );
+    }
+}
+
 $cuisine_terms  = wp_get_post_terms( get_the_ID(), 'vc_cuisine', array( 'fields' => 'names' ) );
 $location_terms = wp_get_post_terms( get_the_ID(), 'vc_location', array( 'fields' => 'names' ) );
 $cuisine_list   = ! is_wp_error( $cuisine_terms ) ? $cuisine_terms : array();
@@ -212,8 +248,11 @@ if ( has_post_thumbnail() ) {
 $cover_url = (string) get_post_meta( get_the_ID(), VC_META_RESTAURANT_FIELDS['cover'], true );
 $header_bg = $cover_url ?: ( $banner_urls[0] ?? $profile_image_url );
 ?>
-<div class="vc-header-capa" style="background-image: url('<?php echo esc_url( $header_bg ?: '' ); ?>');">
-<div class="vc-rest-logo">
+<div class="vc-header-capa" style="background-image: url('<?php echo esc_url( $header_bg ?: '' ); ?>');position:relative;">
+<?php if ( $is_owner && $config_url ) : ?>
+    <a href="<?php echo esc_url( $config_url ); ?>" class="vc-edit-banner-btn" title="<?php echo esc_attr__( 'Editar banner/capa', 'vemcomer' ); ?>" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.9);border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);text-decoration:none;color:#2d8659;font-size:18px;z-index:5;transition:background 0.2s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.9)'">✎</a>
+<?php endif; ?>
+<div class="vc-rest-logo" style="position:relative;">
 <?php if ( $profile_image_url ) : ?>
     <?php if ( $profile_image_id ) : ?>
         <?php echo wp_get_attachment_image( $profile_image_id, 'thumbnail', false, array( 'class' => 'vc-rest-logo__img' ) ); ?>
@@ -222,6 +261,9 @@ $header_bg = $cover_url ?: ( $banner_urls[0] ?? $profile_image_url );
     <?php endif; ?>
 <?php else : ?>
     <?php echo esc_html( $title_letter ); ?>
+<?php endif; ?>
+<?php if ( $is_owner && $config_url ) : ?>
+    <a href="<?php echo esc_url( $config_url ); ?>" class="vc-edit-logo-btn" title="<?php echo esc_attr__( 'Editar logo', 'vemcomer' ); ?>" style="position:absolute;bottom:-8px;right:-8px;background:#2d8659;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.3);text-decoration:none;color:#fff;font-size:16px;z-index:5;transition:background 0.2s;" onmouseover="this.style.background='#45c676'" onmouseout="this.style.background='#2d8659'">✎</a>
 <?php endif; ?>
 </div>
 </div>
