@@ -238,12 +238,9 @@
             'posts_per_page' => 1,
         ]);
         
-        $customer_url = ! empty( $customer_signup_pages ) 
-            ? get_permalink( $customer_signup_pages[0]->ID ) 
-            : home_url( '/cadastro-cliente/' );
-        $restaurant_url = ! empty( $restaurant_signup_pages ) 
-            ? get_permalink( $restaurant_signup_pages[0]->ID ) 
-            : home_url( '/cadastro-restaurante/' );
+        // URLs fixas para cadastro de cliente e restaurante
+        $customer_url = home_url( '/cadastro/' );
+        $restaurant_url = home_url( '/cadastre-seu-restaurante/' );
     ?>
     <div class="signup-popup" id="signup-popup">
         <div class="signup-popup__overlay"></div>

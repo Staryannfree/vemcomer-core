@@ -20,8 +20,9 @@ $restaurant_signup_pages = get_posts(
     ]
 );
 
-$customer_signup_url   = ! empty( $customer_signup_pages ) ? get_permalink( $customer_signup_pages[0]->ID ) : home_url( '/cadastro-cliente/' );
-$restaurant_signup_url = ! empty( $restaurant_signup_pages ) ? get_permalink( $restaurant_signup_pages[0]->ID ) : home_url( '/cadastro-restaurante/' );
+// URLs fixas para cadastro de cliente e restaurante (web app)
+$customer_signup_url   = home_url( '/cadastro/' );
+$restaurant_signup_url = home_url( '/cadastre-seu-restaurante/' );
 $login_url             = wp_login_url( home_url( '/?mode=app' ) );
 $account_url           = home_url( '/minha-conta/' );
 $is_logged_in          = is_user_logged_in();
