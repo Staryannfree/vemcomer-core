@@ -317,11 +317,16 @@ class RestaurantPanel {
             $message = '<div class="vc-alert vc-alert--error">' . esc_html__( 'Usuário ou senha inválidos. Tente novamente.', 'vemcomer' ) . '</div>';
         }
 
+        $signup_url = home_url( '/cadastro/' );
+
         ob_start();
         ?>
         <div class="vc-panel vc-panel--login">
             <div class="vc-card vc-panel__card">
-                <h3><?php echo esc_html__( 'Entrar no painel do restaurante', 'vemcomer' ); ?></h3>
+                <h3><?php echo esc_html__( 'Faça login para acessar com suas credenciais', 'vemcomer' ); ?></h3>
+                <p class="vc-panel__muted" style="margin-bottom: 14px;">
+                    <?php echo esc_html__( 'Use seu e-mail e senha cadastrados para acessar o painel do restaurante.', 'vemcomer' ); ?>
+                </p>
                 <?php echo $message; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 <form class="vc-form" method="post" action="<?php echo $action; ?>">
                     <input type="hidden" name="action" value="vc_panel_login" />
@@ -339,11 +344,16 @@ class RestaurantPanel {
                         <input type="checkbox" name="vc_remember" value="1" />
                         <span><?php echo esc_html__( 'Lembrar de mim', 'vemcomer' ); ?></span>
                     </label>
-                    <div class="vc-form__actions">
+                    <div class="vc-form__actions" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
                         <button type="submit" class="vc-btn"><?php echo esc_html__( 'Entrar', 'vemcomer' ); ?></button>
                         <a class="vc-link" href="<?php echo esc_url( wp_lostpassword_url( $redirect ) ); ?>"><?php echo esc_html__( 'Esqueci minha senha', 'vemcomer' ); ?></a>
                     </div>
                 </form>
+                <div class="vc-form__actions" style="margin-top:16px;">
+                    <a href="<?php echo esc_url( $signup_url ); ?>" class="vc-btn vc-btn--primary" id="btn-cadastro">
+                        <?php echo esc_html__( 'Cadastrar', 'vemcomer' ); ?>
+                    </a>
+                </div>
             </div>
         </div>
         <?php
