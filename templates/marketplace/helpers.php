@@ -173,7 +173,7 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             }, $cuisine_terms ) );
         }
 
-        // Categoria principal e secundárias (por ID) + lista completa para selects
+        // Categoria principal e secundárias (por ID) - apenas para pré-seleção
         $primary_cuisine   = (int) get_post_meta( $restaurant->ID, '_vc_primary_cuisine', true );
         $secondary_raw     = get_post_meta( $restaurant->ID, '_vc_secondary_cuisines', true );
         $secondary_cuisines = [];
@@ -184,26 +184,45 @@ if ( ! function_exists( 'vc_marketplace_collect_restaurant_data' ) ) {
             }
         }
 
-        // Se não houver meta, infere a partir da taxonomia
-        if ( ! $primary_cuisine && ! empty( $cuisine_terms ) && ! is_wp_error( $cuisine_terms ) ) {
-            $ids = array_map( fn( $t ) => (int) $t->term_id, $cuisine_terms );
+        // Se não houver meta, infere a partir da taxonomia do restaurante
+        $restaurant_cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'all' ] );
+        if ( ! $primary_cuisine && ! empty( $restaurant_cuisine_terms ) && ! is_wp_error( $restaurant_cuisine_terms ) ) {
+            $ids = array_map( fn( $t ) => (int) $t->term_id, $restaurant_cuisine_terms );
             if ( $ids ) {
                 $primary_cuisine = (int) array_shift( $ids );
-                $secondary_cuisines = array_slice( $ids, 0, 3 );
+                $secondary_cuisines = array_slice( $ids, 0, 2 ); // Máximo 2 secundárias
             }
         }
 
         $data['primary_cuisine']    = $primary_cuisine ?: null;
         $data['secondary_cuisines'] = $secondary_cuisines;
 
-        // Lista de termos completos para o painel (id + name)
-        if ( ! is_wp_error( $cuisine_terms ) && $cuisine_terms ) {
+        // Lista de TODAS as categorias disponíveis (não apenas as do restaurante)
+        // Isso permite que o lojista escolha qualquer categoria, não apenas a que já tem
+        $all_cuisine_terms = get_terms( [
+            'taxonomy'   => 'vc_cuisine',
+            'hide_empty' => false, // Inclui todas, mesmo sem restaurantes
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        ] );
+        
+        if ( ! is_wp_error( $all_cuisine_terms ) && $all_cuisine_terms ) {
+            // Filtra apenas termos filhos (não os grupos pais que começam com "grupo-")
+            $child_terms = array_filter( $all_cuisine_terms, function( $term ) {
+                // Exclui termos que são grupos pais (parent = 0 e slug começa com "grupo-")
+                if ( $term->parent === 0 && str_starts_with( (string) $term->slug, 'grupo-' ) ) {
+                    return false;
+                }
+                // Inclui apenas termos que têm parent (são filhos) ou são termos raiz válidos
+                return $term->parent !== 0 || ! str_starts_with( (string) $term->slug, 'grupo-' );
+            } );
+            
             $data['cuisine_terms'] = array_values( array_map( function( $t ) {
                 return [
                     'id'   => (int) $t->term_id,
                     'name' => $t->name,
                 ];
-            }, $cuisine_terms ) );
+            }, $child_terms ) );
         } else {
             $data['cuisine_terms'] = [];
         }
