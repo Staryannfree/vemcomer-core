@@ -79,36 +79,75 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
             <input type="text" id="vcLatitude" placeholder="Latitude" />
             <input type="text" id="vcLongitude" placeholder="Longitude" />
           </div>
-          <div class="switch-row">
+          
+          <div class="switch-row" style="margin-bottom:20px;">
             <label class="switch-label">Oferece delivery?</label>
             <label class="switch">
               <input type="checkbox" id="vcDeliveryFlag" />
               <span class="slider"></span>
             </label>
           </div>
-          <div class="input-row" style="position:relative;">
-            <div style="display:flex;align-items:center;flex:1;position:relative;">
-              <input type="number" id="vcDeliveryEta" placeholder="35" min="0" step="1" style="flex:1;padding-right:50px;">
-              <span style="position:absolute;right:15px;color:#6b7672;font-weight:600;pointer-events:none;">min</span>
-            </div>
-            <div style="display:flex;align-items:center;flex:1;position:relative;">
-              <span style="position:absolute;left:15px;color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
-              <input type="number" id="vcDeliveryFee" placeholder="5.00" min="0" step="0.01" style="flex:1;padding-left:35px;">
+          
+          <div style="margin-top:20px;margin-bottom:16px;">
+            <label class="vc-field-label">Tempo de entrega</label>
+            <div style="position:relative;max-width:300px;">
+              <input type="number" id="vcDeliveryEta" placeholder="35" min="0" step="1" style="width:100%;padding-right:50px;">
+              <span style="position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;pointer-events:none;">min</span>
             </div>
           </div>
-          <div class="input-row">
-            <input type="text" id="vcDeliveryType" placeholder="Tipo de entrega (ex: Entrega Própria)">
+          
+          <div style="margin-bottom:16px;">
+            <label class="vc-field-label">Taxa padrão de entrega</label>
+            <div style="position:relative;max-width:300px;">
+              <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
+              <input type="number" id="vcDeliveryFee" placeholder="5.00" min="0" step="0.01" style="width:100%;padding-left:35px;">
+            </div>
           </div>
-          <div class="input-row">
-            <input type="number" id="vcDeliveryRadius" step="0.1" min="0" placeholder="Raio de aplicação da taxa padrão (km)">
-            <input type="number" id="vcPriceKm" step="0.01" min="0" placeholder="Valor adicional por KM (R$)">
+          
+          <div style="margin-bottom:16px;">
+            <label class="vc-field-label">Raio de aplicação da taxa padrão</label>
+            <div class="input-row" style="max-width:300px;">
+              <input type="number" id="vcDeliveryRadius" step="0.1" min="0" placeholder="Ex: 5.0" style="flex:1;">
+              <span style="align-self:center;color:#6b7672;font-weight:600;margin-left:8px;">km</span>
+            </div>
           </div>
-          <div class="input-row">
-            <input type="number" id="vcFreeAbove" step="0.01" min="0" placeholder="Frete grátis acima de (R$)">
-            <input type="number" id="vcMinOrder" step="0.01" min="0" placeholder="Pedido mínimo (R$)">
+          
+          <div style="margin-bottom:16px;">
+            <label class="vc-field-label">Valor adicional por KM</label>
+            <div style="position:relative;max-width:300px;">
+              <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
+              <input type="number" id="vcPriceKm" step="0.01" min="0" placeholder="2.50" style="width:100%;padding-left:35px;">
+            </div>
           </div>
-          <div class="input-row">
-            <input type="text" id="vcAccessUrl" placeholder="Token de acesso (access_url)">
+          
+          <div class="switch-row" style="margin-top:20px;margin-bottom:12px;">
+            <label class="switch-label">Seu restaurante oferece frete grátis?</label>
+            <label class="switch">
+              <input type="checkbox" id="vcFreeShippingToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="vcFreeShippingContainer" style="display:none;margin-bottom:16px;">
+            <label class="vc-field-label">Frete grátis acima de</label>
+            <div style="position:relative;max-width:300px;">
+              <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
+              <input type="number" id="vcFreeAbove" step="0.01" min="0" placeholder="50.00" style="width:100%;padding-left:35px;">
+            </div>
+          </div>
+          
+          <div class="switch-row" style="margin-top:20px;margin-bottom:12px;">
+            <label class="switch-label">Seu restaurante tem restrição de pedido mínimo?</label>
+            <label class="switch">
+              <input type="checkbox" id="vcMinOrderToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="vcMinOrderContainer" style="display:none;">
+            <label class="vc-field-label">Pedido mínimo</label>
+            <div style="position:relative;max-width:300px;">
+              <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
+              <input type="number" id="vcMinOrder" step="0.01" min="0" placeholder="30.00" style="width:100%;padding-left:35px;">
+            </div>
           </div>
         </section>
         <section class="vc-extra-section">
@@ -167,7 +206,6 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
     setValue('vcEndereco', data.endereco);
     setValue('vcLatitude', data.geo ? data.geo.lat : '');
     setValue('vcLongitude', data.geo ? data.geo.lng : '');
-    setValue('vcAccessUrl', data.access_url);
     // Tempo de entrega: remove "min" se existir, mantém só o número
     const etaValue = data.delivery_eta ? String(data.delivery_eta).replace(/\s*min\s*/gi, '').trim() : '';
     setValue('vcDeliveryEta', etaValue);
@@ -176,11 +214,46 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
     const feeValue = data.delivery_fee ? String(data.delivery_fee).replace(/R\$\s*/gi, '').trim() : '';
     setValue('vcDeliveryFee', feeValue);
     
-    setValue('vcDeliveryType', data.delivery_type);
     setValue('vcDeliveryRadius', data.shipping ? data.shipping.radius : '');
     setValue('vcPriceKm', data.shipping ? data.shipping.price_per_km : '');
-    setValue('vcFreeAbove', data.shipping ? data.shipping.free_above : '');
-    setValue('vcMinOrder', data.shipping ? data.shipping.min_order : '');
+    
+    // Checkbox e campo condicional para frete grátis
+    const freeShippingToggle = document.getElementById('vcFreeShippingToggle');
+    const freeShippingContainer = document.getElementById('vcFreeShippingContainer');
+    const freeAboveValue = data.shipping ? data.shipping.free_above : '';
+    if (freeShippingToggle && freeShippingContainer) {
+      const hasFreeShipping = freeAboveValue && parseFloat(freeAboveValue) > 0;
+      freeShippingToggle.checked = hasFreeShipping;
+      freeShippingContainer.style.display = hasFreeShipping ? 'block' : 'none';
+      if (hasFreeShipping) {
+        setValue('vcFreeAbove', freeAboveValue);
+      }
+      freeShippingToggle.addEventListener('change', function() {
+        freeShippingContainer.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+          document.getElementById('vcFreeAbove').value = '';
+        }
+      });
+    }
+    
+    // Checkbox e campo condicional para pedido mínimo
+    const minOrderToggle = document.getElementById('vcMinOrderToggle');
+    const minOrderContainer = document.getElementById('vcMinOrderContainer');
+    const minOrderValue = data.shipping ? data.shipping.min_order : '';
+    if (minOrderToggle && minOrderContainer) {
+      const hasMinOrder = minOrderValue && parseFloat(minOrderValue) > 0;
+      minOrderToggle.checked = hasMinOrder;
+      minOrderContainer.style.display = hasMinOrder ? 'block' : 'none';
+      if (hasMinOrder) {
+        setValue('vcMinOrder', minOrderValue);
+      }
+      minOrderToggle.addEventListener('change', function() {
+        minOrderContainer.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+          document.getElementById('vcMinOrder').value = '';
+        }
+      });
+    }
     setValue('vcHorarioLegado', data.horario_legado);
     setValue('vcOrdersCount', data.orders_count);
     setValue('vcPlanName', data.plan_name);
@@ -631,8 +704,12 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
         price_per_km: getVal('vcPriceKm') || null,
       };
 
-      shipping.free_above = getVal('vcFreeAbove') || null;
-      shipping.min_order = getVal('vcMinOrder') || null;
+      // Frete grátis e pedido mínimo só se os checkboxes estiverem marcados
+      const freeShippingChecked = document.getElementById('vcFreeShippingToggle')?.checked;
+      const minOrderChecked = document.getElementById('vcMinOrderToggle')?.checked;
+      
+      shipping.free_above = freeShippingChecked ? (getVal('vcFreeAbove') || null) : null;
+      shipping.min_order = minOrderChecked ? (getVal('vcMinOrder') || null) : null;
 
       // Galeria da Loja (até 4 imagens) - prioriza a galeria nova
       const galeriaUrls = (window.galeriaImages && Array.isArray(window.galeriaImages)) ? window.galeriaImages.slice(0, 4) : [];
@@ -664,8 +741,6 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
           if (isNaN(num)) return '';
           return 'R$ ' + num.toFixed(2).replace('.', ',');
         })(),
-        delivery_type: getVal('vcDeliveryType'),
-        access_url: getVal('vcAccessUrl'),
         horario_legado: getVal('vcHorarioLegado'),
         banners: finalBanners,
         highlights: collectLines('vcHighlights'),

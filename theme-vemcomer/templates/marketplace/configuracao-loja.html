@@ -64,10 +64,46 @@
     .upload-box img { width: 120px; height: 120px; object-fit: cover; border-radius: 16px; }
     .upload-box input[type="file"] { position: absolute; width: 120px; height: 120px; opacity: 0; cursor: pointer; }
     .upload-label { text-align: center; font-weight: 600; color: var(--primary); margin-top: 6px; user-select: none; }
-    textarea, input[type="text"] { width: 100%; border-radius: 13px; border: 1.2px solid #cdf9e0;
+    textarea, input[type="text"], input[type="number"] { width: 100%; border-radius: 13px; border: 1.2px solid #cdf9e0;
       padding: 15px 14px; font-size: 1em; color: var(--text); font-family: inherit; }
     textarea {height: 70px; resize: vertical;}
-    .input-row {display:flex;gap:13px;margin-bottom:8px;}
+    .input-row {display:flex;gap:13px;margin-bottom:8px;flex-wrap:wrap;}
+    .vc-field-label {
+      display:block;font-weight:700;color:var(--primary);font-size:0.95em;margin-bottom:8px;
+    }
+    
+    /* Responsivo para mobile */
+    @media (max-width: 768px) {
+      .input-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .input-row > * {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+      }
+      .vc-extra-section {
+        padding: 16px;
+      }
+      .vc-extra-section h2 {
+        font-size: 1.1em;
+      }
+      textarea, input[type="text"], input[type="number"] {
+        font-size: 16px; /* Evita zoom no iOS */
+        padding: 12px;
+      }
+      .switch-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .switch-label {
+        font-size: 0.95em;
+      }
+      .vc-field-label {
+        font-size: 0.9em;
+      }
+    }
     .badge-selo {background:var(--primary-light);color:var(--primary);font-size:.88em;border-radius:12px;padding:3px 13px;font-weight:600;border:1px solid #b9eacd;}
     .banners-group {display:flex;gap:11px;flex-wrap:wrap;margin-bottom:9px;}
     .banner-thumb {
