@@ -202,15 +202,27 @@ vc_marketplace_render_static_template('configuracao-loja.html');
       galeriaImages.forEach(function(url, index){
         const item = document.createElement('div');
         item.className = 'galeria-item';
+        item.title = 'Clique para ver em tamanho maior';
+        
+        // Permite clicar na miniatura para ver em tamanho maior
+        item.onclick = function(e){
+          if (e.target.tagName !== 'BUTTON') {
+            window.open(url, '_blank');
+          }
+        };
+        
         const img = document.createElement('img');
         img.src = url;
         img.alt = 'Imagem da galeria ' + (index + 1);
+        img.loading = 'lazy';
+        
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'galeria-item-remove';
         removeBtn.innerHTML = '×';
         removeBtn.title = 'Remover imagem';
-        removeBtn.onclick = function(){
+        removeBtn.onclick = function(e){
+          e.stopPropagation(); // Evita abrir a imagem ao clicar no X
           galeriaImages.splice(index, 1);
           window.galeriaImages = galeriaImages; // Atualiza global
           renderGaleria();

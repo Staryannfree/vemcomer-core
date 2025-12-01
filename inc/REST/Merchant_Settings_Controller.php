@@ -200,8 +200,29 @@ class Merchant_Settings_Controller {
         }
 
         if ( isset( $payload['banners'] ) && is_array( $payload['banners'] ) ) {
-            $lines = array_filter( array_map( 'trim', $payload['banners'] ) );
-            update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['banners'], implode( "\n", $lines ) );
+            // Processa cada imagem da galeria: se for data:image, cria attachment; se for URL, mantém
+            $processed_urls = [];
+            foreach ( $payload['banners'] as $banner_item ) {
+                $banner_item = trim( (string) $banner_item );
+                if ( empty( $banner_item ) ) {
+                    continue;
+                }
+                
+                // Se for data:image, processa como attachment (igual ao logo)
+                if ( str_starts_with( $banner_item, 'data:image' ) ) {
+                    $processed_url = $this->maybe_handle_data_image( $banner_item, 'gallery', $restaurant_id );
+                    if ( $processed_url ) {
+                        $processed_urls[] = $processed_url;
+                    }
+                } else {
+                    // Se já for URL, mantém como está
+                    $processed_urls[] = esc_url_raw( $banner_item );
+                }
+            }
+            
+            // Limita a 4 imagens e salva
+            $processed_urls = array_slice( $processed_urls, 0, 4 );
+            update_post_meta( $restaurant_id, VC_META_RESTAURANT_FIELDS['banners'], implode( "\n", $processed_urls ) );
         }
 
         if ( isset( $payload['highlights'] ) && is_array( $payload['highlights'] ) ) {
