@@ -65,7 +65,10 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
         </section>
         <section class="vc-extra-section">
           <h2>Contato e Documento</h2>
-          <div class="input-row"><input type="text" id="vcCnpj" placeholder="CNPJ"></div>
+          <div class="input-row">
+            <input type="text" id="vcCnpj" placeholder="CNPJ" readonly style="background:#f5f5f5;cursor:not-allowed;">
+            <small style="font-size:0.85em;color:#6b7672;align-self:center;">CNPJ não pode ser alterado</small>
+          </div>
           <div class="input-row"><input type="text" id="vcWhatsapp" placeholder="WhatsApp"></div>
           <div class="input-row"><input type="text" id="vcSite" placeholder="Site"></div>
         </section>
@@ -83,17 +86,26 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
               <span class="slider"></span>
             </label>
           </div>
-          <div class="input-row">
-            <input type="text" id="vcDeliveryEta" placeholder="Tempo médio de entrega (ex: 35-50 min)">
-            <input type="text" id="vcDeliveryFee" placeholder="Taxa de entrega (texto)">
+          <div class="input-row" style="position:relative;">
+            <div style="display:flex;align-items:center;flex:1;position:relative;">
+              <input type="number" id="vcDeliveryEta" placeholder="35" min="0" step="1" style="flex:1;padding-right:50px;">
+              <span style="position:absolute;right:15px;color:#6b7672;font-weight:600;pointer-events:none;">min</span>
+            </div>
+            <div style="display:flex;align-items:center;flex:1;position:relative;">
+              <span style="position:absolute;left:15px;color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
+              <input type="number" id="vcDeliveryFee" placeholder="5.00" min="0" step="0.01" style="flex:1;padding-left:35px;">
+            </div>
           </div>
           <div class="input-row">
             <input type="text" id="vcDeliveryType" placeholder="Tipo de entrega (ex: Entrega Própria)">
           </div>
           <div class="input-row">
-            <input type="number" id="vcPriceKm" step="0.01" placeholder="Preço por km (R$)">
-            <input type="number" id="vcFreeAbove" step="0.01" placeholder="Frete grátis acima de (R$)">
-            <input type="number" id="vcMinOrder" step="0.01" placeholder="Pedido mínimo (R$)">
+            <input type="number" id="vcDeliveryRadius" step="0.1" min="0" placeholder="Raio de aplicação da taxa padrão (km)">
+            <input type="number" id="vcPriceKm" step="0.01" min="0" placeholder="Valor adicional por KM (R$)">
+          </div>
+          <div class="input-row">
+            <input type="number" id="vcFreeAbove" step="0.01" min="0" placeholder="Frete grátis acima de (R$)">
+            <input type="number" id="vcMinOrder" step="0.01" min="0" placeholder="Pedido mínimo (R$)">
           </div>
           <div class="input-row">
             <input type="text" id="vcAccessUrl" placeholder="Token de acesso (access_url)">
@@ -156,9 +168,16 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
     setValue('vcLatitude', data.geo ? data.geo.lat : '');
     setValue('vcLongitude', data.geo ? data.geo.lng : '');
     setValue('vcAccessUrl', data.access_url);
-    setValue('vcDeliveryEta', data.delivery_eta);
-    setValue('vcDeliveryFee', data.delivery_fee);
+    // Tempo de entrega: remove "min" se existir, mantém só o número
+    const etaValue = data.delivery_eta ? String(data.delivery_eta).replace(/\s*min\s*/gi, '').trim() : '';
+    setValue('vcDeliveryEta', etaValue);
+    
+    // Taxa de entrega: remove "R$" se existir, mantém só o número
+    const feeValue = data.delivery_fee ? String(data.delivery_fee).replace(/R\$\s*/gi, '').trim() : '';
+    setValue('vcDeliveryFee', feeValue);
+    
     setValue('vcDeliveryType', data.delivery_type);
+    setValue('vcDeliveryRadius', data.shipping ? data.shipping.radius : '');
     setValue('vcPriceKm', data.shipping ? data.shipping.price_per_km : '');
     setValue('vcFreeAbove', data.shipping ? data.shipping.free_above : '');
     setValue('vcMinOrder', data.shipping ? data.shipping.min_order : '');
@@ -607,7 +626,7 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
         base_fee: getVal('taxaBase') || null,
       } : {
         mode: 'radius',
-        radius: getVal('kmRaio') || null,
+        radius: getVal('vcDeliveryRadius') || getVal('kmRaio') || null,
         base_fee: getVal('taxaBase') || null,
         price_per_km: getVal('vcPriceKm') || null,
       };
@@ -627,15 +646,24 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
       const payload = {
         title: getVal('nomeRestaurante'),
         description: getVal('descricao'),
-        cnpj: getVal('vcCnpj'),
+        // CNPJ não é enviado (campo readonly, não pode ser alterado)
         whatsapp: getVal('vcWhatsapp'),
         site: getVal('vcSite'),
         address: getVal('vcEndereco'),
         lat: getVal('vcLatitude'),
         lng: getVal('vcLongitude'),
         delivery: !!document.getElementById('vcDeliveryFlag')?.checked,
-        delivery_eta: getVal('vcDeliveryEta'),
-        delivery_fee: getVal('vcDeliveryFee'),
+        delivery_eta: (function(){
+          const val = getVal('vcDeliveryEta');
+          return val ? val + ' min' : '';
+        })(),
+        delivery_fee: (function(){
+          const val = getVal('vcDeliveryFee');
+          if (!val) return '';
+          const num = parseFloat(val);
+          if (isNaN(num)) return '';
+          return 'R$ ' + num.toFixed(2).replace('.', ',');
+        })(),
         delivery_type: getVal('vcDeliveryType'),
         access_url: getVal('vcAccessUrl'),
         horario_legado: getVal('vcHorarioLegado'),

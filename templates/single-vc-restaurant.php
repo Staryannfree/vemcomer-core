@@ -299,7 +299,27 @@ $header_bg = $cover_url ?: ( $banner_urls[0] ?? $profile_image_url );
 <span class="vc-info-attr" title="<?php echo esc_attr__( 'Tempo de entrega', 'vemcomer' ); ?>">⏱️ <?php echo esc_html( $delivery_eta ); ?></span>
 <?php endif; ?>
 <?php if ( $delivery_fee ) : ?>
-<span class="vc-info-attr" title="<?php echo esc_attr__( 'Taxa de entrega', 'vemcomer' ); ?>"><?php echo esc_html( $delivery_fee ); ?></span>
+<span class="vc-info-attr" title="<?php echo esc_attr__( 'Taxa de entrega', 'vemcomer' ); ?>">💰 <?php echo esc_html( $delivery_fee ); ?></span>
+<?php endif; ?>
+<?php
+$delivery_radius = get_post_meta( get_the_ID(), VC_META_RESTAURANT_FIELDS['delivery_radius'], true );
+$price_per_km   = get_post_meta( get_the_ID(), VC_META_RESTAURANT_FIELDS['delivery_price_per_km'], true );
+if ( $delivery_radius || $price_per_km ) :
+?>
+<span class="vc-info-attr" title="<?php echo esc_attr__( 'Entrega dinâmica', 'vemcomer' ); ?>">
+  🚚 <?php
+  if ( $delivery_radius ) {
+    echo esc_html( sprintf( __( 'Raio: %s km', 'vemcomer' ), number_format_i18n( (float) $delivery_radius, 1 ) ) );
+  }
+  if ( $delivery_radius && $price_per_km ) {
+    echo ' | ';
+  }
+  if ( $price_per_km ) {
+    $price_formatted = function_exists( 'wc_price' ) ? wc_price( (float) $price_per_km ) : sprintf( 'R$ %s', number_format_i18n( (float) $price_per_km, 2 ) );
+    echo esc_html( sprintf( __( '+%s/km', 'vemcomer' ), $price_formatted ) );
+  }
+  ?>
+</span>
 <?php endif; ?>
 <?php if ( null !== $is_open ) : ?>
 <span class="vc-tag-status <?php echo $is_open ? '' : 'is-closed'; ?>"><?php echo $is_open ? esc_html__( 'Aberto', 'vemcomer' ) : esc_html__( 'Fechado', 'vemcomer' ); ?></span>
