@@ -270,9 +270,8 @@ $stats['categories'] = count($categories);
 
     <?php if (! $restaurant) : ?>
         <div class="empty-state"><?php echo esc_html__('Faça login como lojista para gerenciar o cardápio.', 'vemcomer'); ?></div>
-    <?php elseif (empty($categories)) : ?>
-        <div class="empty-state"><?php echo esc_html__('Nenhum item cadastrado ainda. Adicione produtos para começar.', 'vemcomer'); ?></div>
     <?php else : ?>
+        <!-- Estatísticas sempre visíveis quando há restaurante -->
         <div class="menu-stats" aria-label="<?php echo esc_attr__('Resumo do cardápio', 'vemcomer'); ?>">
             <div class="stat-card">
                 <div class="stat-label"><?php echo esc_html__('Itens ativos', 'vemcomer'); ?></div>
@@ -291,6 +290,10 @@ $stats['categories'] = count($categories);
                 <div class="stat-value" data-stat="categories"><?php echo esc_html($stats['categories']); ?></div>
             </div>
         </div>
+        
+        <?php if (empty($categories)) : ?>
+            <div class="empty-state" style="margin-top:20px;"><?php echo esc_html__('Nenhum item cadastrado ainda. Adicione produtos para começar.', 'vemcomer'); ?></div>
+        <?php else : ?>
         <div class="tabs-cat">
             <?php foreach ($categories as $index => $cat) : ?>
                 <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-<?php echo esc_attr($cat['slug']); ?>"><?php echo esc_html($cat['name']); ?></button>
@@ -353,6 +356,7 @@ $stats['categories'] = count($categories);
                 </div>
             </div>
         <?php endforeach; ?>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 
@@ -487,6 +491,7 @@ $stats['categories'] = count($categories);
                 active: document.querySelector('[data-stat="active"]'),
                 paused: document.querySelector('[data-stat="paused"]'),
                 noThumb: document.querySelector('[data-stat="no-thumb"]'),
+                categories: document.querySelector('[data-stat="categories"]'),
             };
 
             let active = 0; let paused = 0; let noThumb = 0;
@@ -494,12 +499,16 @@ $stats['categories'] = count($categories);
                 const available = card.getAttribute('data-available') === '1';
                 if (available) { active++; } else { paused++; }
                 const img = card.querySelector('.prod-img');
-                if (img && img.getAttribute('src') === '') { noThumb++; }
+                if (img && (!img.getAttribute('src') || img.getAttribute('src') === '')) { noThumb++; }
             });
+
+            // Contar categorias únicas (pelas tabs)
+            const categoryCount = document.querySelectorAll('.cat-tab-btn').length;
 
             if (statNodes.active) statNodes.active.textContent = active;
             if (statNodes.paused) statNodes.paused.textContent = paused;
             if (statNodes.noThumb) statNodes.noThumb.textContent = noThumb;
+            if (statNodes.categories) statNodes.categories.textContent = categoryCount;
         };
 
         const toggleButtons = document.querySelectorAll('.js-toggle-availability');
