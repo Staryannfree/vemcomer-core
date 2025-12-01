@@ -101,10 +101,38 @@ class Signups {
                 <div id="vc-restaurant-map-picker" class="vc-form__map" aria-label="<?php echo esc_attr__( 'Mapa para selecionar localização do restaurante', 'vemcomer' ); ?>"></div>
                 <button type="button" class="vc-btn vc-btn--ghost vc-form__location" id="vc-use-my-location"><?php echo esc_html__( 'Usar minha localização', 'vemcomer' ); ?></button>
             </div>
+            <?php
+            // Lista de categorias/cozinhas disponíveis (vc_cuisine) para o autocomplete
+            $signup_cuisines = [];
+            if ( taxonomy_exists( 'vc_cuisine' ) ) {
+                $terms = get_terms(
+                    [
+                        'taxonomy'   => 'vc_cuisine',
+                        'hide_empty' => false,
+                    ]
+                );
+                if ( ! is_wp_error( $terms ) ) {
+                    $signup_cuisines = $terms;
+                }
+            }
+            ?>
             <div class="vc-form__row">
                 <label>
                     <?php echo esc_html__( 'Cozinha/Categoria', 'vemcomer' ); ?>
-                    <input type="text" name="restaurant_cuisine" maxlength="60" placeholder="ex.: pizza" />
+                    <input
+                        type="text"
+                        name="restaurant_cuisine"
+                        list="vc-restaurant-cuisines"
+                        maxlength="60"
+                        placeholder="<?php echo esc_attr__( 'Digite para buscar ou escolha uma categoria', 'vemcomer' ); ?>"
+                    />
+                    <?php if ( ! empty( $signup_cuisines ) ) : ?>
+                        <datalist id="vc-restaurant-cuisines">
+                            <?php foreach ( $signup_cuisines as $term ) : ?>
+                                <option value="<?php echo esc_attr( $term->slug ); ?>" label="<?php echo esc_attr( $term->name ); ?>"></option>
+                            <?php endforeach; ?>
+                        </datalist>
+                    <?php endif; ?>
                 </label>
                 <label>
                     <?php echo esc_html__( 'Localização/bairro', 'vemcomer' ); ?>
