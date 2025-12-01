@@ -186,6 +186,90 @@ vc_marketplace_render_static_template('configuracao-loja.html');
       destaqueBadge.textContent = 'Destaque ativo';
     }
 
+    // Galeria da Loja (até 4 imagens)
+    const galeriaGrid = document.getElementById('galeria-grid');
+    const galeriaUpload = document.getElementById('galeria-upload');
+    const galeriaAddBtn = document.getElementById('galeria-add-btn');
+    let galeriaImages = Array.isArray(data.banners) ? data.banners.slice(0, 4) : [];
+    
+    // Expõe galeriaImages globalmente para o salvamento
+    window.galeriaImages = galeriaImages;
+    
+    function renderGaleria() {
+      if (!galeriaGrid) return;
+      galeriaGrid.innerHTML = '';
+      
+      galeriaImages.forEach(function(url, index){
+        const item = document.createElement('div');
+        item.className = 'galeria-item';
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Imagem da galeria ' + (index + 1);
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'galeria-item-remove';
+        removeBtn.innerHTML = '×';
+        removeBtn.title = 'Remover imagem';
+        removeBtn.onclick = function(){
+          galeriaImages.splice(index, 1);
+          window.galeriaImages = galeriaImages; // Atualiza global
+          renderGaleria();
+          updateGaleriaAddBtn();
+        };
+        item.appendChild(img);
+        item.appendChild(removeBtn);
+        galeriaGrid.appendChild(item);
+      });
+      
+      updateGaleriaAddBtn();
+    }
+    
+    function updateGaleriaAddBtn() {
+      if (galeriaAddBtn) {
+        galeriaAddBtn.disabled = galeriaImages.length >= 4;
+        if (galeriaImages.length >= 4) {
+          galeriaAddBtn.textContent = 'Máximo de 4 imagens atingido';
+        } else {
+          galeriaAddBtn.innerHTML = '<span style="font-size:1.5em;line-height:1;">+</span> Adicionar Imagem';
+        }
+      }
+    }
+    
+    if (galeriaAddBtn && galeriaUpload) {
+      galeriaAddBtn.onclick = function(){
+        if (galeriaImages.length < 4) {
+          galeriaUpload.click();
+        }
+      };
+      
+      galeriaUpload.addEventListener('change', function(e){
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        
+        files.forEach(function(file){
+          if (galeriaImages.length >= 4) return;
+          if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione apenas imagens.');
+            return;
+          }
+          
+          const reader = new FileReader();
+          reader.onload = function(event){
+            const dataUrl = event.target.result;
+            galeriaImages.push(dataUrl);
+            window.galeriaImages = galeriaImages; // Atualiza global
+            renderGaleria();
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        e.target.value = '';
+      });
+    }
+    
+    renderGaleria();
+    
+    // Mantém compatibilidade com banners antigos (se existir)
     if (Array.isArray(data.banners) && data.banners.length) {
       const group = document.querySelector('.banners-group');
       if (group) {
@@ -346,7 +430,13 @@ vc_marketplace_render_static_template('configuracao-loja.html');
       shipping.free_above = getVal('vcFreeAbove') || null;
       shipping.min_order = getVal('vcMinOrder') || null;
 
+      // Galeria da Loja (até 4 imagens) - prioriza a galeria nova
+      const galeriaUrls = (window.galeriaImages && Array.isArray(window.galeriaImages)) ? window.galeriaImages.slice(0, 4) : [];
+      
+      // Mantém compatibilidade com banners antigos (se não houver galeria nova)
       const banners = Array.from(document.querySelectorAll('.banners-group img')).map(img => img.src).filter(Boolean);
+      // Prioriza galeria nova, depois banners antigos
+      const finalBanners = galeriaUrls.length > 0 ? galeriaUrls : banners;
       const reservaMsg = document.querySelector('.switch-row input[type="text"]');
 
       const payload = {
@@ -364,7 +454,7 @@ vc_marketplace_render_static_template('configuracao-loja.html');
         delivery_type: getVal('vcDeliveryType'),
         access_url: getVal('vcAccessUrl'),
         horario_legado: getVal('vcHorarioLegado'),
-        banners,
+        banners: finalBanners,
         highlights: collectLines('vcHighlights'),
         filters: collectLines('vcFilters'),
         payments: collectLines('vcPayments'),

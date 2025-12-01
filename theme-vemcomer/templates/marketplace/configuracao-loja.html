@@ -76,6 +76,28 @@
     .banner-actions{display:flex;gap:7px;}
     .banner-btn{background:#2d8659;color:#fff;border:none;font-weight:700;padding:4px 10px;border-radius:6px;font-size:.95em;cursor:pointer;}
     .banner-btn.remove{background:#ffe7e7;color:#ea5252;}
+    /* Galeria da Loja */
+    .galeria-section {margin:18px 0 24px 0;padding:16px;background:var(--primary-light);border-radius:12px;border:1px solid #cdf9e0;}
+    .galeria-grid {
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:14px;
+    }
+    .galeria-item {
+      position:relative;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px #2d865920;background:#fff;
+    }
+    .galeria-item img {
+      width:100%;height:100%;object-fit:cover;display:block;
+    }
+    .galeria-item-remove {
+      position:absolute;top:6px;right:6px;width:28px;height:28px;background:rgba(234,82,82,0.9);color:#fff;border:none;border-radius:50%;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:background 0.2s;z-index:2;
+    }
+    .galeria-item-remove:hover {background:rgba(234,82,82,1);}
+    .galeria-add-btn {
+      background:var(--primary);color:#fff;border:none;font-weight:700;padding:10px 18px;border-radius:8px;font-size:0.98em;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background 0.2s;
+    }
+    .galeria-add-btn:hover {background:var(--accent);}
+    .galeria-add-btn:disabled {
+      background:#ccc;cursor:not-allowed;opacity:0.6;
+    }
     .switch-row {display: flex;align-items: center;gap:14px;margin-bottom:13px;}
     .switch-label{font-size:1.03em;font-weight:700;color:var(--primary);}
     .switch {position:relative;display:inline-block;width:44px;height:23px;}
@@ -156,13 +178,16 @@
         <input type="text" id="nomeRestaurante" placeholder="Nome do restaurante" value="Restaurante Raízes da África"/>
         <span class="badge-selo">Destaque</span>
       </div>
-      <div class="banners-group">
-        <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef92?auto=format&fit=crop&w=120&q=60" alt="Banner 1" class="banner-thumb">
-        <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=120&q=60" alt="Banner 2" class="banner-thumb">
-        <div class="banner-actions">
-          <button class="banner-btn" onclick="alert('Adicionar Banner')">+ Banner</button>
-          <button class="banner-btn remove" onclick="alert('Remover Banner')">Remover</button>
+      <div class="galeria-section">
+        <h3 style="font-size:1.05em;font-weight:700;color:var(--primary);margin-bottom:12px;">Galeria da Loja</h3>
+        <div class="galeria-grid" id="galeria-grid">
+          <!-- Imagens serão inseridas aqui via JS -->
         </div>
+        <input type="file" accept="image/*" id="galeria-upload" multiple style="display:none;" />
+        <button type="button" class="galeria-add-btn" id="galeria-add-btn">
+          <span style="font-size:1.5em;line-height:1;">+</span> Adicionar Imagem
+        </button>
+        <p style="font-size:0.85em;color:var(--meta);margin-top:8px;">Máximo de 4 imagens na galeria</p>
       </div>
       <textarea placeholder="Descrição breve do restaurante" id="descricao"></textarea>
     </section>
