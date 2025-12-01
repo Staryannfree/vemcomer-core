@@ -106,6 +106,9 @@ if ($restaurant instanceof WP_Post) {
     ]);
 
     if ($items_query->have_posts()) {
+        // Debug: verificar quantos posts foram encontrados
+        // error_log('VC Debug: Encontrados ' . count($items_query->posts) . ' itens do cardápio');
+        
         foreach ($items_query->posts as $item) {
             // Obtém a imagem destacada do produto
             $thumb = get_the_post_thumbnail_url($item->ID, 'medium');
@@ -184,11 +187,12 @@ if ($restaurant instanceof WP_Post) {
 }
 
 // Converte array associativo para indexado e ordena categorias por nome
+// IMPORTANTE: array_values() preserva os dados, incluindo arrays aninhados como 'items'
 if (!empty($categories) && is_array($categories)) {
-    // Sempre converte para array indexado (preserva os dados)
+    // Sempre converte para array indexado (preserva TODOS os dados, incluindo 'items')
     $categories = array_values($categories);
     
-    // Ordena por nome
+    // Ordena por nome (preserva os arrays 'items' dentro de cada categoria)
     usort($categories, function ($a, $b) {
         $name_a = isset($a['name']) ? $a['name'] : '';
         $name_b = isset($b['name']) ? $b['name'] : '';
@@ -319,12 +323,21 @@ $stats['categories'] = is_array($categories) ? count($categories) : 0;
         </div>
 
         <?php foreach ($categories as $index => $cat) : ?>
-            <div class="tab-content" id="cat-<?php echo esc_attr($cat['slug']); ?>" style="<?php echo 0 === $index ? '' : 'display:none;'; ?>">
+            <?php
+            // Garantir que temos os itens da categoria
+            // IMPORTANTE: Verificar se 'items' existe e é um array válido
+            // Usar array_key_exists para garantir que a chave existe, mesmo que seja null
+            $cat_items = [];
+            if (array_key_exists('items', $cat) && is_array($cat['items'])) {
+                $cat_items = $cat['items'];
+            }
+            ?>
+            <div class="tab-content" id="cat-<?php echo esc_attr(isset($cat['slug']) ? $cat['slug'] : 'sem-categoria'); ?>" style="<?php echo 0 === $index ? '' : 'display:none;'; ?>">
                 <div class="prod-list">
-                    <?php if (empty($cat['items'])) : ?>
+                    <?php if (empty($cat_items)) : ?>
                         <div class="empty-state" style="width:100%;"><?php echo esc_html__('Nenhum item nesta categoria ainda.', 'vemcomer'); ?></div>
                     <?php else : ?>
-                        <?php foreach ($cat['items'] as $item) : ?>
+                        <?php foreach ($cat_items as $item) : ?>
                             <?php
                             // Garantir que os dados existem e não estão vazios
                             $item_id = isset($item['id']) && !empty($item['id']) ? (int) $item['id'] : 0;
