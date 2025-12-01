@@ -131,7 +131,7 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
             <label class="vc-field-label">Frete grátis acima de</label>
             <div style="position:relative;max-width:300px;">
               <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
-              <input type="number" id="vcFreeAbove" step="0.01" min="0" placeholder="50.00" style="width:100%;padding-left:35px;">
+              <input type="number" id="vcFreeAbove" step="0.01" min="0" placeholder="50.00 (digite o valor)" style="width:100%;padding-left:35px;">
             </div>
           </div>
           
@@ -146,7 +146,7 @@ wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/di
             <label class="vc-field-label">Pedido mínimo</label>
             <div style="position:relative;max-width:300px;">
               <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#6b7672;font-weight:600;z-index:1;pointer-events:none;">R$</span>
-              <input type="number" id="vcMinOrder" step="0.01" min="0" placeholder="30.00" style="width:100%;padding-left:35px;">
+              <input type="number" id="vcMinOrder" step="0.01" min="0" placeholder="30.00 (digite o valor)" style="width:100%;padding-left:35px;">
             </div>
           </div>
         </section>
