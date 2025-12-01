@@ -186,14 +186,13 @@ if ($restaurant instanceof WP_Post) {
     wp_reset_postdata();
 }
 
-// Converte array associativo para indexado e ordena categorias por nome
-// IMPORTANTE: array_values() preserva os dados, incluindo arrays aninhados como 'items'
+$categories_for_view = [];
+
+// Converte array associativo para indexado e ordena categorias por nome (mantendo os itens intactos)
 if (!empty($categories) && is_array($categories)) {
-    // Sempre converte para array indexado (preserva TODOS os dados, incluindo 'items')
-    $categories = array_values($categories);
-    
-    // Ordena por nome (preserva os arrays 'items' dentro de cada categoria)
-    usort($categories, function ($a, $b) {
+    $categories_for_view = array_values($categories);
+
+    usort($categories_for_view, function ($a, $b) {
         $name_a = isset($a['name']) ? $a['name'] : '';
         $name_b = isset($b['name']) ? $b['name'] : '';
         return strcasecmp($name_a, $name_b);
@@ -201,12 +200,12 @@ if (!empty($categories) && is_array($categories)) {
 }
 
 // Se não houver categorias mas houver restaurante, adiciona categoria padrão
-if (empty($categories) && $restaurant instanceof WP_Post) {
-    $categories[] = $default_category;
+if (empty($categories_for_view) && $restaurant instanceof WP_Post) {
+    $categories_for_view[] = $default_category;
 }
 
 // Atualiza estatística de categorias (sempre após processar tudo)
-$stats['categories'] = is_array($categories) ? count($categories) : 0;
+$stats['categories'] = is_array($categories_for_view) ? count($categories_for_view) : 0;
 ?>
 <div class="menu-gestao-container">
     <style>
@@ -313,16 +312,16 @@ $stats['categories'] = is_array($categories) ? count($categories) : 0;
             </div>
         </div>
         
-        <?php if (empty($categories)) : ?>
+        <?php if (empty($categories_for_view)) : ?>
             <div class="empty-state" style="margin-top:20px;"><?php echo esc_html__('Nenhum item cadastrado ainda. Adicione produtos para começar.', 'vemcomer'); ?></div>
         <?php else : ?>
         <div class="tabs-cat">
-            <?php foreach ($categories as $index => $cat) : ?>
+            <?php foreach ($categories_for_view as $index => $cat) : ?>
                 <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-<?php echo esc_attr($cat['slug']); ?>"><?php echo esc_html($cat['name']); ?></button>
             <?php endforeach; ?>
         </div>
 
-        <?php foreach ($categories as $index => $cat) : ?>
+        <?php foreach ($categories_for_view as $index => $cat) : ?>
             <?php
             // Garantir que temos os itens da categoria
             // IMPORTANTE: Verificar se 'items' existe e é um array válido
