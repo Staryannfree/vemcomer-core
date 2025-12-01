@@ -98,49 +98,81 @@ $orders_count  = (int) get_post_meta( get_the_ID(), 'vc_restaurant_orders_count'
 $delivery_eta  = get_post_meta( get_the_ID(), 'vc_restaurant_delivery_eta', true );
 $delivery_fee  = get_post_meta( get_the_ID(), 'vc_restaurant_delivery_fee', true );
 $delivery_type = get_post_meta( get_the_ID(), 'vc_restaurant_delivery_type', true );
-$free_shipping = get_post_meta( get_the_ID(), '_vc_delivery_free_above', true );
+$free_shipping = get_post_meta( get_the_ID(), VC_META_RESTAURANT_FIELDS['delivery_free_above'], true );
+$min_order     = get_post_meta( get_the_ID(), VC_META_RESTAURANT_FIELDS['delivery_min_order'], true );
 
 $reservation_enabled = '1' === get_post_meta( get_the_ID(), 'vc_restaurant_reservation_enabled', true );
 $reservation_link    = get_post_meta( get_the_ID(), 'vc_restaurant_reservation_link', true );
 $reservation_phone   = get_post_meta( get_the_ID(), 'vc_restaurant_reservation_phone', true );
 $reservation_notes   = get_post_meta( get_the_ID(), 'vc_restaurant_reservation_notes', true );
 
+// Preparar dados de horários estruturados
+$schedule_data = null;
 $hours_formatted = '';
+$today_schedule = null;
+$today_close_time = '';
+
 if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
-$schedule     = \VC\Utils\Schedule_Helper::get_schedule( get_the_ID() );
-$day_names_pt = array(
-'monday'    => __( 'Segunda', 'vemcomer' ),
-'tuesday'   => __( 'Terça', 'vemcomer' ),
-'wednesday' => __( 'Quarta', 'vemcomer' ),
-'thursday'  => __( 'Quinta', 'vemcomer' ),
-'friday'    => __( 'Sexta', 'vemcomer' ),
-'saturday'  => __( 'Sábado', 'vemcomer' ),
-'sunday'    => __( 'Domingo', 'vemcomer' ),
-);
-if ( ! empty( $schedule ) ) {
-$lines = array();
-foreach ( $schedule as $day => $day_data ) {
-if ( empty( $day_data['enabled'] ) || empty( $day_data['periods'] ) ) {
-continue;
-}
-$periods_str = array();
-foreach ( $day_data['periods'] as $period ) {
-$open  = $period['open'] ?? '';
-$close = $period['close'] ?? '';
-if ( $open && $close ) {
-$periods_str[] = $open . ' - ' . $close;
-}
-}
-if ( $periods_str ) {
-$lines[] = ( $day_names_pt[ $day ] ?? ucfirst( $day ) ) . ': ' . implode( ', ', $periods_str );
-}
-}
-$hours_formatted = implode( "\n", $lines );
-}
+    $schedule     = \VC\Utils\Schedule_Helper::get_schedule( get_the_ID() );
+    $day_names_pt = array(
+        'monday'    => __( 'Segunda', 'vemcomer' ),
+        'tuesday'   => __( 'Terça', 'vemcomer' ),
+        'wednesday' => __( 'Quarta', 'vemcomer' ),
+        'thursday'  => __( 'Quinta', 'vemcomer' ),
+        'friday'    => __( 'Sexta', 'vemcomer' ),
+        'saturday'  => __( 'Sábado', 'vemcomer' ),
+        'sunday'    => __( 'Domingo', 'vemcomer' ),
+    );
+    
+    // Mapear dias da semana PHP para chaves do schedule
+    $day_map = array(
+        1 => 'monday',
+        2 => 'tuesday',
+        3 => 'wednesday',
+        4 => 'thursday',
+        5 => 'friday',
+        6 => 'saturday',
+        0 => 'sunday',
+    );
+    
+    $current_day_key = $day_map[ (int) date( 'w' ) ] ?? null;
+    
+    if ( ! empty( $schedule ) ) {
+        $schedule_data = $schedule;
+        
+        // Buscar horário de hoje
+        if ( $current_day_key && isset( $schedule[ $current_day_key ] ) ) {
+            $today_schedule = $schedule[ $current_day_key ];
+            if ( ! empty( $today_schedule['enabled'] ) && ! empty( $today_schedule['periods'] ) ) {
+                $last_period = end( $today_schedule['periods'] );
+                $today_close_time = $last_period['close'] ?? '';
+            }
+        }
+        
+        // Formatar para exibição completa (fallback)
+        $lines = array();
+        foreach ( $schedule as $day => $day_data ) {
+            if ( empty( $day_data['enabled'] ) || empty( $day_data['periods'] ) ) {
+                continue;
+            }
+            $periods_str = array();
+            foreach ( $day_data['periods'] as $period ) {
+                $open  = $period['open'] ?? '';
+                $close = $period['close'] ?? '';
+                if ( $open && $close ) {
+                    $periods_str[] = $open . ' - ' . $close;
+                }
+            }
+            if ( $periods_str ) {
+                $lines[] = ( $day_names_pt[ $day ] ?? ucfirst( $day ) ) . ': ' . implode( ', ', $periods_str );
+            }
+        }
+        $hours_formatted = implode( "\n", $lines );
+    }
 }
 
 if ( ! $hours_formatted ) {
-$hours_formatted = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
+    $hours_formatted = get_post_meta( get_the_ID(), 'vc_restaurant_open_hours', true );
 }
 
 $has_coordinates = $lat && $lng;
@@ -325,12 +357,66 @@ if ( $delivery_radius || $price_per_km ) :
 <span class="vc-tag-status <?php echo $is_open ? '' : 'is-closed'; ?>"><?php echo $is_open ? esc_html__( 'Aberto', 'vemcomer' ) : esc_html__( 'Fechado', 'vemcomer' ); ?></span>
 <?php endif; ?>
 </div>
-<?php if ( $hours_formatted ) : ?>
+<?php if ( $schedule_data || $hours_formatted ) : ?>
 <div class="vc-horario">
-<?php echo nl2br( esc_html( $hours_formatted ) ); ?>
-<?php if ( $delivery_raw ) : ?>
-<?php echo esc_html__( ' | Delivery e Retirada', 'vemcomer' ); ?>
-<?php endif; ?>
+    <?php if ( $schedule_data && isset( $current_day_key ) ) : ?>
+        <?php if ( $today_close_time && $today_schedule && ! empty( $today_schedule['enabled'] ) ) : ?>
+            <div class="vc-horario-hoje" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="font-weight:700;color:var(--primary);">
+                    <?php echo esc_html__( 'Aberto hoje até:', 'vemcomer' ); ?> <strong><?php echo esc_html( $today_close_time ); ?></strong>
+                </span>
+                <button type="button" class="vc-horario-toggle" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:1.2em;padding:0;display:flex;align-items:center;" aria-label="<?php echo esc_attr__( 'Ver todos os horários', 'vemcomer' ); ?>">
+                    <span class="vc-horario-icon" style="transition:transform 0.3s;">▼</span>
+                </button>
+            </div>
+        <?php else : ?>
+            <div class="vc-horario-hoje" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="font-weight:700;color:var(--danger);">
+                    <?php echo esc_html__( 'Fechado hoje', 'vemcomer' ); ?>
+                </span>
+                <button type="button" class="vc-horario-toggle" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:1.2em;padding:0;display:flex;align-items:center;" aria-label="<?php echo esc_attr__( 'Ver todos os horários', 'vemcomer' ); ?>">
+                    <span class="vc-horario-icon" style="transition:transform 0.3s;">▼</span>
+                </button>
+            </div>
+        <?php endif; ?>
+        <div class="vc-horario-completo" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid #eaf8f1;">
+            <?php
+            $day_names_pt_full = array(
+                'monday'    => __( 'Segunda', 'vemcomer' ),
+                'tuesday'   => __( 'Terça', 'vemcomer' ),
+                'wednesday' => __( 'Quarta', 'vemcomer' ),
+                'thursday'  => __( 'Quinta', 'vemcomer' ),
+                'friday'    => __( 'Sexta', 'vemcomer' ),
+                'saturday'  => __( 'Sábado', 'vemcomer' ),
+                'sunday'    => __( 'Domingo', 'vemcomer' ),
+            );
+            foreach ( $schedule_data as $day => $day_data ) {
+                if ( empty( $day_data['enabled'] ) || empty( $day_data['periods'] ) ) {
+                    echo esc_html( ( $day_names_pt_full[ $day ] ?? ucfirst( $day ) ) . ': ' . __( 'Fechado', 'vemcomer' ) ) . '<br>';
+                    continue;
+                }
+                $periods_str = array();
+                foreach ( $day_data['periods'] as $period ) {
+                    $open  = $period['open'] ?? '';
+                    $close = $period['close'] ?? '';
+                    if ( $open && $close ) {
+                        $periods_str[] = $open . ' - ' . $close;
+                    }
+                }
+                if ( $periods_str ) {
+                    echo esc_html( ( $day_names_pt_full[ $day ] ?? ucfirst( $day ) ) . ': ' . implode( ', ', $periods_str ) ) . '<br>';
+                }
+            }
+            ?>
+        </div>
+    <?php else : ?>
+        <?php if ( $hours_formatted ) : ?>
+            <?php echo nl2br( esc_html( $hours_formatted ) ); ?>
+        <?php endif; ?>
+    <?php endif; ?>
+    <?php if ( $delivery_raw ) : ?>
+        <?php echo esc_html__( ' | Delivery e Retirada', 'vemcomer' ); ?>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 <div class="vc-badges">
@@ -341,9 +427,13 @@ if ( $delivery_radius || $price_per_km ) :
 <?php elseif ( 'pickup' === $delivery_type ) : ?>
 <span class="vc-badge-pill"><?php echo esc_html__( 'Retirada no local', 'vemcomer' ); ?></span>
 <?php endif; ?>
-<?php if ( $free_shipping ) : ?>
+<?php if ( $free_shipping && (float) $free_shipping > 0 ) : ?>
 <?php $free_shipping_label = function_exists( 'wc_price' ) ? wc_price( (float) $free_shipping ) : sprintf( 'R$ %s', number_format_i18n( (float) $free_shipping, 2 ) ); ?>
 <span class="vc-badge-pill is-accent"><?php echo esc_html( sprintf( __( 'Entrega Grátis acima de %s', 'vemcomer' ), $free_shipping_label ) ); ?></span>
+<?php endif; ?>
+<?php if ( $min_order && (float) $min_order > 0 ) : ?>
+<?php $min_order_label = function_exists( 'wc_price' ) ? wc_price( (float) $min_order ) : sprintf( 'R$ %s', number_format_i18n( (float) $min_order, 2 ) ); ?>
+<span class="vc-badge-pill" style="background:var(--primary-light);color:var(--primary);"><?php echo esc_html( sprintf( __( 'Pedido mínimo: %s', 'vemcomer' ), $min_order_label ) ); ?></span>
 <?php endif; ?>
 </div>
 <?php if ( $highlight_tags || $cuisine_list || $location_list ) : ?>
@@ -517,9 +607,22 @@ if ( $delivery_radius || $price_per_km ) :
 </div>
 </nav>
 
-<?php if ( $reservation_enabled ) : ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Toggle de horários (expandir/colapsar)
+    const horarioToggle = document.querySelector('.vc-horario-toggle');
+    const horarioCompleto = document.querySelector('.vc-horario-completo');
+    const horarioIcon = document.querySelector('.vc-horario-icon');
+    
+    if (horarioToggle && horarioCompleto && horarioIcon) {
+        horarioToggle.addEventListener('click', function() {
+            const isExpanded = horarioCompleto.style.display !== 'none';
+            horarioCompleto.style.display = isExpanded ? 'none' : 'block';
+            horarioIcon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+    }
+    
+<?php if ( $reservation_enabled ) : ?>
 const tabs = document.querySelectorAll('.vc-tab-btn');
 const sections = {
 'vc-aba-cardapio': document.getElementById('vc-aba-cardapio'),
