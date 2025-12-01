@@ -85,9 +85,18 @@ class Signups {
             </div>
             <label>
                 <?php echo esc_html__( 'Endereço completo', 'vemcomer' ); ?>
-                <input type="text" name="restaurant_address" maxlength="200" />
+                <input
+                    type="text"
+                    name="restaurant_address"
+                    maxlength="200"
+                    placeholder="<?php echo esc_attr__( 'Preencha manualmente seu endereço completo ou clique em \"Usar minha localização\" para preencher automaticamente.', 'vemcomer' ); ?>"
+                />
             </label>
+            <button type="button" class="vc-btn vc-btn--ghost vc-form__location" id="vc-use-my-location">
+                <?php echo esc_html__( 'Usar minha localização', 'vemcomer' ); ?>
+            </button>
             <div class="vc-form__geo">
+                <div id="vc-restaurant-map-picker" class="vc-form__map" aria-label="<?php echo esc_attr__( 'Mapa para selecionar localização do restaurante', 'vemcomer' ); ?>"></div>
                 <div class="vc-form__row">
                     <label>
                         <?php echo esc_html__( 'Latitude', 'vemcomer' ); ?>
@@ -98,8 +107,6 @@ class Signups {
                         <input type="text" name="restaurant_lng" maxlength="20" readonly />
                     </label>
                 </div>
-                <div id="vc-restaurant-map-picker" class="vc-form__map" aria-label="<?php echo esc_attr__( 'Mapa para selecionar localização do restaurante', 'vemcomer' ); ?>"></div>
-                <button type="button" class="vc-btn vc-btn--ghost vc-form__location" id="vc-use-my-location"><?php echo esc_html__( 'Usar minha localização', 'vemcomer' ); ?></button>
             </div>
             <?php
             // Lista de categorias/cozinhas disponíveis (vc_cuisine) para o autocomplete
