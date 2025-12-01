@@ -22,6 +22,10 @@ if (! $vc_marketplace_inline) {
 
 vc_marketplace_render_static_template('configuracao-loja.html');
 
+// Carrega Select2 para busca nas categorias
+wp_enqueue_style('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', [], '4.1.0');
+wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', ['jquery'], '4.1.0', true);
+
 ?>
 <script>
   window.vcConfigPrefill = <?php echo wp_json_encode( $config_prefill ); ?>;
@@ -39,18 +43,24 @@ vc_marketplace_render_static_template('configuracao-loja.html');
       const firstSection = container.querySelector('section');
       const extraHtml = `
         <section class="vc-extra-section">
-          <h2>Categoria do Perfil</h2>
+          <h2>Categorias do Perfil</h2>
           <div class="input-row">
-            <select id="vcPrimaryCuisine" style="flex:1;">
-              <option value="">Selecione a categoria principal</option>
+            <select id="vcCuisine1" style="flex:1;" class="vc-cuisine-select">
+              <option value="">Selecione a primeira categoria</option>
             </select>
           </div>
           <div class="input-row">
-            <select id="vcSecondaryCuisines" multiple style="flex:1; min-height: 80px;">
+            <select id="vcCuisine2" style="flex:1;" class="vc-cuisine-select">
+              <option value="">Selecione a segunda categoria (opcional)</option>
+            </select>
+          </div>
+          <div class="input-row">
+            <select id="vcCuisine3" style="flex:1;" class="vc-cuisine-select">
+              <option value="">Selecione a terceira categoria (opcional)</option>
             </select>
           </div>
           <p style="font-size: 0.82rem; color: #6b7672; margin-top: 4px;">
-            Escolha 1 categoria principal e até 3 categorias secundárias que melhor descrevem seu estabelecimento.
+            Escolha até 3 categorias que melhor descrevem seu estabelecimento. A primeira será a categoria principal.
           </p>
         </section>
         <section class="vc-extra-section">
@@ -158,27 +168,78 @@ vc_marketplace_render_static_template('configuracao-loja.html');
     setValue('vcPlanLimit', data.plan_limit);
     setValue('vcPlanUsed', data.plan_used);
 
-    // Preencher categorias (primary_cuisine + secondary_cuisines)
+    // Preencher categorias nos 3 selects com busca
     if (Array.isArray(data.cuisine_terms) && data.cuisine_terms.length) {
-      const primarySelect = document.getElementById('vcPrimaryCuisine');
-      const secondarySelect = document.getElementById('vcSecondaryCuisines');
-      data.cuisine_terms.forEach(function(term){
-        const opt1 = document.createElement('option');
-        opt1.value = term.id;
-        opt1.textContent = term.name;
-        if (data.primary_cuisine && term.id === data.primary_cuisine) {
-          opt1.selected = true;
+      const select1 = document.getElementById('vcCuisine1');
+      const select2 = document.getElementById('vcCuisine2');
+      const select3 = document.getElementById('vcCuisine3');
+      
+      // Monta lista de todas as categorias
+      const allTerms = data.cuisine_terms;
+      
+      // Primeira categoria = principal
+      const primaryId = data.primary_cuisine || null;
+      const secondaryIds = Array.isArray(data.secondary_cuisines) ? data.secondary_cuisines : [];
+      
+      // Preenche os 3 selects com todas as opções
+      [select1, select2, select3].forEach(function(select, index) {
+        if (!select) return;
+        
+        // Limpa opções existentes (exceto a primeira que é placeholder)
+        while (select.options.length > 1) {
+          select.remove(1);
         }
-        if (primarySelect) primarySelect.appendChild(opt1);
-
-        const opt2 = document.createElement('option');
-        opt2.value = term.id;
-        opt2.textContent = term.name;
-        if (Array.isArray(data.secondary_cuisines) && data.secondary_cuisines.includes(term.id)) {
-          opt2.selected = true;
+        
+        // Adiciona todas as categorias
+        allTerms.forEach(function(term) {
+          const opt = document.createElement('option');
+          opt.value = term.id;
+          opt.textContent = term.name;
+          select.appendChild(opt);
+        });
+        
+        // Seleciona o valor apropriado
+        if (index === 0 && primaryId) {
+          select.value = primaryId;
+        } else if (index === 1 && secondaryIds[0]) {
+          select.value = secondaryIds[0];
+        } else if (index === 2 && secondaryIds[1]) {
+          select.value = secondaryIds[1];
         }
-        if (secondarySelect) secondarySelect.appendChild(opt2);
       });
+      
+      // Inicializa Select2 para busca (aguarda carregamento se necessário)
+      function initSelect2() {
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+          jQuery('.vc-cuisine-select').select2({
+            placeholder: function() {
+              return jQuery(this).find('option:first').text();
+            },
+            allowClear: true,
+            width: '100%',
+            language: {
+              noResults: function() {
+                return 'Nenhuma categoria encontrada';
+              },
+              searching: function() {
+                return 'Buscando...';
+              }
+            }
+          });
+        } else {
+          // Se Select2 ainda não carregou, tenta novamente após um delay
+          setTimeout(initSelect2, 100);
+        }
+      }
+      
+      // Aguarda um pouco para garantir que Select2 foi carregado
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(initSelect2, 200);
+        });
+      } else {
+        setTimeout(initSelect2, 200);
+      }
     }
 
     const destaqueBadge = document.querySelector('.badge-selo');
@@ -593,14 +654,22 @@ vc_marketplace_render_static_template('configuracao-loja.html');
         reservation_message: reservaMsg ? reservaMsg.value : '',
         holidays: collectLines('vcHolidays'),
         primary_cuisine: (function(){
-          const el = document.getElementById('vcPrimaryCuisine');
+          const el = document.getElementById('vcCuisine1');
           return el && el.value ? parseInt(el.value, 10) : null;
         })(),
         secondary_cuisines: (function(){
-          const el = document.getElementById('vcSecondaryCuisines');
-          if (!el) return [];
-          const selected = Array.from(el.selectedOptions || []);
-          return selected.slice(0, 3).map(function(opt){ return parseInt(opt.value, 10); }).filter(function(v){ return !isNaN(v); });
+          const el2 = document.getElementById('vcCuisine2');
+          const el3 = document.getElementById('vcCuisine3');
+          const secondary = [];
+          if (el2 && el2.value) {
+            const val = parseInt(el2.value, 10);
+            if (!isNaN(val)) secondary.push(val);
+          }
+          if (el3 && el3.value) {
+            const val = parseInt(el3.value, 10);
+            if (!isNaN(val)) secondary.push(val);
+          }
+          return secondary.slice(0, 2); // Máximo 2 secundárias
         })(),
         shipping,
         schedule: horarios,
