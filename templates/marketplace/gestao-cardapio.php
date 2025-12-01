@@ -108,14 +108,13 @@ if ($restaurant instanceof WP_Post) {
     if ($items_query->have_posts()) {
         foreach ($items_query->posts as $item) {
             // Obtém a imagem destacada do produto
-            $thumb_id = get_post_thumbnail_id($item->ID);
-            $thumb = '';
-            if ($thumb_id) {
-                $thumb = wp_get_attachment_image_url($thumb_id, 'medium');
-            }
-            // Fallback: tenta get_the_post_thumbnail_url se o método acima não funcionar
+            $thumb = get_the_post_thumbnail_url($item->ID, 'medium');
+            // Se não houver, tenta obter via attachment ID
             if (!$thumb) {
-                $thumb = get_the_post_thumbnail_url($item->ID, 'medium');
+                $thumb_id = get_post_thumbnail_id($item->ID);
+                if ($thumb_id) {
+                    $thumb = wp_get_attachment_image_url($thumb_id, 'medium');
+                }
             }
             $price_raw  = get_post_meta($item->ID, '_vc_price', true);
             $price      = $price_raw !== '' ? $price_raw : __('Sem preço', 'vemcomer');
@@ -327,11 +326,30 @@ $stats['categories'] = is_array($categories) ? count($categories) : 0;
                     <?php else : ?>
                         <?php foreach ($cat['items'] as $item) : ?>
                             <?php
-                            // Debug: garantir que os dados existem
-                            $item_id = isset($item['id']) ? $item['id'] : 0;
-                            $item_title = isset($item['title']) ? $item['title'] : '';
-                            $item_thumb = isset($item['thumb']) ? $item['thumb'] : '';
-                            $item_status = isset($item['status']) ? $item['status'] : 'pausado';
+                            // Garantir que os dados existem e não estão vazios
+                            $item_id = isset($item['id']) && !empty($item['id']) ? (int) $item['id'] : 0;
+                            $item_title = isset($item['title']) && !empty($item['title']) ? (string) $item['title'] : (isset($item['title']) ? (string) $item['title'] : '');
+                            $item_thumb = isset($item['thumb']) && !empty($item['thumb']) ? (string) $item['thumb'] : '';
+                            $item_status = isset($item['status']) && !empty($item['status']) ? (string) $item['status'] : 'pausado';
+                            
+                            // Se o título estiver vazio mas o ID existir, buscar do post
+                            if (empty($item_title) && $item_id > 0) {
+                                $post_obj = get_post($item_id);
+                                if ($post_obj) {
+                                    $item_title = $post_obj->post_title;
+                                }
+                            }
+                            
+                            // Se a imagem estiver vazia mas o ID existir, tentar buscar novamente
+                            if (empty($item_thumb) && $item_id > 0) {
+                                $item_thumb = get_the_post_thumbnail_url($item_id, 'medium');
+                                if (!$item_thumb) {
+                                    $thumb_id = get_post_thumbnail_id($item_id);
+                                    if ($thumb_id) {
+                                        $item_thumb = wp_get_attachment_image_url($thumb_id, 'medium');
+                                    }
+                                }
+                            }
                             ?>
                             <div class="prod-card" data-item-id="<?php echo esc_attr($item_id); ?>" data-available="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
                                 <div style="display:flex;align-items:center;">
