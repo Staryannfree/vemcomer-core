@@ -107,7 +107,16 @@ if ($restaurant instanceof WP_Post) {
 
     if ($items_query->have_posts()) {
         foreach ($items_query->posts as $item) {
-            $thumb      = get_the_post_thumbnail_url($item, 'medium');
+            // Obtém a imagem destacada do produto
+            $thumb_id = get_post_thumbnail_id($item->ID);
+            $thumb = '';
+            if ($thumb_id) {
+                $thumb = wp_get_attachment_image_url($thumb_id, 'medium');
+            }
+            // Fallback: tenta get_the_post_thumbnail_url se o método acima não funcionar
+            if (!$thumb) {
+                $thumb = get_the_post_thumbnail_url($item->ID, 'medium');
+            }
             $price_raw  = get_post_meta($item->ID, '_vc_price', true);
             $price      = $price_raw !== '' ? $price_raw : __('Sem preço', 'vemcomer');
             $available  = (bool) get_post_meta($item->ID, '_vc_is_available', true);
@@ -177,10 +186,8 @@ if ($restaurant instanceof WP_Post) {
 
 // Converte array associativo para indexado e ordena categorias por nome
 if (!empty($categories) && is_array($categories)) {
-    // Se for array associativo, converte para indexado
-    if (array_keys($categories) !== range(0, count($categories) - 1)) {
-        $categories = array_values($categories);
-    }
+    // Sempre converte para array indexado (preserva os dados)
+    $categories = array_values($categories);
     
     // Ordena por nome
     usort($categories, function ($a, $b) {
@@ -319,31 +326,38 @@ $stats['categories'] = is_array($categories) ? count($categories) : 0;
                         <div class="empty-state" style="width:100%;"><?php echo esc_html__('Nenhum item nesta categoria ainda.', 'vemcomer'); ?></div>
                     <?php else : ?>
                         <?php foreach ($cat['items'] as $item) : ?>
-                            <div class="prod-card" data-item-id="<?php echo esc_attr($item['id']); ?>" data-available="<?php echo esc_attr('ativo' === $item['status'] ? '1' : '0'); ?>">
+                            <?php
+                            // Debug: garantir que os dados existem
+                            $item_id = isset($item['id']) ? $item['id'] : 0;
+                            $item_title = isset($item['title']) ? $item['title'] : '';
+                            $item_thumb = isset($item['thumb']) ? $item['thumb'] : '';
+                            $item_status = isset($item['status']) ? $item['status'] : 'pausado';
+                            ?>
+                            <div class="prod-card" data-item-id="<?php echo esc_attr($item_id); ?>" data-available="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
                                 <div style="display:flex;align-items:center;">
-                                    <?php if ($item['thumb']) : ?>
-                                        <img src="<?php echo esc_url($item['thumb']); ?>" class="prod-img" alt="" />
+                                    <?php if (!empty($item_thumb)) : ?>
+                                        <img src="<?php echo esc_url($item_thumb); ?>" class="prod-img" alt="<?php echo esc_attr($item_title); ?>" />
                                     <?php else : ?>
                                         <img src="" class="prod-img" style="background:#ffe7e7;" alt="<?php echo esc_attr__('Sem foto', 'vemcomer'); ?>" />
                                     <?php endif; ?>
                                     <div class="prod-info">
                                         <div class="prod-nome">
-                                            <?php echo esc_html($item['title']); ?>
-                                            <?php if ('ativo' === $item['status']) : ?>
+                                            <?php echo esc_html($item_title); ?>
+                                            <?php if ('ativo' === $item_status) : ?>
                                                 <span class="prod-ativo"><?php echo esc_html__('Ativo', 'vemcomer'); ?></span>
                                             <?php else : ?>
                                                 <span class="prod-pausado"><?php echo esc_html__('Pausado', 'vemcomer'); ?></span>
-                                                <?php if (! $item['thumb']) : ?>
+                                                <?php if (empty($item_thumb)) : ?>
                                                     <span class="prod-alerta" title="<?php echo esc_attr__('Sem foto', 'vemcomer'); ?>">⚠️</span>
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
-                                        <div class="prod-desc"><?php echo esc_html($item['description']); ?></div>
-                                        <div class="prod-preco"><?php echo esc_html($item['price']); ?></div>
+                                        <div class="prod-desc"><?php echo esc_html(isset($item['description']) ? $item['description'] : ''); ?></div>
+                                        <div class="prod-preco"><?php echo esc_html(isset($item['price']) ? $item['price'] : ''); ?></div>
                                     </div>
                                 </div>
                                 <div class="prod-actions">
-                                    <?php if ($item['edit_url']) : ?>
+                                    <?php if (isset($item['edit_url']) && $item['edit_url']) : ?>
                                         <button class="pedit-btn" onclick="window.location.href='<?php echo esc_url($item['edit_url']); ?>'"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
                                     <?php endif; ?>
                                     <button class="pedit-btn pause js-toggle-availability"><?php echo esc_html__('Pausar/Ativar', 'vemcomer'); ?></button>
@@ -352,7 +366,7 @@ $stats['categories'] = is_array($categories) ? count($categories) : 0;
                                 <div class="modif-box">
                                     <div class="modif-title"><?php echo esc_html__('Modificadores:', 'vemcomer'); ?></div>
                                     <div class="modif-list">
-                                        <?php if (! empty($item['modifiers'])) : ?>
+                                        <?php if (isset($item['modifiers']) && ! empty($item['modifiers']) && is_array($item['modifiers'])) : ?>
                                             <?php foreach ($item['modifiers'] as $mod_title) : ?>
                                                 <div class="modif-badge"><?php echo esc_html($mod_title); ?></div>
                                             <?php endforeach; ?>
