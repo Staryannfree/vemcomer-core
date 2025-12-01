@@ -246,11 +246,14 @@ add_action( 'plugins_loaded', function () {
         }
     }
 
-    // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez
-    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) ) {
+} );
+
+// Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
+add_action( 'init', function () {
+    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
         \VC\Utils\Cuisine_Seeder::seed();
     }
-} );
+}, 20 );
 
 // --- Bootstrap do módulo Restaurantes ---
 $vc_inc_base = VEMCOMER_CORE_DIR . 'inc/';
