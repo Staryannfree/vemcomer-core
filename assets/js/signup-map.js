@@ -7,6 +7,8 @@
 
     var latInput = form.querySelector('input[name="restaurant_lat"]');
     var lngInput = form.querySelector('input[name="restaurant_lng"]');
+    var addressInput   = form.querySelector('input[name="restaurant_address"]');
+    var neighborhoodInput = form.querySelector('input[name="restaurant_location"]');
     if (!latInput || !lngInput) {return;}
 
     var defaultLat = parseFloat(latInput.value) || -14.235004;
@@ -37,15 +39,26 @@
     });
 
     var geoBtn = document.getElementById('vc-use-my-location');
-    var addressInput = form.querySelector('input[name="restaurant_address"]');
     var reverseGeocode = function(lat, lng){
-      if(!addressInput){ return; }
+      if(!addressInput && !neighborhoodInput){ return; }
       var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
       fetch(url, { headers: { 'Accept': 'application/json' } })
         .then(function(resp){ return resp.ok ? resp.json() : null; })
         .then(function(data){
-          if(data && data.display_name){
+          if(!data){ return; }
+
+          // Endereço completo
+          if(addressInput && data.display_name){
             addressInput.value = data.display_name;
+          }
+
+          // Bairro / localização (suburb, neighbourhood, quarter, city_district...)
+          if(neighborhoodInput && data.address){
+            var addr = data.address;
+            var bairro = addr.suburb || addr.neighbourhood || addr.neighborhood || addr.quarter || addr.city_district || '';
+            if(bairro){
+              neighborhoodInput.value = bairro;
+            }
           }
         })
         .catch(function(){});

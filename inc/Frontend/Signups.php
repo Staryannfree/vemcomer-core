@@ -146,22 +146,9 @@ class Signups {
                     <input type="text" name="restaurant_location" maxlength="60" placeholder="ex.: centro" />
                 </label>
             </div>
-            <fieldset class="vc-form__schedule">
-                <legend><?php echo esc_html__( 'Horário de funcionamento', 'vemcomer' ); ?></legend>
-                <p class="vc-form__muted"><?php echo esc_html__( 'Escolha os dias e horários em que o restaurante funciona.', 'vemcomer' ); ?></p>
-                <?php foreach ( $days as $key => $label ) : ?>
-                    <label class="vc-form__schedule-row">
-                        <input type="checkbox" name="restaurant_open_days[]" value="<?php echo esc_attr( $key ); ?>" data-vc-schedule-day />
-                        <span class="vc-form__schedule-day"><?php echo esc_html( $label ); ?></span>
-                        <input type="time" name="restaurant_open_hours[<?php echo esc_attr( $key ); ?>][start]" aria-label="<?php echo esc_attr( sprintf( __( 'Horário inicial de %s', 'vemcomer' ), $label ) ); ?>" disabled />
-                        <span class="vc-form__schedule-sep"><?php echo esc_html__( 'até', 'vemcomer' ); ?></span>
-                        <input type="time" name="restaurant_open_hours[<?php echo esc_attr( $key ); ?>][end]" aria-label="<?php echo esc_attr( sprintf( __( 'Horário final de %s', 'vemcomer' ), $label ) ); ?>" disabled />
-                    </label>
-                <?php endforeach; ?>
-            </fieldset>
             <label class="vc-form__check">
                 <input type="checkbox" name="restaurant_delivery" value="1" />
-                <span><?php echo esc_html__( 'Oferece delivery próprio', 'vemcomer' ); ?></span>
+                <span><?php echo esc_html__( 'Trabalha com delivery?', 'vemcomer' ); ?></span>
             </label>
             <div class="vc-form__actions">
                 <button type="submit" class="vc-btn"><?php echo esc_html__( 'Enviar para análise', 'vemcomer' ); ?></button>
