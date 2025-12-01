@@ -107,9 +107,12 @@ if ($restaurant instanceof WP_Post) {
 
     if ($items_query->have_posts()) {
         // Debug: verificar quantos posts foram encontrados
-        // error_log('VC Debug: Encontrados ' . count($items_query->posts) . ' itens do cardápio');
+        error_log('VC Debug: Encontrados ' . count($items_query->posts) . ' itens do cardápio para RestID: ' . $restaurant->ID);
         
         foreach ($items_query->posts as $item) {
+            // Debug item
+            // error_log('VC Debug: Processando item: ' . $item->ID . ' - ' . $item->post_title);
+
             // Obtém a imagem destacada do produto
             $thumb = get_the_post_thumbnail_url($item->ID, 'medium');
             // Se não houver, tenta obter via attachment ID
@@ -149,6 +152,7 @@ if ($restaurant instanceof WP_Post) {
                 $name    = $term->name ?? __('Sem categoria', 'vemcomer');
 
                 if (! isset($categories[$term_id])) {
+                    // error_log('VC Debug: Criando categoria no array: ' . $term_id . ' (' . $name . ')');
                     $categories[$term_id] = [
                         'id'    => $term_id,
                         'slug'  => sanitize_title($slug),
@@ -169,6 +173,7 @@ if ($restaurant instanceof WP_Post) {
                 ];
 
                 $categories[$term_id]['items'][] = $item_payload;
+                // error_log('VC Debug: Adicionado item ' . $item->ID . ' na categoria ' . $term_id . '. Total itens agora: ' . count($categories[$term_id]['items']));
 
                 $stats['total']++;
                 if ($available) {
@@ -197,6 +202,14 @@ if (!empty($categories) && is_array($categories)) {
         $name_b = isset($b['name']) ? $b['name'] : '';
         return strcasecmp($name_a, $name_b);
     });
+
+    // Debug final
+    /*
+    error_log('VC Debug: Categories for view preparado. Total cats: ' . count($categories_for_view));
+    foreach ($categories_for_view as $c) {
+        error_log('VC Debug: Cat ' . $c['name'] . ' tem ' . (isset($c['items']) ? count($c['items']) : 0) . ' itens.');
+    }
+    */
 }
 
 // Se não houver categorias mas houver restaurante, adiciona categoria padrão
@@ -315,53 +328,59 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         <?php if (empty($categories_for_view)) : ?>
             <div class="empty-state" style="margin-top:20px;"><?php echo esc_html__('Nenhum item cadastrado ainda. Adicione produtos para começar.', 'vemcomer'); ?></div>
         <?php else : ?>
+        
+        <!-- Debug: Total de categorias para visualização: <?php echo count($categories_for_view); ?> -->
+        
         <div class="tabs-cat">
             <?php foreach ($categories_for_view as $index => $cat) : ?>
-                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-<?php echo esc_attr($cat['slug']); ?>"><?php echo esc_html($cat['name']); ?></button>
+                <?php $safe_slug = sanitize_title($cat['slug'] ? $cat['slug'] : 'cat-' . $index); ?>
+                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-<?php echo esc_attr($safe_slug); ?>">
+                    <?php echo esc_html($cat['name']); ?> 
+                    <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
+                </button>
             <?php endforeach; ?>
         </div>
 
         <?php foreach ($categories_for_view as $index => $cat) : ?>
             <?php
-            // Garantir que temos os itens da categoria
-            // IMPORTANTE: Verificar se 'items' existe e é um array válido
-            // Usar array_key_exists para garantir que a chave existe, mesmo que seja null
+            $safe_slug = sanitize_title($cat['slug'] ? $cat['slug'] : 'cat-' . $index);
+            
             $cat_items = [];
             if (array_key_exists('items', $cat) && is_array($cat['items'])) {
                 $cat_items = $cat['items'];
             }
             ?>
-            <div class="tab-content" id="cat-<?php echo esc_attr(isset($cat['slug']) ? $cat['slug'] : 'sem-categoria'); ?>" style="<?php echo 0 === $index ? '' : 'display:none;'; ?>">
+            <!-- Debug: Iniciando renderização da categoria "<?php echo esc_html($cat['name']); ?>" (Slug: <?php echo $safe_slug; ?>) - Itens: <?php echo count($cat_items); ?> -->
+            
+            <div class="tab-content" id="cat-<?php echo esc_attr($safe_slug); ?>" style="<?php echo 0 === $index ? '' : 'display:none;'; ?>">
                 <div class="prod-list">
                     <?php if (empty($cat_items)) : ?>
+                        <!-- Debug: Categoria vazia -->
                         <div class="empty-state" style="width:100%;"><?php echo esc_html__('Nenhum item nesta categoria ainda.', 'vemcomer'); ?></div>
                     <?php else : ?>
+                        <!-- Debug: Loop de itens iniciando -->
                         <?php foreach ($cat_items as $item) : ?>
+                            <!-- Debug: Renderizando item ID <?php echo $item['id'] ?? 'N/A'; ?> -->
                             <?php
                             // Garantir que os dados existem e não estão vazios
                             $item_id = isset($item['id']) && !empty($item['id']) ? (int) $item['id'] : 0;
-                            $item_title = isset($item['title']) && !empty($item['title']) ? (string) $item['title'] : (isset($item['title']) ? (string) $item['title'] : '');
-                            $item_thumb = isset($item['thumb']) && !empty($item['thumb']) ? (string) $item['thumb'] : '';
-                            $item_status = isset($item['status']) && !empty($item['status']) ? (string) $item['status'] : 'pausado';
+                            $item_title = isset($item['title']) && !empty($item['title']) ? (string) $item['title'] : '';
                             
-                            // Se o título estiver vazio mas o ID existir, buscar do post
+                            // Fallback para título se vazio
                             if (empty($item_title) && $item_id > 0) {
                                 $post_obj = get_post($item_id);
                                 if ($post_obj) {
                                     $item_title = $post_obj->post_title;
+                                } else {
+                                    $item_title = __('Produto sem nome', 'vemcomer');
                                 }
                             }
                             
-                            // Se a imagem estiver vazia mas o ID existir, tentar buscar novamente
-                            if (empty($item_thumb) && $item_id > 0) {
-                                $item_thumb = get_the_post_thumbnail_url($item_id, 'medium');
-                                if (!$item_thumb) {
-                                    $thumb_id = get_post_thumbnail_id($item_id);
-                                    if ($thumb_id) {
-                                        $item_thumb = wp_get_attachment_image_url($thumb_id, 'medium');
-                                    }
-                                }
-                            }
+                            // ... resto das variáveis ...
+                            $item_thumb = isset($item['thumb']) ? (string) $item['thumb'] : '';
+                            $item_status = isset($item['status']) ? (string) $item['status'] : 'pausado';
+                            $item_price = isset($item['price']) ? (string) $item['price'] : '';
+                            $item_desc = isset($item['description']) ? (string) $item['description'] : '';
                             ?>
                             <div class="prod-card" data-item-id="<?php echo esc_attr($item_id); ?>" data-available="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
                                 <div style="display:flex;align-items:center;">
@@ -377,13 +396,10 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                                 <span class="prod-ativo"><?php echo esc_html__('Ativo', 'vemcomer'); ?></span>
                                             <?php else : ?>
                                                 <span class="prod-pausado"><?php echo esc_html__('Pausado', 'vemcomer'); ?></span>
-                                                <?php if (empty($item_thumb)) : ?>
-                                                    <span class="prod-alerta" title="<?php echo esc_attr__('Sem foto', 'vemcomer'); ?>">⚠️</span>
-                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
-                                        <div class="prod-desc"><?php echo esc_html(isset($item['description']) ? $item['description'] : ''); ?></div>
-                                        <div class="prod-preco"><?php echo esc_html(isset($item['price']) ? $item['price'] : ''); ?></div>
+                                        <div class="prod-desc"><?php echo esc_html($item_desc); ?></div>
+                                        <div class="prod-preco"><?php echo esc_html($item_price); ?></div>
                                     </div>
                                 </div>
                                 <div class="prod-actions">
