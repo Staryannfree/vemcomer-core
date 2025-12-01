@@ -223,11 +223,48 @@ $stats['categories'] = count($categories);
         .stat-label {font-size:.95em;color:#6b7672;font-weight:700;}
         .stat-value {font-size:1.4em;font-weight:900;color:#2d8659;}
         @media (max-width:720px){.prod-list{flex-direction:column}.prod-card{min-width:96vw;max-width:98vw;}}
+        
+        /* Modal de adicionar produto */
+        .vc-modal-overlay {display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+        .vc-modal-overlay.active {display:flex;}
+        .vc-modal-content {background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+        .vc-modal-header {padding:20px 24px;border-bottom:2px solid #eaf8f1;display:flex;justify-content:space-between;align-items:center;}
+        .vc-modal-title {font-size:1.3em;font-weight:900;color:#2d8659;margin:0;}
+        .vc-modal-close {background:none;border:none;font-size:1.8em;color:#6b7672;cursor:pointer;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.2s;}
+        .vc-modal-close:hover {background:#f0f9f5;color:#2d8659;}
+        .vc-modal-body {padding:24px;}
+        .vc-form-group {margin-bottom:20px;}
+        .vc-form-label {display:block;font-weight:700;color:#232a2c;margin-bottom:8px;font-size:0.95em;}
+        .vc-form-input, .vc-form-textarea, .vc-form-select {width:100%;padding:12px;border:2px solid #eaf8f1;border-radius:8px;font-size:1em;font-family:inherit;transition:border-color 0.2s;}
+        .vc-form-input:focus, .vc-form-textarea:focus, .vc-form-select:focus {outline:none;border-color:#2d8659;}
+        .vc-form-textarea {min-height:100px;resize:vertical;}
+        .vc-form-row {display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .vc-form-checkbox-group {display:flex;align-items:center;gap:8px;}
+        .vc-form-checkbox {width:20px;height:20px;cursor:pointer;}
+        .vc-image-upload {border:2px dashed #cbdad1;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s;}
+        .vc-image-upload:hover {border-color:#2d8659;}
+        .vc-image-preview {max-width:100%;max-height:200px;border-radius:8px;margin-top:12px;display:none;}
+        .vc-image-preview.show {display:block;}
+        .vc-modal-footer {padding:20px 24px;border-top:2px solid #eaf8f1;display:flex;gap:12px;justify-content:flex-end;}
+        .vc-btn-primary {background:#2d8659;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:1em;transition:background 0.2s;}
+        .vc-btn-primary:hover {background:#23863b;}
+        .vc-btn-primary:disabled {background:#cbdad1;cursor:not-allowed;}
+        .vc-btn-secondary {background:#fff;color:#6b7672;border:2px solid #eaf8f1;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:1em;}
+        .vc-btn-secondary:hover {border-color:#cbdad1;}
+        @media (max-width:720px){.vc-form-row{grid-template-columns:1fr;}.vc-modal-content{max-width:95vw;}}
     </style>
+
+    <?php
+    // Buscar categorias disponíveis para o select
+    $menu_categories = get_terms( [
+        'taxonomy'   => 'vc_menu_category',
+        'hide_empty' => false,
+    ] );
+    ?>
 
     <div class="menu-top">
         <div class="menu-title"><?php echo esc_html__('Gestão de Cardápio', 'vemcomer'); ?></div>
-        <button class="menu-btn" onclick="window.location.href='<?php echo esc_url(admin_url('post-new.php?post_type=vc_menu_item')); ?>'">+ <?php echo esc_html__('Adicionar Produto', 'vemcomer'); ?></button>
+        <button class="menu-btn" onclick="openAddProductModal()">+ <?php echo esc_html__('Adicionar Produto', 'vemcomer'); ?></button>
         <button class="menu-btn secondary" onclick="window.location.href='<?php echo esc_url(admin_url('edit-tags.php?taxonomy=vc_menu_category&post_type=vc_menu_item')); ?>'">+ <?php echo esc_html__('Categoria', 'vemcomer'); ?></button>
     </div>
 
@@ -319,6 +356,79 @@ $stats['categories'] = count($categories);
     <?php endif; ?>
 </div>
 
+<!-- Modal de Adicionar Produto -->
+<div id="vcAddProductModal" class="vc-modal-overlay">
+    <div class="vc-modal-content">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title"><?php echo esc_html__('Adicionar Novo Produto', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeAddProductModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <form id="vcAddProductForm" onsubmit="saveNewProduct(event)">
+            <div class="vc-modal-body">
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Nome do Produto *', 'vemcomer'); ?></label>
+                    <input type="text" id="vcProductTitle" class="vc-form-input" required placeholder="<?php echo esc_attr__('Ex: Hambúrguer Artesanal', 'vemcomer'); ?>" />
+                </div>
+                
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Descrição', 'vemcomer'); ?></label>
+                    <textarea id="vcProductDescription" class="vc-form-textarea" placeholder="<?php echo esc_attr__('Descreva o produto...', 'vemcomer'); ?>"></textarea>
+                </div>
+                
+                <div class="vc-form-row">
+                    <div class="vc-form-group">
+                        <label class="vc-form-label"><?php echo esc_html__('Preço (R$)', 'vemcomer'); ?></label>
+                        <input type="number" id="vcProductPrice" class="vc-form-input" step="0.01" min="0" placeholder="0.00" />
+                    </div>
+                    <div class="vc-form-group">
+                        <label class="vc-form-label"><?php echo esc_html__('Tempo de Preparo (min)', 'vemcomer'); ?></label>
+                        <input type="number" id="vcProductPrepTime" class="vc-form-input" min="0" placeholder="0" />
+                    </div>
+                </div>
+                
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Categoria', 'vemcomer'); ?></label>
+                    <select id="vcProductCategory" class="vc-form-select">
+                        <option value=""><?php echo esc_html__('Selecione uma categoria', 'vemcomer'); ?></option>
+                        <?php if ( ! is_wp_error( $menu_categories ) && $menu_categories ) : ?>
+                            <?php foreach ( $menu_categories as $cat ) : ?>
+                                <option value="<?php echo esc_attr( $cat->term_id ); ?>"><?php echo esc_html( $cat->name ); ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <div class="vc-form-group">
+                    <label class="vc-form-label"><?php echo esc_html__('Imagem do Produto', 'vemcomer'); ?></label>
+                    <div class="vc-image-upload" onclick="document.getElementById('vcProductImageInput').click()">
+                        <input type="file" id="vcProductImageInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
+                        <div id="vcImageUploadText"><?php echo esc_html__('Clique para adicionar imagem', 'vemcomer'); ?></div>
+                        <img id="vcImagePreview" class="vc-image-preview" alt="" />
+                    </div>
+                </div>
+                
+                <div class="vc-form-group">
+                    <div class="vc-form-checkbox-group">
+                        <input type="checkbox" id="vcProductAvailable" class="vc-form-checkbox" checked />
+                        <label for="vcProductAvailable" class="vc-form-label" style="margin:0;cursor:pointer;"><?php echo esc_html__('Produto disponível', 'vemcomer'); ?></label>
+                    </div>
+                </div>
+                
+                <div class="vc-form-group">
+                    <div class="vc-form-checkbox-group">
+                        <input type="checkbox" id="vcProductFeatured" class="vc-form-checkbox" />
+                        <label for="vcProductFeatured" class="vc-form-label" style="margin:0;cursor:pointer;"><?php echo esc_html__('⭐ Prato do Dia (Destaque)', 'vemcomer'); ?></label>
+                    </div>
+                </div>
+            </div>
+            <div class="vc-modal-footer">
+                <button type="button" class="vc-btn-secondary" onclick="closeAddProductModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
+                <button type="submit" class="vc-btn-primary" id="vcSaveProductBtn"><?php echo esc_html__('Salvar Produto', 'vemcomer'); ?></button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const tabButtons = document.querySelectorAll('.cat-tab-btn');
@@ -332,7 +442,7 @@ $stats['categories'] = count($categories);
             });
         });
 
-        const restBase = '<?php echo esc_js(rest_url('vemcomer/v1/menu-items/')); ?>';
+        const restBase = '<?php echo esc_js(rest_url('vemcomer/v1/menu-items')); ?>';
         const restNonce = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
 
         const updateStats = () => {
@@ -365,7 +475,7 @@ $stats['categories'] = count($categories);
 
                 btn.disabled = true;
                 try {
-                    const response = await fetch(`${restBase}${itemId}/toggle-availability`, {
+                    const response = await fetch(`${restBase}/${itemId}/toggle-availability`, {
                         method: 'POST',
                         headers: {
                             'X-WP-Nonce': restNonce,
@@ -427,7 +537,7 @@ $stats['categories'] = count($categories);
 
                 btn.disabled = true;
                 try {
-                    const response = await fetch(`${restBase}${itemId}`, {
+                    const response = await fetch(`${restBase}/${itemId}`, {
                         method: 'DELETE',
                         headers: {
                             'X-WP-Nonce': restNonce,
@@ -449,6 +559,98 @@ $stats['categories'] = count($categories);
                 }
             });
         });
+
+        // Modal de adicionar produto
+        let productImageData = null;
+
+        window.openAddProductModal = function() {
+            document.getElementById('vcAddProductModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeAddProductModal = function() {
+            document.getElementById('vcAddProductModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Resetar formulário
+            document.getElementById('vcAddProductForm').reset();
+            productImageData = null;
+            document.getElementById('vcImagePreview').classList.remove('show');
+            document.getElementById('vcImageUploadText').style.display = 'block';
+        };
+
+        // Fechar modal ao clicar fora
+        document.getElementById('vcAddProductModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddProductModal();
+            }
+        });
+
+        window.handleImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                productImageData = e.target.result;
+                const preview = document.getElementById('vcImagePreview');
+                preview.src = productImageData;
+                preview.classList.add('show');
+                document.getElementById('vcImageUploadText').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.saveNewProduct = async function(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('vcSaveProductBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Salvando...', 'vemcomer')); ?>';
+
+            const payload = {
+                title: document.getElementById('vcProductTitle').value.trim(),
+                description: document.getElementById('vcProductDescription').value.trim(),
+                price: document.getElementById('vcProductPrice').value || '',
+                prep_time: document.getElementById('vcProductPrepTime').value || 0,
+                category_id: document.getElementById('vcProductCategory').value || null,
+                is_available: document.getElementById('vcProductAvailable').checked,
+                is_featured: document.getElementById('vcProductFeatured').checked,
+            };
+
+            if (productImageData) {
+                payload.image = productImageData;
+            }
+
+            try {
+                const response = await fetch(restBase, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Não foi possível criar o produto.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Produto criado com sucesso!', 'vemcomer')); ?>');
+                closeAddProductModal();
+                // Recarregar a página para mostrar o novo produto
+                window.location.reload();
+            } catch (e) {
+                console.error(e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
     });
 </script>
 
