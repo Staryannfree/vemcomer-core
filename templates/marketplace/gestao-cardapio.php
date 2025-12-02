@@ -144,23 +144,36 @@ if ($restaurant instanceof WP_Post) {
                         'post_status'    => 'any', // Buscar mesmo se estiver em rascunho
                     ]);
 
+                    // Agrupar modificadores por grupo
+                    $groups_map = [];
                     foreach ($modifier_posts as $mod) {
-                        // Buscar apenas grupos principais (que não têm _vc_group_id ou são grupos)
                         $parent_group_id = get_post_meta($mod->ID, '_vc_group_id', true);
                         
                         if (empty($parent_group_id)) {
-                            // É um grupo principal, mostrar o nome
-                            $modifier_titles[] = $mod->post_title;
+                            // É um grupo principal
+                            if (!isset($groups_map[$mod->ID])) {
+                                $groups_map[$mod->ID] = [
+                                    'id' => $mod->ID,
+                                    'title' => $mod->post_title,
+                                ];
+                            }
                         } else {
                             // É um item, buscar o grupo pai
-                            $parent_group = get_post($parent_group_id);
-                            if ($parent_group) {
-                                // Adicionar o grupo apenas uma vez
-                                if (!in_array($parent_group->post_title, $modifier_titles, true)) {
-                                    $modifier_titles[] = $parent_group->post_title;
+                            if (!isset($groups_map[$parent_group_id])) {
+                                $parent_group = get_post($parent_group_id);
+                                if ($parent_group) {
+                                    $groups_map[$parent_group_id] = [
+                                        'id' => $parent_group_id,
+                                        'title' => $parent_group->post_title,
+                                    ];
                                 }
                             }
                         }
+                    }
+                    
+                    // Converter para array simples mantendo ID e título
+                    foreach ($groups_map as $group_data) {
+                        $modifier_titles[] = $group_data;
                     }
                 }
             }
@@ -281,7 +294,9 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         .modif-box {background:#eaf8f1;border-radius:8px;padding:6px 10px;font-size:.98em;margin-top:11px;width:100%;}
         .modif-title {font-weight:700;color:#3176da;font-size:.96em;margin-bottom:3px;}
         .modif-list {margin:0;padding:0;display:flex;gap:9px;flex-wrap:wrap;}
-        .modif-badge {background:#fffbe2;color:#fa7e1e;border-radius:7px;padding:3px 9px;margin:0 0 4px 0; font-weight:700;font-size:.94em;}
+        .modif-badge {background:#fffbe2;color:#fa7e1e;border-radius:7px;padding:3px 9px;margin:0 0 4px 0; font-weight:700;font-size:.94em;display:inline-flex;align-items:center;gap:6px;position:relative;}
+        .modif-remove {cursor:pointer;color:#d32f2f;font-size:18px;font-weight:bold;line-height:1;padding:0 2px;opacity:0.7;transition:opacity 0.2s;}
+        .modif-remove:hover {opacity:1;color:#b71c1c;}
         .modif-edit {margin-left:11px;color:#2d8659;text-decoration:underline;cursor:pointer;font-size:.97em;}
         .empty-state {background:#fff;border-radius:12px;padding:18px 16px;box-shadow:0 2px 12px #2d865910;color:#6b7672;font-weight:600;}
         .menu-stats {display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px 0;}
@@ -450,8 +465,17 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                     <div class="modif-title"><?php echo esc_html__('Adicionais:', 'vemcomer'); ?></div>
                                     <div class="modif-list">
                                         <?php if (isset($item['modifiers']) && ! empty($item['modifiers']) && is_array($item['modifiers'])) : ?>
-                                            <?php foreach ($item['modifiers'] as $mod_title) : ?>
-                                                <div class="modif-badge"><?php echo esc_html($mod_title); ?></div>
+                                            <?php foreach ($item['modifiers'] as $mod_data) : ?>
+                                                <?php 
+                                                $mod_id = is_array($mod_data) ? $mod_data['id'] : null;
+                                                $mod_title = is_array($mod_data) ? $mod_data['title'] : $mod_data;
+                                                ?>
+                                                <div class="modif-badge" data-group-id="<?php echo esc_attr($mod_id); ?>">
+                                                    <?php echo esc_html($mod_title); ?>
+                                                    <?php if ($mod_id) : ?>
+                                                        <span class="modif-remove" onclick="removeAddonGroup(<?php echo esc_attr($item_id); ?>, <?php echo esc_attr($mod_id); ?>, this)" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             <?php endforeach; ?>
                                         <?php else : ?>
                                             <div class="modif-badge" style="background:#fff;color:#6b7672;border:1px dashed #cbdad1;"><?php echo esc_html__('Nenhum adicional', 'vemcomer'); ?></div>
@@ -1281,6 +1305,63 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 if (btn) {
                     btn.disabled = false;
                     btn.textContent = originalText;
+                }
+            }
+        }
+
+        async function removeAddonGroup(productId, groupId, element) {
+            if (!confirm('<?php echo esc_js(__('Deseja remover este adicional do produto?', 'vemcomer')); ?>')) {
+                return;
+            }
+
+            const badge = element.closest('.modif-badge');
+            if (badge) {
+                badge.style.opacity = '0.5';
+                badge.style.pointerEvents = 'none';
+            }
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/unlink-group-from-product?product_id=${productId}&group_id=${groupId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao remover adicional.', 'vemcomer')); ?>');
+                    if (badge) {
+                        badge.style.opacity = '1';
+                        badge.style.pointerEvents = 'auto';
+                    }
+                    return;
+                }
+
+                // Remover o badge da interface
+                if (badge) {
+                    badge.remove();
+                }
+
+                // Verificar se não há mais adicionais
+                const modifList = document.querySelector(`[data-item-id="${productId}"] .modif-list`);
+                if (modifList) {
+                    const badges = modifList.querySelectorAll('.modif-badge');
+                    if (badges.length === 0) {
+                        modifList.innerHTML = '<div class="modif-badge" style="background:#fff;color:#6b7672;border:1px dashed #cbdad1;"><?php echo esc_js(__('Nenhum adicional', 'vemcomer')); ?></div><div class="modif-edit" onclick="openAddonsModal(' + productId + ')">+ <?php echo esc_js(__('Adicionais', 'vemcomer')); ?></div>';
+                    }
+                }
+
+                // Recarregar a página após um breve delay para garantir que a atualização seja visível
+                setTimeout(function() {
+                    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+                }, 300);
+            } catch (e) {
+                console.error('Erro ao remover grupo:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                if (badge) {
+                    badge.style.opacity = '1';
+                    badge.style.pointerEvents = 'auto';
                 }
             }
         }

@@ -63,6 +63,29 @@ class Addon_Catalog_Controller {
             'permission_callback' => [ $this, 'can_manage_store' ],
         ] );
 
+        // DELETE: Remover grupo de um produto
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/unlink-group-from-product', [
+            'methods'             => 'DELETE',
+            'callback'            => [ $this, 'unlink_group_from_product' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+            'args'                => [
+                'product_id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+                'group_id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
         // POST: Vincular grupo copiado a um produto
         register_rest_route( 'vemcomer/v1', '/addon-catalog/link-group-to-product', [
             'methods'             => 'POST',
@@ -399,11 +422,16 @@ class Addon_Catalog_Controller {
             ], 403 );
         }
 
-        // Buscar todos os modificadores do grupo (itens que pertencem ao grupo)
-        $group_modifiers = get_posts( [
+        // REGRA: Um produto pode ter vários grupos diferentes, mas não pode ter o mesmo grupo duplicado
+        // Verificar se o grupo já está vinculado a este produto
+        $current_modifiers = get_post_meta( $product_id, '_vc_menu_item_modifiers', true );
+        $current_modifiers = is_array( $current_modifiers ) ? $current_modifiers : [];
+
+        // Buscar todos os modificadores do grupo (grupo + itens)
+        $group_modifiers_all = get_posts( [
             'post_type'      => 'vc_product_modifier',
             'posts_per_page' => -1,
-            'post_status'    => 'publish',
+            'post_status'    => 'any',
             'meta_query'     => [
                 [
                     'key'   => '_vc_group_id',
@@ -415,6 +443,30 @@ class Addon_Catalog_Controller {
                 ],
             ],
         ] );
+
+        $group_modifier_ids = [ $group_id ];
+        foreach ( $group_modifiers_all as $gm ) {
+            $group_modifier_ids[] = $gm->ID;
+        }
+
+        // Verificar se algum modificador do grupo já está vinculado
+        $already_linked = false;
+        foreach ( $group_modifier_ids as $mod_id ) {
+            if ( in_array( $mod_id, $current_modifiers, true ) ) {
+                $already_linked = true;
+                break;
+            }
+        }
+
+        if ( $already_linked ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Este grupo já está vinculado a este produto.', 'vemcomer' ),
+            ], 400 );
+        }
+
+        // Buscar todos os modificadores do grupo (itens que pertencem ao grupo) para vincular
+        $group_modifiers = $group_modifiers_all;
 
         // Criar array com todos os modificadores (grupo principal + itens)
         $all_modifiers = [];
@@ -434,17 +486,14 @@ class Addon_Catalog_Controller {
             ], 404 );
         }
 
-        // Vincular modificadores ao produto
-        $current_modifiers = get_post_meta( $product_id, '_vc_menu_item_modifiers', true );
-        $current_modifiers = is_array( $current_modifiers ) ? $current_modifiers : [];
-
+        // Vincular modificadores ao produto (já verificamos que não está duplicado acima)
         $added_count = 0;
         $modifier_ids_to_add = [];
         
         foreach ( $all_modifiers as $modifier ) {
             $modifier_id = $modifier->ID;
             
-            // Adicionar à lista se ainda não estiver vinculado
+            // Adicionar à lista (já verificamos duplicação acima)
             if ( ! in_array( $modifier_id, $current_modifiers, true ) ) {
                 $modifier_ids_to_add[] = $modifier_id;
                 $added_count++;
@@ -471,6 +520,89 @@ class Addon_Catalog_Controller {
             'success'     => true,
             'message'     => __( 'Grupo vinculado ao produto com sucesso!', 'vemcomer' ),
             'added_count' => $added_count,
+        ] );
+    }
+
+    /**
+     * DELETE /wp-json/vemcomer/v1/addon-catalog/unlink-group-from-product
+     * Remove um grupo de modificadores de um produto
+     */
+    public function unlink_group_from_product( \WP_REST_Request $request ): \WP_REST_Response {
+        $product_id = (int) $request->get_param( 'product_id' );
+        $group_id = (int) $request->get_param( 'group_id' );
+
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Verificar se o produto existe e pertence ao restaurante
+        $product = get_post( $product_id );
+        if ( ! $product || $product->post_type !== 'vc_menu_item' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Produto não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        $product_restaurant_id = (int) get_post_meta( $product_id, '_vc_restaurant_id', true );
+        if ( $product_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Você não tem permissão para modificar este produto.', 'vemcomer' ),
+            ], 403 );
+        }
+
+        // Buscar todos os modificadores do grupo (grupo principal + itens)
+        $group_modifiers = get_posts( [
+            'post_type'      => 'vc_product_modifier',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+            'meta_query'     => [
+                [
+                    'key'   => '_vc_group_id',
+                    'value' => $group_id,
+                ],
+                [
+                    'key'   => '_vc_restaurant_id',
+                    'value' => $restaurant_id,
+                ],
+            ],
+        ] );
+
+        // Adicionar o grupo principal também
+        $all_modifier_ids = [ $group_id ];
+        foreach ( $group_modifiers as $mod ) {
+            $all_modifier_ids[] = $mod->ID;
+        }
+
+        // Remover do produto
+        $current_modifiers = get_post_meta( $product_id, '_vc_menu_item_modifiers', true );
+        $current_modifiers = is_array( $current_modifiers ) ? $current_modifiers : [];
+        $current_modifiers = array_diff( $current_modifiers, $all_modifier_ids );
+        $current_modifiers = array_values( array_filter( $current_modifiers ) );
+        update_post_meta( $product_id, '_vc_menu_item_modifiers', $current_modifiers );
+
+        // Atualizar meta reversa
+        foreach ( $all_modifier_ids as $modifier_id ) {
+            $modifier_items = get_post_meta( $modifier_id, '_vc_modifier_menu_items', true );
+            $modifier_items = is_array( $modifier_items ) ? $modifier_items : [];
+            $key = array_search( $product_id, $modifier_items, true );
+            if ( $key !== false ) {
+                unset( $modifier_items[ $key ] );
+                $modifier_items = array_values( $modifier_items );
+                update_post_meta( $modifier_id, '_vc_modifier_menu_items', $modifier_items );
+            }
+        }
+
+        return new \WP_REST_Response( [
+            'success' => true,
+            'message' => __( 'Grupo removido do produto com sucesso!', 'vemcomer' ),
         ] );
     }
 
