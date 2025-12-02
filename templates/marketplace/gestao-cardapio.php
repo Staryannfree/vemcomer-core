@@ -437,12 +437,42 @@ if ($restaurant instanceof WP_Post) {
         
         <!-- Debug: Total de categorias para visualização: <?php echo count($categories_for_view); ?> -->
         
-        <div class="tabs-cat">
+        <div class="tabs-cat" style="position:relative;">
             <?php foreach ($categories_for_view as $index => $cat) : ?>
-                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-index-<?php echo $index; ?>">
-                    <?php echo esc_html($cat['name']); ?> 
-                    <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
-                </button>
+                <?php 
+                $cat_id = isset($cat['id']) && $cat['id'] !== 'sem-categoria' ? (int) $cat['id'] : 0;
+                $is_uncategorized = ($cat_id === 0 || $cat['id'] === 'sem-categoria');
+                ?>
+                <div style="position:relative;display:inline-block;">
+                    <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-index-<?php echo $index; ?>">
+                        <?php echo esc_html($cat['name']); ?> 
+                        <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
+                    </button>
+                    <?php if (!$is_uncategorized && $cat_id > 0) : ?>
+                        <div style="position:absolute;top:0;right:0;display:flex;gap:4px;padding:4px;">
+                            <button class="js-edit-category" 
+                                    data-category-id="<?php echo esc_attr($cat_id); ?>" 
+                                    data-category-name="<?php echo esc_attr($cat['name']); ?>"
+                                    data-category-order="<?php echo esc_attr(get_term_meta($cat_id, '_vc_category_order', true) ?: 0); ?>"
+                                    title="<?php echo esc_attr__('Editar categoria', 'vemcomer'); ?>"
+                                    style="background:#2d8659;color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;"
+                                    onmouseover="this.style.background='#1f5d3f';"
+                                    onmouseout="this.style.background='#2d8659';">
+                                ✏️
+                            </button>
+                            <button class="js-delete-category" 
+                                    data-category-id="<?php echo esc_attr($cat_id); ?>" 
+                                    data-category-name="<?php echo esc_attr($cat['name']); ?>"
+                                    data-category-count="<?php echo esc_attr(count($cat['items'] ?? [])); ?>"
+                                    title="<?php echo esc_attr__('Deletar categoria', 'vemcomer'); ?>"
+                                    style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;"
+                                    onmouseover="this.style.background='#b71c1c';"
+                                    onmouseout="this.style.background='#d32f2f';">
+                                ×
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                </div>
             <?php endforeach; ?>
         </div>
 
@@ -547,11 +577,11 @@ if ($restaurant instanceof WP_Post) {
     <?php endif; ?>
 </div>
 
-<!-- Modal de Adicionar Categoria -->
+<!-- Modal de Adicionar/Editar Categoria -->
 <div id="vcAddCategoryModal" class="vc-modal-overlay">
     <div class="vc-modal-content" style="max-width:700px;">
         <div class="vc-modal-header">
-            <h2 class="vc-modal-title"><?php echo esc_html__('Adicionar Nova Categoria', 'vemcomer'); ?></h2>
+            <h2 class="vc-modal-title" id="vcCategoryModalTitle"><?php echo esc_html__('Adicionar Nova Categoria', 'vemcomer'); ?></h2>
             <button class="vc-modal-close" onclick="closeAddCategoryModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
         </div>
         <div class="vc-modal-body">
@@ -575,8 +605,9 @@ if ($restaurant instanceof WP_Post) {
                 </div>
             </div>
 
-            <!-- Formulário: Criar Categoria Personalizada -->
+            <!-- Formulário: Criar/Editar Categoria Personalizada -->
             <form id="vcAddCategoryForm" onsubmit="saveNewCategory(event)">
+                <input type="hidden" id="vcCategoryId" value="" />
                 <div class="vc-form-group">
                     <label class="vc-form-label"><?php echo esc_html__('Nome da Categoria *', 'vemcomer'); ?></label>
                     <input type="text" id="vcCategoryName" class="vc-form-input" required placeholder="<?php echo esc_attr__('Ex: Entradas, Pratos Principais, Bebidas', 'vemcomer'); ?>" />
@@ -1291,11 +1322,36 @@ if ($restaurant instanceof WP_Post) {
             document.getElementById('vcAddCategoryForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
-        window.openAddCategoryModal = function() {
+        window.openAddCategoryModal = function(categoryId = null, categoryName = null, categoryOrder = null) {
             document.getElementById('vcAddCategoryModal').classList.add('active');
             document.body.style.overflow = 'hidden';
-            // Carregar categorias recomendadas
-            loadRecommendedMenuCategories();
+            
+            // Resetar formulário
+            document.getElementById('vcCategoryId').value = '';
+            document.getElementById('vcCategoryName').value = '';
+            document.getElementById('vcCategoryOrder').value = '0';
+            document.getElementById('vcCategoryModalTitle').textContent = '<?php echo esc_js(__('Adicionar Nova Categoria', 'vemcomer')); ?>';
+            document.getElementById('vcSaveCategoryBtn').textContent = '<?php echo esc_js(__('Salvar Categoria', 'vemcomer')); ?>';
+            categoryImageData = null;
+            document.getElementById('vcCategoryImagePreview').classList.remove('show');
+            document.getElementById('vcCategoryImageUploadText').style.display = 'block';
+            
+            // Se for edição, preencher campos
+            if (categoryId) {
+                document.getElementById('vcCategoryId').value = categoryId;
+                document.getElementById('vcCategoryName').value = categoryName || '';
+                document.getElementById('vcCategoryOrder').value = categoryOrder || '0';
+                document.getElementById('vcCategoryModalTitle').textContent = '<?php echo esc_js(__('Editar Categoria', 'vemcomer')); ?>';
+                document.getElementById('vcSaveCategoryBtn').textContent = '<?php echo esc_js(__('Atualizar Categoria', 'vemcomer')); ?>';
+                
+                // Esconder seção de categorias recomendadas ao editar
+                document.getElementById('vcRecommendedCategoriesSection').style.display = 'none';
+            } else {
+                // Mostrar seção de categorias recomendadas ao criar
+                document.getElementById('vcRecommendedCategoriesSection').style.display = 'block';
+                // Carregar categorias recomendadas
+                loadRecommendedMenuCategories();
+            }
         };
 
         window.closeAddCategoryModal = function() {
@@ -1303,9 +1359,12 @@ if ($restaurant instanceof WP_Post) {
             document.body.style.overflow = '';
             // Resetar formulário
             document.getElementById('vcAddCategoryForm').reset();
+            document.getElementById('vcCategoryId').value = '';
             categoryImageData = null;
             document.getElementById('vcCategoryImagePreview').classList.remove('show');
             document.getElementById('vcCategoryImageUploadText').style.display = 'block';
+            // Mostrar seção de categorias recomendadas novamente
+            document.getElementById('vcRecommendedCategoriesSection').style.display = 'block';
         };
 
         // Fechar modal ao clicar fora
@@ -1338,6 +1397,9 @@ if ($restaurant instanceof WP_Post) {
             btn.disabled = true;
             btn.textContent = '<?php echo esc_js(__('Salvando...', 'vemcomer')); ?>';
 
+            const categoryId = document.getElementById('vcCategoryId').value;
+            const isEdit = categoryId && categoryId !== '';
+
             const payload = {
                 name: document.getElementById('vcCategoryName').value.trim(),
                 order: document.getElementById('vcCategoryOrder').value || 0,
@@ -1345,11 +1407,18 @@ if ($restaurant instanceof WP_Post) {
 
             if (categoryImageData) {
                 payload.image = categoryImageData;
+            } else if (isEdit) {
+                // Se estiver editando e não houver nova imagem, enviar string vazia para manter a atual
+                payload.image = '';
             }
 
             try {
-                const response = await fetch('<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>', {
-                    method: 'POST',
+                const url = isEdit 
+                    ? `<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>/${categoryId}`
+                    : '<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>';
+                
+                const response = await fetch(url, {
+                    method: isEdit ? 'PUT' : 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-WP-Nonce': restNonce,
@@ -1360,13 +1429,13 @@ if ($restaurant instanceof WP_Post) {
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
-                    alert(data?.message || data?.data?.message || '<?php echo esc_js(__('Não foi possível criar a categoria.', 'vemcomer')); ?>');
+                    alert(data?.message || data?.data?.message || (isEdit ? '<?php echo esc_js(__('Não foi possível atualizar a categoria.', 'vemcomer')); ?>' : '<?php echo esc_js(__('Não foi possível criar a categoria.', 'vemcomer')); ?>'));
                     return;
                 }
 
-                alert('<?php echo esc_js(__('Categoria criada com sucesso!', 'vemcomer')); ?>');
+                alert(isEdit ? '<?php echo esc_js(__('Categoria atualizada com sucesso!', 'vemcomer')); ?>' : '<?php echo esc_js(__('Categoria criada com sucesso!', 'vemcomer')); ?>');
                 closeAddCategoryModal();
-                // Recarregar a página para mostrar a nova categoria
+                // Recarregar a página para mostrar as mudanças
                 window.location.reload();
             } catch (e) {
                 console.error(e);
@@ -2708,6 +2777,65 @@ if ($restaurant instanceof WP_Post) {
                 }
             });
         }
+
+        // Editar categoria
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.js-edit-category')) {
+                const btn = e.target.closest('.js-edit-category');
+                const categoryId = btn.getAttribute('data-category-id');
+                const categoryName = btn.getAttribute('data-category-name');
+                const categoryOrder = btn.getAttribute('data-category-order');
+                openAddCategoryModal(categoryId, categoryName, categoryOrder);
+            }
+        });
+
+        // Deletar categoria
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.js-delete-category')) {
+                const btn = e.target.closest('.js-delete-category');
+                const categoryId = btn.getAttribute('data-category-id');
+                const categoryName = btn.getAttribute('data-category-name');
+                const categoryCount = parseInt(btn.getAttribute('data-category-count') || '0');
+
+                if (categoryCount > 0) {
+                    alert('<?php echo esc_js(__('Não é possível deletar esta categoria. Ela possui produtos associados. Remova os produtos primeiro ou mova-os para outra categoria.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                if (!confirm(`<?php echo esc_js(__('Tem certeza que deseja deletar a categoria', 'vemcomer')); ?> "${categoryName}"?`)) {
+                    return;
+                }
+
+                btn.disabled = true;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '...';
+
+                fetch(`<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>/${categoryId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert(data?.message || '<?php echo esc_js(__('Não foi possível deletar a categoria.', 'vemcomer')); ?>');
+                        return;
+                    }
+
+                    alert('<?php echo esc_js(__('Categoria deletada com sucesso!', 'vemcomer')); ?>');
+                    window.location.reload();
+                })
+                .catch(e => {
+                    console.error(e);
+                    alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }
+        });
     });
 </script>
 

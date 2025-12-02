@@ -42,6 +42,38 @@ class Menu_Categories_Controller {
             'callback'            => [ $this, 'get_recommended_categories' ],
             'permission_callback' => [ $this, 'can_manage_categories' ],
         ] );
+
+        // PUT: Editar categoria existente
+        register_rest_route( 'vemcomer/v1', '/menu-categories/(?P<id>\d+)', [
+            'methods'             => 'PUT',
+            'callback'            => [ $this, 'update_category' ],
+            'permission_callback' => [ $this, 'can_manage_categories' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
+        // DELETE: Deletar categoria
+        register_rest_route( 'vemcomer/v1', '/menu-categories/(?P<id>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [ $this, 'delete_category' ],
+            'permission_callback' => [ $this, 'can_manage_categories' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
     }
 
     /**
@@ -117,13 +149,17 @@ class Menu_Categories_Controller {
             );
         }
 
-        // Verificar se já existe
-        if ( term_exists( $name, CPT_MenuItem::TAX_CATEGORY ) ) {
-            return new WP_Error(
-                'vc_category_exists',
-                __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
-                [ 'status' => 400 ]
-            );
+        // Verificar se já existe (apenas ao criar, não ao editar)
+        $term_id_param = $request->get_param( 'id' );
+        if ( ! $term_id_param ) {
+            // Só verifica duplicatas ao criar (não ao editar)
+            if ( term_exists( $name, CPT_MenuItem::TAX_CATEGORY ) ) {
+                return new WP_Error(
+                    'vc_category_exists',
+                    __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
+                    [ 'status' => 400 ]
+                );
+            }
         }
 
         // Criar o termo
@@ -309,6 +345,163 @@ class Menu_Categories_Controller {
             'success'    => true,
             'categories' => $all_categories,
             'count'      => count( $all_categories ),
+        ], 200 );
+    }
+
+    /**
+     * PUT /wp-json/vemcomer/v1/menu-categories/{id}
+     * Atualiza uma categoria existente
+     */
+    public function update_category( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $term_id = (int) $request->get_param( 'id' );
+        $body    = $request->get_json_params();
+
+        if ( ! $body ) {
+            return new WP_Error(
+                'vc_invalid_json',
+                __( 'JSON inválido no body da requisição.', 'vemcomer' ),
+                [ 'status' => 400 ]
+            );
+        }
+
+        // Verificar se a categoria existe
+        $term = get_term( $term_id, CPT_MenuItem::TAX_CATEGORY );
+        if ( ! $term || is_wp_error( $term ) ) {
+            return new WP_Error(
+                'vc_category_not_found',
+                __( 'Categoria não encontrada.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        // Atualizar nome se fornecido
+        if ( isset( $body['name'] ) && ! empty( $body['name'] ) ) {
+            $name = sanitize_text_field( $body['name'] );
+            
+            // Verificar se outro termo com esse nome já existe
+            $existing = get_term_by( 'name', $name, CPT_MenuItem::TAX_CATEGORY );
+            if ( $existing && $existing->term_id !== $term_id ) {
+                return new WP_Error(
+                    'vc_category_exists',
+                    __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
+                    [ 'status' => 400 ]
+                );
+            }
+
+            $result = wp_update_term( $term_id, CPT_MenuItem::TAX_CATEGORY, [
+                'name' => $name,
+                'slug' => sanitize_title( $name ),
+            ] );
+
+            if ( is_wp_error( $result ) ) {
+                return new WP_Error(
+                    'vc_category_update_failed',
+                    $result->get_error_message(),
+                    [ 'status' => 500 ]
+                );
+            }
+        }
+
+        // Atualizar ordem se fornecida
+        if ( isset( $body['order'] ) && is_numeric( $body['order'] ) ) {
+            update_term_meta( $term_id, '_vc_category_order', absint( $body['order'] ) );
+        }
+
+        // Atualizar imagem se fornecida
+        if ( isset( $body['image'] ) ) {
+            $image_url = sanitize_text_field( $body['image'] );
+            
+            if ( empty( $image_url ) ) {
+                // Se for vazio, remover imagem
+                delete_term_meta( $term_id, '_vc_category_image' );
+            } elseif ( strpos( $image_url, 'data:image' ) === 0 ) {
+                // Se for data:image, fazer upload
+                require_once ABSPATH . 'wp-admin/includes/image.php';
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+                require_once ABSPATH . 'wp-admin/includes/media.php';
+
+                $upload = wp_upload_bits( 'category-' . $term_id . '.jpg', null, base64_decode( preg_replace( '#^data:image/\w+;base64,#i', '', $image_url ) ) );
+                if ( ! $upload['error'] ) {
+                    $attachment = [
+                        'post_mime_type' => 'image/jpeg',
+                        'post_title'     => sanitize_file_name( $term->name ),
+                        'post_content'   => '',
+                        'post_status'    => 'inherit',
+                    ];
+                    $attach_id = wp_insert_attachment( $attachment, $upload['file'] );
+                    $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
+                    wp_update_attachment_metadata( $attach_id, $attach_data );
+                    update_term_meta( $term_id, '_vc_category_image', $attach_id );
+                }
+            } elseif ( is_numeric( $image_url ) ) {
+                // Se for ID de attachment
+                update_term_meta( $term_id, '_vc_category_image', absint( $image_url ) );
+            }
+        }
+
+        log_event( 'REST menu category updated', [ 'term_id' => $term_id ], 'info' );
+
+        return new WP_REST_Response( [
+            'success' => true,
+            'id'      => $term_id,
+            'message' => __( 'Categoria atualizada com sucesso!', 'vemcomer' ),
+        ], 200 );
+    }
+
+    /**
+     * DELETE /wp-json/vemcomer/v1/menu-categories/{id}
+     * Deleta uma categoria
+     */
+    public function delete_category( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $term_id = (int) $request->get_param( 'id' );
+
+        // Verificar se a categoria existe
+        $term = get_term( $term_id, CPT_MenuItem::TAX_CATEGORY );
+        if ( ! $term || is_wp_error( $term ) ) {
+            return new WP_Error(
+                'vc_category_not_found',
+                __( 'Categoria não encontrada.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        // Verificar se há produtos nesta categoria
+        $count = $term->count;
+        if ( $count > 0 ) {
+            return new WP_Error(
+                'vc_category_has_items',
+                sprintf(
+                    __( 'Não é possível deletar esta categoria. Ela possui %d produto(s) associado(s). Remova os produtos primeiro ou mova-os para outra categoria.', 'vemcomer' ),
+                    $count
+                ),
+                [ 'status' => 400 ]
+            );
+        }
+
+        // Deletar a categoria
+        $result = wp_delete_term( $term_id, CPT_MenuItem::TAX_CATEGORY );
+
+        if ( is_wp_error( $result ) ) {
+            return new WP_Error(
+                'vc_category_deletion_failed',
+                $result->get_error_message(),
+                [ 'status' => 500 ]
+            );
+        }
+
+        if ( ! $result ) {
+            return new WP_Error(
+                'vc_category_deletion_failed',
+                __( 'Não foi possível deletar a categoria.', 'vemcomer' ),
+                [ 'status' => 500 ]
+            );
+        }
+
+        log_event( 'REST menu category deleted', [ 'term_id' => $term_id ], 'info' );
+
+        return new WP_REST_Response( [
+            'success' => true,
+            'message' => __( 'Categoria deletada com sucesso!', 'vemcomer' ),
         ], 200 );
     }
 }
