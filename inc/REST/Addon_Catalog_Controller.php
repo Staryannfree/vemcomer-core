@@ -56,6 +56,13 @@ class Addon_Catalog_Controller {
             ],
         ] );
 
+        // POST: Forçar atualização de itens dos grupos (temporário para debug)
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/update-items', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'force_update_items' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+        ] );
+
         // POST: Vincular grupo copiado a um produto
         register_rest_route( 'vemcomer/v1', '/addon-catalog/link-group-to-product', [
             'methods'             => 'POST',
@@ -203,7 +210,7 @@ class Addon_Catalog_Controller {
                 [
                     'key'     => '_vc_is_active',
                     'value'   => '1',
-                    'compare' => '!=', // Aceita qualquer valor que não seja '0'
+                    'compare' => '=',
                 ],
             ],
             'orderby'        => 'title',
@@ -436,6 +443,26 @@ class Addon_Catalog_Controller {
             'success'     => true,
             'message'     => __( 'Grupo vinculado ao produto com sucesso!', 'vemcomer' ),
             'added_count' => $added_count,
+        ] );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/addon-catalog/update-items
+     * Força a atualização dos itens dos grupos (temporário para debug)
+     */
+    public function force_update_items( \WP_REST_Request $request ): \WP_REST_Response {
+        if ( ! class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Classe Addon_Catalog_Seeder não encontrada.', 'vemcomer' ),
+            ], 500 );
+        }
+
+        \VC\Utils\Addon_Catalog_Seeder::update_group_items();
+
+        return new \WP_REST_Response( [
+            'success' => true,
+            'message' => __( 'Itens atualizados com sucesso.', 'vemcomer' ),
         ] );
     }
 }

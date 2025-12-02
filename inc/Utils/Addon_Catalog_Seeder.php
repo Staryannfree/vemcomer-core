@@ -133,6 +133,7 @@ class Addon_Catalog_Seeder {
 
             // Adicionar apenas itens que não existem
             if ( ! empty( $group_data['items'] ) ) {
+                $items_added = 0;
                 foreach ( $group_data['items'] as $item_data ) {
                     if ( ! in_array( $item_data['name'], $existing_item_names, true ) ) {
                         $item_id = wp_insert_post( [
@@ -148,8 +149,20 @@ class Addon_Catalog_Seeder {
                             update_post_meta( $item_id, '_vc_allow_quantity', $item_data['allow_quantity'] ? '1' : '0' );
                             update_post_meta( $item_id, '_vc_max_quantity', $item_data['max_quantity'] ?? 1 );
                             update_post_meta( $item_id, '_vc_is_active', '1' );
+                            $items_added++;
                         }
                     }
+                }
+                
+                // Log para debug
+                if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                    error_log( sprintf( 
+                        '[Addon Catalog] Grupo "%s" (ID: %d): %d itens adicionados, %d já existiam',
+                        $group_data['name'],
+                        $group_id,
+                        $items_added,
+                        count( $existing_item_names )
+                    ) );
                 }
             }
         }
