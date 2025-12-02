@@ -1113,32 +1113,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                     groupCard.className = 'vc-addon-group-card';
                     groupCard.style.cssText = 'border:1px solid #e0e0e0;border-radius:8px;padding:15px;background:#fff;margin-bottom:15px;';
                     
-                    // Buscar itens do grupo
-                    let itemsHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;"><p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p><ul style="margin:0;padding-left:20px;font-size:13px;color:#666;list-style:disc;">';
-                    
-                    try {
-                        const itemsResponse = await fetch(`${addonCatalogBase}/groups/${group.id}/items`, {
-                            headers: {
-                                'X-WP-Nonce': restNonce,
-                            },
-                        });
-                        
-                        const itemsData = await itemsResponse.json();
-                        if (itemsData.success && itemsData.items && itemsData.items.length > 0) {
-                            itemsData.items.forEach(item => {
-                                const price = parseFloat(item.default_price || 0).toFixed(2).replace('.', ',');
-                                itemsHtml += `<li style="margin-bottom:4px;">${escapeHtml(item.name)} <span style="color:#2d8659;font-weight:700;">R$ ${price}</span></li>`;
-                            });
-                        } else {
-                            itemsHtml += '<li style="color:#999;font-style:italic;">Nenhum item disponível</li>';
-                        }
-                    } catch (e) {
-                        console.error('Erro ao carregar itens:', e);
-                        itemsHtml += '<li style="color:#999;font-style:italic;">Erro ao carregar itens</li>';
-                    }
-                    
-                    itemsHtml += '</ul></div>';
-                    
+                    // Renderizar estrutura básica primeiro
                     groupCard.innerHTML = `
                         <h3 style="margin:0 0 10px 0;font-size:16px;color:#2d8659;">${escapeHtml(group.name)}</h3>
                         ${group.description ? `<p style="color:#666;font-size:14px;margin:0 0 15px 0;">${escapeHtml(group.description)}</p>` : ''}
@@ -1146,13 +1121,61 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                             <span style="font-size:12px;color:#999;">Tipo: <strong>${group.selection_type === 'single' ? 'Seleção única' : 'Múltipla seleção'}</strong></span>
                             ${group.is_required ? '<span style="font-size:12px;color:#d32f2f;background:#ffe7e7;padding:2px 8px;border-radius:4px;">Obrigatório</span>' : ''}
                         </div>
-                        ${itemsHtml}
-                        <button onclick="copyGroupToStore(${group.id}, event)" class="vc-btn-primary" style="width:100%;padding:10px;margin-top:15px;">
+                        <div class="vc-group-items-${group.id}" style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;">
+                            <p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p>
+                            <div style="text-align:center;padding:10px;color:#999;">Carregando itens...</div>
+                        </div>
+                        <button class="vc-btn-copy-group vc-btn-primary" data-group-id="${group.id}" style="width:100%;padding:10px;margin-top:15px;">
                             <?php echo esc_js(__('Usar este grupo', 'vemcomer')); ?>
                         </button>
                     `;
                     container.appendChild(groupCard);
+                    
+                    // Buscar itens do grupo de forma assíncrona
+                    (async function(groupId, groupCardElement) {
+                        const itemsContainer = groupCardElement.querySelector(`.vc-group-items-${groupId}`);
+                        if (!itemsContainer) return;
+                        
+                        try {
+                            const itemsResponse = await fetch(`${addonCatalogBase}/groups/${groupId}/items`, {
+                                headers: {
+                                    'X-WP-Nonce': restNonce,
+                                },
+                            });
+                            
+                            if (!itemsResponse.ok) {
+                                throw new Error(`HTTP ${itemsResponse.status}`);
+                            }
+                            
+                            const itemsData = await itemsResponse.json();
+                            console.log('Items data for group', groupId, ':', itemsData);
+                            
+                            if (itemsData.success && itemsData.items && Array.isArray(itemsData.items) && itemsData.items.length > 0) {
+                                let itemsList = '<ul style="margin:0;padding-left:20px;font-size:13px;color:#666;list-style:disc;">';
+                                itemsData.items.forEach(item => {
+                                    const price = parseFloat(item.default_price || 0).toFixed(2).replace('.', ',');
+                                    itemsList += `<li style="margin-bottom:4px;">${escapeHtml(item.name)} <span style="color:#2d8659;font-weight:700;">R$ ${price}</span></li>`;
+                                });
+                                itemsList += '</ul>';
+                                itemsContainer.innerHTML = '<p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p>' + itemsList;
+                            } else {
+                                itemsContainer.innerHTML = '<p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p><ul style="margin:0;padding-left:20px;font-size:13px;color:#999;font-style:italic;"><li>Nenhum item disponível</li></ul>';
+                            }
+                        } catch (e) {
+                            console.error('Erro ao carregar itens do grupo:', groupId, e);
+                            itemsContainer.innerHTML = '<p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p><ul style="margin:0;padding-left:20px;font-size:13px;color:#d32f2f;"><li>Erro ao carregar itens. Verifique o console.</li></ul>';
+                        }
+                    })(group.id, groupCard);
                 }
+                
+                // Adicionar event listeners aos botões
+                container.querySelectorAll('.vc-btn-copy-group').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const groupId = parseInt(this.getAttribute('data-group-id'));
+                        copyGroupToStore(groupId, e);
+                    });
+                });
             } catch (e) {
                 console.error(e);
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar grupos recomendados.', 'vemcomer')); ?></p></div>';
@@ -1170,10 +1193,12 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 return;
             }
 
-            const btn = evt ? evt.target : event.target;
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = '<?php echo esc_js(__('Copiando...', 'vemcomer')); ?>';
+            const btn = evt ? evt.target : (event ? event.target : null);
+            if (btn) {
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = '<?php echo esc_js(__('Copiando...', 'vemcomer')); ?>';
+            }
 
             try {
                 // 1. Copiar grupo do catálogo para a loja
@@ -1187,6 +1212,10 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 const copyData = await copyResponse.json();
                 if (!copyData.success) {
                     alert(copyData?.message || '<?php echo esc_js(__('Erro ao copiar grupo.', 'vemcomer')); ?>');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
                     return;
                 }
 
@@ -1208,6 +1237,10 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 const linkData = await linkResponse.json();
                 if (!linkData.success) {
                     alert(linkData?.message || '<?php echo esc_js(__('Grupo copiado, mas erro ao vincular ao produto.', 'vemcomer')); ?>');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
                     return;
                 }
 
@@ -1215,11 +1248,12 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 closeAddonsModal();
                 window.location.reload(); // Recarregar para mostrar as mudanças
             } catch (e) {
-                console.error(e);
+                console.error('Erro ao copiar grupo:', e);
                 alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
             }
         }
 

@@ -201,8 +201,9 @@ class Addon_Catalog_Controller {
                     'value' => $group_id,
                 ],
                 [
-                    'key'   => '_vc_is_active',
-                    'value' => '1',
+                    'key'     => '_vc_is_active',
+                    'value'   => '1',
+                    'compare' => '!=', // Aceita qualquer valor que não seja '0'
                 ],
             ],
             'orderby'        => 'title',
