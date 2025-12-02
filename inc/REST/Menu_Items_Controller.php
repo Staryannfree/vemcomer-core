@@ -36,7 +36,9 @@ class Menu_Items_Controller {
                 ],
                 'restaurant_id' => [
                     'required'          => false,
-                    'validate_callback' => 'is_numeric',
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
                     'sanitize_callback' => 'absint',
                 ],
                 'per_page' => [
@@ -65,7 +67,9 @@ class Menu_Items_Controller {
             'args'                => [
                 'id' => [
                     'required'          => true,
-                    'validate_callback' => 'is_numeric',
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
                     'sanitize_callback' => 'absint',
                 ],
             ],

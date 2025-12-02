@@ -25,7 +25,9 @@ class Menu_Items_Status_Controller {
             'args'                => [
                 'id' => [
                     'required'          => true,
-                    'validate_callback' => 'is_numeric',
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
                     'sanitize_callback' => 'absint',
                 ],
             ],
@@ -38,7 +40,9 @@ class Menu_Items_Status_Controller {
             'args'                => [
                 'id' => [
                     'required'          => true,
-                    'validate_callback' => 'is_numeric',
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
                     'sanitize_callback' => 'absint',
                 ],
             ],
