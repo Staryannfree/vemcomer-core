@@ -178,6 +178,13 @@ class Addon_Catalog_Controller {
             'permission_callback' => [ $this, 'can_manage_store' ],
         ] );
 
+        // POST: Dismiss onboarding
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/dismiss-onboarding', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'dismiss_onboarding' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+        ] );
+
         // POST: Aplicar grupo a múltiplos produtos
         register_rest_route( 'vemcomer/v1', '/addon-catalog/apply-group-to-products', [
             'methods'             => 'POST',
@@ -1075,6 +1082,264 @@ class Addon_Catalog_Controller {
         return new \WP_REST_Response( [
             'success' => true,
             'message' => __( 'Itens atualizados com sucesso.', 'vemcomer' ),
+        ] );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/addon-catalog/store-groups/{id}/save-as-template
+     * Salva um grupo de adicionais da loja como template para reutilização
+     */
+    public function save_group_as_template( \WP_REST_Request $request ): \WP_REST_Response {
+        $group_id = (int) $request->get_param( 'id' );
+        
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Verificar se o grupo existe e pertence ao restaurante
+        $group = get_post( $group_id );
+        if ( ! $group || $group->post_type !== 'vc_product_modifier' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        $group_restaurant_id = (int) get_post_meta( $group_id, '_vc_restaurant_id', true );
+        if ( $group_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não pertence à sua loja.', 'vemcomer' ),
+            ], 403 );
+        }
+
+        // Verificar se é um grupo principal (_vc_group_id = 0)
+        $group_parent_id = (int) get_post_meta( $group_id, '_vc_group_id', true );
+        if ( $group_parent_id !== 0 && $group_parent_id !== $group_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Apenas grupos principais podem ser salvos como template.', 'vemcomer' ),
+            ], 400 );
+        }
+
+        // Criar um novo grupo template no catálogo global (vc_addon_group)
+        $template_group_id = wp_insert_post( [
+            'post_type'    => 'vc_addon_group',
+            'post_title'   => $group->post_title . ' (Template)',
+            'post_content' => $group->post_content,
+            'post_status'  => 'publish',
+            'post_author'  => $user_id,
+        ] );
+
+        if ( is_wp_error( $template_group_id ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Erro ao criar template.', 'vemcomer' ),
+            ], 500 );
+        }
+
+        // Copiar configurações do grupo
+        update_post_meta( $template_group_id, '_vc_selection_type', get_post_meta( $group_id, '_vc_selection_type', true ) ?: 'multiple' );
+        update_post_meta( $template_group_id, '_vc_min_select', get_post_meta( $group_id, '_vc_min_select', true ) );
+        update_post_meta( $template_group_id, '_vc_max_select', get_post_meta( $group_id, '_vc_max_select', true ) );
+        update_post_meta( $template_group_id, '_vc_is_required', get_post_meta( $group_id, '_vc_is_required', true ) );
+        update_post_meta( $template_group_id, '_vc_difficulty_level', 'basic' );
+        update_post_meta( $template_group_id, 'vc_addon_template_group', '1' ); // Marcar como template
+        update_post_meta( $template_group_id, 'vc_addon_template_author', $user_id ); // Autor do template
+
+        // Buscar e copiar itens do grupo
+        $store_items = get_posts( [
+            'post_type'      => 'vc_product_modifier',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'meta_query'     => [
+                [
+                    'key'   => '_vc_group_id',
+                    'value' => $group_id,
+                ],
+                [
+                    'key'   => '_vc_restaurant_id',
+                    'value' => $restaurant_id,
+                ],
+            ],
+        ] );
+
+        $copied_items = [];
+        foreach ( $store_items as $store_item ) {
+            // Criar item no catálogo (vc_addon_item)
+            $template_item_id = wp_insert_post( [
+                'post_type'    => 'vc_addon_item',
+                'post_title'   => $store_item->post_title,
+                'post_content' => $store_item->post_content,
+                'post_status'  => 'publish',
+                'post_author'  => $user_id,
+            ] );
+
+            if ( ! is_wp_error( $template_item_id ) ) {
+                // Copiar configurações do item
+                update_post_meta( $template_item_id, '_vc_group_id', $template_group_id );
+                update_post_meta( $template_item_id, '_vc_default_price', get_post_meta( $store_item->ID, '_vc_price', true ) ?: '0.00' );
+                update_post_meta( $template_item_id, '_vc_allow_quantity', get_post_meta( $store_item->ID, '_vc_allow_quantity', true ) );
+                update_post_meta( $template_item_id, '_vc_max_quantity', get_post_meta( $store_item->ID, '_vc_max_quantity', true ) ?: '1' );
+                update_post_meta( $template_item_id, '_vc_is_active', '1' );
+
+                $copied_items[] = $template_item_id;
+            }
+        }
+
+        return new \WP_REST_Response( [
+            'success'      => true,
+            'message'      => __( 'Grupo salvo como template com sucesso!', 'vemcomer' ),
+            'template_id'  => $template_group_id,
+            'items_count'  => count( $copied_items ),
+        ] );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/addon-catalog/my-templates
+     * Lista grupos templates salvos pelo lojista
+     */
+    public function get_my_templates( \WP_REST_Request $request ): \WP_REST_Response {
+        $user_id = get_current_user_id();
+        
+        // Buscar grupos templates criados pelo usuário
+        $templates = get_posts( [
+            'post_type'      => 'vc_addon_group',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'author'         => $user_id,
+            'meta_query'     => [
+                [
+                    'key'   => 'vc_addon_template_group',
+                    'value' => '1',
+                ],
+            ],
+        ] );
+
+        $templates_data = [];
+        foreach ( $templates as $template ) {
+            $templates_data[] = [
+                'id'          => $template->ID,
+                'name'        => $template->post_title,
+                'description' => $template->post_content,
+            ];
+        }
+
+        return new \WP_REST_Response( [
+            'success'   => true,
+            'templates' => $templates_data,
+        ] );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/addon-catalog/setup-onboarding
+     * Configura grupos iniciais de adicionais para o restaurante
+     */
+    public function setup_addons_onboarding( \WP_REST_Request $request ): \WP_REST_Response {
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        $body = $request->get_json_params();
+        $group_ids = isset( $body['group_ids'] ) && is_array( $body['group_ids'] ) ? array_map( 'absint', $body['group_ids'] ) : [];
+
+        if ( empty( $group_ids ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Nenhum grupo selecionado.', 'vemcomer' ),
+            ], 400 );
+        }
+
+        $copied_groups = [];
+        foreach ( $group_ids as $catalog_group_id ) {
+            // Criar uma requisição interna para copiar o grupo
+            $copy_request = new \WP_REST_Request( 'POST', '/vemcomer/v1/addon-catalog/groups/' . $catalog_group_id . '/copy-to-store' );
+            $copy_result = $this->copy_group_to_store( $copy_request );
+            $copy_data = $copy_result->get_data();
+
+            if ( $copy_data['success'] && isset( $copy_data['group_id'] ) ) {
+                $copied_groups[] = $copy_data['group_id'];
+            }
+        }
+
+        // Marcar onboarding como completo
+        update_user_meta( $user_id, 'vc_addons_onboarding_completed', '1' );
+
+        return new \WP_REST_Response( [
+            'success'      => true,
+            'message'      => sprintf( __( '%d grupo(s) configurado(s) com sucesso!', 'vemcomer' ), count( $copied_groups ) ),
+            'groups_count' => count( $copied_groups ),
+        ] );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/addon-catalog/needs-onboarding
+     * Verifica se o restaurante precisa de onboarding de adicionais
+     */
+    public function check_needs_onboarding( \WP_REST_Request $request ): \WP_REST_Response {
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'needs_onboarding' => false,
+            ], 404 );
+        }
+
+        // Verificar se já tem grupos configurados
+        $store_groups = get_posts( [
+            'post_type'      => 'vc_product_modifier',
+            'posts_per_page' => 1,
+            'post_status'    => 'any',
+            'meta_query'     => [
+                [
+                    'key'   => '_vc_restaurant_id',
+                    'value' => $restaurant_id,
+                ],
+                [
+                    'key'   => '_vc_group_id',
+                    'value' => '0',
+                    'compare' => '=',
+                ],
+            ],
+        ] );
+
+        $has_groups = ! empty( $store_groups );
+        $onboarding_completed = get_user_meta( $user_id, 'vc_addons_onboarding_completed', true ) === '1';
+        $needs_onboarding = ! $has_groups && ! $onboarding_completed;
+
+        return new \WP_REST_Response( [
+            'success'           => true,
+            'needs_onboarding'  => $needs_onboarding,
+            'has_groups'        => $has_groups,
+            'completed'         => $onboarding_completed,
+        ] );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/addon-catalog/dismiss-onboarding
+     * Descarta o onboarding de adicionais
+     */
+    public function dismiss_onboarding( \WP_REST_Request $request ): \WP_REST_Response {
+        $user_id = get_current_user_id();
+        update_user_meta( $user_id, 'vc_addons_onboarding_completed', '1' );
+
+        return new \WP_REST_Response( [
+            'success' => true,
+            'message' => __( 'Onboarding descartado.', 'vemcomer' ),
         ] );
     }
 }
