@@ -1414,6 +1414,7 @@ class Addon_Catalog_Seeder {
                     'Brigaderia',
                     'Brownieria',
                     'Loja de donuts',
+                    'Bomboniere',
                 ],
                 'items'          => [
                     [ 'name' => 'Calda de chocolate', 'price' => '2.00', 'allow_quantity' => false ],
@@ -1455,6 +1456,7 @@ class Addon_Catalog_Seeder {
                     'Sports bar / Bar esportivo',
                     'Karaokê bar',
                     'Beach club',
+                    'Balada / Night club',
                 ],
                 'items'          => [
                     [ 'name' => 'Batata frita', 'price' => '8.00', 'allow_quantity' => false ],
@@ -1549,7 +1551,7 @@ class Addon_Catalog_Seeder {
                 ],
             ],
 
-            // Grupos para Rodízio / Buffet
+            // Grupos para Rodízio / Buffet / À la carte
             [
                 'name'           => 'Extras para Rodízio/Buffet',
                 'description'    => 'Extras para rodízio e buffet',
@@ -1560,6 +1562,7 @@ class Addon_Catalog_Seeder {
                 'categories'     => [
                     'Rodízio (geral)',
                     'Buffet livre',
+                    'À la carte',
                 ],
                 'items'          => [
                     [ 'name' => 'Bebida inclusa', 'price' => '0.00', 'allow_quantity' => false ],
