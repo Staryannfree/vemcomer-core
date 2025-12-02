@@ -2846,6 +2846,181 @@ if ($restaurant instanceof WP_Post) {
                 });
             }
         });
+
+        // Modal de Gerenciar Categorias
+        let categoriesList = []; // Armazenar lista globalmente para acesso nos event listeners
+        
+        window.openManageCategoriesModal = async function() {
+            const modal = document.getElementById('vcManageCategoriesModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                loadCategoriesList();
+            }
+        };
+
+        window.closeManageCategoriesModal = function() {
+            const modal = document.getElementById('vcManageCategoriesModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        };
+
+        // Carregar lista de categorias no modal
+        async function loadCategoriesList() {
+            const container = document.getElementById('vcCategoriesList');
+            if (!container) return;
+            
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando categorias...', 'vemcomer')); ?></p></div>';
+
+            try {
+                const response = await fetch('<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>', {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar categorias');
+                }
+
+                categoriesList = await response.json();
+                const categories = categoriesList;
+                
+                if (!Array.isArray(categories) || categories.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhuma categoria encontrada.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                let categoriesHtml = '';
+                
+                categories.forEach(category => {
+                    const categoryNameEscaped = escapeHtml(category.name);
+                    const itemCount = category.count || 0;
+                    
+                    categoriesHtml += `
+                        <div class="vc-category-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e0e0e0;transition:background 0.2s;" 
+                             onmouseover="this.style.background='#f5f5f5';"
+                             onmouseout="this.style.background='#fff';">
+                            <div style="flex:1;">
+                                <strong style="color:#2d8659;font-size:15px;">${categoryNameEscaped}</strong>
+                                <span style="color:#999;font-size:13px;margin-left:8px;">(${itemCount} <?php echo esc_js(__('produto(s)', 'vemcomer')); ?>)</span>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button class="js-edit-category-in-list" 
+                                        data-category-id="${category.id}" 
+                                        data-category-name="${categoryNameEscaped.replace(/'/g, "\\'")}"
+                                        title="<?php echo esc_js(__('Editar categoria', 'vemcomer')); ?>"
+                                        style="background:#2d8659;color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s;"
+                                        onmouseover="this.style.background='#1f5d3f';"
+                                        onmouseout="this.style.background='#2d8659';">
+                                    ✏️
+                                </button>
+                                <button class="js-delete-category-in-list" 
+                                        data-category-id="${category.id}" 
+                                        data-category-name="${categoryNameEscaped.replace(/'/g, "\\'")}"
+                                        data-category-count="${itemCount}"
+                                        title="<?php echo esc_js(__('Deletar categoria', 'vemcomer')); ?>"
+                                        style="background:#d32f2f;color:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:18px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s;"
+                                        onmouseover="this.style.background='#b71c1c';"
+                                        onmouseout="this.style.background='#d32f2f';">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = categoriesHtml;
+            } catch (e) {
+                console.error('Erro ao carregar categorias:', e);
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar categorias.', 'vemcomer')); ?></p></div>';
+            }
+        }
+
+        // Event listeners para editar/deletar categorias na lista
+        document.addEventListener('click', function(e) {
+            // Editar categoria da lista
+            if (e.target.closest('.js-edit-category-in-list')) {
+                const btn = e.target.closest('.js-edit-category-in-list');
+                const categoryId = btn.getAttribute('data-category-id');
+                const categoryName = btn.getAttribute('data-category-name');
+                
+                // Buscar dados completos da categoria (incluindo ordem)
+                const categoryItem = categoriesList.find(c => c.id == categoryId);
+                const categoryOrder = categoryItem ? (categoryItem.order || 0) : 0;
+                
+                closeManageCategoriesModal();
+                openAddCategoryModal(categoryId, categoryName, categoryOrder);
+            }
+
+            // Deletar categoria da lista
+            if (e.target.closest('.js-delete-category-in-list')) {
+                const btn = e.target.closest('.js-delete-category-in-list');
+                const categoryId = btn.getAttribute('data-category-id');
+                const categoryName = btn.getAttribute('data-category-name');
+                const categoryCount = parseInt(btn.getAttribute('data-category-count') || '0');
+
+                if (categoryCount > 0) {
+                    alert('<?php echo esc_js(__('Não é possível deletar esta categoria. Ela possui produtos associados. Remova os produtos primeiro ou mova-os para outra categoria.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                if (!confirm(`<?php echo esc_js(__('Tem certeza que deseja deletar a categoria', 'vemcomer')); ?> "${categoryName}"?`)) {
+                    return;
+                }
+
+                btn.disabled = true;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '...';
+
+                fetch(`<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>/${categoryId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert(data?.message || '<?php echo esc_js(__('Não foi possível deletar a categoria.', 'vemcomer')); ?>');
+                        return;
+                    }
+
+                    alert('<?php echo esc_js(__('Categoria deletada com sucesso!', 'vemcomer')); ?>');
+                    loadCategoriesList(); // Recarregar lista
+                    setTimeout(() => {
+                        window.location.reload(); // Recarregar página para atualizar abas
+                    }, 500);
+                })
+                .catch(e => {
+                    console.error(e);
+                    alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }
+        });
+
+        // Abrir modal ao clicar no botão de gerenciar categorias
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.js-manage-categories')) {
+                openManageCategoriesModal();
+            }
+        });
+
+        // Fechar modal ao clicar fora
+        const manageCategoriesModal = document.getElementById('vcManageCategoriesModal');
+        if (manageCategoriesModal) {
+            manageCategoriesModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeManageCategoriesModal();
+                }
+            });
+        }
     });
 </script>
 
