@@ -995,6 +995,27 @@ if ($restaurant instanceof WP_Post) {
             if (statNodes.categories) statNodes.categories.textContent = categoryCount;
         };
 
+        // Função para atualizar apenas o contador de categorias via API
+        const updateCategoriesCount = async () => {
+            try {
+                const response = await fetch('<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>', {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                if (response.ok) {
+                    const categories = await response.json();
+                    const statNode = document.querySelector('[data-stat="categories"]');
+                    if (statNode) {
+                        statNode.textContent = Array.isArray(categories) ? categories.length : 0;
+                    }
+                }
+            } catch (e) {
+                console.error('Erro ao atualizar contador de categorias:', e);
+            }
+        };
+
         const toggleButtons = document.querySelectorAll('.js-toggle-availability');
         toggleButtons.forEach(btn => {
             btn.addEventListener('click', async (event) => {
@@ -1445,8 +1466,19 @@ if ($restaurant instanceof WP_Post) {
 
                 alert(isEdit ? '<?php echo esc_js(__('Categoria atualizada com sucesso!', 'vemcomer')); ?>' : '<?php echo esc_js(__('Categoria criada com sucesso!', 'vemcomer')); ?>');
                 closeAddCategoryModal();
-                // Recarregar a página para mostrar as mudanças
-                window.location.reload();
+                
+                // Atualizar contador de categorias imediatamente
+                updateCategoriesCount();
+                
+                // Recarregar categorias recomendadas (remover a que foi criada)
+                if (typeof loadRecommendedMenuCategories === 'function') {
+                    loadRecommendedMenuCategories();
+                }
+                
+                // Recarregar a página para mostrar as mudanças nas abas
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             } catch (e) {
                 console.error(e);
                 alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
