@@ -473,7 +473,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                                 <div class="modif-badge" data-group-id="<?php echo esc_attr($mod_id); ?>" data-product-id="<?php echo esc_attr($item_id); ?>">
                                                     <?php echo esc_html($mod_title); ?>
                                                     <?php if ($mod_id) : ?>
-                                                        <span class="modif-remove" data-product-id="<?php echo esc_attr($item_id); ?>" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
+                                                        <span class="modif-remove" onclick="removeAddonGroup(<?php echo esc_attr($item_id); ?>, <?php echo esc_attr($mod_id); ?>, this); return false;" data-product-id="<?php echo esc_attr($item_id); ?>" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
                                                     <?php endif; ?>
                                                 </div>
                                             <?php endforeach; ?>
@@ -1382,20 +1382,32 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
             }
         }
 
-        // Adicionar event listeners para os botões de remover (caso o onclick não funcione)
-        document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar event listeners para os botões de remover (delegation para funcionar com conteúdo dinâmico)
+        function initRemoveAddonListeners() {
+            // Usar delegation para capturar cliques mesmo em elementos adicionados dinamicamente
             document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('modif-remove')) {
+                if (e.target.classList.contains('modif-remove') || e.target.closest('.modif-remove')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const productId = parseInt(e.target.getAttribute('data-product-id'));
-                    const groupId = parseInt(e.target.getAttribute('data-group-id'));
+                    const target = e.target.classList.contains('modif-remove') ? e.target : e.target.closest('.modif-remove');
+                    const productId = parseInt(target.getAttribute('data-product-id'));
+                    const groupId = parseInt(target.getAttribute('data-group-id'));
+                    console.log('Click detectado no modif-remove:', { productId, groupId, target });
                     if (productId && groupId) {
-                        removeAddonGroup(productId, groupId, e.target);
+                        removeAddonGroup(productId, groupId, target);
+                    } else {
+                        console.error('IDs não encontrados:', { productId, groupId, target });
                     }
                 }
             });
-        });
+        }
+        
+        // Inicializar imediatamente se o DOM já estiver carregado, senão esperar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initRemoveAddonListeners);
+        } else {
+            initRemoveAddonListeners();
+        }
 
         window.addCustomAddonItem = function() {
             customAddonItemCount++;
