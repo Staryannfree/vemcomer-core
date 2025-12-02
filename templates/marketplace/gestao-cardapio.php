@@ -610,11 +610,18 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                         method: 'POST',
                         headers: {
                             'X-WP-Nonce': restNonce,
+                            'Content-Type': 'application/json',
                         },
                     });
 
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+                        alert(errorData?.message || `Erro ${response.status}: ${response.statusText}`);
+                        return;
+                    }
+
                     const data = await response.json();
-                    if (!response.ok || !data.success) {
+                    if (!data.success) {
                         alert(data?.message || '<?php echo esc_js(__('Não foi possível atualizar o status.', 'vemcomer')); ?>');
                         return;
                     }
@@ -673,11 +680,18 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                         method: 'DELETE',
                         headers: {
                             'X-WP-Nonce': restNonce,
+                            'Content-Type': 'application/json',
                         },
                     });
 
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+                        alert(errorData?.message || `Erro ${response.status}: ${response.statusText}`);
+                        return;
+                    }
+
                     const data = await response.json();
-                    if (!response.ok || !data.success) {
+                    if (!data.success) {
                         alert(data?.message || '<?php echo esc_js(__('Não foi possível deletar este item.', 'vemcomer')); ?>');
                         return;
                     }

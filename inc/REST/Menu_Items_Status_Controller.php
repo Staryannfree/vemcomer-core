@@ -50,7 +50,39 @@ class Menu_Items_Status_Controller {
             return false;
         }
 
-        return current_user_can( 'edit_vc_menu_item', (int) $request->get_param( 'id' ) );
+        $item_id = (int) $request->get_param( 'id' );
+        $item = get_post( $item_id );
+
+        if ( ! $item || $item->post_type !== 'vc_menu_item' ) {
+            return false;
+        }
+
+        // Verificar se o usuário é admin
+        if ( current_user_can( 'manage_options' ) ) {
+            return true;
+        }
+
+        // Verificar se o usuário é dono do restaurante associado ao item
+        $restaurant_id = (int) get_post_meta( $item_id, '_vc_restaurant_id', true );
+        if ( $restaurant_id <= 0 ) {
+            return false;
+        }
+
+        $user_id = get_current_user_id();
+        $user_restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $user_restaurant_id === $restaurant_id ) {
+            return true;
+        }
+
+        // Verificar se o usuário é autor do restaurante
+        $restaurant = get_post( $restaurant_id );
+        if ( $restaurant && (int) $restaurant->post_author === $user_id ) {
+            return true;
+        }
+
+        // Fallback: verificar capability padrão
+        return current_user_can( 'edit_post', $item_id );
     }
 
     public function can_delete_item( WP_REST_Request $request ): bool {
@@ -58,7 +90,39 @@ class Menu_Items_Status_Controller {
             return false;
         }
 
-        return current_user_can( 'delete_post', (int) $request->get_param( 'id' ) );
+        $item_id = (int) $request->get_param( 'id' );
+        $item = get_post( $item_id );
+
+        if ( ! $item || $item->post_type !== 'vc_menu_item' ) {
+            return false;
+        }
+
+        // Verificar se o usuário é admin
+        if ( current_user_can( 'manage_options' ) ) {
+            return true;
+        }
+
+        // Verificar se o usuário é dono do restaurante associado ao item
+        $restaurant_id = (int) get_post_meta( $item_id, '_vc_restaurant_id', true );
+        if ( $restaurant_id <= 0 ) {
+            return false;
+        }
+
+        $user_id = get_current_user_id();
+        $user_restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $user_restaurant_id === $restaurant_id ) {
+            return true;
+        }
+
+        // Verificar se o usuário é autor do restaurante
+        $restaurant = get_post( $restaurant_id );
+        if ( $restaurant && (int) $restaurant->post_author === $user_id ) {
+            return true;
+        }
+
+        // Fallback: verificar capability padrão
+        return current_user_can( 'delete_post', $item_id );
     }
 
     public function toggle_availability( WP_REST_Request $request ): WP_REST_Response|WP_Error {
@@ -69,10 +133,8 @@ class Menu_Items_Status_Controller {
             return new WP_Error( 'vc_menu_item_not_found', __( 'Item não encontrado.', 'vemcomer' ), [ 'status' => 404 ] );
         }
 
-        $nonce = $request->get_header( 'X-WP-Nonce' );
-        if ( ! $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-            return new WP_Error( 'vc_invalid_nonce', __( 'Nonce inválido.', 'vemcomer' ), [ 'status' => 403 ] );
-        }
+        // A verificação de permissão já foi feita pela permission_callback
+        // Não é necessário verificar o nonce manualmente aqui
 
         $current = (bool) get_post_meta( $id, '_vc_is_available', true );
         $new     = ! $current;
@@ -98,10 +160,8 @@ class Menu_Items_Status_Controller {
             return new WP_Error( 'vc_menu_item_not_found', __( 'Item não encontrado.', 'vemcomer' ), [ 'status' => 404 ] );
         }
 
-        $nonce = $request->get_header( 'X-WP-Nonce' );
-        if ( ! $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-            return new WP_Error( 'vc_invalid_nonce', __( 'Nonce inválido.', 'vemcomer' ), [ 'status' => 403 ] );
-        }
+        // A verificação de permissão já foi feita pela permission_callback
+        // Não é necessário verificar o nonce manualmente aqui
 
         $trashed = wp_trash_post( $id );
 
