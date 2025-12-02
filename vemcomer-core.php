@@ -261,6 +261,9 @@ add_action( 'init', function () {
     if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) ) {
         \VC\Utils\Facility_Seeder::seed();
     }
+    if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
+        \VC\Utils\Addon_Catalog_Seeder::seed();
+    }
 }, 20 );
 
 // --- Bootstrap do módulo Restaurantes ---
