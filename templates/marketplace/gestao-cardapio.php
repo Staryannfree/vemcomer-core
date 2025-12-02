@@ -371,6 +371,14 @@ if ($restaurant instanceof WP_Post) {
         .vc-addons-tab-content {min-height:200px;}
         .vc-addon-group-card {margin-bottom:15px;}
         @media (max-width:720px){.vc-form-row{grid-template-columns:1fr;}.vc-modal-content{max-width:95vw;}.vc-addons-tabs{flex-direction:column;}.vc-addons-tab-btn{border-bottom:none;border-left:3px solid transparent;padding-left:15px;}.vc-addons-tab-btn.active{border-left-color:#2d8659;border-bottom-color:transparent;}}
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     </style>
 
     <?php
