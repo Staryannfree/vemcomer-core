@@ -1202,6 +1202,430 @@ class Addon_Catalog_Seeder {
                 ],
             ],
 
+            // Grupos para Comida Regional Brasileira
+            [
+                'name'           => 'Acompanhamentos Regionais',
+                'description'    => 'Acompanhamentos típicos das regiões brasileiras',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                    'Restaurante tropical / praiano',
+                ],
+                'items'          => [
+                    [ 'name' => 'Farofa', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pirão', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Vinagrete', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Arroz', 'price' => '2.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Marmitaria
+            [
+                'name'           => 'Extras para Marmita',
+                'description'    => 'Complementos para sua marmita',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Marmitaria / Marmitex',
+                ],
+                'items'          => [
+                    [ 'name' => 'Arroz extra', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Feijão extra', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Salada extra', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Proteína extra', 'price' => '5.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Restaurantes Fine Dining
+            [
+                'name'           => 'Acompanhamentos Premium',
+                'description'    => 'Acompanhamentos especiais para pratos gourmet',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Restaurante contemporâneo',
+                    'Restaurante de alta gastronomia / fine dining',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho especial do chef', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Vegetais em conserva', 'price' => '3.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão artesanal', 'price' => '3.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Caseira
+            [
+                'name'           => 'Acompanhamentos Caseiros',
+                'description'    => 'Acompanhamentos para comida caseira',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Comida caseira',
+                ],
+                'items'          => [
+                    [ 'name' => 'Arroz', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Feijão', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Farofa', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Salada', 'price' => '3.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Culinária Argentina/Uruguaia
+            [
+                'name'           => 'Adicionais Argentinos/Uruguaios',
+                'description'    => 'Complementos para pratos argentinos e uruguaios',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                    'Steakhouse',
+                ],
+                'items'          => [
+                    [ 'name' => 'Chimichurri', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Provoleta', 'price' => '6.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Batata frita', 'price' => '4.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Izakaya / Lámen
+            [
+                'name'           => 'Adicionais para Lámen/Izakaya',
+                'description'    => 'Complementos para lámen e pratos de izakaya',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Izakaya',
+                    'Restaurante de lámen / ramen',
+                ],
+                'items'          => [
+                    [ 'name' => 'Ovo cozido (ajitama)', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Naruto (peixe)', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Bambu em conserva', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Alho frito', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Culinária Turca/Libanesa (expandir)
+            [
+                'name'           => 'Adicionais Turcos',
+                'description'    => 'Complementos para pratos turcos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária turca',
+                    'Culinária libanesa',
+                ],
+                'items'          => [
+                    [ 'name' => 'Tahine', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Homus', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Baba ganoush', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão pita', 'price' => '2.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Espetinhos/Grelhados
+            [
+                'name'           => 'Acompanhamentos para Espetinhos',
+                'description'    => 'Acompanhamentos para espetinhos e grelhados',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Espetinhos',
+                    'Grelhados',
+                    'Assados & rotisserie',
+                ],
+                'items'          => [
+                    [ 'name' => 'Farofa', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Vinagrete', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão de alho', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho de pimenta', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Kebab
+            [
+                'name'           => 'Adicionais para Kebab',
+                'description'    => 'Complementos para seu kebab ou shawarma',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Kebab / shawarma',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho de alho', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho picante', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Vegetais frescos', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Batata frita', 'price' => '4.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Food Truck / Quiosque / Trailer
+            [
+                'name'           => 'Extras para Lanche Rápido',
+                'description'    => 'Complementos para lanches rápidos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Quiosque de praia',
+                    'Trailer de lanches',
+                    'Refeição rápida / fast-food',
+                ],
+                'items'          => [
+                    [ 'name' => 'Batata frita', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Refrigerante', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Molhos', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Doces Específicos
+            [
+                'name'           => 'Coberturas para Doces Especiais',
+                'description'    => 'Coberturas para doces e sobremesas especiais',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Brigaderia',
+                    'Brownieria',
+                    'Loja de donuts',
+                ],
+                'items'          => [
+                    [ 'name' => 'Calda de chocolate', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Chantilly', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Granulado', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Morango', 'price' => '3.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Casa de Chá / Waffle
+            [
+                'name'           => 'Adicionais para Chá/Waffle',
+                'description'    => 'Complementos para chás e waffles',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Casa de chá',
+                    'Waffle house',
+                ],
+                'items'          => [
+                    [ 'name' => 'Mel', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Limão', 'price' => '0.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de chocolate', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Sorvete', 'price' => '3.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Bares Específicos
+            [
+                'name'           => 'Petiscos para Bares Especiais',
+                'description'    => 'Petiscos para bares temáticos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Sports bar / Bar esportivo',
+                    'Karaokê bar',
+                    'Beach club',
+                ],
+                'items'          => [
+                    [ 'name' => 'Batata frita', 'price' => '8.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Amendoim', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeitona', 'price' => '4.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Coquetelaria / Caipirinha
+            [
+                'name'           => 'Extras para Drinks',
+                'description'    => 'Complementos para seus drinks e coquetéis',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Bar de drinks / Coquetelaria',
+                    'Bar de caipirinha',
+                    'Hookah / Narguilé bar',
+                ],
+                'items'          => [
+                    [ 'name' => 'Água tônica', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Refrigerante', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Energético', 'price' => '4.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Adega / Loja de Vinhos
+            [
+                'name'           => 'Acompanhamentos para Vinhos',
+                'description'    => 'Acompanhamentos para vinhos e destilados',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Adega de bebidas',
+                    'Loja de vinhos e destilados',
+                ],
+                'items'          => [
+                    [ 'name' => 'Queijos especiais', 'price' => '12.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeitonas premium', 'price' => '6.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Castanhas', 'price' => '8.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Dietas Específicas
+            [
+                'name'           => 'Substituições para Dietas',
+                'description'    => 'Opções de substituição para dietas especiais',
+                'selection_type' => 'single',
+                'min_select'     => 0,
+                'max_select'     => 1,
+                'is_required'    => false,
+                'categories'     => [
+                    'Vegetariano',
+                    'Vegano',
+                    'Plant-based',
+                    'Sem glúten',
+                    'Sem lactose',
+                    'Orgânico',
+                    'Natural / saudável',
+                    'Comida funcional',
+                    'Low carb',
+                ],
+                'items'          => [
+                    [ 'name' => 'Proteína vegetal', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo vegano', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão sem glúten', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Leite vegetal', 'price' => '2.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Restaurantes Temáticos
+            [
+                'name'           => 'Extras para Experiência',
+                'description'    => 'Extras para melhorar sua experiência',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Restaurante familiar / kids friendly',
+                    'Restaurante romântico',
+                    'Restaurante temático',
+                    'Restaurante com música ao vivo',
+                ],
+                'items'          => [
+                    [ 'name' => 'Sobremesa especial', 'price' => '8.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Bebida especial', 'price' => '6.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Rodízio / Buffet
+            [
+                'name'           => 'Extras para Rodízio/Buffet',
+                'description'    => 'Extras para rodízio e buffet',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Rodízio (geral)',
+                    'Buffet livre',
+                ],
+                'items'          => [
+                    [ 'name' => 'Bebida inclusa', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Sobremesa inclusa', 'price' => '0.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Delivery / Dark Kitchen
+            [
+                'name'           => 'Extras para Delivery',
+                'description'    => 'Extras para pedidos de delivery',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Delivery only / Dark kitchen',
+                    'Drive-thru',
+                    'Take-away / para levar',
+                ],
+                'items'          => [
+                    [ 'name' => 'Talheres descartáveis', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Molhos extras', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Food Court
+            [
+                'name'           => 'Extras para Food Court',
+                'description'    => 'Extras para praça de alimentação',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Praça de alimentação / food court',
+                ],
+                'items'          => [
+                    [ 'name' => 'Bebida', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Sobremesa', 'price' => '5.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Mercados / Lojas
+            [
+                'name'           => 'Produtos Complementares',
+                'description'    => 'Produtos complementares para sua compra',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Mercado / mini mercado',
+                    'Empório',
+                    'Loja de produtos naturais',
+                    'Açougue gourmet',
+                    'Hortifruti',
+                    'Peixaria',
+                    'Loja de conveniência',
+                ],
+                'items'          => [
+                    [ 'name' => 'Embalagem especial', 'price' => '1.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Produto relacionado', 'price' => '5.00', 'allow_quantity' => false ],
+                ],
+            ],
+
             // Grupos genéricos (para qualquer tipo)
             [
                 'name'           => 'Molhos Extras',
