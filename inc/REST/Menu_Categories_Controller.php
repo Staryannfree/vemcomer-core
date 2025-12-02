@@ -169,12 +169,27 @@ class Menu_Categories_Controller {
         $term_id_param = $request->get_param( 'id' );
         if ( ! $term_id_param ) {
             // Só verifica duplicatas ao criar (não ao editar)
-            if ( term_exists( $name, CPT_MenuItem::TAX_CATEGORY ) ) {
-                return new WP_Error(
-                    'vc_category_exists',
-                    __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
-                    [ 'status' => 400 ]
-                );
+            // Buscar termos com o mesmo nome
+            $existing_terms = get_terms( [
+                'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
+                'name'       => $name,
+                'hide_empty' => false,
+            ] );
+
+            if ( ! is_wp_error( $existing_terms ) && ! empty( $existing_terms ) ) {
+                // Verificar se algum dos termos encontrados NÃO é do catálogo
+                // (ou seja, foi criado pelo usuário)
+                foreach ( $existing_terms as $term ) {
+                    $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
+                    // Se encontrou uma categoria criada pelo usuário (não do catálogo), então já existe
+                    if ( $is_catalog !== '1' ) {
+                        return new WP_Error(
+                            'vc_category_exists',
+                            __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
+                            [ 'status' => 400 ]
+                        );
+                    }
+                }
             }
         }
 
