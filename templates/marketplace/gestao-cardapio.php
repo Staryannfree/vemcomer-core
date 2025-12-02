@@ -295,6 +295,8 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         .modif-title {font-weight:700;color:#3176da;font-size:.96em;margin-bottom:3px;}
         .modif-list {margin:0;padding:0;display:flex;gap:9px;flex-wrap:wrap;}
         .modif-badge {background:#fffbe2;color:#fa7e1e;border-radius:7px;padding:3px 9px;margin:0 0 4px 0; font-weight:700;font-size:.94em;display:inline-flex;align-items:center;gap:6px;position:relative;}
+        .modif-edit-price {cursor:pointer;color:#2d8659;font-size:14px;font-weight:bold;line-height:1;padding:0 2px;opacity:0.7;transition:opacity 0.2s;text-decoration:none;}
+        .modif-edit-price:hover {opacity:1;color:#1f5d3f;}
         .modif-remove {cursor:pointer;color:#d32f2f;font-size:18px;font-weight:bold;line-height:1;padding:0 2px;opacity:0.7;transition:opacity 0.2s;}
         .modif-remove:hover {opacity:1;color:#b71c1c;}
         .modif-edit {margin-left:11px;color:#2d8659;text-decoration:underline;cursor:pointer;font-size:.97em;}
@@ -473,6 +475,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                                 <div class="modif-badge" data-group-id="<?php echo esc_attr($mod_id); ?>" data-product-id="<?php echo esc_attr($item_id); ?>">
                                                     <?php echo esc_html($mod_title); ?>
                                                     <?php if ($mod_id) : ?>
+                                                        <span class="modif-edit-price" onclick="openEditAddonPricesModal(<?php echo esc_attr($mod_id); ?>, '<?php echo esc_js($mod_title); ?>'); return false;" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Editar preços dos itens', 'vemcomer'); ?>">✏️</span>
                                                         <span class="modif-remove" onclick="removeAddonGroup(<?php echo esc_attr($item_id); ?>, <?php echo esc_attr($mod_id); ?>, this); return false;" data-product-id="<?php echo esc_attr($item_id); ?>" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
                                                     <?php endif; ?>
                                                 </div>
@@ -687,6 +690,29 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 <div id="vcCurrentAddons">
                     <p style="color:#666;"><?php echo esc_html__('Carregando adicionais vinculados a este produto...', 'vemcomer'); ?></p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar Preços dos Itens do Grupo -->
+<div id="vcEditAddonPricesModal" class="vc-modal-overlay" style="display:none;">
+    <div class="vc-modal-content" style="max-width:600px;">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title" id="vcEditPricesModalTitle"><?php echo esc_html__('Editar Preços dos Itens', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeEditAddonPricesModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <div class="vc-modal-body">
+            <input type="hidden" id="vcEditPricesGroupId" value="" />
+            <p style="color:#666;margin-bottom:20px;"><?php echo esc_html__('Defina os preços para cada item deste grupo:', 'vemcomer'); ?></p>
+            <div id="vcEditPricesItemsList" style="display:grid;gap:15px;">
+                <div style="text-align:center;padding:40px;color:#999;">
+                    <p><?php echo esc_html__('Carregando itens...', 'vemcomer'); ?></p>
+                </div>
+            </div>
+            <div class="vc-modal-footer" style="margin-top:20px;padding-top:20px;border-top:1px solid #e0e0e0;">
+                <button type="button" class="vc-btn-secondary" onclick="closeEditAddonPricesModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
+                <button type="button" class="vc-btn-primary" onclick="saveAddonPrices()"><?php echo esc_html__('Salvar Preços', 'vemcomer'); ?></button>
             </div>
         </div>
     </div>
@@ -1408,6 +1434,259 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         } else {
             initRemoveAddonListeners();
         }
+
+        // Modal de Editar Preços dos Itens
+        window.openEditAddonPricesModal = async function(groupId, groupName) {
+            document.getElementById('vcEditPricesGroupId').value = groupId;
+            document.getElementById('vcEditPricesModalTitle').textContent = '<?php echo esc_js(__('Editar Preços: ', 'vemcomer')); ?>' + groupName;
+            document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando itens...', 'vemcomer')); ?></p></div>';
+            document.getElementById('vcEditAddonPricesModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/store-groups/${groupId}/items`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success || !data.items) {
+                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar itens.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                if (data.items.length === 0) {
+                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhum item encontrado neste grupo.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                let itemsHtml = '';
+                data.items.forEach(item => {
+                    const price = parseFloat(item.price || 0).toFixed(2);
+                    itemsHtml += `
+                        <div class="vc-form-group" style="display:grid;grid-template-columns:2fr 1fr;gap:15px;align-items:end;padding:15px;background:#f5f5f5;border-radius:6px;">
+                            <div>
+                                <label class="vc-form-label" style="font-size:13px;margin-bottom:5px;">${escapeHtml(item.name)}</label>
+                            </div>
+                            <div>
+                                <label class="vc-form-label" style="font-size:12px;margin-bottom:5px;"><?php echo esc_js(__('Preço (R$)', 'vemcomer')); ?></label>
+                                <input type="number" class="vc-form-input vc-item-price-input" data-item-id="${item.id}" step="0.01" min="0" value="${price}" placeholder="0.00" style="text-align:right;" />
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('vcEditPricesItemsList').innerHTML = itemsHtml;
+            } catch (e) {
+                console.error('Erro ao carregar itens:', e);
+                document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?></p></div>';
+            }
+        };
+
+        window.closeEditAddonPricesModal = function() {
+            document.getElementById('vcEditAddonPricesModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        window.saveAddonPrices = async function() {
+            const groupId = parseInt(document.getElementById('vcEditPricesGroupId').value);
+            if (!groupId) {
+                alert('<?php echo esc_js(__('Grupo não identificado.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const priceInputs = document.querySelectorAll('.vc-item-price-input');
+            const items = [];
+            priceInputs.forEach(input => {
+                const itemId = parseInt(input.getAttribute('data-item-id'));
+                const price = parseFloat(input.value) || 0.00;
+                if (itemId) {
+                    items.push({
+                        id: itemId,
+                        price: price,
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                alert('<?php echo esc_js(__('Nenhum item para atualizar.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Salvando...', 'vemcomer')); ?>';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/store-groups/${groupId}/items/prices`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify({
+                        items: items,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao salvar preços.', 'vemcomer')); ?>');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Preços atualizados com sucesso!', 'vemcomer')); ?>');
+                closeEditAddonPricesModal();
+                // Recarregar a página para refletir as mudanças
+                setTimeout(function() {
+                    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+                }, 300);
+            } catch (e) {
+                console.error('Erro ao salvar preços:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
+        // Fechar modal ao clicar fora
+        const editPricesModal = document.getElementById('vcEditAddonPricesModal');
+        if (editPricesModal) {
+            editPricesModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeEditAddonPricesModal();
+                }
+            });
+        }
+
+        // Modal de Editar Preços dos Itens
+        window.openEditAddonPricesModal = async function(groupId, groupName) {
+            document.getElementById('vcEditPricesGroupId').value = groupId;
+            document.getElementById('vcEditPricesModalTitle').textContent = '<?php echo esc_js(__('Editar Preços: ', 'vemcomer')); ?>' + groupName;
+            document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando itens...', 'vemcomer')); ?></p></div>';
+            document.getElementById('vcEditAddonPricesModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/store-groups/${groupId}/items`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success || !data.items) {
+                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar itens.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                if (data.items.length === 0) {
+                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhum item encontrado neste grupo.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                let itemsHtml = '';
+                data.items.forEach(item => {
+                    const price = parseFloat(item.price || 0).toFixed(2).replace('.', ',');
+                    itemsHtml += `
+                        <div class="vc-form-group" style="display:grid;grid-template-columns:2fr 1fr;gap:15px;align-items:end;padding:15px;background:#f5f5f5;border-radius:6px;">
+                            <div>
+                                <label class="vc-form-label" style="font-size:13px;margin-bottom:5px;">${escapeHtml(item.name)}</label>
+                            </div>
+                            <div>
+                                <label class="vc-form-label" style="font-size:12px;margin-bottom:5px;"><?php echo esc_js(__('Preço (R$)', 'vemcomer')); ?></label>
+                                <input type="number" class="vc-form-input vc-item-price-input" data-item-id="${item.id}" step="0.01" min="0" value="${item.price}" placeholder="0.00" style="text-align:right;" />
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('vcEditPricesItemsList').innerHTML = itemsHtml;
+            } catch (e) {
+                console.error('Erro ao carregar itens:', e);
+                document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?></p></div>';
+            }
+        };
+
+        window.closeEditAddonPricesModal = function() {
+            document.getElementById('vcEditAddonPricesModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        window.saveAddonPrices = async function() {
+            const groupId = parseInt(document.getElementById('vcEditPricesGroupId').value);
+            if (!groupId) {
+                alert('<?php echo esc_js(__('Grupo não identificado.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const priceInputs = document.querySelectorAll('.vc-item-price-input');
+            const items = [];
+            priceInputs.forEach(input => {
+                const itemId = parseInt(input.getAttribute('data-item-id'));
+                const price = parseFloat(input.value) || 0.00;
+                if (itemId) {
+                    items.push({
+                        id: itemId,
+                        price: price,
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                alert('<?php echo esc_js(__('Nenhum item para atualizar.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Salvando...', 'vemcomer')); ?>';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/store-groups/${groupId}/items/prices`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify({
+                        items: items,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao salvar preços.', 'vemcomer')); ?>');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Preços atualizados com sucesso!', 'vemcomer')); ?>');
+                closeEditAddonPricesModal();
+                // Recarregar a página para refletir as mudanças
+                setTimeout(function() {
+                    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+                }, 300);
+            } catch (e) {
+                console.error('Erro ao salvar preços:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
+        // Fechar modal ao clicar fora
+        document.getElementById('vcEditAddonPricesModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditAddonPricesModal();
+            }
+        });
 
         window.addCustomAddonItem = function() {
             customAddonItemCount++;

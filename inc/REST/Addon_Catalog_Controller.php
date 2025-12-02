@@ -86,6 +86,38 @@ class Addon_Catalog_Controller {
             ],
         ] );
 
+        // GET: Buscar itens de um grupo da loja (para edição de preços)
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/store-groups/(?P<id>\d+)/items', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_store_group_items' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
+        // PUT: Atualizar preços dos itens de um grupo da loja
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/store-groups/(?P<id>\d+)/items/prices', [
+            'methods'             => 'PUT',
+            'callback'            => [ $this, 'update_store_group_items_prices' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
         // POST: Vincular grupo copiado a um produto
         register_rest_route( 'vemcomer/v1', '/addon-catalog/link-group-to-product', [
             'methods'             => 'POST',
