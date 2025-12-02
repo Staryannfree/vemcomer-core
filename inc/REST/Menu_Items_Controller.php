@@ -56,6 +56,20 @@ class Menu_Items_Controller {
             'callback'            => [ $this, 'create_menu_item' ],
             'permission_callback' => [ $this, 'can_manage_menu_items' ],
         ] );
+
+        // PUT: Atualizar item do cardápio existente (lojista)
+        register_rest_route( 'vemcomer/v1', '/menu-items/(?P<id>\d+)', [
+            'methods'             => 'PUT',
+            'callback'            => [ $this, 'update_menu_item' ],
+            'permission_callback' => [ $this, 'can_edit_menu_item' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => 'is_numeric',
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
     }
 
     /**
@@ -295,6 +309,155 @@ class Menu_Items_Controller {
             'id'      => $post_id,
             'message' => __( 'Item do cardápio criado com sucesso!', 'vemcomer' ),
         ], 201 );
+    }
+
+    /**
+     * Verifica se o usuário pode editar um item específico do cardápio
+     */
+    public function can_edit_menu_item( WP_REST_Request $request ): bool {
+        if ( ! is_user_logged_in() ) {
+            return false;
+        }
+
+        $item_id = (int) $request->get_param( 'id' );
+        $item = get_post( $item_id );
+
+        if ( ! $item || CPT_MenuItem::SLUG !== $item->post_type ) {
+            return false;
+        }
+
+        // Verificar se o usuário é o dono do restaurante associado ao item
+        $restaurant_id = (int) get_post_meta( $item_id, '_vc_restaurant_id', true );
+        if ( $restaurant_id <= 0 ) {
+            return false;
+        }
+
+        $user_id = get_current_user_id();
+        $user_restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $user_restaurant_id === $restaurant_id ) {
+            return true;
+        }
+
+        // Verificar se o usuário é autor do restaurante
+        $restaurant = get_post( $restaurant_id );
+        if ( $restaurant && (int) $restaurant->post_author === $user_id ) {
+            return true;
+        }
+
+        return current_user_can( 'edit_post', $item_id );
+    }
+
+    /**
+     * PUT /wp-json/vemcomer/v1/menu-items/{id}
+     * Atualiza um item do cardápio existente
+     */
+    public function update_menu_item( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        $item_id = (int) $request->get_param( 'id' );
+        $item = get_post( $item_id );
+
+        if ( ! $item || CPT_MenuItem::SLUG !== $item->post_type ) {
+            return new WP_Error(
+                'vc_menu_item_not_found',
+                __( 'Item do cardápio não encontrado.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        $body = $request->get_json_params();
+        if ( ! $body ) {
+            return new WP_Error(
+                'vc_invalid_json',
+                __( 'JSON inválido no body da requisição.', 'vemcomer' ),
+                [ 'status' => 400 ]
+            );
+        }
+
+        // Atualizar título se fornecido
+        if ( isset( $body['title'] ) && ! empty( trim( $body['title'] ) ) ) {
+            wp_update_post( [
+                'ID'         => $item_id,
+                'post_title' => sanitize_text_field( trim( $body['title'] ) ),
+            ] );
+        }
+
+        // Atualizar descrição se fornecida
+        if ( isset( $body['description'] ) ) {
+            wp_update_post( [
+                'ID'           => $item_id,
+                'post_content' => wp_kses_post( $body['description'] ),
+                'post_excerpt' => wp_trim_words( wp_kses_post( $body['description'] ), 20 ),
+            ] );
+        }
+
+        // Atualizar meta fields
+        if ( isset( $body['price'] ) ) {
+            $price = sanitize_text_field( (string) $body['price'] );
+            update_post_meta( $item_id, '_vc_price', $price );
+        }
+
+        if ( isset( $body['prep_time'] ) ) {
+            $prep_time = absint( $body['prep_time'] );
+            update_post_meta( $item_id, '_vc_prep_time', $prep_time );
+        }
+
+        if ( isset( $body['is_available'] ) ) {
+            $is_available = (bool) $body['is_available'];
+            update_post_meta( $item_id, '_vc_is_available', $is_available ? '1' : '0' );
+        }
+
+        if ( isset( $body['is_featured'] ) ) {
+            if ( (bool) $body['is_featured'] ) {
+                update_post_meta( $item_id, '_vc_menu_item_featured', '1' );
+            } else {
+                delete_post_meta( $item_id, '_vc_menu_item_featured' );
+            }
+        }
+
+        // Atualizar categoria
+        if ( isset( $body['category_id'] ) && is_numeric( $body['category_id'] ) ) {
+            $category_id = absint( $body['category_id'] );
+            if ( term_exists( $category_id, 'vc_menu_category' ) ) {
+                wp_set_object_terms( $item_id, [ $category_id ], 'vc_menu_category', false );
+            }
+        }
+
+        // Atualizar imagem se fornecida
+        if ( isset( $body['image'] ) && ! empty( $body['image'] ) ) {
+            $image_url = sanitize_text_field( $body['image'] );
+            
+            // Se for data:image, fazer upload
+            if ( strpos( $image_url, 'data:image' ) === 0 ) {
+                require_once ABSPATH . 'wp-admin/includes/image.php';
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+                require_once ABSPATH . 'wp-admin/includes/media.php';
+
+                $title = get_the_title( $item_id );
+                $upload = wp_upload_bits( 'menu-item-' . $item_id . '.jpg', null, base64_decode( preg_replace( '#^data:image/\w+;base64,#i', '', $image_url ) ) );
+                if ( ! $upload['error'] ) {
+                    $attachment = [
+                        'post_mime_type' => 'image/jpeg',
+                        'post_title'     => sanitize_file_name( $title ),
+                        'post_content'   => '',
+                        'post_status'    => 'inherit',
+                    ];
+                    $attach_id = wp_insert_attachment( $attachment, $upload['file'], $item_id );
+                    $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
+                    wp_update_attachment_metadata( $attach_id, $attach_data );
+                    set_post_thumbnail( $item_id, $attach_id );
+                }
+            } elseif ( is_numeric( $image_url ) ) {
+                // Se for ID de attachment
+                set_post_thumbnail( $item_id, absint( $image_url ) );
+            }
+        }
+
+        log_event( 'REST menu item updated', [ 'post_id' => $item_id ], 'info' );
+
+        return new WP_REST_Response( [
+            'success' => true,
+            'id'      => $item_id,
+        ], 200 );
     }
 }
 

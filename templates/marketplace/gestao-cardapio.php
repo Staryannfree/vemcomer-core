@@ -124,6 +124,7 @@ if ($restaurant instanceof WP_Post) {
             }
             $price_raw  = get_post_meta($item->ID, '_vc_price', true);
             $price      = $price_raw !== '' ? $price_raw : __('Sem preço', 'vemcomer');
+            $prep_time  = get_post_meta($item->ID, '_vc_prep_time', true);
             $available  = (bool) get_post_meta($item->ID, '_vc_is_available', true);
             $excerpt    = has_excerpt($item) ? wp_strip_all_tags(get_the_excerpt($item)) : wp_trim_words(wp_strip_all_tags($item->post_content), 18, '...');
             $modifiers  = get_post_meta($item->ID, '_vc_menu_item_modifiers', true);
@@ -167,6 +168,7 @@ if ($restaurant instanceof WP_Post) {
                     'status'     => $available ? 'ativo' : 'pausado',
                     'description'=> $excerpt,
                     'price'      => $price,
+                    'prep_time'  => $prep_time ? (int) $prep_time : 0,
                     'thumb'      => $thumb,
                     'edit_url'   => get_edit_post_link($item->ID),
                     'modifiers'  => $modifier_titles,
@@ -233,7 +235,14 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         .cat-tab-btn.active {color:#2d8659;border-bottom:3px solid #2d8659;background:#eaf8f1;}
         .tab-content {margin-bottom:24px;}
         .prod-list {display:flex;flex-wrap:wrap;gap:20px;}
-        .prod-card {background:#fff;border-radius:13px;box-shadow:0 1px 14px #2d865914;min-width:295px;max-width:309px;flex:1 1 315px;position:relative;padding:16px 12px 13px 16px;margin-bottom:9px;display:flex;flex-direction:column;align-items:flex-start;}
+        .prod-card {background:#fff;border-radius:13px;box-shadow:0 1px 14px #2d865914;min-width:295px;max-width:309px;flex:1 1 315px;position:relative;padding:16px 12px 13px 16px;margin-bottom:9px;display:flex;flex-direction:column;align-items:flex-start;transition:opacity 0.3s;}
+        .prod-card[data-available="0"] {opacity:0.5;background:#f5f5f5;}
+        .prod-card[data-available="0"] .prod-img {opacity:0.5;filter:grayscale(100%);}
+        .prod-card[data-available="0"] .prod-info {opacity:0.6;}
+        .prod-card[data-available="0"] .prod-nome {color:#999;}
+        .prod-card[data-available="0"] .prod-desc {color:#999;}
+        .prod-card[data-available="0"] .prod-preco {color:#999;}
+        .prod-card[data-available="0"] .modif-box {opacity:0.6;}
         .prod-img {width:63px;height:63px;object-fit:cover;border-radius:9px;background:#f5f6f4;box-shadow:0 2px 8px #bbb1;}
         .prod-info {margin-left:14px;min-width:0;flex:1;}
         .prod-nome {font-weight:900;color:#232a2c;font-size:1.08em;}
@@ -377,6 +386,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                             $item_status = isset($item['status']) ? (string) $item['status'] : 'pausado';
                             $item_price = isset($item['price']) ? (string) $item['price'] : '';
                             $item_desc = isset($item['description']) ? (string) $item['description'] : '';
+                            $item_prep_time = isset($item['prep_time']) ? (int) $item['prep_time'] : 0;
                             ?>
                             <div class="prod-card" data-item-id="<?php echo esc_attr($item_id); ?>" data-available="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
                                 <div style="display:flex;align-items:center;">
@@ -399,23 +409,21 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                     </div>
                                 </div>
                                 <div class="prod-actions">
-                                    <?php if (isset($item['edit_url']) && $item['edit_url']) : ?>
-                                        <button class="pedit-btn" onclick="window.location.href='<?php echo esc_url($item['edit_url']); ?>'"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
-                                    <?php endif; ?>
+                                    <button class="pedit-btn js-edit-product" data-item-id="<?php echo esc_attr($item_id); ?>" data-item-title="<?php echo esc_attr($item_title); ?>" data-item-desc="<?php echo esc_attr($item_desc); ?>" data-item-price="<?php echo esc_attr(str_replace(['R$', ' '], '', $item_price)); ?>" data-item-prep-time="<?php echo esc_attr($item_prep_time); ?>" data-item-thumb="<?php echo esc_attr($item_thumb); ?>" data-item-status="<?php echo esc_attr($item_status); ?>" data-item-category="<?php echo esc_attr($cat['id']); ?>"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
                                     <button class="pedit-btn pause js-toggle-availability"><?php echo esc_html__('Pausar/Ativar', 'vemcomer'); ?></button>
                                     <button class="pedit-btn del js-delete-item"><?php echo esc_html__('Deletar', 'vemcomer'); ?></button>
                                 </div>
                                 <div class="modif-box">
-                                    <div class="modif-title"><?php echo esc_html__('Modificadores:', 'vemcomer'); ?></div>
+                                    <div class="modif-title"><?php echo esc_html__('Adicionais:', 'vemcomer'); ?></div>
                                     <div class="modif-list">
                                         <?php if (isset($item['modifiers']) && ! empty($item['modifiers']) && is_array($item['modifiers'])) : ?>
                                             <?php foreach ($item['modifiers'] as $mod_title) : ?>
                                                 <div class="modif-badge"><?php echo esc_html($mod_title); ?></div>
                                             <?php endforeach; ?>
                                         <?php else : ?>
-                                            <div class="modif-badge" style="background:#fff;color:#6b7672;border:1px dashed #cbdad1;"><?php echo esc_html__('Nenhum modificador', 'vemcomer'); ?></div>
+                                            <div class="modif-badge" style="background:#fff;color:#6b7672;border:1px dashed #cbdad1;"><?php echo esc_html__('Nenhum adicional', 'vemcomer'); ?></div>
                                         <?php endif; ?>
-                                        <div class="modif-edit" onclick="window.location.href='<?php echo esc_url(admin_url('edit.php?post_type=vc_product_modifier')); ?>'">+ <?php echo esc_html__('Modificadores', 'vemcomer'); ?></div>
+                                        <div class="modif-edit" onclick="window.location.href='<?php echo esc_url(admin_url('edit.php?post_type=vc_product_modifier')); ?>'">+ <?php echo esc_html__('Adicionais', 'vemcomer'); ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -469,10 +477,11 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
 <div id="vcAddProductModal" class="vc-modal-overlay">
     <div class="vc-modal-content">
         <div class="vc-modal-header">
-            <h2 class="vc-modal-title"><?php echo esc_html__('Adicionar Novo Produto', 'vemcomer'); ?></h2>
+            <h2 class="vc-modal-title" id="vcModalTitle"><?php echo esc_html__('Adicionar Novo Produto', 'vemcomer'); ?></h2>
             <button class="vc-modal-close" onclick="closeAddProductModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
         </div>
         <form id="vcAddProductForm" onsubmit="saveNewProduct(event)">
+            <input type="hidden" id="vcProductId" value="" />
             <div class="vc-modal-body">
                 <div class="vc-form-group">
                     <label class="vc-form-label"><?php echo esc_html__('Nome do Produto *', 'vemcomer'); ?></label>
@@ -635,6 +644,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                             statusContainer.appendChild(span);
                         }
                     }
+                    // O CSS já aplica o estilo cinza automaticamente via [data-available="0"]
 
                     updateStats();
                 } catch (e) {
@@ -695,10 +705,58 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
             document.body.style.overflow = '';
             // Resetar formulário
             document.getElementById('vcAddProductForm').reset();
+            document.getElementById('vcProductId').value = '';
+            document.getElementById('vcModalTitle').textContent = '<?php echo esc_js(__('Adicionar Novo Produto', 'vemcomer')); ?>';
+            document.getElementById('vcSaveProductBtn').textContent = '<?php echo esc_js(__('Salvar Produto', 'vemcomer')); ?>';
             productImageData = null;
             document.getElementById('vcImagePreview').classList.remove('show');
             document.getElementById('vcImageUploadText').style.display = 'block';
         };
+
+        // Abrir modal de edição com dados preenchidos
+        const editButtons = document.querySelectorAll('.js-edit-product');
+        editButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const itemTitle = this.getAttribute('data-item-title');
+                const itemDesc = this.getAttribute('data-item-desc');
+                const itemPrice = this.getAttribute('data-item-price');
+                const itemPrepTime = this.getAttribute('data-item-prep-time');
+                const itemThumb = this.getAttribute('data-item-thumb');
+                const itemStatus = this.getAttribute('data-item-status');
+                const itemCategory = this.getAttribute('data-item-category');
+
+                // Preencher campos do formulário
+                document.getElementById('vcProductId').value = itemId;
+                document.getElementById('vcProductTitle').value = itemTitle || '';
+                document.getElementById('vcProductDescription').value = itemDesc || '';
+                document.getElementById('vcProductPrice').value = itemPrice || '';
+                document.getElementById('vcProductPrepTime').value = itemPrepTime || 0;
+                document.getElementById('vcProductCategory').value = itemCategory || '';
+                document.getElementById('vcProductAvailable').checked = itemStatus === 'ativo';
+                
+                // Preencher imagem se existir
+                if (itemThumb) {
+                    productImageData = itemThumb;
+                    const preview = document.getElementById('vcImagePreview');
+                    preview.src = itemThumb;
+                    preview.classList.add('show');
+                    document.getElementById('vcImageUploadText').style.display = 'none';
+                } else {
+                    productImageData = null;
+                    document.getElementById('vcImagePreview').classList.remove('show');
+                    document.getElementById('vcImageUploadText').style.display = 'block';
+                }
+
+                // Atualizar título do modal e botão
+                document.getElementById('vcModalTitle').textContent = '<?php echo esc_js(__('Editar Produto', 'vemcomer')); ?>';
+                document.getElementById('vcSaveProductBtn').textContent = '<?php echo esc_js(__('Atualizar Produto', 'vemcomer')); ?>';
+
+                // Abrir modal
+                document.getElementById('vcAddProductModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
 
         // Fechar modal ao clicar fora
         document.getElementById('vcAddProductModal').addEventListener('click', function(e) {
@@ -730,6 +788,9 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
             btn.disabled = true;
             btn.textContent = '<?php echo esc_js(__('Salvando...', 'vemcomer')); ?>';
 
+            const productId = document.getElementById('vcProductId').value;
+            const isEdit = productId && productId !== '';
+
             const payload = {
                 title: document.getElementById('vcProductTitle').value.trim(),
                 description: document.getElementById('vcProductDescription').value.trim(),
@@ -745,8 +806,11 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
             }
 
             try {
-                const response = await fetch(restBase, {
-                    method: 'POST',
+                const url = isEdit ? `${restBase}/${productId}` : restBase;
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'X-WP-Nonce': restNonce,
@@ -757,13 +821,13 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
-                    alert(data?.message || '<?php echo esc_js(__('Não foi possível criar o produto.', 'vemcomer')); ?>');
+                    alert(data?.message || (isEdit ? '<?php echo esc_js(__('Não foi possível atualizar o produto.', 'vemcomer')); ?>' : '<?php echo esc_js(__('Não foi possível criar o produto.', 'vemcomer')); ?>'));
                     return;
                 }
 
-                alert('<?php echo esc_js(__('Produto criado com sucesso!', 'vemcomer')); ?>');
+                alert(isEdit ? '<?php echo esc_js(__('Produto atualizado com sucesso!', 'vemcomer')); ?>' : '<?php echo esc_js(__('Produto criado com sucesso!', 'vemcomer')); ?>');
                 closeAddProductModal();
-                // Recarregar a página para mostrar o novo produto
+                // Recarregar a página para mostrar as mudanças
                 window.location.reload();
             } catch (e) {
                 console.error(e);
