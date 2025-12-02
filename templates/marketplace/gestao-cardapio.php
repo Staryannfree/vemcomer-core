@@ -405,6 +405,7 @@ if ($restaurant instanceof WP_Post) {
         <div class="menu-title"><?php echo esc_html__('Gestão de Cardápio', 'vemcomer'); ?></div>
         <button class="menu-btn" onclick="openAddProductModal()">+ <?php echo esc_html__('Adicionar Produto', 'vemcomer'); ?></button>
         <button class="menu-btn secondary" onclick="openAddCategoryModal()">+ <?php echo esc_html__('Categoria', 'vemcomer'); ?></button>
+        <button class="menu-btn" onclick="openManageAddonsModal()" style="background:#3176da;color:#fff;"><?php echo esc_html__('⚙️ Adicionais', 'vemcomer'); ?></button>
     </div>
 
     <?php if (! $restaurant) : ?>
@@ -795,6 +796,42 @@ if ($restaurant instanceof WP_Post) {
             <div class="vc-modal-footer" style="margin-top:20px;padding-top:20px;border-top:1px solid #e0e0e0;">
                 <button type="button" class="vc-btn-secondary" onclick="closeApplyGroupModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
                 <button type="button" class="vc-btn-primary" onclick="applyGroupToSelectedProducts()"><?php echo esc_html__('Aplicar aos Selecionados', 'vemcomer'); ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Selecionar Produto para Adicionais -->
+<div id="vcSelectProductForAddonsModal" class="vc-modal-overlay" style="display:none;">
+    <div class="vc-modal-content" style="max-width:600px;">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title"><?php echo esc_html__('Selecione um Produto', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeSelectProductForAddonsModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <div class="vc-modal-body">
+            <p style="color:#666;margin-bottom:20px;"><?php echo esc_html__('Escolha um produto para gerenciar seus adicionais:', 'vemcomer'); ?></p>
+            <div id="vcSelectProductForAddonsList" style="max-height:400px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:8px;">
+                <div style="text-align:center;padding:40px;color:#999;">
+                    <p><?php echo esc_html__('Carregando produtos...', 'vemcomer'); ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Selecionar Produto para Adicionais -->
+<div id="vcSelectProductForAddonsModal" class="vc-modal-overlay" style="display:none;">
+    <div class="vc-modal-content" style="max-width:600px;">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title"><?php echo esc_html__('Selecione um Produto', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeSelectProductForAddonsModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <div class="vc-modal-body">
+            <p style="color:#666;margin-bottom:20px;"><?php echo esc_html__('Escolha um produto para gerenciar seus adicionais:', 'vemcomer'); ?></p>
+            <div id="vcSelectProductForAddonsList" style="max-height:400px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:8px;">
+                <div style="text-align:center;padding:40px;color:#999;">
+                    <p><?php echo esc_html__('Carregando produtos...', 'vemcomer'); ?></p>
+                </div>
             </div>
         </div>
     </div>
@@ -1512,6 +1549,90 @@ if ($restaurant instanceof WP_Post) {
             currentProductIdForAddons = null;
             customAddonItemCount = 0;
             document.getElementById('vcCustomItemsList').innerHTML = '';
+        };
+
+        // Abrir modal de gerenciar adicionais (sem produto específico)
+        window.openManageAddonsModal = async function() {
+            // Primeiro, mostrar modal para selecionar produto
+            const selectProductModal = document.getElementById('vcSelectProductForAddonsModal');
+            if (selectProductModal) {
+                selectProductModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                
+                // Carregar lista de produtos
+                try {
+                    const restaurantId = <?php 
+                        $current_restaurant = null;
+                        if (is_user_logged_in()) {
+                            $user_id = get_current_user_id();
+                            $restaurant_id = (int) get_user_meta($user_id, 'vc_restaurant_id', true);
+                            if ($restaurant_id > 0) {
+                                $current_restaurant = get_post($restaurant_id);
+                            }
+                        }
+                        echo $current_restaurant ? $current_restaurant->ID : 'null';
+                    ?>;
+                    
+                    if (!restaurantId) {
+                        alert('<?php echo esc_js(__('Restaurante não encontrado.', 'vemcomer')); ?>');
+                        closeSelectProductForAddonsModal();
+                        return;
+                    }
+
+                    const response = await fetch(`${restBase}?per_page=50&restaurant_id=${restaurantId}`, {
+                        headers: {
+                            'X-WP-Nonce': restNonce,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao carregar produtos');
+                    }
+
+                    const products = await response.json();
+                    const container = document.getElementById('vcSelectProductForAddonsList');
+                    
+                    if (!Array.isArray(products) || products.length === 0) {
+                        container.innerHTML = '<p style="text-align:center;padding:20px;color:#999;"><?php echo esc_js(__('Nenhum produto encontrado. Crie um produto primeiro.', 'vemcomer')); ?></p>';
+                        return;
+                    }
+                    
+                    let productsHtml = '';
+                    products.forEach(product => {
+                        const productId = product.id;
+                        const productName = product.title?.rendered || product.title || product.name || `Produto #${productId}`;
+                        productsHtml += `
+                            <div style="display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid #e0e0e0;cursor:pointer;transition:background 0.2s;" 
+                                 onclick="selectProductForAddons(${productId})" 
+                                 onmouseover="this.style.background='#f5f5f5'" 
+                                 onmouseout="this.style.background='#fff'">
+                                <div style="flex:1;">
+                                    <strong style="color:#2d8659;font-size:15px;">${escapeHtml(productName)}</strong>
+                                </div>
+                                <span style="color:#999;font-size:14px;">→</span>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML = productsHtml;
+                } catch (e) {
+                    console.error('Erro ao carregar produtos:', e);
+                    document.getElementById('vcSelectProductForAddonsList').innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f;"><?php echo esc_js(__('Erro ao carregar produtos.', 'vemcomer')); ?></p>';
+                }
+            }
+        };
+
+        window.closeSelectProductForAddonsModal = function() {
+            const modal = document.getElementById('vcSelectProductForAddonsModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.selectProductForAddons = function(productId) {
+            closeSelectProductForAddonsModal();
+            openAddonsModal(productId);
         };
 
         window.switchAddonsTab = function(tab) {
@@ -2484,6 +2605,15 @@ if ($restaurant instanceof WP_Post) {
             onboardingModal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeAddonsOnboardingWizard();
+                }
+            });
+        }
+
+        const selectProductModal = document.getElementById('vcSelectProductForAddonsModal');
+        if (selectProductModal) {
+            selectProductModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSelectProductForAddonsModal();
                 }
             });
         }
