@@ -100,9 +100,32 @@ class Menu_Categories_Controller {
 
     /**
      * GET /wp-json/vemcomer/v1/menu-categories
-     * Lista categorias do cardápio
+     * Lista categorias do cardápio do restaurante atual
      */
     public function get_categories( WP_REST_Request $request ): WP_REST_Response {
+        // Buscar restaurante do usuário atual
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( ! $restaurant_id ) {
+            // Tentar buscar pelo post_author
+            $restaurants = get_posts( [
+                'post_type'      => 'vc_restaurant',
+                'author'         => $user_id,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+            ] );
+
+            if ( ! empty( $restaurants ) ) {
+                $restaurant_id = $restaurants[0];
+            }
+        }
+
+        // Se não tiver restaurante, retornar vazio
+        if ( ! $restaurant_id ) {
+            return new WP_REST_Response( [], 200 );
+        }
+
         $categories = get_terms( [
             'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
             'hide_empty' => false,
@@ -116,9 +139,10 @@ class Menu_Categories_Controller {
         foreach ( $categories as $term ) {
             // Verificar se é categoria do catálogo
             $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
+            $term_restaurant_id = (int) get_term_meta( $term->term_id, '_vc_restaurant_id', true );
             
-            // Incluir apenas categorias criadas pelo usuário (não do catálogo)
-            if ( $is_catalog !== '1' ) {
+            // Incluir apenas categorias criadas pelo usuário (não do catálogo) E do restaurante atual
+            if ( $is_catalog !== '1' && $term_restaurant_id === $restaurant_id ) {
                 $order = (int) get_term_meta( $term->term_id, '_vc_category_order', true );
                 $items[] = [
                     'id'    => $term->term_id,
@@ -165,6 +189,32 @@ class Menu_Categories_Controller {
             );
         }
 
+        // Buscar restaurante do usuário atual
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( ! $restaurant_id ) {
+            // Tentar buscar pelo post_author
+            $restaurants = get_posts( [
+                'post_type'      => 'vc_restaurant',
+                'author'         => $user_id,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+            ] );
+
+            if ( ! empty( $restaurants ) ) {
+                $restaurant_id = $restaurants[0];
+            }
+        }
+
+        if ( ! $restaurant_id ) {
+            return new WP_Error(
+                'vc_no_restaurant',
+                __( 'Nenhum restaurante encontrado para este usuário.', 'vemcomer' ),
+                [ 'status' => 403 ]
+            );
+        }
+
         // Verificar se já existe (apenas ao criar, não ao editar)
         $term_id_param = $request->get_param( 'id' );
         if ( ! $term_id_param ) {
@@ -177,12 +227,14 @@ class Menu_Categories_Controller {
             ] );
 
             if ( ! is_wp_error( $existing_terms ) && ! empty( $existing_terms ) ) {
-                // Verificar se algum dos termos encontrados NÃO é do catálogo
-                // (ou seja, foi criado pelo usuário)
+                // Verificar se algum dos termos encontrados pertence ao mesmo restaurante
+                // (ignorar categorias do catálogo e de outros restaurantes)
                 foreach ( $existing_terms as $term ) {
                     $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
-                    // Se encontrou uma categoria criada pelo usuário (não do catálogo), então já existe
-                    if ( $is_catalog !== '1' ) {
+                    $term_restaurant_id = (int) get_term_meta( $term->term_id, '_vc_restaurant_id', true );
+                    
+                    // Se não é do catálogo E pertence ao mesmo restaurante, então já existe
+                    if ( $is_catalog !== '1' && $term_restaurant_id === $restaurant_id ) {
                         return new WP_Error(
                             'vc_category_exists',
                             __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
@@ -193,12 +245,16 @@ class Menu_Categories_Controller {
             }
         }
 
-        // Criar o termo
+        // Criar o termo com slug único por restaurante
+        // Adicionar ID do restaurante ao slug para evitar conflitos entre restaurantes
+        $base_slug = sanitize_title( $name );
+        $unique_slug = $base_slug . '-rest-' . $restaurant_id;
+        
         $result = wp_insert_term(
             $name,
             CPT_MenuItem::TAX_CATEGORY,
             [
-                'slug' => sanitize_title( $name ),
+                'slug' => $unique_slug,
             ]
         );
 
@@ -211,6 +267,9 @@ class Menu_Categories_Controller {
         }
 
         $term_id = is_array( $result ) ? $result['term_id'] : $result;
+
+        // Vincular categoria ao restaurante
+        update_term_meta( $term_id, '_vc_restaurant_id', $restaurant_id );
 
         // Salvar campos adicionais se fornecidos
         if ( isset( $body['order'] ) && is_numeric( $body['order'] ) ) {
@@ -405,23 +464,75 @@ class Menu_Categories_Controller {
             );
         }
 
+        // Verificar se a categoria pertence ao restaurante do usuário
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( ! $restaurant_id ) {
+            $restaurants = get_posts( [
+                'post_type'      => 'vc_restaurant',
+                'author'         => $user_id,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+            ] );
+
+            if ( ! empty( $restaurants ) ) {
+                $restaurant_id = $restaurants[0];
+            }
+        }
+
+        if ( $restaurant_id ) {
+            $term_restaurant_id = (int) get_term_meta( $term_id, '_vc_restaurant_id', true );
+            $is_catalog = get_term_meta( $term_id, '_vc_is_catalog_category', true );
+            
+            // Se não for do catálogo e não pertencer ao restaurante, negar acesso
+            if ( $is_catalog !== '1' && $term_restaurant_id !== $restaurant_id ) {
+                return new WP_Error(
+                    'vc_forbidden',
+                    __( 'Você não tem permissão para editar esta categoria.', 'vemcomer' ),
+                    [ 'status' => 403 ]
+                );
+            }
+        }
+
         // Atualizar nome se fornecido
         if ( isset( $body['name'] ) && ! empty( $body['name'] ) ) {
             $name = sanitize_text_field( $body['name'] );
             
-            // Verificar se outro termo com esse nome já existe
-            $existing = get_term_by( 'name', $name, CPT_MenuItem::TAX_CATEGORY );
-            if ( $existing && $existing->term_id !== $term_id ) {
-                return new WP_Error(
-                    'vc_category_exists',
-                    __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
-                    [ 'status' => 400 ]
-                );
+            // Verificar se outro termo com esse nome já existe no mesmo restaurante
+            $existing_terms = get_terms( [
+                'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
+                'name'       => $name,
+                'hide_empty' => false,
+            ] );
+
+            if ( ! is_wp_error( $existing_terms ) && ! empty( $existing_terms ) ) {
+                foreach ( $existing_terms as $existing_term ) {
+                    if ( $existing_term->term_id === $term_id ) {
+                        continue; // Pular o próprio termo
+                    }
+                    
+                    $is_catalog_existing = get_term_meta( $existing_term->term_id, '_vc_is_catalog_category', true );
+                    $existing_restaurant_id = (int) get_term_meta( $existing_term->term_id, '_vc_restaurant_id', true );
+                    
+                    // Se não é do catálogo E pertence ao mesmo restaurante, então já existe
+                    if ( $is_catalog_existing !== '1' && $existing_restaurant_id === $restaurant_id ) {
+                        return new WP_Error(
+                            'vc_category_exists',
+                            __( 'Uma categoria com este nome já existe.', 'vemcomer' ),
+                            [ 'status' => 400 ]
+                        );
+                    }
+                }
             }
+
+            // Manter o slug único por restaurante
+            $base_slug = sanitize_title( $name );
+            $unique_slug = $base_slug . '-rest-' . $restaurant_id;
 
             $result = wp_update_term( $term_id, CPT_MenuItem::TAX_CATEGORY, [
                 'name' => $name,
-                'slug' => sanitize_title( $name ),
+                'slug' => $unique_slug,
             ] );
 
             if ( is_wp_error( $result ) ) {
@@ -494,6 +605,37 @@ class Menu_Categories_Controller {
                 __( 'Categoria não encontrada.', 'vemcomer' ),
                 [ 'status' => 404 ]
             );
+        }
+
+        // Verificar se a categoria pertence ao restaurante do usuário
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( ! $restaurant_id ) {
+            $restaurants = get_posts( [
+                'post_type'      => 'vc_restaurant',
+                'author'         => $user_id,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+            ] );
+
+            if ( ! empty( $restaurants ) ) {
+                $restaurant_id = $restaurants[0];
+            }
+        }
+
+        if ( $restaurant_id ) {
+            $term_restaurant_id = (int) get_term_meta( $term_id, '_vc_restaurant_id', true );
+            $is_catalog = get_term_meta( $term_id, '_vc_is_catalog_category', true );
+            
+            // Se não for do catálogo e não pertencer ao restaurante, negar acesso
+            if ( $is_catalog !== '1' && $term_restaurant_id !== $restaurant_id ) {
+                return new WP_Error(
+                    'vc_forbidden',
+                    __( 'Você não tem permissão para deletar esta categoria.', 'vemcomer' ),
+                    [ 'status' => 403 ]
+                );
+            }
         }
 
         // Verificar se há produtos nesta categoria
