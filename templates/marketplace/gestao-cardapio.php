@@ -381,6 +381,26 @@ if ($restaurant instanceof WP_Post) {
     ] );
     ?>
 
+    <?php if ($needs_addons_onboarding) : ?>
+    <!-- Banner de Onboarding de Adicionais -->
+    <div id="vcAddonsOnboardingBanner" style="background:linear-gradient(135deg, #2d8659 0%, #1f5d3f 100%);color:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 4px 12px rgba(45,134,89,0.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
+            <div style="flex:1;">
+                <h3 style="margin:0 0 8px 0;font-size:18px;font-weight:700;">⭐ <?php echo esc_html__('Configure seus primeiros adicionais!', 'vemcomer'); ?></h3>
+                <p style="margin:0;font-size:14px;opacity:0.95;"><?php echo esc_html__('Vamos configurar grupos básicos de adicionais para seus produtos. Isso ajuda seus clientes a personalizarem os pedidos.', 'vemcomer'); ?></p>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button type="button" class="menu-btn" onclick="openAddonsOnboardingWizard()" style="background:#fff;color:#2d8659;font-weight:700;">
+                    <?php echo esc_html__('Começar Configuração', 'vemcomer'); ?>
+                </button>
+                <button type="button" onclick="dismissAddonsOnboarding()" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;">
+                    <?php echo esc_html__('Depois', 'vemcomer'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="menu-top">
         <div class="menu-title"><?php echo esc_html__('Gestão de Cardápio', 'vemcomer'); ?></div>
         <button class="menu-btn" onclick="openAddProductModal()">+ <?php echo esc_html__('Adicionar Produto', 'vemcomer'); ?></button>
@@ -775,6 +795,30 @@ if ($restaurant instanceof WP_Post) {
             <div class="vc-modal-footer" style="margin-top:20px;padding-top:20px;border-top:1px solid #e0e0e0;">
                 <button type="button" class="vc-btn-secondary" onclick="closeApplyGroupModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
                 <button type="button" class="vc-btn-primary" onclick="applyGroupToSelectedProducts()"><?php echo esc_html__('Aplicar aos Selecionados', 'vemcomer'); ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Onboarding de Adicionais -->
+<div id="vcAddonsOnboardingModal" class="vc-modal-overlay" style="display:none;">
+    <div class="vc-modal-content" style="max-width:700px;">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title">⭐ <?php echo esc_html__('Configure seus primeiros adicionais', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeAddonsOnboardingWizard()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <div class="vc-modal-body">
+            <p style="color:#666;margin-bottom:20px;font-size:15px;">
+                <?php echo esc_html__('Selecione os grupos básicos que você quer usar. Você pode editar os preços depois:', 'vemcomer'); ?>
+            </p>
+            <div id="vcOnboardingGroupsList" style="display:grid;gap:15px;max-height:500px;overflow-y:auto;">
+                <div style="text-align:center;padding:40px;color:#999;">
+                    <p><?php echo esc_html__('Carregando grupos recomendados...', 'vemcomer'); ?></p>
+                </div>
+            </div>
+            <div class="vc-modal-footer" style="margin-top:20px;padding-top:20px;border-top:1px solid #e0e0e0;">
+                <button type="button" class="vc-btn-secondary" onclick="closeAddonsOnboardingWizard()"><?php echo esc_html__('Pular', 'vemcomer'); ?></button>
+                <button type="button" class="vc-btn-primary" onclick="saveOnboardingGroups()"><?php echo esc_html__('Configurar Grupos Selecionados', 'vemcomer'); ?></button>
             </div>
         </div>
     </div>
@@ -1209,6 +1253,230 @@ if ($restaurant instanceof WP_Post) {
         const addonCatalogBase = '<?php echo esc_js(rest_url('vemcomer/v1/addon-catalog')); ?>';
         let currentProductIdForAddons = null;
         let customAddonItemCount = 0;
+        let onboardingSelectedGroups = [];
+
+        // Wizard de Onboarding de Adicionais
+        window.openAddonsOnboardingWizard = async function() {
+            document.getElementById('vcAddonsOnboardingModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Carregar grupos recomendados básicos
+            try {
+                const response = await fetch(`${addonCatalogBase}/recommended-groups`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success || !data.groups || data.groups.length === 0) {
+                    document.getElementById('vcOnboardingGroupsList').innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhum grupo recomendado encontrado.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                // Filtrar apenas grupos básicos
+                const basicGroups = data.groups.filter(g => g.difficulty_level === 'basic');
+                
+                let groupsHtml = '';
+                onboardingSelectedGroups = [];
+                
+                basicGroups.forEach(group => {
+                    const groupId = group.id;
+                    groupsHtml += `
+                        <div class="vc-onboarding-group-item" style="border:2px solid #e0e0e0;border-radius:8px;padding:15px;background:#fff;cursor:pointer;transition:all 0.2s;" data-group-id="${groupId}" onclick="toggleOnboardingGroup(${groupId})">
+                            <div style="display:flex;align-items:start;gap:12px;">
+                                <input type="checkbox" id="onboarding-group-${groupId}" style="width:20px;height:20px;margin-top:2px;cursor:pointer;" onchange="toggleOnboardingGroup(${groupId})" />
+                                <div style="flex:1;">
+                                    <h4 style="margin:0 0 5px 0;font-size:16px;color:#2d8659;font-weight:700;">${escapeHtml(group.name)}</h4>
+                                    ${group.description ? `<p style="margin:0;color:#666;font-size:14px;">${escapeHtml(group.description)}</p>` : ''}
+                                    <div style="margin-top:8px;font-size:12px;color:#999;">
+                                        Tipo: <strong>${group.selection_type === 'single' ? 'Seleção única' : 'Múltipla seleção'}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('vcOnboardingGroupsList').innerHTML = groupsHtml || '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhum grupo básico encontrado.', 'vemcomer')); ?></p></div>';
+            } catch (e) {
+                console.error('Erro ao carregar grupos:', e);
+                document.getElementById('vcOnboardingGroupsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar grupos.', 'vemcomer')); ?></p></div>';
+            }
+        };
+
+        window.closeAddonsOnboardingWizard = function() {
+            document.getElementById('vcAddonsOnboardingModal').style.display = 'none';
+            document.body.style.overflow = '';
+            onboardingSelectedGroups = [];
+        };
+
+        window.toggleOnboardingGroup = function(groupId) {
+            const checkbox = document.getElementById(`onboarding-group-${groupId}`);
+            if (!checkbox) return;
+            const card = checkbox.closest('.vc-onboarding-group-item');
+            
+            if (checkbox.checked) {
+                if (!onboardingSelectedGroups.includes(groupId)) {
+                    onboardingSelectedGroups.push(groupId);
+                }
+                if (card) {
+                    card.style.borderColor = '#2d8659';
+                    card.style.background = '#f0f9f4';
+                }
+            } else {
+                onboardingSelectedGroups = onboardingSelectedGroups.filter(id => id !== groupId);
+                if (card) {
+                    card.style.borderColor = '#e0e0e0';
+                    card.style.background = '#fff';
+                }
+            }
+        };
+
+        window.saveOnboardingGroups = async function() {
+            if (onboardingSelectedGroups.length === 0) {
+                alert('<?php echo esc_js(__('Selecione pelo menos um grupo para configurar.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Configurando...', 'vemcomer')); ?>';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/setup-onboarding`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify({
+                        group_ids: onboardingSelectedGroups,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao configurar grupos.', 'vemcomer')); ?>');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                alert(data?.message || '<?php echo esc_js(__('Grupos configurados com sucesso!', 'vemcomer')); ?>');
+                closeAddonsOnboardingWizard();
+                
+                // Esconder banner e recarregar página
+                const banner = document.getElementById('vcAddonsOnboardingBanner');
+                if (banner) {
+                    banner.style.display = 'none';
+                }
+                
+                setTimeout(function() {
+                    window.location.reload();
+                }, 500);
+            } catch (e) {
+                console.error('Erro ao salvar onboarding:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
+        window.dismissAddonsOnboarding = function() {
+            if (!confirm('<?php echo esc_js(__('Deseja pular a configuração de adicionais por enquanto? Você pode configurar depois.', 'vemcomer')); ?>')) {
+                return;
+            }
+
+            const banner = document.getElementById('vcAddonsOnboardingBanner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        };
+
+        // Carregar modelos do lojista
+        async function loadMyTemplates() {
+            const container = document.getElementById('vcMyTemplates');
+            if (!container) return;
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando seus modelos...', 'vemcomer')); ?></p></div>';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/my-templates`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success || !data.templates || data.templates.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Você ainda não salvou nenhum grupo como modelo.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                let templatesHtml = '';
+                data.templates.forEach(template => {
+                    templatesHtml += `
+                        <div class="vc-template-card" style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;background:#fff;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <h4 style="margin:0 0 5px 0;font-size:16px;color:#2d8659;">${escapeHtml(template.name)}</h4>
+                                ${template.description ? `<p style="margin:0;color:#666;font-size:14px;">${escapeHtml(template.description)}</p>` : ''}
+                            </div>
+                            <button class="vc-btn-primary" onclick="useTemplate(${template.id})" style="padding:8px 16px;">
+                                <?php echo esc_js(__('Usar', 'vemcomer')); ?>
+                            </button>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = templatesHtml;
+            } catch (e) {
+                console.error('Erro ao carregar modelos:', e);
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar modelos.', 'vemcomer')); ?></p></div>';
+            }
+        }
+
+        window.useTemplate = async function(templateId) {
+            const productId = currentProductIdForAddons;
+            if (!productId) {
+                alert('<?php echo esc_js(__('Produto não identificado.', 'vemcomer')); ?>');
+                return;
+            }
+
+            if (!confirm('<?php echo esc_js(__('Deseja usar este modelo para este produto?', 'vemcomer')); ?>')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/link-group-to-product`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        group_id: templateId,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao usar modelo.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Modelo aplicado com sucesso!', 'vemcomer')); ?>');
+                closeAddonsModal();
+                setTimeout(function() {
+                    window.location.reload();
+                }, 500);
+            } catch (e) {
+                console.error('Erro ao usar modelo:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+            }
+        };
 
         window.openAddonsModal = function(productId) {
             currentProductIdForAddons = productId;
@@ -1242,8 +1510,11 @@ if ($restaurant instanceof WP_Post) {
 
             if (tab === 'recommended') {
                 loadRecommendedGroups();
+                loadProductsForCopy();
             } else if (tab === 'current') {
                 loadCurrentAddons();
+            } else if (tab === 'templates') {
+                loadMyTemplates();
             }
         };
 
@@ -2017,6 +2288,151 @@ if ($restaurant instanceof WP_Post) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Salvar grupo como modelo
+        window.saveGroupAsTemplate = async function(groupId) {
+            if (!confirm('<?php echo esc_js(__('Deseja salvar este grupo como modelo para reutilizar em outros produtos?', 'vemcomer')); ?>')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/store-groups/${groupId}/save-as-template`, {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao salvar modelo.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Grupo salvo como modelo com sucesso!', 'vemcomer')); ?>');
+            } catch (e) {
+                console.error('Erro ao salvar modelo:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+            }
+        };
+
+        // Modal: Aplicar grupo a múltiplos produtos
+        window.openApplyGroupModal = async function(groupId) {
+            document.getElementById('vcApplyGroupId').value = groupId;
+            document.getElementById('vcApplyGroupModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            try {
+                const response = await fetch(`${restBase}?per_page=100`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar produtos');
+                }
+
+                const products = await response.json();
+                const container = document.getElementById('vcApplyGroupProductsList');
+                
+                let productsHtml = '';
+                products.forEach(product => {
+                    const productId = product.id;
+                    const productName = product.title?.rendered || product.name || `Produto #${productId}`;
+                    productsHtml += `
+                        <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #e0e0e0;">
+                            <input type="checkbox" id="apply-product-${productId}" class="vc-apply-product-checkbox" value="${productId}" />
+                            <label for="apply-product-${productId}" style="flex:1;cursor:pointer;margin:0;">${escapeHtml(productName)}</label>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = productsHtml || '<p style="text-align:center;padding:20px;color:#999;"><?php echo esc_js(__('Nenhum produto encontrado.', 'vemcomer')); ?></p>';
+            } catch (e) {
+                console.error('Erro ao carregar produtos:', e);
+                document.getElementById('vcApplyGroupProductsList').innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f;"><?php echo esc_js(__('Erro ao carregar produtos.', 'vemcomer')); ?></p>';
+            }
+        };
+
+        window.closeApplyGroupModal = function() {
+            document.getElementById('vcApplyGroupModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        window.applyGroupToSelectedProducts = async function() {
+            const groupId = parseInt(document.getElementById('vcApplyGroupId').value);
+            const checkboxes = document.querySelectorAll('.vc-apply-product-checkbox:checked');
+            const productIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            if (!groupId || productIds.length === 0) {
+                alert('<?php echo esc_js(__('Selecione pelo menos um produto.', 'vemcomer')); ?>');
+                return;
+            }
+
+            if (!confirm(`<?php echo esc_js(__('Deseja aplicar este grupo a', 'vemcomer')); ?> ${productIds.length} <?php echo esc_js(__('produto(s)?', 'vemcomer')); ?>`)) {
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Aplicando...', 'vemcomer')); ?>';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/apply-group-to-products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify({
+                        group_id: groupId,
+                        product_ids: productIds,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao aplicar grupo.', 'vemcomer')); ?>');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                alert(data?.message || '<?php echo esc_js(__('Grupo aplicado com sucesso!', 'vemcomer')); ?>');
+                closeApplyGroupModal();
+                closeAddonsModal();
+                setTimeout(function() {
+                    window.location.reload();
+                }, 500);
+            } catch (e) {
+                console.error('Erro ao aplicar grupo:', e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
+        const applyGroupModal = document.getElementById('vcApplyGroupModal');
+        if (applyGroupModal) {
+            applyGroupModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeApplyGroupModal();
+                }
+            });
+        }
+
+        const onboardingModal = document.getElementById('vcAddonsOnboardingModal');
+        if (onboardingModal) {
+            onboardingModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddonsOnboardingWizard();
+                }
+            });
         }
     });
 </script>
