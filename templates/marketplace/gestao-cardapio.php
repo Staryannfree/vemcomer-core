@@ -374,10 +374,22 @@ if ($restaurant instanceof WP_Post) {
     </style>
 
     <?php
-    // Buscar categorias disponíveis para o select
+    // Buscar categorias do cardápio (apenas as criadas pelo usuário, não as do catálogo)
     $menu_categories = get_terms( [
         'taxonomy'   => 'vc_menu_category',
         'hide_empty' => false,
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key'     => '_vc_is_catalog_category',
+                'compare' => 'NOT EXISTS',
+            ],
+            [
+                'key'     => '_vc_is_catalog_category',
+                'value'   => '1',
+                'compare' => '!=',
+            ],
+        ],
     ] );
     ?>
 
