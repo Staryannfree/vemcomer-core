@@ -55,6 +55,29 @@ class Addon_Catalog_Controller {
                 ],
             ],
         ] );
+
+        // POST: Vincular grupo copiado a um produto
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/link-group-to-product', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'link_group_to_product' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+            'args'                => [
+                'product_id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+                'group_id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
     }
 
     public function can_access(): bool {
@@ -311,6 +334,107 @@ class Addon_Catalog_Controller {
             'message'      => __( 'Grupo copiado com sucesso para sua loja.', 'vemcomer' ),
             'group_id'     => $store_group_id,
             'items_count'  => count( $copied_items ),
+            'modifier_ids' => array_merge( [ $store_group_id ], $copied_items ), // IDs dos modificadores criados
+        ] );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/addon-catalog/link-group-to-product
+     * Vincula um grupo de modificadores (já copiado) a um produto
+     */
+    public function link_group_to_product( \WP_REST_Request $request ): \WP_REST_Response {
+        $product_id = (int) $request->get_param( 'product_id' );
+        $group_id = (int) $request->get_param( 'group_id' );
+
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Verificar se o produto existe e pertence ao restaurante
+        $product = get_post( $product_id );
+        if ( ! $product || $product->post_type !== 'vc_menu_item' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Produto não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        $product_restaurant_id = (int) get_post_meta( $product_id, '_vc_restaurant_id', true );
+        if ( $product_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Você não tem permissão para modificar este produto.', 'vemcomer' ),
+            ], 403 );
+        }
+
+        // Buscar o grupo principal
+        $group_post = get_post( $group_id );
+        if ( ! $group_post || $group_post->post_type !== 'vc_product_modifier' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não encontrado na sua loja.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Buscar todos os modificadores do grupo (itens que pertencem ao grupo)
+        $group_modifiers = get_posts( [
+            'post_type'      => 'vc_product_modifier',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'meta_query'     => [
+                [
+                    'key'   => '_vc_group_id',
+                    'value' => $group_id,
+                ],
+            ],
+        ] );
+
+        // Adicionar o grupo principal também (se não estiver na lista)
+        $group_modifiers_ids = array_map( function( $m ) { return $m->ID; }, $group_modifiers );
+        if ( ! in_array( $group_id, $group_modifiers_ids, true ) ) {
+            $group_modifiers[] = $group_post;
+        }
+
+        if ( empty( $group_modifiers ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não encontrado na sua loja.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Vincular modificadores ao produto
+        $current_modifiers = get_post_meta( $product_id, '_vc_menu_item_modifiers', true );
+        $current_modifiers = is_array( $current_modifiers ) ? $current_modifiers : [];
+
+        $added_count = 0;
+        foreach ( $group_modifiers as $modifier ) {
+            $modifier_id = $modifier->ID;
+            if ( ! in_array( $modifier_id, $current_modifiers, true ) ) {
+                $current_modifiers[] = $modifier_id;
+                $added_count++;
+
+                // Atualizar meta reversa
+                $modifier_items = get_post_meta( $modifier_id, '_vc_modifier_menu_items', true );
+                $modifier_items = is_array( $modifier_items ) ? $modifier_items : [];
+                if ( ! in_array( $product_id, $modifier_items, true ) ) {
+                    $modifier_items[] = $product_id;
+                    update_post_meta( $modifier_id, '_vc_modifier_menu_items', $modifier_items );
+                }
+            }
+        }
+
+        update_post_meta( $product_id, '_vc_menu_item_modifiers', $current_modifiers );
+
+        return new \WP_REST_Response( [
+            'success'     => true,
+            'message'     => __( 'Grupo vinculado ao produto com sucesso!', 'vemcomer' ),
+            'added_count' => $added_count,
         ] );
     }
 }

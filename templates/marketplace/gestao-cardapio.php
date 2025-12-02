@@ -1106,53 +1106,120 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 }
 
                 container.innerHTML = '';
-                data.groups.forEach(group => {
+                
+                // Buscar itens de cada grupo e exibir
+                for (const group of data.groups) {
                     const groupCard = document.createElement('div');
                     groupCard.className = 'vc-addon-group-card';
-                    groupCard.style.cssText = 'border:1px solid #e0e0e0;border-radius:8px;padding:15px;background:#fff;';
+                    groupCard.style.cssText = 'border:1px solid #e0e0e0;border-radius:8px;padding:15px;background:#fff;margin-bottom:15px;';
+                    
+                    // Buscar itens do grupo
+                    let itemsHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;"><p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p><ul style="margin:0;padding-left:20px;font-size:13px;color:#666;list-style:disc;">';
+                    
+                    try {
+                        const itemsResponse = await fetch(`${addonCatalogBase}/groups/${group.id}/items`, {
+                            headers: {
+                                'X-WP-Nonce': restNonce,
+                            },
+                        });
+                        
+                        const itemsData = await itemsResponse.json();
+                        if (itemsData.success && itemsData.items && itemsData.items.length > 0) {
+                            itemsData.items.forEach(item => {
+                                const price = parseFloat(item.default_price || 0).toFixed(2).replace('.', ',');
+                                itemsHtml += `<li style="margin-bottom:4px;">${escapeHtml(item.name)} <span style="color:#2d8659;font-weight:700;">R$ ${price}</span></li>`;
+                            });
+                        } else {
+                            itemsHtml += '<li style="color:#999;font-style:italic;">Nenhum item disponível</li>';
+                        }
+                    } catch (e) {
+                        console.error('Erro ao carregar itens:', e);
+                        itemsHtml += '<li style="color:#999;font-style:italic;">Erro ao carregar itens</li>';
+                    }
+                    
+                    itemsHtml += '</ul></div>';
+                    
                     groupCard.innerHTML = `
-                        <h3 style="margin:0 0 10px 0;font-size:16px;">${escapeHtml(group.name)}</h3>
+                        <h3 style="margin:0 0 10px 0;font-size:16px;color:#2d8659;">${escapeHtml(group.name)}</h3>
                         ${group.description ? `<p style="color:#666;font-size:14px;margin:0 0 15px 0;">${escapeHtml(group.description)}</p>` : ''}
-                        <div style="display:flex;gap:10px;align-items:center;margin-bottom:15px;">
-                            <span style="font-size:12px;color:#999;">Tipo: ${group.selection_type === 'single' ? 'Seleção única' : 'Múltipla seleção'}</span>
-                            ${group.is_required ? '<span style="font-size:12px;color:#d32f2f;">Obrigatório</span>' : ''}
+                        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                            <span style="font-size:12px;color:#999;">Tipo: <strong>${group.selection_type === 'single' ? 'Seleção única' : 'Múltipla seleção'}</strong></span>
+                            ${group.is_required ? '<span style="font-size:12px;color:#d32f2f;background:#ffe7e7;padding:2px 8px;border-radius:4px;">Obrigatório</span>' : ''}
                         </div>
-                        <button onclick="copyGroupToStore(${group.id})" class="vc-btn-primary" style="width:100%;padding:10px;">
+                        ${itemsHtml}
+                        <button onclick="copyGroupToStore(${group.id}, event)" class="vc-btn-primary" style="width:100%;padding:10px;margin-top:15px;">
                             <?php echo esc_js(__('Usar este grupo', 'vemcomer')); ?>
                         </button>
                     `;
                     container.appendChild(groupCard);
-                });
+                }
             } catch (e) {
                 console.error(e);
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar grupos recomendados.', 'vemcomer')); ?></p></div>';
             }
         }
 
-        async function copyGroupToStore(groupId) {
-            if (!confirm('<?php echo esc_js(__('Deseja copiar este grupo para sua loja?', 'vemcomer')); ?>')) {
+        async function copyGroupToStore(groupId, evt) {
+            const productId = currentProductIdForAddons;
+            if (!productId) {
+                alert('<?php echo esc_js(__('Produto não identificado.', 'vemcomer')); ?>');
                 return;
             }
 
+            if (!confirm('<?php echo esc_js(__('Deseja copiar este grupo para sua loja e vinculá-lo a este produto?', 'vemcomer')); ?>')) {
+                return;
+            }
+
+            const btn = evt ? evt.target : event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Copiando...', 'vemcomer')); ?>';
+
             try {
-                const response = await fetch(`${addonCatalogBase}/groups/${groupId}/copy-to-store`, {
+                // 1. Copiar grupo do catálogo para a loja
+                const copyResponse = await fetch(`${addonCatalogBase}/groups/${groupId}/copy-to-store`, {
                     method: 'POST',
                     headers: {
                         'X-WP-Nonce': restNonce,
                     },
                 });
 
-                const data = await response.json();
-                if (!data.success) {
-                    alert(data?.message || '<?php echo esc_js(__('Erro ao copiar grupo.', 'vemcomer')); ?>');
+                const copyData = await copyResponse.json();
+                if (!copyData.success) {
+                    alert(copyData?.message || '<?php echo esc_js(__('Erro ao copiar grupo.', 'vemcomer')); ?>');
                     return;
                 }
 
-                alert('<?php echo esc_js(__('Grupo copiado com sucesso! Agora você pode vinculá-lo ao produto.', 'vemcomer')); ?>');
-                loadRecommendedGroups();
+                const storeGroupId = copyData.group_id;
+
+                // 2. Vincular grupo ao produto
+                const linkResponse = await fetch(`${addonCatalogBase}/link-group-to-product`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': restNonce,
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        group_id: storeGroupId,
+                    }),
+                });
+
+                const linkData = await linkResponse.json();
+                if (!linkData.success) {
+                    alert(linkData?.message || '<?php echo esc_js(__('Grupo copiado, mas erro ao vincular ao produto.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Grupo copiado e vinculado ao produto com sucesso!', 'vemcomer')); ?>');
+                closeAddonsModal();
+                window.location.reload(); // Recarregar para mostrar as mudanças
             } catch (e) {
                 console.error(e);
                 alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
 
