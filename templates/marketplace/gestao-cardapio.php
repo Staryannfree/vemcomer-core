@@ -1464,21 +1464,41 @@ if ($restaurant instanceof WP_Post) {
                     return;
                 }
 
-                alert(isEdit ? '<?php echo esc_js(__('Categoria atualizada com sucesso!', 'vemcomer')); ?>' : '<?php echo esc_js(__('Categoria criada com sucesso!', 'vemcomer')); ?>');
-                closeAddCategoryModal();
+                // Atualizar contador de categorias imediatamente (antes de fechar o modal)
+                await updateCategoriesCount();
                 
-                // Atualizar contador de categorias imediatamente
-                updateCategoriesCount();
+                // Mostrar feedback visual suave
+                const successMessage = isEdit 
+                    ? '<?php echo esc_js(__('Categoria atualizada com sucesso!', 'vemcomer')); ?>'
+                    : '<?php echo esc_js(__('Categoria criada com sucesso!', 'vemcomer')); ?>';
+                
+                // Criar notificação visual temporária
+                const notification = document.createElement('div');
+                notification.textContent = successMessage;
+                notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#2d8659;color:#fff;padding:15px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;animation:slideIn 0.3s ease-out;';
+                document.body.appendChild(notification);
+                
+                // Remover notificação após 3 segundos
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+                
+                closeAddCategoryModal();
                 
                 // Recarregar categorias recomendadas (remover a que foi criada)
                 if (typeof loadRecommendedMenuCategories === 'function') {
                     loadRecommendedMenuCategories();
                 }
                 
-                // Recarregar a página para mostrar as mudanças nas abas
+                // Atualizar estatísticas (incluindo contagem de categorias pelas abas)
+                updateStats();
+                
+                // Recarregar a página após um breve delay para mostrar as mudanças nas abas
+                // (necessário porque as abas são renderizadas no servidor)
                 setTimeout(() => {
                     window.location.reload();
-                }, 500);
+                }, 1000);
             } catch (e) {
                 console.error(e);
                 alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
