@@ -83,6 +83,79 @@ class Addon_Catalog_Seeder {
     }
 
     /**
+     * Atualiza os itens dos grupos existentes (para adicionar itens aos grupos já criados)
+     */
+    public static function update_group_items(): void {
+        if ( ! post_type_exists( 'vc_addon_group' ) || ! post_type_exists( 'vc_addon_item' ) ) {
+            return;
+        }
+
+        $groups_data = self::get_groups_data();
+        $first_5_groups = array_slice( $groups_data, 0, 5 );
+
+        foreach ( $first_5_groups as $group_data ) {
+            // Buscar grupo existente pelo nome
+            $existing_groups = get_posts( [
+                'post_type'      => 'vc_addon_group',
+                'posts_per_page' => -1,
+                'post_status'    => 'any',
+            ] );
+
+            $group_id = null;
+            foreach ( $existing_groups as $group ) {
+                if ( $group->post_title === $group_data['name'] ) {
+                    $group_id = $group->ID;
+                    break;
+                }
+            }
+
+            if ( ! $group_id ) {
+                continue;
+            }
+
+            // Verificar quais itens já existem
+            $existing_items = get_posts( [
+                'post_type'      => 'vc_addon_item',
+                'posts_per_page' => -1,
+                'post_status'    => 'any',
+                'meta_query'     => [
+                    [
+                        'key'   => '_vc_group_id',
+                        'value' => $group_id,
+                    ],
+                ],
+            ] );
+
+            $existing_item_names = [];
+            foreach ( $existing_items as $item ) {
+                $existing_item_names[] = $item->post_title;
+            }
+
+            // Adicionar apenas itens que não existem
+            if ( ! empty( $group_data['items'] ) ) {
+                foreach ( $group_data['items'] as $item_data ) {
+                    if ( ! in_array( $item_data['name'], $existing_item_names, true ) ) {
+                        $item_id = wp_insert_post( [
+                            'post_type'    => 'vc_addon_item',
+                            'post_title'   => $item_data['name'],
+                            'post_content' => $item_data['description'] ?? '',
+                            'post_status'  => 'publish',
+                        ] );
+
+                        if ( ! is_wp_error( $item_id ) ) {
+                            update_post_meta( $item_id, '_vc_group_id', $group_id );
+                            update_post_meta( $item_id, '_vc_default_price', $item_data['price'] ?? '0.00' );
+                            update_post_meta( $item_id, '_vc_allow_quantity', $item_data['allow_quantity'] ? '1' : '0' );
+                            update_post_meta( $item_id, '_vc_max_quantity', $item_data['max_quantity'] ?? 1 );
+                            update_post_meta( $item_id, '_vc_is_active', '1' );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Retorna os dados dos grupos de adicionais
      */
     private static function get_groups_data(): array {
@@ -103,12 +176,16 @@ class Addon_Catalog_Seeder {
                     'Food truck',
                 ],
                 'items'          => [
-                    [ 'name' => 'Queijo extra', 'price' => '3.00', 'allow_quantity' => true, 'max_quantity' => 3 ],
-                    [ 'name' => 'Bacon extra', 'price' => '4.00', 'allow_quantity' => true, 'max_quantity' => 3 ],
-                    [ 'name' => 'Ovo frito', 'price' => '2.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Cebola caramelizada', 'price' => '2.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Cogumelos', 'price' => '3.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Abacaxi grelhado', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo extra', 'price' => '0.00', 'allow_quantity' => true, 'max_quantity' => 3 ],
+                    [ 'name' => 'Bacon extra', 'price' => '0.00', 'allow_quantity' => true, 'max_quantity' => 3 ],
+                    [ 'name' => 'Ovo frito', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Cebola caramelizada', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Cogumelos', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Abacaxi grelhado', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Alface', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Tomate', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Picles', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Cebola roxa', 'price' => '0.00', 'allow_quantity' => false ],
                 ],
             ],
             [
@@ -125,11 +202,14 @@ class Addon_Catalog_Seeder {
                     'Food truck',
                 ],
                 'items'          => [
-                    [ 'name' => 'Molho especial da casa', 'price' => '1.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Barbecue', 'price' => '1.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Maionese temperada', 'price' => '1.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Mostarda e mel', 'price' => '1.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Pimenta', 'price' => '0.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho especial da casa', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Barbecue', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Maionese temperada', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Mostarda e mel', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho picante', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Ketchup', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Mostarda', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Maionese', 'price' => '0.00', 'allow_quantity' => false ],
                 ],
             ],
 
@@ -149,10 +229,12 @@ class Addon_Catalog_Seeder {
                     'Culinária italiana',
                 ],
                 'items'          => [
-                    [ 'name' => 'Borda com catupiry', 'price' => '8.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Borda com cheddar', 'price' => '8.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Borda com chocolate', 'price' => '10.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Borda com doce de leite', 'price' => '10.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Borda com catupiry', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Borda com cheddar', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Borda com requeijão', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Borda com chocolate', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Borda com doce de leite', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Borda sem recheio', 'price' => '0.00', 'allow_quantity' => false ],
                 ],
             ],
             [
@@ -170,12 +252,15 @@ class Addon_Catalog_Seeder {
                     'Culinária italiana',
                 ],
                 'items'          => [
-                    [ 'name' => 'Queijo extra', 'price' => '5.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Bacon', 'price' => '6.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Azeitona', 'price' => '3.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Cebola', 'price' => '2.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Pimentão', 'price' => '2.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Champignon', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo extra', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Bacon', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeitona', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Cebola', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pimentão', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Champignon', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Tomate', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Orégano', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeite extra', 'price' => '0.00', 'allow_quantity' => false ],
                 ],
             ],
 
@@ -195,13 +280,15 @@ class Addon_Catalog_Seeder {
                     'Doceria',
                 ],
                 'items'          => [
-                    [ 'name' => 'Calda de chocolate', 'price' => '2.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Calda de morango', 'price' => '2.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Calda de caramelo', 'price' => '2.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Granulado', 'price' => '1.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Confete', 'price' => '1.50', 'allow_quantity' => false ],
-                    [ 'name' => 'Castanha', 'price' => '3.00', 'allow_quantity' => false ],
-                    [ 'name' => 'Morango fresco', 'price' => '3.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de chocolate', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de morango', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de caramelo', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Granulado', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Confete', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Castanha', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Morango fresco', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de chocolate branco', 'price' => '0.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de frutas vermelhas', 'price' => '0.00', 'allow_quantity' => false ],
                 ],
             ],
             [

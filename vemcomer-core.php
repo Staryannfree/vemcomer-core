@@ -263,6 +263,8 @@ add_action( 'init', function () {
     }
     if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
         \VC\Utils\Addon_Catalog_Seeder::seed();
+        // Atualizar itens dos grupos existentes (adiciona itens aos grupos já criados)
+        \VC\Utils\Addon_Catalog_Seeder::update_group_items();
     }
 }, 20 );
 
