@@ -1449,7 +1449,24 @@ if ($restaurant instanceof WP_Post) {
             }
 
             try {
-                const response = await fetch(`${addonCatalogBase}/link-group-to-product`, {
+                // Primeiro, copiar o template (que é um grupo do catálogo) para a loja
+                const copyResponse = await fetch(`${addonCatalogBase}/groups/${templateId}/copy-to-store`, {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const copyData = await copyResponse.json();
+                if (!copyData.success) {
+                    alert(copyData?.message || '<?php echo esc_js(__('Erro ao copiar modelo para sua loja.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                const storeGroupId = copyData.group_id;
+
+                // Depois, vincular o grupo copiado ao produto
+                const linkResponse = await fetch(`${addonCatalogBase}/link-group-to-product`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1457,13 +1474,13 @@ if ($restaurant instanceof WP_Post) {
                     },
                     body: JSON.stringify({
                         product_id: productId,
-                        group_id: templateId,
+                        group_id: storeGroupId,
                     }),
                 });
 
-                const data = await response.json();
-                if (!data.success) {
-                    alert(data?.message || '<?php echo esc_js(__('Erro ao usar modelo.', 'vemcomer')); ?>');
+                const linkData = await linkResponse.json();
+                if (!linkData.success) {
+                    alert(linkData?.message || '<?php echo esc_js(__('Erro ao vincular modelo ao produto.', 'vemcomer')); ?>');
                     return;
                 }
 
@@ -2324,36 +2341,51 @@ if ($restaurant instanceof WP_Post) {
             document.getElementById('vcApplyGroupModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
 
+            const container = document.getElementById('vcApplyGroupProductsList');
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando produtos...', 'vemcomer')); ?></p></div>';
+
             try {
-                const response = await fetch(`${restBase}?per_page=100`, {
+                // Usar o endpoint correto de menu-items que filtra por restaurante automaticamente
+                const response = await fetch(`${restBase}?per_page=100&_embed`, {
                     headers: {
                         'X-WP-Nonce': restNonce,
                     },
                 });
 
                 if (!response.ok) {
-                    throw new Error('Erro ao carregar produtos');
+                    const errorText = await response.text();
+                    console.error('Erro ao carregar produtos:', response.status, errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
                 const products = await response.json();
-                const container = document.getElementById('vcApplyGroupProductsList');
+                
+                // Verificar se é um array válido
+                if (!Array.isArray(products)) {
+                    console.error('Resposta não é um array:', products);
+                    throw new Error('Resposta inválida do servidor');
+                }
                 
                 let productsHtml = '';
-                products.forEach(product => {
-                    const productId = product.id;
-                    const productName = product.title?.rendered || product.name || `Produto #${productId}`;
-                    productsHtml += `
-                        <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #e0e0e0;">
-                            <input type="checkbox" id="apply-product-${productId}" class="vc-apply-product-checkbox" value="${productId}" />
-                            <label for="apply-product-${productId}" style="flex:1;cursor:pointer;margin:0;">${escapeHtml(productName)}</label>
-                        </div>
-                    `;
-                });
+                if (products.length === 0) {
+                    productsHtml = '<p style="text-align:center;padding:20px;color:#999;"><?php echo esc_js(__('Nenhum produto encontrado.', 'vemcomer')); ?></p>';
+                } else {
+                    products.forEach(product => {
+                        const productId = product.id;
+                        const productName = product.title?.rendered || product.title || product.name || `Produto #${productId}`;
+                        productsHtml += `
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #e0e0e0;">
+                                <input type="checkbox" id="apply-product-${productId}" class="vc-apply-product-checkbox" value="${productId}" />
+                                <label for="apply-product-${productId}" style="flex:1;cursor:pointer;margin:0;">${escapeHtml(productName)}</label>
+                            </div>
+                        `;
+                    });
+                }
 
-                container.innerHTML = productsHtml || '<p style="text-align:center;padding:20px;color:#999;"><?php echo esc_js(__('Nenhum produto encontrado.', 'vemcomer')); ?></p>';
+                container.innerHTML = productsHtml;
             } catch (e) {
                 console.error('Erro ao carregar produtos:', e);
-                document.getElementById('vcApplyGroupProductsList').innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f;"><?php echo esc_js(__('Erro ao carregar produtos.', 'vemcomer')); ?></p>';
+                container.innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f;"><?php echo esc_js(__('Erro ao carregar produtos. Verifique o console para mais detalhes.', 'vemcomer')); ?></p>';
             }
         };
 
