@@ -410,7 +410,9 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                 </div>
                                 <div class="prod-actions">
                                     <button class="pedit-btn js-edit-product" data-item-id="<?php echo esc_attr($item_id); ?>" data-item-title="<?php echo esc_attr($item_title); ?>" data-item-desc="<?php echo esc_attr($item_desc); ?>" data-item-price="<?php echo esc_attr(str_replace(['R$', ' '], '', $item_price)); ?>" data-item-prep-time="<?php echo esc_attr($item_prep_time); ?>" data-item-thumb="<?php echo esc_attr($item_thumb); ?>" data-item-status="<?php echo esc_attr($item_status); ?>" data-item-category="<?php echo esc_attr($cat['id']); ?>"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
-                                    <button class="pedit-btn pause js-toggle-availability"><?php echo esc_html__('Pausar/Ativar', 'vemcomer'); ?></button>
+                                    <button class="pedit-btn pause js-toggle-availability" data-is-active="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
+                                        <?php echo 'ativo' === $item_status ? esc_html__('Pausar', 'vemcomer') : esc_html__('Ativar', 'vemcomer'); ?>
+                                    </button>
                                     <button class="pedit-btn del js-delete-item"><?php echo esc_html__('Deletar', 'vemcomer'); ?></button>
                                 </div>
                                 <div class="modif-box">
@@ -628,8 +630,14 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
 
                     const statusSpan = card.querySelector('.prod-ativo, .prod-pausado');
                     const statusContainer = card.querySelector('.prod-nome');
+                    const toggleBtn = card.querySelector('.js-toggle-availability');
+                    
                     if (data.available) {
                         card.setAttribute('data-available', '1');
+                        if (toggleBtn) {
+                            toggleBtn.setAttribute('data-is-active', '1');
+                            toggleBtn.textContent = '<?php echo esc_js(__('Pausar', 'vemcomer')); ?>';
+                        }
                         if (statusSpan) {
                             statusSpan.className = 'prod-ativo';
                             statusSpan.textContent = '<?php echo esc_js(__('Ativo', 'vemcomer')); ?>';
@@ -641,6 +649,10 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                         }
                     } else {
                         card.setAttribute('data-available', '0');
+                        if (toggleBtn) {
+                            toggleBtn.setAttribute('data-is-active', '0');
+                            toggleBtn.textContent = '<?php echo esc_js(__('Ativar', 'vemcomer')); ?>';
+                        }
                         if (statusSpan) {
                             statusSpan.className = 'prod-pausado';
                             statusSpan.textContent = '<?php echo esc_js(__('Pausado', 'vemcomer')); ?>';
