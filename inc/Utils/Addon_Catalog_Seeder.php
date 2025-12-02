@@ -52,6 +52,26 @@ class Addon_Catalog_Seeder {
             update_post_meta( $group_id, '_vc_is_required', $group_data['is_required'] ? '1' : '0' );
             update_post_meta( $group_id, '_vc_is_active', '1' );
 
+            // Marcar grupos básicos (os mais comuns)
+            $basic_groups = [
+                'Adicionais de Hambúrguer',
+                'Bebida do Combo',
+                'Molhos Extras',
+                'Ponto da Carne',
+                'Tamanho da Bebida',
+                'Adicionais de Pizza',
+                'Borda Recheada',
+                'Coberturas para Sorvete',
+                'Adicionais para Café',
+                'Tamanhos',
+            ];
+
+            if ( in_array( $group_data['name'], $basic_groups, true ) ) {
+                update_post_meta( $group_id, '_vc_difficulty_level', 'basic' );
+            } else {
+                update_post_meta( $group_id, '_vc_difficulty_level', 'advanced' );
+            }
+
             // Vincular às categorias
             if ( ! empty( $group_data['categories'] ) ) {
                 $category_ids = self::get_category_ids_by_names( $group_data['categories'] );

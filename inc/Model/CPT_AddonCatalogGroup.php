@@ -136,6 +136,20 @@ class CPT_AddonCatalogGroup {
                 </td>
             </tr>
             <tr>
+                <th><label for="vc_difficulty_level"><?php _e( 'Nível de Dificuldade', 'vemcomer' ); ?></label></th>
+                <td>
+                    <select id="vc_difficulty_level" name="vc_difficulty_level">
+                        <option value="basic" <?php selected( get_post_meta( $post->ID, '_vc_difficulty_level', true ), 'basic' ); ?>>
+                            <?php _e( '⭐ Básico', 'vemcomer' ); ?>
+                        </option>
+                        <option value="advanced" <?php selected( get_post_meta( $post->ID, '_vc_difficulty_level', true ), 'advanced' ); ?>>
+                            <?php _e( '⚙️ Avançado', 'vemcomer' ); ?>
+                        </option>
+                    </select>
+                    <p class="description"><?php _e( 'Básico: grupos simples e comuns. Avançado: grupos com configurações mais complexas.', 'vemcomer' ); ?></p>
+                </td>
+            </tr>
+            <tr>
                 <th><label><?php _e( 'Categorias de Restaurantes', 'vemcomer' ); ?></label></th>
                 <td>
                     <p class="description"><?php _e( 'Selecione as categorias de restaurantes para as quais este grupo de adicionais é recomendado. Lojistas com essas categorias verão este grupo como sugestão ao criar produtos.', 'vemcomer' ); ?></p>
@@ -195,10 +209,18 @@ class CPT_AddonCatalogGroup {
 
         update_post_meta( $post_id, '_vc_is_required', isset( $_POST['vc_is_required'] ) ? '1' : '0' );
         update_post_meta( $post_id, '_vc_is_active', isset( $_POST['vc_is_active'] ) ? '1' : '0' );
+
+        if ( isset( $_POST['vc_difficulty_level'] ) ) {
+            $level = sanitize_text_field( $_POST['vc_difficulty_level'] );
+            if ( in_array( $level, [ 'basic', 'advanced' ], true ) ) {
+                update_post_meta( $post_id, '_vc_difficulty_level', $level );
+            }
+        }
     }
 
     public function admin_columns( array $columns ): array {
         $columns['selection_type'] = __( 'Tipo', 'vemcomer' );
+        $columns['difficulty'] = __( 'Nível', 'vemcomer' );
         $columns['categories'] = __( 'Categorias', 'vemcomer' );
         $columns['active'] = __( 'Ativo', 'vemcomer' );
         return $columns;
@@ -209,6 +231,10 @@ class CPT_AddonCatalogGroup {
             case 'selection_type':
                 $type = get_post_meta( $post_id, '_vc_selection_type', true ) ?: 'multiple';
                 echo $type === 'single' ? __( 'Única', 'vemcomer' ) : __( 'Múltipla', 'vemcomer' );
+                break;
+            case 'difficulty':
+                $level = get_post_meta( $post_id, '_vc_difficulty_level', true ) ?: 'basic';
+                echo $level === 'basic' ? '⭐ ' . __( 'Básico', 'vemcomer' ) : '⚙️ ' . __( 'Avançado', 'vemcomer' );
                 break;
             case 'categories':
                 $terms = wp_get_object_terms( $post_id, 'vc_cuisine', [ 'fields' => 'names' ] );

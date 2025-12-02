@@ -112,7 +112,16 @@ class CPT_MenuItem {
     }
 
     public function register_cpt(): void {
-        $labels = [ 'name' => __( 'Itens do Cardápio', 'vemcomer' ), 'singular_name' => __( 'Item do Cardápio', 'vemcomer' ) ];
+        $labels = [
+            'name'          => __( 'Itens do Cardápio', 'vemcomer' ),
+            'singular_name' => __( 'Item do Cardápio', 'vemcomer' ),
+            'add_new_item' => __( 'Adicionar Novo Item', 'vemcomer' ),
+            'edit_item'    => __( 'Editar Item', 'vemcomer' ),
+            'new_item'     => __( 'Novo Item', 'vemcomer' ),
+            'view_item'    => __( 'Ver Item', 'vemcomer' ),
+            'search_items' => __( 'Buscar Itens', 'vemcomer' ),
+            'not_found'    => __( 'Nenhum item encontrado.', 'vemcomer' ),
+        ];
         $args = [
             'labels'       => $labels,
             'public'       => true,
@@ -123,6 +132,7 @@ class CPT_MenuItem {
             'capability_type' => [ 'vc_menu_item', 'vc_menu_items' ],
             'map_meta_cap'    => true,
             'capabilities'    => $this->capabilities(),
+            'taxonomies'   => [ self::TAX_CATEGORY ],
         ];
         register_post_type( self::SLUG, $args );
     }
@@ -215,7 +225,42 @@ class CPT_MenuItem {
     }
 
     public function register_metaboxes(): void {
+        // Metabox para tipo de produto (simples ou combo)
+        add_meta_box(
+            'vc_menu_item_type',
+            __( 'Tipo de Produto', 'vemcomer' ),
+            [ $this, 'product_type_metabox' ],
+            self::SLUG,
+            'side',
+            'default'
+        );
         add_meta_box( 'vc_menu_item_meta', __( 'Dados do Item', 'vemcomer' ), [ $this, 'metabox' ], self::SLUG, 'normal', 'high' );
+    }
+
+    /**
+     * Metabox para tipo de produto
+     */
+    public function product_type_metabox( $post ): void {
+        wp_nonce_field( 'vc_menu_item_type_meta', 'vc_menu_item_type_nonce' );
+        
+        $product_type = get_post_meta( $post->ID, '_vc_product_type', true ) ?: 'simple';
+        ?>
+        <p>
+            <label>
+                <input type="radio" name="vc_product_type" value="simple" <?php checked( $product_type, 'simple' ); ?> />
+                <?php _e( 'Produto Simples', 'vemcomer' ); ?>
+            </label>
+        </p>
+        <p>
+            <label>
+                <input type="radio" name="vc_product_type" value="combo" <?php checked( $product_type, 'combo' ); ?> />
+                <?php _e( 'Combo', 'vemcomer' ); ?>
+            </label>
+        </p>
+        <p class="description">
+            <?php _e( 'Combos permitem que o cliente escolha componentes (ex: lanche + bebida + batata).', 'vemcomer' ); ?>
+        </p>
+        <?php
     }
 
     public function metabox( $post ): void {
@@ -258,6 +303,13 @@ class CPT_MenuItem {
                 if ( '_vc_is_available' === $key || '_vc_menu_item_featured' === $key ) {
                     delete_post_meta( $post_id, $key );
                 }
+            }
+        }
+
+        // Salvar tipo de produto
+        if ( isset( $_POST['vc_menu_item_type_nonce'] ) && wp_verify_nonce( $_POST['vc_menu_item_type_nonce'], 'vc_menu_item_type_meta' ) ) {
+            if ( isset( $_POST['vc_product_type'] ) && in_array( $_POST['vc_product_type'], [ 'simple', 'combo' ], true ) ) {
+                update_post_meta( $post_id, '_vc_product_type', sanitize_text_field( $_POST['vc_product_type'] ) );
             }
         }
     }

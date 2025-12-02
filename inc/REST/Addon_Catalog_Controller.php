@@ -140,6 +140,73 @@ class Addon_Catalog_Controller {
                 ],
             ],
         ] );
+
+        // POST: Setup inicial de adicionais (wizard de onboarding)
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/setup-onboarding', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'setup_addons_onboarding' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+        ] );
+
+        // GET: Verificar se precisa de onboarding
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/needs-onboarding', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'check_needs_onboarding' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+        ] );
+
+        // POST: Salvar grupo como modelo
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/store-groups/(?P<id>\d+)/save-as-template', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'save_group_as_template' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
+
+        // GET: Listar grupos templates do lojista
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/my-templates', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_my_templates' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+        ] );
+
+        // POST: Aplicar grupo a múltiplos produtos
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/apply-group-to-products', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'apply_group_to_products' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+        ] );
+
+        // POST: Copiar adicionais de um produto para outro
+        register_rest_route( 'vemcomer/v1', '/addon-catalog/products/(?P<id>\d+)/copy-addons-from/(?P<source_id>\d+)', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'copy_addons_from_product' ],
+            'permission_callback' => [ $this, 'can_manage_store' ],
+            'args'                => [
+                'id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+                'source_id' => [
+                    'required'          => true,
+                    'validate_callback' => function( $param ) {
+                        return is_numeric( $param );
+                    },
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ] );
     }
 
     public function can_access(): bool {
@@ -226,6 +293,7 @@ class Addon_Catalog_Controller {
                     'min_select'      => (int) get_post_meta( $group->ID, '_vc_min_select', true ),
                     'max_select'     => (int) get_post_meta( $group->ID, '_vc_max_select', true ),
                     'is_required'    => get_post_meta( $group->ID, '_vc_is_required', true ) === '1',
+                    'difficulty_level' => get_post_meta( $group->ID, '_vc_difficulty_level', true ) ?: 'basic',
                 ];
             }
         }
@@ -793,6 +861,200 @@ class Addon_Catalog_Controller {
             'success'       => true,
             'message'       => __( 'Preços atualizados com sucesso!', 'vemcomer' ),
             'updated_count' => $updated_count,
+        ] );
+    }
+
+    /**
+     * POST /wp-json/vemcomer/v1/addon-catalog/products/{id}/copy-addons-from/{source_id}
+     * Copia todos os grupos de adicionais de um produto para outro
+     */
+    public function copy_addons_from_product( \WP_REST_Request $request ): \WP_REST_Response {
+        $product_id = (int) $request->get_param( 'id' );
+        $source_product_id = (int) $request->get_param( 'source_id' );
+        
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Verificar se ambos os produtos existem e pertencem ao restaurante
+        $product = get_post( $product_id );
+        $source_product = get_post( $source_product_id );
+
+        if ( ! $product || $product->post_type !== 'vc_menu_item' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Produto de destino não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        if ( ! $source_product || $source_product->post_type !== 'vc_menu_item' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Produto de origem não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        $product_restaurant_id = (int) get_post_meta( $product_id, '_vc_restaurant_id', true );
+        $source_restaurant_id = (int) get_post_meta( $source_product_id, '_vc_restaurant_id', true );
+
+        if ( $product_restaurant_id !== $restaurant_id || $source_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Você não tem permissão para modificar estes produtos.', 'vemcomer' ),
+            ], 403 );
+        }
+
+        // Buscar grupos do produto de origem
+        $source_modifiers = get_post_meta( $source_product_id, '_vc_menu_item_modifiers', true );
+        $source_modifiers = is_array( $source_modifiers ) ? $source_modifiers : [];
+
+        if ( empty( $source_modifiers ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'O produto de origem não possui adicionais para copiar.', 'vemcomer' ),
+            ], 400 );
+        }
+
+        // Identificar grupos únicos (grupos principais, não itens individuais)
+        // Um grupo principal tem _vc_group_id = 0 ou igual ao próprio ID
+        // Um item tem _vc_group_id = ID do grupo principal
+        $source_group_ids = [];
+        
+        foreach ( $source_modifiers as $modifier_id ) {
+            $modifier = get_post( $modifier_id );
+            if ( ! $modifier || $modifier->post_type !== 'vc_product_modifier' ) {
+                continue;
+            }
+
+            $group_id = (int) get_post_meta( $modifier_id, '_vc_group_id', true );
+            $modifier_restaurant_id = (int) get_post_meta( $modifier_id, '_vc_restaurant_id', true );
+
+            // Verificar se pertence ao restaurante
+            if ( $modifier_restaurant_id !== $restaurant_id ) {
+                continue;
+            }
+
+            // Se group_id é 0 ou igual ao modifier_id, é o grupo principal
+            if ( $group_id === 0 || $group_id === $modifier_id ) {
+                // É um grupo principal
+                if ( ! in_array( $modifier_id, $source_group_ids, true ) ) {
+                    $source_group_ids[] = $modifier_id;
+                }
+            } elseif ( $group_id > 0 ) {
+                // É um item, o grupo principal é o group_id
+                if ( ! in_array( $group_id, $source_group_ids, true ) ) {
+                    // Verificar se o grupo principal existe
+                    $group_post = get_post( $group_id );
+                    if ( $group_post && $group_post->post_type === 'vc_product_modifier' ) {
+                        $group_restaurant_id = (int) get_post_meta( $group_id, '_vc_restaurant_id', true );
+                        if ( $group_restaurant_id === $restaurant_id ) {
+                            $source_group_ids[] = $group_id;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ( empty( $source_group_ids ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Não foi possível identificar grupos de adicionais no produto de origem.', 'vemcomer' ),
+            ], 400 );
+        }
+
+        // Buscar grupos atuais do produto de destino
+        $current_modifiers = get_post_meta( $product_id, '_vc_menu_item_modifiers', true );
+        $current_modifiers = is_array( $current_modifiers ) ? $current_modifiers : [];
+
+        // Vincular cada grupo ao produto de destino (reutilizando os mesmos grupos)
+        $added_count = 0;
+        $groups_added = 0;
+        
+        foreach ( $source_group_ids as $group_id ) {
+            // Buscar todos os modificadores do grupo (grupo principal + itens)
+            $group_modifiers = get_posts( [
+                'post_type'      => 'vc_product_modifier',
+                'posts_per_page' => -1,
+                'post_status'    => 'any',
+                'meta_query'     => [
+                    'relation' => 'AND',
+                    [
+                        'relation' => 'OR',
+                        [
+                            'key'   => '_vc_group_id',
+                            'value' => $group_id,
+                        ],
+                        [
+                            'key'   => '_vc_group_id',
+                            'value' => '0',
+                            'compare' => '=',
+                        ],
+                    ],
+                    [
+                        'key'   => '_vc_restaurant_id',
+                        'value' => $restaurant_id,
+                    ],
+                ],
+            ] );
+
+            // Incluir o grupo principal e todos os itens
+            $group_modifier_ids = [ $group_id ];
+            foreach ( $group_modifiers as $gm ) {
+                $gm_group_id = (int) get_post_meta( $gm->ID, '_vc_group_id', true );
+                // Se é o grupo principal ou um item deste grupo
+                if ( $gm->ID === $group_id || $gm_group_id === $group_id ) {
+                    if ( ! in_array( $gm->ID, $group_modifier_ids, true ) ) {
+                        $group_modifier_ids[] = $gm->ID;
+                    }
+                }
+            }
+
+            // Verificar se algum modificador do grupo já está vinculado
+            $already_linked = false;
+            foreach ( $group_modifier_ids as $mod_id ) {
+                if ( in_array( $mod_id, $current_modifiers, true ) ) {
+                    $already_linked = true;
+                    break;
+                }
+            }
+
+            if ( $already_linked ) {
+                continue; // Pular grupos já vinculados
+            }
+
+            // Adicionar todos os modificadores do grupo
+            foreach ( $group_modifier_ids as $mod_id ) {
+                if ( ! in_array( $mod_id, $current_modifiers, true ) ) {
+                    $current_modifiers[] = $mod_id;
+                    $added_count++;
+
+                    // Atualizar meta reversa
+                    $modifier_items = get_post_meta( $mod_id, '_vc_modifier_menu_items', true );
+                    $modifier_items = is_array( $modifier_items ) ? $modifier_items : [];
+                    if ( ! in_array( $product_id, $modifier_items, true ) ) {
+                        $modifier_items[] = $product_id;
+                        update_post_meta( $mod_id, '_vc_modifier_menu_items', $modifier_items );
+                    }
+                }
+            }
+            
+            $groups_added++;
+        }
+
+        // Atualizar meta do produto
+        update_post_meta( $product_id, '_vc_menu_item_modifiers', $current_modifiers );
+
+        return new \WP_REST_Response( [
+            'success'     => true,
+            'message'     => sprintf( __( '%d grupo(s) de adicionais copiado(s) com sucesso!', 'vemcomer' ), $groups_added ),
+            'groups_added' => $groups_added,
+            'items_added'  => $added_count,
         ] );
     }
 
