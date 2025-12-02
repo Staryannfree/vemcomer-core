@@ -375,22 +375,22 @@ if ($restaurant instanceof WP_Post) {
 
     <?php
     // Buscar categorias do cardápio (apenas as criadas pelo usuário, não as do catálogo)
-    $menu_categories = get_terms( [
+    $all_menu_categories = get_terms( [
         'taxonomy'   => 'vc_menu_category',
         'hide_empty' => false,
-        'meta_query' => [
-            'relation' => 'OR',
-            [
-                'key'     => '_vc_is_catalog_category',
-                'compare' => 'NOT EXISTS',
-            ],
-            [
-                'key'     => '_vc_is_catalog_category',
-                'value'   => '1',
-                'compare' => '!=',
-            ],
-        ],
     ] );
+    
+    // Filtrar categorias do catálogo (marcadas com _vc_is_catalog_category = '1')
+    $menu_categories = [];
+    if ( ! is_wp_error( $all_menu_categories ) && $all_menu_categories ) {
+        foreach ( $all_menu_categories as $cat ) {
+            $is_catalog = get_term_meta( $cat->term_id, '_vc_is_catalog_category', true );
+            // Incluir apenas categorias que NÃO são do catálogo
+            if ( $is_catalog !== '1' ) {
+                $menu_categories[] = $cat;
+            }
+        }
+    }
     ?>
 
     <?php if ($needs_addons_onboarding) : ?>
