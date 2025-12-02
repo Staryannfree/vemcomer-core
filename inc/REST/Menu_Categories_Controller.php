@@ -364,6 +364,25 @@ class Menu_Categories_Controller {
             $cuisine_ids = array_map( 'intval', $cuisine_terms );
         }
 
+        // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)
+        $user_categories = get_terms( [
+            'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
+            'hide_empty' => false,
+        ] );
+
+        $user_category_names = [];
+        if ( ! is_wp_error( $user_categories ) && ! empty( $user_categories ) ) {
+            foreach ( $user_categories as $user_cat ) {
+                $is_catalog = get_term_meta( $user_cat->term_id, '_vc_is_catalog_category', true );
+                $cat_restaurant_id = (int) get_term_meta( $user_cat->term_id, '_vc_restaurant_id', true );
+                
+                // Se não é do catálogo E pertence ao restaurante atual, adicionar à lista
+                if ( $is_catalog !== '1' && $cat_restaurant_id === $restaurant_id ) {
+                    $user_category_names[] = strtolower( trim( $user_cat->name ) );
+                }
+            }
+        }
+
         // Buscar todas as categorias de cardápio do catálogo
         $catalog_categories = get_terms( [
             'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
@@ -390,6 +409,10 @@ class Menu_Categories_Controller {
         $generic = []; // Categorias genéricas (sem vínculo específico)
 
         foreach ( $catalog_categories as $category ) {
+            // Pular se o restaurante já criou uma categoria com o mesmo nome
+            if ( in_array( strtolower( trim( $category->name ) ), $user_category_names, true ) ) {
+                continue;
+            }
             $recommended_for = get_term_meta( $category->term_id, '_vc_recommended_for_cuisines', true );
             
             if ( empty( $recommended_for ) ) {
