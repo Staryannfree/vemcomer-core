@@ -566,6 +566,27 @@ if ($restaurant instanceof WP_Post) {
     <?php endif; ?>
 </div>
 
+<!-- Modal de Gerenciar Categorias -->
+<div id="vcManageCategoriesModal" class="vc-modal-overlay" style="display:none;">
+    <div class="vc-modal-content" style="max-width:600px;">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title"><?php echo esc_html__('Gerenciar Categorias', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeManageCategoriesModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <div class="vc-modal-body">
+            <div id="vcCategoriesList" style="max-height:500px;overflow-y:auto;">
+                <div style="text-align:center;padding:40px;color:#999;">
+                    <p><?php echo esc_html__('Carregando categorias...', 'vemcomer'); ?></p>
+                </div>
+            </div>
+        </div>
+        <div class="vc-modal-footer">
+            <button type="button" class="vc-btn-secondary" onclick="closeManageCategoriesModal()"><?php echo esc_html__('Fechar', 'vemcomer'); ?></button>
+            <button type="button" class="vc-btn-primary" onclick="closeManageCategoriesModal(); openAddCategoryModal();"><?php echo esc_html__('+ Adicionar Nova Categoria', 'vemcomer'); ?></button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de Adicionar/Editar Categoria -->
 <div id="vcAddCategoryModal" class="vc-modal-overlay">
     <div class="vc-modal-content" style="max-width:700px;">
