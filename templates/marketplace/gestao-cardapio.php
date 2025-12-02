@@ -470,10 +470,10 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                                 $mod_id = is_array($mod_data) ? $mod_data['id'] : null;
                                                 $mod_title = is_array($mod_data) ? $mod_data['title'] : $mod_data;
                                                 ?>
-                                                <div class="modif-badge" data-group-id="<?php echo esc_attr($mod_id); ?>">
+                                                <div class="modif-badge" data-group-id="<?php echo esc_attr($mod_id); ?>" data-product-id="<?php echo esc_attr($item_id); ?>">
                                                     <?php echo esc_html($mod_title); ?>
                                                     <?php if ($mod_id) : ?>
-                                                        <span class="modif-remove" onclick="removeAddonGroup(<?php echo esc_attr($item_id); ?>, <?php echo esc_attr($mod_id); ?>, this)" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
+                                                        <span class="modif-remove" data-product-id="<?php echo esc_attr($item_id); ?>" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
                                                     <?php endif; ?>
                                                 </div>
                                             <?php endforeach; ?>
@@ -1309,26 +1309,41 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
             }
         }
 
-        async function removeAddonGroup(productId, groupId, element) {
+        window.removeAddonGroup = async function(productId, groupId, element) {
+            console.log('removeAddonGroup chamado:', productId, groupId, element);
+            
             if (!confirm('<?php echo esc_js(__('Deseja remover este adicional do produto?', 'vemcomer')); ?>')) {
                 return;
             }
 
-            const badge = element.closest('.modif-badge');
+            const badge = element ? element.closest('.modif-badge') : null;
             if (badge) {
                 badge.style.opacity = '0.5';
                 badge.style.pointerEvents = 'none';
             }
 
             try {
-                const response = await fetch(`${addonCatalogBase}/unlink-group-from-product?product_id=${productId}&group_id=${groupId}`, {
+                const url = `${addonCatalogBase}/unlink-group-from-product?product_id=${productId}&group_id=${groupId}`;
+                console.log('Chamando endpoint:', url);
+                
+                const response = await fetch(url, {
                     method: 'DELETE',
                     headers: {
                         'X-WP-Nonce': restNonce,
                     },
                 });
 
+                console.log('Resposta recebida:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Erro na resposta:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const data = await response.json();
+                console.log('Dados recebidos:', data);
+                
                 if (!data.success) {
                     alert(data?.message || '<?php echo esc_js(__('Erro ao remover adicional.', 'vemcomer')); ?>');
                     if (badge) {
@@ -1344,7 +1359,8 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 }
 
                 // Verificar se não há mais adicionais
-                const modifList = document.querySelector(`[data-item-id="${productId}"] .modif-list`);
+                const modifList = document.querySelector(`.prod-card[data-item-id="${productId}"] .modif-list`) || 
+                                 document.querySelector(`[data-item-id="${productId}"] .modif-list`);
                 if (modifList) {
                     const badges = modifList.querySelectorAll('.modif-badge');
                     if (badges.length === 0) {
@@ -1358,13 +1374,28 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 }, 300);
             } catch (e) {
                 console.error('Erro ao remover grupo:', e);
-                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor: ', 'vemcomer')); ?>' + e.message);
                 if (badge) {
                     badge.style.opacity = '1';
                     badge.style.pointerEvents = 'auto';
                 }
             }
         }
+
+        // Adicionar event listeners para os botões de remover (caso o onclick não funcione)
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modif-remove')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const productId = parseInt(e.target.getAttribute('data-product-id'));
+                    const groupId = parseInt(e.target.getAttribute('data-group-id'));
+                    if (productId && groupId) {
+                        removeAddonGroup(productId, groupId, e.target);
+                    }
+                }
+            });
+        });
 
         window.addCustomAddonItem = function() {
             customAddonItemCount++;
