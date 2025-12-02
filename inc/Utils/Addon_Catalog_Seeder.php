@@ -711,6 +711,497 @@ class Addon_Catalog_Seeder {
                 ],
             ],
 
+            // Grupos para Comida Indiana
+            [
+                'name'           => 'Adicionais Indianos',
+                'description'    => 'Complementos para pratos indianos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária indiana',
+                ],
+                'items'          => [
+                    [ 'name' => 'Raita (iogurte com pepino)', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Chutney de manga', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Chutney de hortelã', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão naan', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Arroz basmati', 'price' => '3.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Tailandesa
+            [
+                'name'           => 'Adicionais Tailandeses',
+                'description'    => 'Complementos para pratos tailandeses',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária tailandesa',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho de pimenta tailandês', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Amendoim torrado', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Broto de feijão', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Coentro fresco', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Vietnamita
+            [
+                'name'           => 'Adicionais Vietnamitas',
+                'description'    => 'Complementos para pratos vietnamitas',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária vietnamita',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho hoisin', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho de pimenta', 'price' => '1.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Broto de feijão', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Hortelã', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Coreana
+            [
+                'name'           => 'Adicionais Coreanos',
+                'description'    => 'Complementos para pratos coreanos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária coreana',
+                    'Churrasco coreano (K-BBQ)',
+                ],
+                'items'          => [
+                    [ 'name' => 'Kimchi', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Alface para wrap', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho gochujang', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Alho assado', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Chinesa
+            [
+                'name'           => 'Adicionais Chineses',
+                'description'    => 'Complementos para pratos chineses',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária chinesa',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho agridoce', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho de soja', 'price' => '0.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Biscoito da sorte', 'price' => '1.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Arroz frito', 'price' => '4.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Grega
+            [
+                'name'           => 'Adicionais Gregos',
+                'description'    => 'Complementos para pratos gregos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+                'items'          => [
+                    [ 'name' => 'Tzatziki', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeitonas kalamata', 'price' => '3.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo feta', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão pita', 'price' => '2.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Francesa
+            [
+                'name'           => 'Adicionais Franceses',
+                'description'    => 'Complementos para pratos franceses',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária francesa',
+                    'Bistrô',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho bearnês', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Molho holandês', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Batata rösti', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão baguette', 'price' => '2.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Portuguesa
+            [
+                'name'           => 'Adicionais Portugueses',
+                'description'    => 'Complementos para pratos portugueses',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária portuguesa',
+                ],
+                'items'          => [
+                    [ 'name' => 'Azeitonas', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão português', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeite extra virgem', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Tapas
+            [
+                'name'           => 'Adicionais para Tapas',
+                'description'    => 'Complementos para suas tapas',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Tapas',
+                    'Culinária espanhola',
+                ],
+                'items'          => [
+                    [ 'name' => 'Azeitonas', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão torrado', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeite', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Alho', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Cevicheria
+            [
+                'name'           => 'Adicionais para Ceviche',
+                'description'    => 'Complementos para seu ceviche',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Cevicheria',
+                    'Culinária peruana',
+                ],
+                'items'          => [
+                    [ 'name' => 'Batata doce', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Milho', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Cebola roxa', 'price' => '1.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Coentro', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Galeteria
+            [
+                'name'           => 'Acompanhamentos para Galeto',
+                'description'    => 'Acompanhamentos para seu galeto',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Galeteria',
+                    'Frango assado',
+                    'Frango frito estilo americano',
+                ],
+                'items'          => [
+                    [ 'name' => 'Batata frita', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Arroz', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Salada', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Farofa', 'price' => '2.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Sopas e Caldos
+            [
+                'name'           => 'Adicionais para Sopa/Caldo',
+                'description'    => 'Complementos para suas sopas e caldos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Sopas & caldos',
+                ],
+                'items'          => [
+                    [ 'name' => 'Croutons', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo ralado', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Creme de leite', 'price' => '1.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão', 'price' => '2.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida de Boteco
+            [
+                'name'           => 'Petiscos de Boteco',
+                'description'    => 'Petiscos para acompanhar suas bebidas',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Comida de boteco',
+                    'Petiscos e porções',
+                    'Boteco',
+                ],
+                'items'          => [
+                    [ 'name' => 'Amendoim', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeitona', 'price' => '4.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Torresmo', 'price' => '6.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Batata frita', 'price' => '8.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Creperia
+            [
+                'name'           => 'Adicionais para Crepe',
+                'description'    => 'Complementos para seus crepes',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Creperia salgada',
+                    'Creperia doce',
+                ],
+                'items'          => [
+                    [ 'name' => 'Chantilly', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de chocolate', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Sorvete', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo extra', 'price' => '2.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Panquecaria
+            [
+                'name'           => 'Adicionais para Panqueca',
+                'description'    => 'Complementos para suas panquecas',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Panquecaria',
+                ],
+                'items'          => [
+                    [ 'name' => 'Queijo extra', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Bacon', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Ovo', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Calda de mel', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Omeleteria
+            [
+                'name'           => 'Adicionais para Omelete',
+                'description'    => 'Complementos para seu omelete',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Omeleteria',
+                ],
+                'items'          => [
+                    [ 'name' => 'Queijo extra', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Bacon', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Cogumelos', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Cebola', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Sanduíches
+            [
+                'name'           => 'Adicionais para Sanduíche',
+                'description'    => 'Complementos para seus sanduíches',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Sanduíches & baguetes',
+                    'Lanchonete',
+                ],
+                'items'          => [
+                    [ 'name' => 'Queijo extra', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Bacon', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Ovo', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Batata palha', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Wraps
+            [
+                'name'           => 'Adicionais para Wrap',
+                'description'    => 'Complementos para seus wraps',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Wraps & tortillas',
+                ],
+                'items'          => [
+                    [ 'name' => 'Guacamole', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Sour cream', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Queijo extra', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pimenta jalapeño', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Salgados
+            [
+                'name'           => 'Molhos para Salgados',
+                'description'    => 'Molhos para acompanhar seus salgados',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Salgados variados',
+                    'Coxinha & frituras',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho de pimenta', 'price' => '0.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Ketchup', 'price' => '1.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Mostarda', 'price' => '1.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Maionese', 'price' => '1.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Padaria (Doces)
+            [
+                'name'           => 'Coberturas para Doces de Padaria',
+                'description'    => 'Coberturas para doces e bolos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Padaria tradicional',
+                    'Padaria gourmet',
+                    'Confeitaria',
+                    'Casa de bolos',
+                ],
+                'items'          => [
+                    [ 'name' => 'Calda de chocolate', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Chantilly', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Morango', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Granulado', 'price' => '1.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Rooftop Bar / Lounge
+            [
+                'name'           => 'Acompanhamentos Premium',
+                'description'    => 'Acompanhamentos especiais para drinks',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Rooftop bar',
+                    'Lounge bar',
+                    'Bar de vinhos / Wine bar',
+                ],
+                'items'          => [
+                    [ 'name' => 'Queijos especiais', 'price' => '12.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Azeitonas premium', 'price' => '6.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Castanhas', 'price' => '8.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Frutos secos', 'price' => '7.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Africana/Marroquina
+            [
+                'name'           => 'Adicionais Africanos',
+                'description'    => 'Complementos para pratos africanos e marroquinos',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária africana',
+                    'Culinária marroquina',
+                ],
+                'items'          => [
+                    [ 'name' => 'Couscous', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Harissa (molho picante)', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Pão pita', 'price' => '2.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Comida Fusion
+            [
+                'name'           => 'Adicionais Fusion',
+                'description'    => 'Complementos para pratos fusion',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Culinária fusion',
+                    'Culinária oriental (mista)',
+                ],
+                'items'          => [
+                    [ 'name' => 'Molho especial da casa', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Vegetais em conserva', 'price' => '2.50', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Refeições Congeladas
+            [
+                'name'           => 'Acompanhamentos Rápidos',
+                'description'    => 'Acompanhamentos para refeições congeladas',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Refeições congeladas',
+                ],
+                'items'          => [
+                    [ 'name' => 'Arroz', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Feijão', 'price' => '2.50', 'allow_quantity' => false ],
+                    [ 'name' => 'Salada', 'price' => '3.00', 'allow_quantity' => false ],
+                ],
+            ],
+
+            // Grupos para Marmita Fitness
+            [
+                'name'           => 'Extras para Marmita Fitness',
+                'description'    => 'Complementos para sua marmita fitness',
+                'selection_type' => 'multiple',
+                'min_select'     => 0,
+                'max_select'     => 0,
+                'is_required'    => false,
+                'categories'     => [
+                    'Marmita fitness',
+                    'Comida fit / saudável',
+                ],
+                'items'          => [
+                    [ 'name' => 'Proteína extra', 'price' => '5.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Abacate', 'price' => '3.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Ovo cozido', 'price' => '2.00', 'allow_quantity' => false ],
+                    [ 'name' => 'Sementes', 'price' => '2.00', 'allow_quantity' => false ],
+                ],
+            ],
+
             // Grupos genéricos (para qualquer tipo)
             [
                 'name'           => 'Molhos Extras',
