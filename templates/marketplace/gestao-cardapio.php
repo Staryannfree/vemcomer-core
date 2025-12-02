@@ -437,9 +437,16 @@ if ($restaurant instanceof WP_Post) {
                 <div class="stat-label"><?php echo esc_html__('Sem foto', 'vemcomer'); ?></div>
                 <div class="stat-value" data-stat="no-thumb"><?php echo esc_html($stats['no_thumb']); ?></div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="position:relative;">
                 <div class="stat-label"><?php echo esc_html__('Categorias', 'vemcomer'); ?></div>
                 <div class="stat-value" data-stat="categories"><?php echo esc_html($stats['categories']); ?></div>
+                <button class="js-manage-categories" 
+                        title="<?php echo esc_attr__('Gerenciar categorias', 'vemcomer'); ?>"
+                        style="position:absolute;top:8px;right:8px;background:transparent;border:none;cursor:pointer;font-size:18px;color:#2d8659;padding:4px;line-height:1;opacity:0.7;transition:opacity 0.2s;"
+                        onmouseover="this.style.opacity='1';"
+                        onmouseout="this.style.opacity='0.7';">
+                    ✏️
+                </button>
             </div>
         </div>
         
@@ -449,42 +456,12 @@ if ($restaurant instanceof WP_Post) {
         
         <!-- Debug: Total de categorias para visualização: <?php echo count($categories_for_view); ?> -->
         
-        <div class="tabs-cat" style="position:relative;">
+        <div class="tabs-cat">
             <?php foreach ($categories_for_view as $index => $cat) : ?>
-                <?php 
-                $cat_id = isset($cat['id']) && $cat['id'] !== 'sem-categoria' ? (int) $cat['id'] : 0;
-                $is_uncategorized = ($cat_id === 0 || $cat['id'] === 'sem-categoria');
-                ?>
-                <div style="position:relative;display:inline-block;">
-                    <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-index-<?php echo $index; ?>">
-                        <?php echo esc_html($cat['name']); ?> 
-                        <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
-                    </button>
-                    <?php if (!$is_uncategorized && $cat_id > 0) : ?>
-                        <div style="position:absolute;top:0;right:0;display:flex;gap:4px;padding:4px;">
-                            <button class="js-edit-category" 
-                                    data-category-id="<?php echo esc_attr($cat_id); ?>" 
-                                    data-category-name="<?php echo esc_attr($cat['name']); ?>"
-                                    data-category-order="<?php echo esc_attr(get_term_meta($cat_id, '_vc_category_order', true) ?: 0); ?>"
-                                    title="<?php echo esc_attr__('Editar categoria', 'vemcomer'); ?>"
-                                    style="background:#2d8659;color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;"
-                                    onmouseover="this.style.background='#1f5d3f';"
-                                    onmouseout="this.style.background='#2d8659';">
-                                ✏️
-                            </button>
-                            <button class="js-delete-category" 
-                                    data-category-id="<?php echo esc_attr($cat_id); ?>" 
-                                    data-category-name="<?php echo esc_attr($cat['name']); ?>"
-                                    data-category-count="<?php echo esc_attr(count($cat['items'] ?? [])); ?>"
-                                    title="<?php echo esc_attr__('Deletar categoria', 'vemcomer'); ?>"
-                                    style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:12px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;"
-                                    onmouseover="this.style.background='#b71c1c';"
-                                    onmouseout="this.style.background='#d32f2f';">
-                                ×
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-index-<?php echo $index; ?>">
+                    <?php echo esc_html($cat['name']); ?> 
+                    <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
+                </button>
             <?php endforeach; ?>
         </div>
 

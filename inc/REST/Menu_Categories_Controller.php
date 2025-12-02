@@ -114,13 +114,29 @@ class Menu_Categories_Controller {
 
         $items = [];
         foreach ( $categories as $term ) {
-            $items[] = [
-                'id'    => $term->term_id,
-                'name'  => $term->name,
-                'slug'  => $term->slug,
-                'count' => $term->count,
-            ];
+            // Verificar se é categoria do catálogo
+            $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
+            
+            // Incluir apenas categorias criadas pelo usuário (não do catálogo)
+            if ( $is_catalog !== '1' ) {
+                $order = (int) get_term_meta( $term->term_id, '_vc_category_order', true );
+                $items[] = [
+                    'id'    => $term->term_id,
+                    'name'  => $term->name,
+                    'slug'  => $term->slug,
+                    'count' => $term->count,
+                    'order' => $order,
+                ];
+            }
         }
+
+        // Ordenar por ordem, depois por nome
+        usort( $items, function( $a, $b ) {
+            if ( $a['order'] !== $b['order'] ) {
+                return $a['order'] <=> $b['order'];
+            }
+            return strcasecmp( $a['name'], $b['name'] );
+        } );
 
         return new WP_REST_Response( $items, 200 );
     }
