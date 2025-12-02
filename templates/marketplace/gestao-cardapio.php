@@ -1450,9 +1450,24 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                     },
                 });
 
+                console.log('Resposta do endpoint store-groups:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Erro na resposta:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const data = await response.json();
-                if (!data.success || !data.items) {
-                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar itens.', 'vemcomer')); ?></p></div>';
+                console.log('Dados recebidos:', data);
+                
+                if (!data.success) {
+                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p>' + (data?.message || '<?php echo esc_js(__('Erro ao carregar itens.', 'vemcomer')); ?>') + '</p></div>';
+                    return;
+                }
+
+                if (!data.items || !Array.isArray(data.items)) {
+                    document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Formato de dados inválido.', 'vemcomer')); ?></p></div>';
                     return;
                 }
 
@@ -1480,7 +1495,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 document.getElementById('vcEditPricesItemsList').innerHTML = itemsHtml;
             } catch (e) {
                 console.error('Erro ao carregar itens:', e);
-                document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?></p></div>';
+                document.getElementById('vcEditPricesItemsList').innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao conectar com o servidor: ', 'vemcomer')); ?>' + e.message + '</p></div>';
             }
         };
 

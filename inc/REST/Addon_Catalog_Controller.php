@@ -639,6 +639,164 @@ class Addon_Catalog_Controller {
     }
 
     /**
+     * GET /wp-json/vemcomer/v1/addon-catalog/store-groups/{id}/items
+     * Retorna os itens de um grupo da loja (para edição de preços)
+     */
+    public function get_store_group_items( \WP_REST_Request $request ): \WP_REST_Response {
+        $group_id = (int) $request->get_param( 'id' );
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+                'items'   => [],
+            ], 404 );
+        }
+
+        // Verificar se o grupo pertence ao restaurante
+        $group = get_post( $group_id );
+        if ( ! $group || $group->post_type !== 'vc_product_modifier' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não encontrado.', 'vemcomer' ),
+                'items'   => [],
+            ], 404 );
+        }
+
+        $group_restaurant_id = (int) get_post_meta( $group_id, '_vc_restaurant_id', true );
+        if ( $group_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não pertence à sua loja.', 'vemcomer' ),
+                'items'   => [],
+            ], 403 );
+        }
+
+        // Buscar itens do grupo (apenas os itens, não o grupo principal)
+        $items = get_posts( [
+            'post_type'      => 'vc_product_modifier',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+            'meta_query'     => [
+                [
+                    'key'   => '_vc_group_id',
+                    'value' => $group_id,
+                ],
+                [
+                    'key'   => '_vc_restaurant_id',
+                    'value' => $restaurant_id,
+                ],
+            ],
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ] );
+
+        $items_data = [];
+        foreach ( $items as $item ) {
+            // Buscar preço do item (cada restaurante tem seu próprio preço)
+            $price = (float) get_post_meta( $item->ID, '_vc_price', true );
+            if ( $price <= 0 ) {
+                // Se não tiver preço definido, usar o preço padrão do catálogo (se houver)
+                $catalog_item_id = (int) get_post_meta( $item->ID, '_vc_catalog_item_id', true );
+                if ( $catalog_item_id ) {
+                    $price = (float) get_post_meta( $catalog_item_id, '_vc_default_price', true );
+                }
+            }
+
+            $items_data[] = [
+                'id'    => $item->ID,
+                'name'  => $item->post_title,
+                'price' => $price,
+            ];
+        }
+
+        return new \WP_REST_Response( [
+            'success' => true,
+            'group'   => [
+                'id'   => $group->ID,
+                'name' => $group->post_title,
+            ],
+            'items'   => $items_data,
+        ] );
+    }
+
+    /**
+     * PUT /wp-json/vemcomer/v1/addon-catalog/store-groups/{id}/items/prices
+     * Atualiza os preços dos itens de um grupo da loja (cada restaurante tem seus próprios preços)
+     */
+    public function update_store_group_items_prices( \WP_REST_Request $request ): \WP_REST_Response {
+        $group_id = (int) $request->get_param( 'id' );
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( $restaurant_id <= 0 ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Restaurante não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        // Verificar se o grupo pertence ao restaurante
+        $group = get_post( $group_id );
+        if ( ! $group || $group->post_type !== 'vc_product_modifier' ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não encontrado.', 'vemcomer' ),
+            ], 404 );
+        }
+
+        $group_restaurant_id = (int) get_post_meta( $group_id, '_vc_restaurant_id', true );
+        if ( $group_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não pertence à sua loja.', 'vemcomer' ),
+            ], 403 );
+        }
+
+        $body = $request->get_json_params();
+        if ( ! isset( $body['items'] ) || ! is_array( $body['items'] ) ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Dados inválidos.', 'vemcomer' ),
+            ], 400 );
+        }
+
+        $updated_count = 0;
+        foreach ( $body['items'] as $item_data ) {
+            $item_id = isset( $item_data['id'] ) ? (int) $item_data['id'] : 0;
+            $price   = isset( $item_data['price'] ) ? max( 0.0, (float) $item_data['price'] ) : 0.00;
+
+            if ( $item_id <= 0 ) {
+                continue;
+            }
+
+            // Verificar se o item pertence ao grupo e ao restaurante
+            $item = get_post( $item_id );
+            if ( ! $item || $item->post_type !== 'vc_product_modifier' ) {
+                continue;
+            }
+
+            $item_group_id = (int) get_post_meta( $item_id, '_vc_group_id', true );
+            $item_restaurant_id = (int) get_post_meta( $item_id, '_vc_restaurant_id', true );
+
+            // IMPORTANTE: Cada restaurante tem seus próprios preços (itens copiados para a loja)
+            if ( $item_group_id === $group_id && $item_restaurant_id === $restaurant_id ) {
+                // Atualizar apenas o preço do item desta loja (não afeta outras lojas)
+                update_post_meta( $item_id, '_vc_price', (string) $price );
+                $updated_count++;
+            }
+        }
+
+        return new \WP_REST_Response( [
+            'success'       => true,
+            'message'       => __( 'Preços atualizados com sucesso!', 'vemcomer' ),
+            'updated_count' => $updated_count,
+        ] );
+    }
+
+    /**
      * POST /wp-json/vemcomer/v1/addon-catalog/update-items
      * Força a atualização dos itens dos grupos (temporário para debug)
      */
