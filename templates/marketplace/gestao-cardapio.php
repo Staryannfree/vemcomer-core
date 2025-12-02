@@ -131,14 +131,37 @@ if ($restaurant instanceof WP_Post) {
             $modifier_titles = [];
 
             if (is_array($modifiers) && ! empty($modifiers)) {
-                $modifier_posts = get_posts([
-                    'post_type'      => 'vc_product_modifier',
-                    'post__in'       => array_map('absint', $modifiers),
-                    'posts_per_page' => -1,
-                ]);
+                // Filtrar valores vazios e garantir que são números
+                $modifier_ids = array_filter(array_map('absint', $modifiers), function($id) {
+                    return $id > 0;
+                });
+                
+                if (!empty($modifier_ids)) {
+                    $modifier_posts = get_posts([
+                        'post_type'      => 'vc_product_modifier',
+                        'post__in'       => $modifier_ids,
+                        'posts_per_page' => -1,
+                        'post_status'    => 'any', // Buscar mesmo se estiver em rascunho
+                    ]);
 
-                foreach ($modifier_posts as $mod) {
-                    $modifier_titles[] = $mod->post_title;
+                    foreach ($modifier_posts as $mod) {
+                        // Buscar apenas grupos principais (que não têm _vc_group_id ou são grupos)
+                        $parent_group_id = get_post_meta($mod->ID, '_vc_group_id', true);
+                        
+                        if (empty($parent_group_id)) {
+                            // É um grupo principal, mostrar o nome
+                            $modifier_titles[] = $mod->post_title;
+                        } else {
+                            // É um item, buscar o grupo pai
+                            $parent_group = get_post($parent_group_id);
+                            if ($parent_group) {
+                                // Adicionar o grupo apenas uma vez
+                                if (!in_array($parent_group->post_title, $modifier_titles, true)) {
+                                    $modifier_titles[] = $parent_group->post_title;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1247,7 +1270,11 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 console.log('Grupo vinculado com sucesso:', linkData);
                 alert('<?php echo esc_js(__('Grupo copiado e vinculado ao produto com sucesso!', 'vemcomer')); ?>');
                 closeAddonsModal();
-                window.location.reload(); // Recarregar para mostrar as mudanças
+                
+                // Forçar reload sem cache
+                setTimeout(function() {
+                    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+                }, 500);
             } catch (e) {
                 console.error('Erro ao copiar grupo:', e);
                 alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
