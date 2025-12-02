@@ -390,6 +390,15 @@ class Addon_Catalog_Controller {
             ], 404 );
         }
 
+        // Verificar se o grupo pertence ao restaurante
+        $group_restaurant_id = (int) get_post_meta( $group_id, '_vc_restaurant_id', true );
+        if ( $group_restaurant_id !== $restaurant_id ) {
+            return new \WP_REST_Response( [
+                'success' => false,
+                'message' => __( 'Grupo não pertence à sua loja.', 'vemcomer' ),
+            ], 403 );
+        }
+
         // Buscar todos os modificadores do grupo (itens que pertencem ao grupo)
         $group_modifiers = get_posts( [
             'post_type'      => 'vc_product_modifier',
@@ -400,16 +409,25 @@ class Addon_Catalog_Controller {
                     'key'   => '_vc_group_id',
                     'value' => $group_id,
                 ],
+                [
+                    'key'   => '_vc_restaurant_id',
+                    'value' => $restaurant_id,
+                ],
             ],
         ] );
 
-        // Adicionar o grupo principal também (se não estiver na lista)
-        $group_modifiers_ids = array_map( function( $m ) { return $m->ID; }, $group_modifiers );
-        if ( ! in_array( $group_id, $group_modifiers_ids, true ) ) {
-            $group_modifiers[] = $group_post;
+        // Criar array com todos os modificadores (grupo principal + itens)
+        $all_modifiers = [];
+        
+        // Adicionar o grupo principal primeiro
+        $all_modifiers[] = $group_post;
+        
+        // Adicionar todos os itens do grupo
+        foreach ( $group_modifiers as $modifier ) {
+            $all_modifiers[] = $modifier;
         }
 
-        if ( empty( $group_modifiers ) ) {
+        if ( empty( $all_modifiers ) ) {
             return new \WP_REST_Response( [
                 'success' => false,
                 'message' => __( 'Grupo não encontrado na sua loja.', 'vemcomer' ),
@@ -421,13 +439,25 @@ class Addon_Catalog_Controller {
         $current_modifiers = is_array( $current_modifiers ) ? $current_modifiers : [];
 
         $added_count = 0;
-        foreach ( $group_modifiers as $modifier ) {
+        $modifier_ids_to_add = [];
+        
+        foreach ( $all_modifiers as $modifier ) {
             $modifier_id = $modifier->ID;
+            
+            // Adicionar à lista se ainda não estiver vinculado
             if ( ! in_array( $modifier_id, $current_modifiers, true ) ) {
-                $current_modifiers[] = $modifier_id;
+                $modifier_ids_to_add[] = $modifier_id;
                 $added_count++;
+            }
+        }
 
-                // Atualizar meta reversa
+        // Atualizar meta do produto com todos os modificadores
+        if ( ! empty( $modifier_ids_to_add ) ) {
+            $current_modifiers = array_merge( $current_modifiers, $modifier_ids_to_add );
+            update_post_meta( $product_id, '_vc_menu_item_modifiers', $current_modifiers );
+
+            // Atualizar meta reversa em cada modificador
+            foreach ( $modifier_ids_to_add as $modifier_id ) {
                 $modifier_items = get_post_meta( $modifier_id, '_vc_modifier_menu_items', true );
                 $modifier_items = is_array( $modifier_items ) ? $modifier_items : [];
                 if ( ! in_array( $product_id, $modifier_items, true ) ) {
@@ -436,8 +466,6 @@ class Addon_Catalog_Controller {
                 }
             }
         }
-
-        update_post_meta( $product_id, '_vc_menu_item_modifiers', $current_modifiers );
 
         return new \WP_REST_Response( [
             'success'     => true,

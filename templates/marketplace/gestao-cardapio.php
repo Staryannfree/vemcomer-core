@@ -1235,6 +1235,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
 
                 const linkData = await linkResponse.json();
                 if (!linkData.success) {
+                    console.error('Erro ao vincular grupo:', linkData);
                     alert(linkData?.message || '<?php echo esc_js(__('Grupo copiado, mas erro ao vincular ao produto.', 'vemcomer')); ?>');
                     if (btn) {
                         btn.disabled = false;
@@ -1243,6 +1244,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                     return;
                 }
 
+                console.log('Grupo vinculado com sucesso:', linkData);
                 alert('<?php echo esc_js(__('Grupo copiado e vinculado ao produto com sucesso!', 'vemcomer')); ?>');
                 closeAddonsModal();
                 window.location.reload(); // Recarregar para mostrar as mudanças
