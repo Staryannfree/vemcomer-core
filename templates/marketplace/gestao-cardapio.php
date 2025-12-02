@@ -1696,7 +1696,7 @@ if ($restaurant instanceof WP_Post) {
             if (!productId) return;
 
             try {
-                const response = await fetch(`${restBase}?per_page=100`, {
+                const response = await fetch(`${restBase}?per_page=50`, {
                     headers: {
                         'X-WP-Nonce': restNonce,
                     },
@@ -2345,8 +2345,26 @@ if ($restaurant instanceof WP_Post) {
             container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando produtos...', 'vemcomer')); ?></p></div>';
 
             try {
-                // Usar o endpoint correto de menu-items que filtra por restaurante automaticamente
-                const response = await fetch(`${restBase}?per_page=100&_embed`, {
+                // Buscar restaurante atual do PHP para filtrar produtos
+                const restaurantId = <?php 
+                    $current_restaurant = null;
+                    if (is_user_logged_in()) {
+                        $user_id = get_current_user_id();
+                        $restaurant_id = (int) get_user_meta($user_id, 'vc_restaurant_id', true);
+                        if ($restaurant_id > 0) {
+                            $current_restaurant = get_post($restaurant_id);
+                        }
+                    }
+                    echo $current_restaurant ? $current_restaurant->ID : 'null';
+                ?>;
+                
+                if (!restaurantId) {
+                    throw new Error('Restaurante não encontrado');
+                }
+
+                // Usar o endpoint correto de menu-items com filtro por restaurante
+                // O endpoint aceita per_page máximo de 50
+                const response = await fetch(`${restBase}?per_page=50&restaurant_id=${restaurantId}`, {
                     headers: {
                         'X-WP-Nonce': restNonce,
                     },

@@ -45,9 +45,14 @@ class Menu_Items_Controller {
                     'required'          => false,
                     'default'           => 10,
                     'validate_callback' => function( $param ) {
-                        return is_numeric( $param ) && $param > 0 && $param <= 50;
+                        if ( empty( $param ) ) {
+                            return true; // Usa o default
+                        }
+                        return is_numeric( $param ) && $param > 0 && $param <= 100;
                     },
-                    'sanitize_callback' => 'absint',
+                    'sanitize_callback' => function( $param ) {
+                        return absint( $param );
+                    },
                 ],
             ],
         ] );
