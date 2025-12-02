@@ -6,9 +6,9 @@ Este sistema permite criar um catálogo global de grupos de adicionais que são 
 
 ## Estrutura de Dados
 
-### 1. Grupos de Adicionais do Catálogo (`vc_addon_catalog_group`)
+### 1. Grupos de Adicionais do Catálogo (`vc_addon_group`)
 
-**Custom Post Type:** `vc_addon_catalog_group`
+**Custom Post Type:** `vc_addon_group`
 
 **Campos:**
 - `post_title` - Nome do grupo (ex: "Adicionais de hambúrguer")
@@ -28,14 +28,14 @@ Este sistema permite criar um catálogo global de grupos de adicionais que são 
 - Tipo: Múltipla seleção
 - Min: 0, Max: 0 (ilimitado)
 
-### 2. Itens de Adicionais do Catálogo (`vc_addon_catalog_item`)
+### 2. Itens de Adicionais do Catálogo (`vc_addon_item`)
 
-**Custom Post Type:** `vc_addon_catalog_item`
+**Custom Post Type:** `vc_addon_item`
 
 **Campos:**
 - `post_title` - Nome do item (ex: "Queijo extra")
 - `post_content` - Descrição do item
-- `_vc_group_id` - ID do grupo ao qual pertence (FK para `vc_addon_catalog_group`)
+- `_vc_group_id` - ID do grupo ao qual pertence (FK para `vc_addon_group`)
 - `_vc_default_price` - Preço padrão sugerido (ex: "5.00")
 - `_vc_allow_quantity` - Se permite quantidade (`'1'` ou `'0'`)
 - `_vc_max_quantity` - Quantidade máxima (número)

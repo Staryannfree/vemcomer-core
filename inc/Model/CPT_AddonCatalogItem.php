@@ -11,7 +11,7 @@ namespace VC\Model;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class CPT_AddonCatalogItem {
-    public const SLUG = 'vc_addon_catalog_item';
+    public const SLUG = 'vc_addon_item';
 
     public function init(): void {
         add_action( 'init', [ $this, 'register_cpt' ] );
@@ -83,7 +83,7 @@ class CPT_AddonCatalogItem {
 
         // Buscar grupos disponíveis
         $groups = get_posts( [
-            'post_type'      => CPT_AddonCatalogGroup::SLUG,
+            'post_type'      => 'vc_addon_group',
             'posts_per_page' => -1,
             'post_status'    => 'publish',
             'orderby'        => 'title',

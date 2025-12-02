@@ -112,7 +112,7 @@ class Addon_Catalog_Controller {
 
         // Buscar grupos do catálogo que estão vinculados a essas categorias
         $groups_query = new \WP_Query( [
-            'post_type'      => 'vc_addon_catalog_group',
+            'post_type'      => 'vc_addon_group',
             'posts_per_page' => -1,
             'post_status'    => 'publish',
             'meta_query'     => [
@@ -159,7 +159,7 @@ class Addon_Catalog_Controller {
         $group_id = (int) $request->get_param( 'id' );
 
         $group = get_post( $group_id );
-        if ( ! $group || $group->post_type !== 'vc_addon_catalog_group' ) {
+        if ( ! $group || $group->post_type !== 'vc_addon_group' ) {
             return new \WP_REST_Response( [
                 'success' => false,
                 'message' => __( 'Grupo não encontrado.', 'vemcomer' ),
@@ -169,7 +169,7 @@ class Addon_Catalog_Controller {
 
         // Buscar itens do grupo
         $items_query = new \WP_Query( [
-            'post_type'      => 'vc_addon_catalog_item',
+            'post_type'      => 'vc_addon_item',
             'posts_per_page' => -1,
             'post_status'    => 'publish',
             'meta_query'     => [
@@ -233,7 +233,7 @@ class Addon_Catalog_Controller {
 
         // Buscar o grupo do catálogo
         $catalog_group = get_post( $group_id );
-        if ( ! $catalog_group || $catalog_group->post_type !== 'vc_addon_catalog_group' ) {
+        if ( ! $catalog_group || $catalog_group->post_type !== 'vc_addon_group' ) {
             return new \WP_REST_Response( [
                 'success' => false,
                 'message' => __( 'Grupo do catálogo não encontrado.', 'vemcomer' ),
@@ -267,7 +267,7 @@ class Addon_Catalog_Controller {
 
         // Buscar e copiar itens do grupo
         $catalog_items = get_posts( [
-            'post_type'      => 'vc_addon_catalog_item',
+            'post_type'      => 'vc_addon_item',
             'posts_per_page' => -1,
             'post_status'    => 'publish',
             'meta_query'     => [

@@ -11,7 +11,7 @@ namespace VC\Model;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class CPT_AddonCatalogGroup {
-    public const SLUG = 'vc_addon_catalog_group';
+    public const SLUG = 'vc_addon_group';
 
     public function init(): void {
         add_action( 'init', [ $this, 'register_cpt' ] );
