@@ -1153,8 +1153,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                             if (itemsData.success && itemsData.items && Array.isArray(itemsData.items) && itemsData.items.length > 0) {
                                 let itemsList = '<ul style="margin:0;padding-left:20px;font-size:13px;color:#666;list-style:disc;">';
                                 itemsData.items.forEach(item => {
-                                    const price = parseFloat(item.default_price || 0).toFixed(2).replace('.', ',');
-                                    itemsList += `<li style="margin-bottom:4px;">${escapeHtml(item.name)} <span style="color:#2d8659;font-weight:700;">R$ ${price}</span></li>`;
+                                    itemsList += `<li style="margin-bottom:4px;">${escapeHtml(item.name)}</li>`;
                                 });
                                 itemsList += '</ul>';
                                 itemsContainer.innerHTML = '<p style="font-size:12px;color:#666;margin:0 0 8px 0;font-weight:700;">Itens do grupo:</p>' + itemsList;

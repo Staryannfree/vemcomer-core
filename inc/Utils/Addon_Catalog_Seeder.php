@@ -127,15 +127,19 @@ class Addon_Catalog_Seeder {
             ] );
 
             $existing_item_names = [];
+            $existing_items_map = [];
             foreach ( $existing_items as $item ) {
                 $existing_item_names[] = $item->post_title;
+                $existing_items_map[ $item->post_title ] = $item->ID;
             }
 
-            // Adicionar apenas itens que não existem
+            // Adicionar apenas itens que não existem e atualizar preços dos existentes para 0.00
             if ( ! empty( $group_data['items'] ) ) {
                 $items_added = 0;
+                $items_updated = 0;
                 foreach ( $group_data['items'] as $item_data ) {
                     if ( ! in_array( $item_data['name'], $existing_item_names, true ) ) {
+                        // Criar novo item
                         $item_id = wp_insert_post( [
                             'post_type'    => 'vc_addon_item',
                             'post_title'   => $item_data['name'],
@@ -145,22 +149,28 @@ class Addon_Catalog_Seeder {
 
                         if ( ! is_wp_error( $item_id ) ) {
                             update_post_meta( $item_id, '_vc_group_id', $group_id );
-                            update_post_meta( $item_id, '_vc_default_price', $item_data['price'] ?? '0.00' );
+                            update_post_meta( $item_id, '_vc_default_price', '0.00' );
                             update_post_meta( $item_id, '_vc_allow_quantity', $item_data['allow_quantity'] ? '1' : '0' );
                             update_post_meta( $item_id, '_vc_max_quantity', $item_data['max_quantity'] ?? 1 );
                             update_post_meta( $item_id, '_vc_is_active', '1' );
                             $items_added++;
                         }
+                    } else {
+                        // Atualizar preço do item existente para 0.00
+                        $existing_item_id = $existing_items_map[ $item_data['name'] ];
+                        update_post_meta( $existing_item_id, '_vc_default_price', '0.00' );
+                        $items_updated++;
                     }
                 }
                 
                 // Log para debug
                 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
                     error_log( sprintf( 
-                        '[Addon Catalog] Grupo "%s" (ID: %d): %d itens adicionados, %d já existiam',
+                        '[Addon Catalog] Grupo "%s" (ID: %d): %d itens adicionados, %d preços atualizados, %d já existiam',
                         $group_data['name'],
                         $group_id,
                         $items_added,
+                        $items_updated,
                         count( $existing_item_names )
                     ) );
                 }
