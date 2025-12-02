@@ -294,7 +294,15 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
         .vc-btn-primary:disabled {background:#cbdad1;cursor:not-allowed;}
         .vc-btn-secondary {background:#fff;color:#6b7672;border:2px solid #eaf8f1;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:1em;}
         .vc-btn-secondary:hover {border-color:#cbdad1;}
-        @media (max-width:720px){.vc-form-row{grid-template-columns:1fr;}.vc-modal-content{max-width:95vw;}}
+        
+        /* Modal de Adicionais - Tabs */
+        .vc-addons-tabs {display:flex;gap:10px;margin-bottom:20px;border-bottom:2px solid #e0e0e0;}
+        .vc-addons-tab-btn {background:none;border:none;padding:12px 20px;font-weight:700;color:#6b7672;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;}
+        .vc-addons-tab-btn:hover {color:#2d8659;}
+        .vc-addons-tab-btn.active {color:#2d8659;border-bottom-color:#2d8659;}
+        .vc-addons-tab-content {min-height:200px;}
+        .vc-addon-group-card {margin-bottom:15px;}
+        @media (max-width:720px){.vc-form-row{grid-template-columns:1fr;}.vc-modal-content{max-width:95vw;}.vc-addons-tabs{flex-direction:column;}.vc-addons-tab-btn{border-bottom:none;border-left:3px solid transparent;padding-left:15px;}.vc-addons-tab-btn.active{border-left-color:#2d8659;border-bottom-color:transparent;}}
     </style>
 
     <?php
@@ -425,7 +433,7 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                                         <?php else : ?>
                                             <div class="modif-badge" style="background:#fff;color:#6b7672;border:1px dashed #cbdad1;"><?php echo esc_html__('Nenhum adicional', 'vemcomer'); ?></div>
                                         <?php endif; ?>
-                                        <div class="modif-edit" onclick="window.location.href='<?php echo esc_url(admin_url('edit.php?post_type=vc_product_modifier')); ?>'">+ <?php echo esc_html__('Adicionais', 'vemcomer'); ?></div>
+                                        <div class="modif-edit" onclick="openAddonsModal(<?php echo esc_attr($item_id); ?>)">+ <?php echo esc_html__('Adicionais', 'vemcomer'); ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -546,6 +554,94 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 <button type="submit" class="vc-btn-primary" id="vcSaveProductBtn"><?php echo esc_html__('Salvar Produto', 'vemcomer'); ?></button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal de Gerenciar Adicionais -->
+<div id="vcAddonsModal" class="vc-modal-overlay" style="display:none;">
+    <div class="vc-modal-content" style="max-width:800px;">
+        <div class="vc-modal-header">
+            <h2 class="vc-modal-title"><?php echo esc_html__('Gerenciar Adicionais', 'vemcomer'); ?></h2>
+            <button class="vc-modal-close" onclick="closeAddonsModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
+        </div>
+        <div class="vc-modal-body">
+            <input type="hidden" id="vcAddonsProductId" value="" />
+            
+            <!-- Tabs -->
+            <div class="vc-addons-tabs" style="display:flex;gap:10px;margin-bottom:20px;border-bottom:2px solid #e0e0e0;">
+                <button class="vc-addons-tab-btn active" data-tab="recommended" onclick="switchAddonsTab('recommended')">
+                    <?php echo esc_html__('Grupos Recomendados', 'vemcomer'); ?>
+                </button>
+                <button class="vc-addons-tab-btn" data-tab="custom" onclick="switchAddonsTab('custom')">
+                    <?php echo esc_html__('Criar Grupo Personalizado', 'vemcomer'); ?>
+                </button>
+                <button class="vc-addons-tab-btn" data-tab="current" onclick="switchAddonsTab('current')">
+                    <?php echo esc_html__('Adicionais Atuais', 'vemcomer'); ?>
+                </button>
+            </div>
+
+            <!-- Tab: Grupos Recomendados -->
+            <div id="vcAddonsTabRecommended" class="vc-addons-tab-content">
+                <p style="color:#666;margin-bottom:15px;"><?php echo esc_html__('Grupos sugeridos baseados nas categorias do seu restaurante:', 'vemcomer'); ?></p>
+                <div id="vcRecommendedGroups" style="display:grid;gap:15px;">
+                    <div style="text-align:center;padding:40px;color:#999;">
+                        <p><?php echo esc_html__('Carregando grupos recomendados...', 'vemcomer'); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Criar Grupo Personalizado -->
+            <div id="vcAddonsTabCustom" class="vc-addons-tab-content" style="display:none;">
+                <form id="vcCustomAddonForm" onsubmit="saveCustomAddonGroup(event)">
+                    <div class="vc-form-group">
+                        <label class="vc-form-label"><?php echo esc_html__('Nome do Grupo', 'vemcomer'); ?></label>
+                        <input type="text" id="vcCustomGroupName" class="vc-form-input" required placeholder="<?php echo esc_attr__('Ex: Molhos extras', 'vemcomer'); ?>" />
+                    </div>
+                    <div class="vc-form-group">
+                        <label class="vc-form-label"><?php echo esc_html__('Tipo de Seleção', 'vemcomer'); ?></label>
+                        <select id="vcCustomSelectionType" class="vc-form-select">
+                            <option value="single"><?php echo esc_html__('Seleção única', 'vemcomer'); ?></option>
+                            <option value="multiple" selected><?php echo esc_html__('Múltipla seleção', 'vemcomer'); ?></option>
+                        </select>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div class="vc-form-group">
+                            <label class="vc-form-label"><?php echo esc_html__('Seleção Mínima', 'vemcomer'); ?></label>
+                            <input type="number" id="vcCustomMinSelect" class="vc-form-input" min="0" value="0" />
+                        </div>
+                        <div class="vc-form-group">
+                            <label class="vc-form-label"><?php echo esc_html__('Seleção Máxima', 'vemcomer'); ?></label>
+                            <input type="number" id="vcCustomMaxSelect" class="vc-form-input" min="0" value="0" />
+                            <small style="color:#666;"><?php echo esc_html__('0 = ilimitado', 'vemcomer'); ?></small>
+                        </div>
+                    </div>
+                    <div class="vc-form-group">
+                        <div class="vc-form-checkbox-group">
+                            <input type="checkbox" id="vcCustomIsRequired" class="vc-form-checkbox" />
+                            <label for="vcCustomIsRequired" class="vc-form-label" style="margin:0;cursor:pointer;"><?php echo esc_html__('Obrigatório (cliente deve selecionar pelo menos uma opção)', 'vemcomer'); ?></label>
+                        </div>
+                    </div>
+                    <div id="vcCustomAddonItems" style="margin-top:20px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <label class="vc-form-label"><?php echo esc_html__('Itens do Grupo', 'vemcomer'); ?></label>
+                            <button type="button" class="vc-btn-secondary" onclick="addCustomAddonItem()" style="padding:5px 15px;font-size:14px;">+ <?php echo esc_html__('Adicionar Item', 'vemcomer'); ?></button>
+                        </div>
+                        <div id="vcCustomItemsList"></div>
+                    </div>
+                    <div class="vc-modal-footer" style="margin-top:20px;padding-top:20px;border-top:1px solid #e0e0e0;">
+                        <button type="button" class="vc-btn-secondary" onclick="closeAddonsModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
+                        <button type="submit" class="vc-btn-primary"><?php echo esc_html__('Salvar Grupo', 'vemcomer'); ?></button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab: Adicionais Atuais -->
+            <div id="vcAddonsTabCurrent" class="vc-addons-tab-content" style="display:none;">
+                <div id="vcCurrentAddons">
+                    <p style="color:#666;"><?php echo esc_html__('Carregando adicionais vinculados a este produto...', 'vemcomer'); ?></p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -950,6 +1046,182 @@ $stats['categories'] = is_array($categories_for_view) ? count($categories_for_vi
                 btn.textContent = originalText;
             }
         };
+
+        // Modal de Adicionais
+        const addonCatalogBase = '<?php echo esc_js(rest_url('vemcomer/v1/addon-catalog')); ?>';
+        let currentProductIdForAddons = null;
+        let customAddonItemCount = 0;
+
+        window.openAddonsModal = function(productId) {
+            currentProductIdForAddons = productId;
+            document.getElementById('vcAddonsProductId').value = productId;
+            document.getElementById('vcAddonsModal').style.display = 'flex';
+            switchAddonsTab('recommended');
+            loadRecommendedGroups();
+        };
+
+        window.closeAddonsModal = function() {
+            document.getElementById('vcAddonsModal').style.display = 'none';
+            currentProductIdForAddons = null;
+            customAddonItemCount = 0;
+            document.getElementById('vcCustomItemsList').innerHTML = '';
+        };
+
+        window.switchAddonsTab = function(tab) {
+            // Esconder todos os tabs
+            document.querySelectorAll('.vc-addons-tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.querySelectorAll('.vc-addons-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar tab selecionado
+            const tabId = 'vcAddonsTab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+            if (tab === 'recommended') {
+                loadRecommendedGroups();
+            } else if (tab === 'current') {
+                loadCurrentAddons();
+            }
+        };
+
+        async function loadRecommendedGroups() {
+            const container = document.getElementById('vcRecommendedGroups');
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando grupos recomendados...', 'vemcomer')); ?></p></div>';
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/recommended-groups`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success || !data.groups || data.groups.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhum grupo recomendado encontrado para seu restaurante.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.groups.forEach(group => {
+                    const groupCard = document.createElement('div');
+                    groupCard.className = 'vc-addon-group-card';
+                    groupCard.style.cssText = 'border:1px solid #e0e0e0;border-radius:8px;padding:15px;background:#fff;';
+                    groupCard.innerHTML = `
+                        <h3 style="margin:0 0 10px 0;font-size:16px;">${escapeHtml(group.name)}</h3>
+                        ${group.description ? `<p style="color:#666;font-size:14px;margin:0 0 15px 0;">${escapeHtml(group.description)}</p>` : ''}
+                        <div style="display:flex;gap:10px;align-items:center;margin-bottom:15px;">
+                            <span style="font-size:12px;color:#999;">Tipo: ${group.selection_type === 'single' ? 'Seleção única' : 'Múltipla seleção'}</span>
+                            ${group.is_required ? '<span style="font-size:12px;color:#d32f2f;">Obrigatório</span>' : ''}
+                        </div>
+                        <button onclick="copyGroupToStore(${group.id})" class="vc-btn-primary" style="width:100%;padding:10px;">
+                            <?php echo esc_js(__('Usar este grupo', 'vemcomer')); ?>
+                        </button>
+                    `;
+                    container.appendChild(groupCard);
+                });
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar grupos recomendados.', 'vemcomer')); ?></p></div>';
+            }
+        }
+
+        async function copyGroupToStore(groupId) {
+            if (!confirm('<?php echo esc_js(__('Deseja copiar este grupo para sua loja?', 'vemcomer')); ?>')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${addonCatalogBase}/groups/${groupId}/copy-to-store`, {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    alert(data?.message || '<?php echo esc_js(__('Erro ao copiar grupo.', 'vemcomer')); ?>');
+                    return;
+                }
+
+                alert('<?php echo esc_js(__('Grupo copiado com sucesso! Agora você pode vinculá-lo ao produto.', 'vemcomer')); ?>');
+                loadRecommendedGroups();
+            } catch (e) {
+                console.error(e);
+                alert('<?php echo esc_js(__('Erro ao conectar com o servidor.', 'vemcomer')); ?>');
+            }
+        }
+
+        window.addCustomAddonItem = function() {
+            customAddonItemCount++;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'vc-custom-addon-item';
+            itemDiv.style.cssText = 'display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px;padding:15px;background:#f5f5f5;border-radius:6px;';
+            itemDiv.innerHTML = `
+                <div>
+                    <label class="vc-form-label" style="font-size:12px;"><?php echo esc_js(__('Nome do Item', 'vemcomer')); ?></label>
+                    <input type="text" class="vc-form-input vc-custom-item-name" placeholder="<?php echo esc_attr__('Ex: Queijo extra', 'vemcomer'); ?>" required />
+                </div>
+                <div>
+                    <label class="vc-form-label" style="font-size:12px;"><?php echo esc_js(__('Preço (R$)', 'vemcomer')); ?></label>
+                    <input type="number" class="vc-form-input vc-custom-item-price" step="0.01" min="0" value="0.00" required />
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" style="padding:8px 12px;background:#d32f2f;color:#fff;border:none;border-radius:4px;cursor:pointer;">×</button>
+            `;
+            document.getElementById('vcCustomItemsList').appendChild(itemDiv);
+        };
+
+        window.saveCustomAddonGroup = async function(e) {
+            e.preventDefault();
+            const productId = currentProductIdForAddons;
+            if (!productId) {
+                alert('<?php echo esc_js(__('Produto não identificado.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const groupName = document.getElementById('vcCustomGroupName').value.trim();
+            if (!groupName) {
+                alert('<?php echo esc_js(__('Digite o nome do grupo.', 'vemcomer')); ?>');
+                return;
+            }
+
+            const items = [];
+            document.querySelectorAll('.vc-custom-addon-item').forEach(itemDiv => {
+                const name = itemDiv.querySelector('.vc-custom-item-name').value.trim();
+                const price = parseFloat(itemDiv.querySelector('.vc-custom-item-price').value) || 0;
+                if (name) {
+                    items.push({ name, price });
+                }
+            });
+
+            if (items.length === 0) {
+                alert('<?php echo esc_js(__('Adicione pelo menos um item ao grupo.', 'vemcomer')); ?>');
+                return;
+            }
+
+            // TODO: Implementar criação de grupo personalizado via REST API
+            alert('<?php echo esc_js(__('Funcionalidade de criar grupo personalizado será implementada em breve.', 'vemcomer')); ?>');
+        };
+
+        async function loadCurrentAddons() {
+            const container = document.getElementById('vcCurrentAddons');
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Carregando adicionais...', 'vemcomer')); ?></p></div>';
+
+            // TODO: Buscar adicionais vinculados ao produto via REST API
+            setTimeout(() => {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p><?php echo esc_js(__('Nenhum adicional vinculado a este produto ainda.', 'vemcomer')); ?></p></div>';
+            }, 500);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     });
 </script>
 
