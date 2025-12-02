@@ -86,6 +86,11 @@ class Addon_Catalog_Seeder {
      * Atualiza os itens dos grupos existentes (para adicionar itens aos grupos já criados)
      */
     public static function update_group_items(): void {
+        // Não executar durante ativação/desativação de plugins
+        if ( defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+            return;
+        }
+        
         if ( ! post_type_exists( 'vc_addon_group' ) || ! post_type_exists( 'vc_addon_item' ) ) {
             return;
         }

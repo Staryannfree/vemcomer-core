@@ -265,9 +265,14 @@ add_action( 'init', function () {
         \VC\Utils\Addon_Catalog_Seeder::seed();
     }
     
-    // Sempre atualizar itens dos grupos existentes (adiciona itens aos grupos já criados)
-    if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
-        \VC\Utils\Addon_Catalog_Seeder::update_group_items();
+    // Atualizar itens dos grupos existentes apenas uma vez (adiciona itens aos grupos já criados)
+    // Executar apenas em requisições admin normais, não durante ativação
+    if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) && is_admin() && ! wp_doing_ajax() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+        $update_flag = get_option( 'vemcomer_addon_items_updated', false );
+        if ( ! $update_flag && class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
+            \VC\Utils\Addon_Catalog_Seeder::update_group_items();
+            update_option( 'vemcomer_addon_items_updated', true );
+        }
     }
 }, 20 );
 
