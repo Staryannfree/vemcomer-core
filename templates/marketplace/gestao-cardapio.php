@@ -549,13 +549,34 @@ if ($restaurant instanceof WP_Post) {
 
 <!-- Modal de Adicionar Categoria -->
 <div id="vcAddCategoryModal" class="vc-modal-overlay">
-    <div class="vc-modal-content">
+    <div class="vc-modal-content" style="max-width:700px;">
         <div class="vc-modal-header">
             <h2 class="vc-modal-title"><?php echo esc_html__('Adicionar Nova Categoria', 'vemcomer'); ?></h2>
             <button class="vc-modal-close" onclick="closeAddCategoryModal()" aria-label="<?php echo esc_attr__('Fechar', 'vemcomer'); ?>">×</button>
         </div>
-        <form id="vcAddCategoryForm" onsubmit="saveNewCategory(event)">
-            <div class="vc-modal-body">
+        <div class="vc-modal-body">
+            <!-- Seção: Categorias Recomendadas -->
+            <div id="vcRecommendedCategoriesSection" style="margin-bottom:30px;">
+                <h3 style="font-size:16px;font-weight:700;color:#2d8659;margin-bottom:12px;">
+                    <?php echo esc_html__('✨ Categorias Recomendadas', 'vemcomer'); ?>
+                </h3>
+                <p style="font-size:13px;color:#6b7672;margin-bottom:15px;">
+                    <?php echo esc_html__('Baseadas no tipo do seu restaurante. Clique para criar rapidamente:', 'vemcomer'); ?>
+                </p>
+                <div id="vcRecommendedCategoriesList" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:10px;margin-bottom:20px;">
+                    <div style="text-align:center;padding:20px;color:#999;">
+                        <p><?php echo esc_html__('Carregando categorias...', 'vemcomer'); ?></p>
+                    </div>
+                </div>
+                <div style="border-top:1px solid #e0e0e0;padding-top:20px;margin-top:20px;">
+                    <p style="font-size:13px;color:#6b7672;margin-bottom:15px;font-weight:600;">
+                        <?php echo esc_html__('Ou crie uma categoria personalizada:', 'vemcomer'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Formulário: Criar Categoria Personalizada -->
+            <form id="vcAddCategoryForm" onsubmit="saveNewCategory(event)">
                 <div class="vc-form-group">
                     <label class="vc-form-label"><?php echo esc_html__('Nome da Categoria *', 'vemcomer'); ?></label>
                     <input type="text" id="vcCategoryName" class="vc-form-input" required placeholder="<?php echo esc_attr__('Ex: Entradas, Pratos Principais, Bebidas', 'vemcomer'); ?>" />
@@ -575,12 +596,12 @@ if ($restaurant instanceof WP_Post) {
                         <img id="vcCategoryImagePreview" class="vc-image-preview" alt="" />
                     </div>
                 </div>
-            </div>
-            <div class="vc-modal-footer">
-                <button type="button" class="vc-btn-secondary" onclick="closeAddCategoryModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
-                <button type="submit" class="vc-btn-primary" id="vcSaveCategoryBtn"><?php echo esc_html__('Salvar Categoria', 'vemcomer'); ?></button>
-            </div>
-        </form>
+            </form>
+        </div>
+        <div class="vc-modal-footer">
+            <button type="button" class="vc-btn-secondary" onclick="closeAddCategoryModal()"><?php echo esc_html__('Cancelar', 'vemcomer'); ?></button>
+            <button type="submit" form="vcAddCategoryForm" class="vc-btn-primary" id="vcSaveCategoryBtn"><?php echo esc_html__('Salvar Categoria', 'vemcomer'); ?></button>
+        </div>
     </div>
 </div>
 
@@ -1202,9 +1223,79 @@ if ($restaurant instanceof WP_Post) {
         // Modal de adicionar categoria
         let categoryImageData = null;
 
+        // Função auxiliar para escapar HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Carregar categorias recomendadas
+        async function loadRecommendedMenuCategories() {
+            const container = document.getElementById('vcRecommendedCategoriesList');
+            if (!container) return;
+            
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;"><p><?php echo esc_js(__('Carregando categorias...', 'vemcomer')); ?></p></div>';
+
+            try {
+                const menuCategoriesBase = '<?php echo esc_js(rest_url('vemcomer/v1')); ?>';
+                const response = await fetch(`${menuCategoriesBase}/menu-categories/recommended`, {
+                    headers: {
+                        'X-WP-Nonce': restNonce,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar categorias recomendadas');
+                }
+
+                const data = await response.json();
+                
+                if (!data.success || !data.categories || data.categories.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;"><p><?php echo esc_js(__('Nenhuma categoria recomendada encontrada.', 'vemcomer')); ?></p></div>';
+                    return;
+                }
+
+                let categoriesHtml = '';
+                data.categories.forEach(category => {
+                    const categoryNameEscaped = escapeHtml(category.name);
+                    categoriesHtml += `
+                        <button type="button" 
+                                class="vc-recommended-category-btn" 
+                                onclick="useRecommendedCategory('${categoryNameEscaped.replace(/'/g, "\\'")}', ${category.order})"
+                                style="background:#f8f9fa;border:2px solid #2d8659;border-radius:8px;padding:12px 16px;cursor:pointer;transition:all 0.2s;text-align:center;font-weight:600;color:#2d8659;font-size:14px;"
+                                onmouseover="this.style.background='#2d8659';this.style.color='#fff';"
+                                onmouseout="this.style.background='#f8f9fa';this.style.color='#2d8659';">
+                            ${categoryNameEscaped}
+                        </button>
+                    `;
+                });
+
+                container.innerHTML = categoriesHtml;
+            } catch (e) {
+                console.error('Erro ao carregar categorias recomendadas:', e);
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#d32f2f;"><p><?php echo esc_js(__('Erro ao carregar categorias recomendadas.', 'vemcomer')); ?></p></div>';
+            }
+        }
+
+        // Usar categoria recomendada (preencher formulário)
+        window.useRecommendedCategory = function(categoryName, categoryOrder) {
+            // Preencher o formulário
+            document.getElementById('vcCategoryName').value = categoryName;
+            document.getElementById('vcCategoryOrder').value = categoryOrder || 0;
+            
+            // Focar no campo de nome
+            document.getElementById('vcCategoryName').focus();
+            
+            // Scroll suave até o formulário
+            document.getElementById('vcAddCategoryForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
         window.openAddCategoryModal = function() {
             document.getElementById('vcAddCategoryModal').classList.add('active');
             document.body.style.overflow = 'hidden';
+            // Carregar categorias recomendadas
+            loadRecommendedMenuCategories();
         };
 
         window.closeAddCategoryModal = function() {

@@ -265,6 +265,15 @@ add_action( 'init', function () {
         \VC\Utils\Addon_Catalog_Seeder::seed();
     }
     
+    // Seed automático de categorias de cardápio sugeridas
+    if ( class_exists( '\\VC\\Utils\\Menu_Category_Catalog_Seeder' ) && taxonomy_exists( 'vc_menu_category' ) && taxonomy_exists( 'vc_cuisine' ) ) {
+        $menu_categories_seeded = get_option( 'vemcomer_menu_categories_seeded' );
+        if ( ! $menu_categories_seeded ) {
+            \VC\Utils\Menu_Category_Catalog_Seeder::seed();
+            update_option( 'vemcomer_menu_categories_seeded', true );
+        }
+    }
+    
     // Atualizar itens dos grupos existentes apenas uma vez (adiciona itens aos grupos já criados)
     // Executar apenas em requisições admin normais, não durante ativação
     if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) && is_admin() && ! wp_doing_ajax() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {

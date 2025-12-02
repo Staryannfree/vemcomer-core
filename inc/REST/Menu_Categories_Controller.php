@@ -35,6 +35,13 @@ class Menu_Categories_Controller {
             'callback'            => [ $this, 'get_categories' ],
             'permission_callback' => '__return_true',
         ] );
+
+        // GET: Categorias recomendadas baseadas no tipo de restaurante
+        register_rest_route( 'vemcomer/v1', '/menu-categories/recommended', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'get_recommended_categories' ],
+            'permission_callback' => [ $this, 'can_manage_categories' ],
+        ] );
     }
 
     /**
@@ -180,6 +187,129 @@ class Menu_Categories_Controller {
             'name'    => $name,
             'message' => __( 'Categoria criada com sucesso!', 'vemcomer' ),
         ], 201 );
+    }
+
+    /**
+     * GET /wp-json/vemcomer/v1/menu-categories/recommended
+     * Retorna categorias de cardápio recomendadas baseadas no tipo de restaurante do usuário
+     */
+    public function get_recommended_categories( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        if ( ! is_user_logged_in() ) {
+            return new WP_Error(
+                'vc_not_logged_in',
+                __( 'Você precisa estar logado para ver categorias recomendadas.', 'vemcomer' ),
+                [ 'status' => 401 ]
+            );
+        }
+
+        // Buscar restaurante do usuário atual
+        $user_id = get_current_user_id();
+        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+
+        if ( ! $restaurant_id ) {
+            // Tentar buscar pelo post_author
+            $restaurants = get_posts( [
+                'post_type'      => 'vc_restaurant',
+                'author'         => $user_id,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+            ] );
+
+            if ( ! empty( $restaurants ) ) {
+                $restaurant_id = $restaurants[0];
+            }
+        }
+
+        if ( ! $restaurant_id ) {
+            return new WP_Error(
+                'vc_no_restaurant',
+                __( 'Nenhum restaurante encontrado para este usuário.', 'vemcomer' ),
+                [ 'status' => 404 ]
+            );
+        }
+
+        // Buscar categorias de restaurante (vc_cuisine) associadas ao restaurante
+        $cuisine_terms = wp_get_post_terms( $restaurant_id, 'vc_cuisine', [ 'fields' => 'ids' ] );
+
+        if ( is_wp_error( $cuisine_terms ) || empty( $cuisine_terms ) ) {
+            // Se não tiver categorias, retornar categorias genéricas (sem vínculo específico)
+            $cuisine_ids = [];
+        } else {
+            $cuisine_ids = array_map( 'intval', $cuisine_terms );
+        }
+
+        // Buscar todas as categorias de cardápio do catálogo
+        $catalog_categories = get_terms( [
+            'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
+            'hide_empty' => false,
+            'meta_query' => [
+                [
+                    'key'     => '_vc_is_catalog_category',
+                    'value'   => '1',
+                    'compare' => '=',
+                ],
+            ],
+        ] );
+
+        if ( is_wp_error( $catalog_categories ) || empty( $catalog_categories ) ) {
+            return new WP_REST_Response( [
+                'success' => true,
+                'categories' => [],
+                'message' => __( 'Nenhuma categoria recomendada encontrada.', 'vemcomer' ),
+            ], 200 );
+        }
+
+        // Filtrar categorias recomendadas baseadas nas categorias do restaurante
+        $recommended = [];
+        $generic = []; // Categorias genéricas (sem vínculo específico)
+
+        foreach ( $catalog_categories as $category ) {
+            $recommended_for = get_term_meta( $category->term_id, '_vc_recommended_for_cuisines', true );
+            
+            if ( empty( $recommended_for ) ) {
+                // Categoria genérica (sem vínculo específico)
+                $generic[] = [
+                    'id'    => $category->term_id,
+                    'name'  => $category->name,
+                    'slug'  => $category->slug,
+                    'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                ];
+            } else {
+                $recommended_cuisine_ids = json_decode( $recommended_for, true );
+                
+                if ( is_array( $recommended_cuisine_ids ) ) {
+                    // Verificar se alguma categoria do restaurante está na lista de recomendadas
+                    $intersection = array_intersect( $cuisine_ids, $recommended_cuisine_ids );
+                    
+                    if ( ! empty( $intersection ) ) {
+                        $recommended[] = [
+                            'id'    => $category->term_id,
+                            'name'  => $category->name,
+                            'slug'  => $category->slug,
+                            'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Ordenar por ordem
+        usort( $recommended, function( $a, $b ) {
+            return $a['order'] <=> $b['order'];
+        } );
+
+        usort( $generic, function( $a, $b ) {
+            return $a['order'] <=> $b['order'];
+        } );
+
+        // Combinar: primeiro as recomendadas, depois as genéricas
+        $all_categories = array_merge( $recommended, $generic );
+
+        return new WP_REST_Response( [
+            'success'    => true,
+            'categories' => $all_categories,
+            'count'      => count( $all_categories ),
+        ], 200 );
     }
 }
 
