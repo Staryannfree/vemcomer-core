@@ -420,6 +420,7 @@ class Addon_Catalog_Controller {
 
         // Copiar configurações do grupo
         update_post_meta( $store_group_id, '_vc_restaurant_id', $restaurant_id );
+        update_post_meta( $store_group_id, '_vc_group_id', '0' ); // Marcar como grupo principal
         update_post_meta( $store_group_id, '_vc_selection_type', get_post_meta( $group_id, '_vc_selection_type', true ) ?: 'multiple' );
         update_post_meta( $store_group_id, '_vc_min_select', get_post_meta( $group_id, '_vc_min_select', true ) );
         update_post_meta( $store_group_id, '_vc_max_select', get_post_meta( $group_id, '_vc_max_select', true ) );
@@ -1436,24 +1437,46 @@ class Addon_Catalog_Controller {
         }
 
         $copied_groups = [];
+        $errors = [];
+        
         foreach ( $group_ids as $catalog_group_id ) {
-            // Criar uma requisição interna para copiar o grupo
+            // Criar uma requisição REST mock para passar para copy_group_to_store
             $copy_request = new \WP_REST_Request( 'POST', '/vemcomer/v1/addon-catalog/groups/' . $catalog_group_id . '/copy-to-store' );
-            $copy_result = $this->copy_group_to_store( $copy_request );
-            $copy_data = $copy_result->get_data();
+            $copy_request->set_url_params( [ 'id' => $catalog_group_id ] );
+            $copy_request->set_method( 'POST' );
+            
+            try {
+                $copy_result = $this->copy_group_to_store( $copy_request );
+                $copy_data = $copy_result->get_data();
 
-            if ( $copy_data['success'] && isset( $copy_data['group_id'] ) ) {
-                $copied_groups[] = $copy_data['group_id'];
+                if ( $copy_data['success'] && isset( $copy_data['group_id'] ) ) {
+                    $copied_groups[] = $copy_data['group_id'];
+                } else {
+                    $error_msg = isset( $copy_data['message'] ) ? $copy_data['message'] : 'Erro desconhecido';
+                    $errors[] = sprintf( __( 'Grupo ID %d: %s', 'vemcomer' ), $catalog_group_id, $error_msg );
+                }
+            } catch ( \Exception $e ) {
+                $errors[] = sprintf( __( 'Grupo ID %d: %s', 'vemcomer' ), $catalog_group_id, $e->getMessage() );
+                continue;
             }
         }
 
-        // Marcar onboarding como completo
-        update_user_meta( $user_id, 'vc_addons_onboarding_completed', '1' );
+        // Marcar onboarding como completo apenas se pelo menos um grupo foi copiado
+        if ( count( $copied_groups ) > 0 ) {
+            update_user_meta( $user_id, 'vc_addons_onboarding_completed', '1' );
+        }
+
+        $message = sprintf( __( '%d grupo(s) configurado(s) com sucesso!', 'vemcomer' ), count( $copied_groups ) );
+        
+        if ( ! empty( $errors ) ) {
+            $message .= ' ' . __( 'Alguns grupos não puderam ser configurados:', 'vemcomer' ) . ' ' . implode( ', ', $errors );
+        }
 
         return new \WP_REST_Response( [
-            'success'      => true,
-            'message'      => sprintf( __( '%d grupo(s) configurado(s) com sucesso!', 'vemcomer' ), count( $copied_groups ) ),
+            'success'      => count( $copied_groups ) > 0,
+            'message'      => $message,
             'groups_count' => count( $copied_groups ),
+            'errors'       => $errors,
         ] );
     }
 

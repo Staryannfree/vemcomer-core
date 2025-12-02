@@ -1345,6 +1345,8 @@ if ($restaurant instanceof WP_Post) {
             btn.textContent = '<?php echo esc_js(__('Configurando...', 'vemcomer')); ?>';
 
             try {
+                console.log('Grupos selecionados para onboarding:', onboardingSelectedGroups);
+                
                 const response = await fetch(`${addonCatalogBase}/setup-onboarding`, {
                     method: 'POST',
                     headers: {
@@ -1357,6 +1359,7 @@ if ($restaurant instanceof WP_Post) {
                 });
 
                 const data = await response.json();
+                console.log('Resposta do onboarding:', data);
 
                 if (!data.success) {
                     alert(data?.message || '<?php echo esc_js(__('Erro ao configurar grupos.', 'vemcomer')); ?>');
