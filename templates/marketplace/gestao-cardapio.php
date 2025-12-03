@@ -301,6 +301,13 @@ if ($restaurant instanceof WP_Post && !empty($menu_categories)) {
     $all_restaurant_categories_count = count($menu_categories);
 }
 $stats['categories'] = $all_restaurant_categories_count;
+
+// Verificar se precisa de onboarding principal
+$onboarding_status = null;
+if ( $restaurant instanceof WP_Post && class_exists( '\\VC\\Utils\\Onboarding_Helper' ) ) {
+    $onboarding_status = \VC\Utils\Onboarding_Helper::get_onboarding_status( $restaurant->ID );
+}
+$needs_onboarding = $onboarding_status && ! empty( $onboarding_status['needs_onboarding'] );
 ?>
 
 <?php
@@ -446,7 +453,24 @@ if ($restaurant instanceof WP_Post) {
     </div>
     <?php endif; ?>
 
-    <div class="menu-top">
+    <?php if ( $needs_onboarding ) : ?>
+        <?php
+        // Incluir o template do wizard de onboarding
+        $wizard_path = defined( 'VEMCOMER_CORE_DIR' ) 
+            ? VEMCOMER_CORE_DIR . 'templates/marketplace/onboarding-wizard.php'
+            : plugin_dir_path( __FILE__ ) . '../templates/marketplace/onboarding-wizard.php';
+        if ( file_exists( $wizard_path ) ) {
+            include $wizard_path;
+        }
+        ?>
+        <style>
+            .menu-gestao-container > *:not(#vcOnboardingWizard) {
+                display: none !important;
+            }
+        </style>
+    <?php endif; ?>
+
+    <div class="menu-top" <?php echo $needs_onboarding ? 'style="display:none;"' : ''; ?>>
         <div class="menu-title"><?php echo esc_html__('Gestão de Cardápio', 'vemcomer'); ?></div>
         <button class="menu-btn" onclick="openAddProductModal()">+ <?php echo esc_html__('Adicionar Produto', 'vemcomer'); ?></button>
         <button class="menu-btn secondary" onclick="openAddCategoryModal()">+ <?php echo esc_html__('Categoria', 'vemcomer'); ?></button>

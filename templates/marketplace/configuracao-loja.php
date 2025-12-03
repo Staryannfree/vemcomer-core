@@ -16,8 +16,26 @@ require_once __DIR__ . '/helpers.php';
 $restaurant      = vc_marketplace_current_restaurant();
 $config_prefill  = vc_marketplace_collect_restaurant_data( $restaurant );
 
+// Verificar se precisa de onboarding principal
+$onboarding_status = null;
+if ( $restaurant instanceof WP_Post && class_exists( '\\VC\\Utils\\Onboarding_Helper' ) ) {
+    $onboarding_status = \VC\Utils\Onboarding_Helper::get_onboarding_status( $restaurant->ID );
+}
+$needs_onboarding = $onboarding_status && ! empty( $onboarding_status['needs_onboarding'] );
+
 if (! $vc_marketplace_inline) {
     get_header();
+}
+
+// Incluir wizard se necessário
+if ( $needs_onboarding ) {
+    $wizard_path = defined( 'VEMCOMER_CORE_DIR' ) 
+        ? VEMCOMER_CORE_DIR . 'templates/marketplace/onboarding-wizard.php'
+        : plugin_dir_path( __FILE__ ) . '../templates/marketplace/onboarding-wizard.php';
+    if ( file_exists( $wizard_path ) ) {
+        include $wizard_path;
+    }
+    echo '<style>.container { display: none !important; }</style>';
 }
 
 vc_marketplace_render_static_template('configuracao-loja.html');
