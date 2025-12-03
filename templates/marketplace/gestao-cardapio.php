@@ -1052,6 +1052,37 @@ if ($restaurant instanceof WP_Post) {
                         console.log('[DEBUG] Atualizando DOM: valor antigo =', statNode.textContent, ', valor novo =', newValue);
                         statNode.textContent = newValue;
                         console.log('[DEBUG] DOM atualizado. Valor atual no elemento:', statNode.textContent);
+                        
+                        // Adicionar MutationObserver para detectar quando o valor é alterado
+                        if (!window.categoriesObserverAdded) {
+                            window.categoriesObserverAdded = true;
+                            const observer = new MutationObserver(function(mutations) {
+                                mutations.forEach(function(mutation) {
+                                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                                        const currentValue = statNode.textContent.trim();
+                                        console.warn('[DEBUG] ⚠️ VALOR DE CATEGORIAS FOI ALTERADO! Novo valor:', currentValue);
+                                        console.trace('[DEBUG] Stack trace da alteração:');
+                                        
+                                        // Se voltou para 0, tentar corrigir novamente
+                                        if (currentValue === '0' && newValue > 0) {
+                                            console.log('[DEBUG] Tentando corrigir valor de volta para', newValue);
+                                            setTimeout(() => {
+                                                statNode.textContent = newValue;
+                                                console.log('[DEBUG] Valor corrigido para', newValue);
+                                            }, 100);
+                                        }
+                                    }
+                                });
+                            });
+                            
+                            observer.observe(statNode, {
+                                childList: true,
+                                characterData: true,
+                                subtree: true
+                            });
+                            
+                            console.log('[DEBUG] MutationObserver adicionado ao elemento de categorias');
+                        }
                     } else {
                         console.warn('[DEBUG] Elemento [data-stat="categories"] não encontrado no DOM');
                     }
