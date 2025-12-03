@@ -994,13 +994,11 @@ if ($restaurant instanceof WP_Post) {
                 if (img && (!img.getAttribute('src') || img.getAttribute('src') === '')) { noThumb++; }
             });
 
-            // Contar categorias únicas (pelas tabs)
-            const categoryCount = document.querySelectorAll('.cat-tab-btn').length;
-
             if (statNodes.active) statNodes.active.textContent = active;
             if (statNodes.paused) statNodes.paused.textContent = paused;
             if (statNodes.noThumb) statNodes.noThumb.textContent = noThumb;
-            if (statNodes.categories) statNodes.categories.textContent = categoryCount;
+            // Não atualizar categorias aqui, pois depende das abas renderizadas (stale). 
+            // O contador de categorias é atualizado via updateCategoriesCount()
         };
 
         // Função para atualizar apenas o contador de categorias via API
@@ -1499,8 +1497,7 @@ if ($restaurant instanceof WP_Post) {
                     loadRecommendedMenuCategories();
                 }
                 
-                // Atualizar estatísticas (incluindo contagem de categorias pelas abas)
-                updateStats();
+                // Não chamar updateStats() aqui para evitar conflitos, já que produtos não mudaram
                 
                 // Recarregar a página após um breve delay para mostrar as mudanças nas abas
                 // (necessário porque as abas são renderizadas no servidor)
