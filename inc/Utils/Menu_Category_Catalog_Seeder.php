@@ -2035,6 +2035,375 @@ class Menu_Category_Catalog_Seeder {
                 ],
             ],
 
+            // Categorias para Culinária Oriental (Mista) / Fusion
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária oriental (mista)',
+                    'Culinária fusion',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária oriental (mista)',
+                    'Culinária fusion',
+                ],
+            ],
+            [
+                'name'         => 'Pratos fusion',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária fusion',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária oriental (mista)',
+                    'Culinária fusion',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária oriental (mista)',
+                    'Culinária fusion',
+                ],
+            ],
+
+            // Categorias para Bares Especializados (Caipirinha, Rooftop, Lounge, Karaokê, Beach Club, Hookah)
+            [
+                'name'         => 'Petiscos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Bar de caipirinha',
+                    'Rooftop bar',
+                    'Lounge bar',
+                    'Karaokê bar',
+                    'Beach club',
+                    'Hookah / Narguilé bar',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Bar de caipirinha',
+                    'Rooftop bar',
+                    'Lounge bar',
+                    'Karaokê bar',
+                    'Beach club',
+                    'Hookah / Narguilé bar',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas especiais',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Bar de caipirinha',
+                    'Rooftop bar',
+                    'Lounge bar',
+                    'Karaokê bar',
+                    'Beach club',
+                    'Hookah / Narguilé bar',
+                ],
+            ],
+            [
+                'name'         => 'Drinks e coquetéis',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Bar de caipirinha',
+                    'Rooftop bar',
+                    'Lounge bar',
+                    'Karaokê bar',
+                    'Beach club',
+                    'Hookah / Narguilé bar',
+                ],
+            ],
+
+            // Categorias para Balada / Night Club
+            [
+                'name'         => 'Petiscos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Balada / Night club',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Balada / Night club',
+                ],
+            ],
+            [
+                'name'         => 'Drinks e coquetéis',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Balada / Night club',
+                ],
+            ],
+            [
+                'name'         => 'Garrafas e combos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Balada / Night club',
+                ],
+            ],
+
+            // Categorias para Restaurante Familiar / Kids Friendly
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Restaurante familiar / kids friendly',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Restaurante familiar / kids friendly',
+                ],
+            ],
+            [
+                'name'         => 'Menu infantil',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Restaurante familiar / kids friendly',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Restaurante familiar / kids friendly',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Restaurante familiar / kids friendly',
+                ],
+            ],
+
+            // Categorias para Restaurante Romântico / Temático
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Restaurante romântico',
+                    'Restaurante temático',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Restaurante romântico',
+                    'Restaurante temático',
+                ],
+            ],
+            [
+                'name'         => 'Menu especial',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Restaurante romântico',
+                    'Restaurante temático',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Restaurante romântico',
+                    'Restaurante temático',
+                ],
+            ],
+            [
+                'name'         => 'Vinhos e bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Restaurante romântico',
+                    'Restaurante temático',
+                ],
+            ],
+
+            // Categorias para Restaurante com Música ao Vivo
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Restaurante com música ao vivo',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Restaurante com música ao vivo',
+                ],
+            ],
+            [
+                'name'         => 'Petiscos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Restaurante com música ao vivo',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Restaurante com música ao vivo',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Restaurante com música ao vivo',
+                ],
+            ],
+
+            // Categorias para Delivery Only / Dark Kitchen
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Delivery only / Dark kitchen',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Delivery only / Dark kitchen',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Delivery only / Dark kitchen',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Delivery only / Dark kitchen',
+                ],
+            ],
+
+            // Categorias para Drive-thru / Take-away
+            [
+                'name'         => 'Lanches rápidos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Drive-thru',
+                    'Take-away / para levar',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Drive-thru',
+                    'Take-away / para levar',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Drive-thru',
+                    'Take-away / para levar',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Drive-thru',
+                    'Take-away / para levar',
+                ],
+            ],
+
+            // Categorias para Praça de Alimentação / Food Court
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Praça de alimentação / food court',
+                ],
+            ],
+            [
+                'name'         => 'Lanches',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Praça de alimentação / food court',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Praça de alimentação / food court',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Praça de alimentação / food court',
+                ],
+            ],
+
+            // Categorias para Mercado / Empório / Loja de Produtos Naturais
+            [
+                'name'         => 'Produtos frescos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Mercado / mini mercado',
+                    'Empório',
+                    'Loja de produtos naturais',
+                ],
+            ],
+            [
+                'name'         => 'Produtos prontos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Mercado / mini mercado',
+                    'Empório',
+                    'Loja de produtos naturais',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Mercado / mini mercado',
+                    'Empório',
+                    'Loja de produtos naturais',
+                ],
+            ],
+            [
+                'name'         => 'Produtos especiais',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Mercado / mini mercado',
+                    'Empório',
+                    'Loja de produtos naturais',
+                ],
+            ],
+
             // Categorias genéricas (para qualquer tipo)
             [
                 'name'         => 'Entradas',

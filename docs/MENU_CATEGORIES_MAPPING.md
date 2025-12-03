@@ -628,6 +628,140 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 
 ---
 
+#### 47. **Culinária Oriental (Mista) / Fusion**
+**Tipos de restaurante vinculados:**
+- Culinária oriental (mista)
+- Culinária fusion
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Pratos fusion (ordem 3) - Apenas fusion
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 48. **Bares Especializados**
+**Tipos de restaurante vinculados:**
+- Bar de caipirinha
+- Rooftop bar
+- Lounge bar
+- Karaokê bar
+- Beach club
+- Hookah / Narguilé bar
+
+**Categorias de cardápio:**
+- Petiscos (ordem 1)
+- Pratos principais (ordem 2)
+- Bebidas especiais (ordem 3)
+- Drinks e coquetéis (ordem 4)
+
+---
+
+#### 49. **Balada / Night Club**
+**Tipos de restaurante vinculados:**
+- Balada / Night club
+
+**Categorias de cardápio:**
+- Petiscos (ordem 1)
+- Bebidas (ordem 2)
+- Drinks e coquetéis (ordem 3)
+- Garrafas e combos (ordem 4)
+
+---
+
+#### 50. **Restaurante Familiar / Kids Friendly**
+**Tipos de restaurante vinculados:**
+- Restaurante familiar / kids friendly
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Menu infantil (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 51. **Restaurante Romântico / Temático**
+**Tipos de restaurante vinculados:**
+- Restaurante romântico
+- Restaurante temático
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Menu especial (ordem 3)
+- Sobremesas (ordem 4)
+- Vinhos e bebidas (ordem 5)
+
+---
+
+#### 52. **Restaurante com Música ao Vivo**
+**Tipos de restaurante vinculados:**
+- Restaurante com música ao vivo
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Petiscos (ordem 3)
+- Bebidas (ordem 4)
+- Sobremesas (ordem 5)
+
+---
+
+#### 53. **Delivery Only / Dark Kitchen**
+**Tipos de restaurante vinculados:**
+- Delivery only / Dark kitchen
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Combos (ordem 3)
+- Bebidas (ordem 4)
+
+---
+
+#### 54. **Drive-thru / Take-away**
+**Tipos de restaurante vinculados:**
+- Drive-thru
+- Take-away / para levar
+
+**Categorias de cardápio:**
+- Lanches rápidos (ordem 1)
+- Combos (ordem 2)
+- Bebidas (ordem 3)
+- Sobremesas (ordem 4)
+
+---
+
+#### 55. **Praça de Alimentação / Food Court**
+**Tipos de restaurante vinculados:**
+- Praça de alimentação / food court
+
+**Categorias de cardápio:**
+- Pratos principais (ordem 1)
+- Lanches (ordem 2)
+- Bebidas (ordem 3)
+- Sobremesas (ordem 4)
+
+---
+
+#### 56. **Mercado / Empório / Loja de Produtos Naturais**
+**Tipos de restaurante vinculados:**
+- Mercado / mini mercado
+- Empório
+- Loja de produtos naturais
+
+**Categorias de cardápio:**
+- Produtos frescos (ordem 1)
+- Produtos prontos (ordem 2)
+- Bebidas (ordem 3)
+- Produtos especiais (ordem 4)
+
+---
+
 ## 📊 Resumo Final
 
 ### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
@@ -678,6 +812,16 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 44. **Restaurante com Rodízio/Buffet** (Rodízio (geral), Buffet livre)
 45. **Restaurante com Restrições Dietéticas** (Sem glúten, Sem lactose, Orgânico, Comida funcional, Low carb)
 46. **Culinária Africana/Marroquina** (Culinária africana, Culinária marroquina)
+47. **Culinária Oriental (Mista)/Fusion** (Culinária oriental (mista), Culinária fusion)
+48. **Bares Especializados** (Bar de caipirinha, Rooftop bar, Lounge bar, Karaokê bar, Beach club, Hookah / Narguilé bar)
+49. **Balada/Night Club** (Balada / Night club)
+50. **Restaurante Familiar/Kids Friendly** (Restaurante familiar / kids friendly)
+51. **Restaurante Romântico/Temático** (Restaurante romântico, Restaurante temático)
+52. **Restaurante com Música ao Vivo** (Restaurante com música ao vivo)
+53. **Delivery Only/Dark Kitchen** (Delivery only / Dark kitchen)
+54. **Drive-thru/Take-away** (Drive-thru, Take-away / para levar)
+55. **Praça de Alimentação/Food Court** (Praça de alimentação / food court)
+56. **Mercado/Empório/Loja de Produtos Naturais** (Mercado / mini mercado, Empório, Loja de produtos naturais)
 
 ### 📝 Categorias Genéricas (aparecem para todos):
 - Entradas
