@@ -22,6 +22,7 @@ class Shortcodes {
         add_shortcode( 'vemcomer_menu', [ $this, 'sc_menu' ] );
         add_shortcode( 'vemcomer_checkout', [ $this, 'sc_checkout' ] );
         add_shortcode( 'vc_categories', [ $this, 'sc_categories' ] );
+        add_shortcode( 'vc_mobile_app', [ $this, 'sc_mobile_app' ] );
     }
 
     private function ensure_assets(): void {
@@ -508,5 +509,62 @@ class Shortcodes {
         </style>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Shortcode: [vc_mobile_app]
+     * Cria um botão/link para abrir a versão mobile do app
+     * 
+     * @param array $atts Atributos do shortcode:
+     *                    - text: Texto do botão (padrão: "Abrir App")
+     *                    - class: Classes CSS adicionais
+     *                    - style: Estilo inline
+     *                    - type: "button" ou "link" (padrão: "button")
+     * 
+     * @return string HTML do botão/link
+     */
+    public function sc_mobile_app( $atts = [] ): string {
+        $atts = shortcode_atts( [
+            'text'  => __( 'Abrir App', 'vemcomer' ),
+            'class' => '',
+            'style' => '',
+            'type'  => 'button', // 'button' ou 'link'
+        ], $atts, 'vc_mobile_app' );
+
+        $app_url = home_url( '/?mode=app' );
+        $text    = esc_html( $atts['text'] );
+        $class   = esc_attr( $atts['class'] );
+        $style   = esc_attr( $atts['style'] );
+        $type    = $atts['type'] === 'link' ? 'link' : 'button';
+
+        // Classes CSS padrão para o botão
+        $default_class = 'vc-mobile-app-btn';
+        $final_class   = ! empty( $class ) ? $default_class . ' ' . $class : $default_class;
+
+        // Estilos inline padrão se não for especificado
+        $default_style = $type === 'button' 
+            ? 'display:inline-block;padding:12px 24px;background:#2d8659;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;transition:background 0.2s;border:none;cursor:pointer;'
+            : 'display:inline-block;color:#2d8659;text-decoration:none;font-weight:600;';
+        
+        $final_style = ! empty( $style ) ? $style : $default_style;
+
+        if ( $type === 'link' ) {
+            return sprintf(
+                '<a href="%s" class="%s" style="%s">%s</a>',
+                esc_url( $app_url ),
+                $final_class,
+                $final_style,
+                $text
+            );
+        }
+
+        // Botão com onclick para redirecionar
+        return sprintf(
+            '<button onclick="window.location.href=\'%s\'" class="%s" style="%s">%s</button>',
+            esc_js( $app_url ),
+            $final_class,
+            $final_style,
+            $text
+        );
     }
 }
