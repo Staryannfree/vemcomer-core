@@ -67,104 +67,111 @@ $cuisine_options = array_merge( $cuisine_options_primary, $cuisine_options_tags 
 
 // Buscar categorias recomendadas de cardápio (pré-carregar no PHP)
 $recommended_categories = [];
+$has_primary_cuisine = false;
+
 if ( $restaurant instanceof WP_Post ) {
     // Buscar categorias de restaurante (vc_cuisine) associadas ao restaurante
     // FILTRAR APENAS CATEGORIAS PRIMÁRIAS (não tags/estilo)
     $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'all' ] );
     
+    // Filtrar apenas categorias primárias (_vc_is_primary_cuisine = '1')
+    $cuisine_ids = [];
     if ( ! is_wp_error( $cuisine_terms ) && ! empty( $cuisine_terms ) ) {
-        // Filtrar apenas categorias primárias (_vc_is_primary_cuisine = '1')
-        $cuisine_ids = [];
         foreach ( $cuisine_terms as $term ) {
             $is_primary = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
-            if ( $is_primary === '1' ) {
+            // Se a meta não estiver definida, considerar como primária (fallback para termos antigos)
+            if ( $is_primary === '' || $is_primary === '1' ) {
                 $cuisine_ids[] = (int) $term->term_id;
-            }
-        }
-        
-        // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)
-        $user_categories = get_terms( [
-            'taxonomy'   => 'vc_menu_category',
-            'hide_empty' => false,
-        ] );
-        
-        $user_category_names = [];
-        if ( ! is_wp_error( $user_categories ) && ! empty( $user_categories ) ) {
-            foreach ( $user_categories as $user_cat ) {
-                $is_catalog = get_term_meta( $user_cat->term_id, '_vc_is_catalog_category', true );
-                $cat_restaurant_id = (int) get_term_meta( $user_cat->term_id, '_vc_restaurant_id', true );
-                
-                // Se não é do catálogo E pertence ao restaurante atual, adicionar à lista
-                if ( $is_catalog !== '1' && $cat_restaurant_id === $restaurant->ID ) {
-                    $user_category_names[] = strtolower( trim( $user_cat->name ) );
+                if ( $is_primary === '1' ) {
+                    $has_primary_cuisine = true;
                 }
             }
         }
-        
-        // Buscar todas as categorias de cardápio do catálogo
-        $catalog_categories = get_terms( [
-            'taxonomy'   => 'vc_menu_category',
-            'hide_empty' => false,
-            'meta_query' => [
-                [
-                    'key'     => '_vc_is_catalog_category',
-                    'value'   => '1',
-                    'compare' => '=',
-                ],
-            ],
-        ] );
-        
-        if ( ! is_wp_error( $catalog_categories ) && ! empty( $catalog_categories ) ) {
-            $recommended = [];
-            $generic = []; // Categorias genéricas (sem vínculo específico)
+    }
+    
+    // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)
+    $user_categories = get_terms( [
+        'taxonomy'   => 'vc_menu_category',
+        'hide_empty' => false,
+    ] );
+    
+    $user_category_names = [];
+    if ( ! is_wp_error( $user_categories ) && ! empty( $user_categories ) ) {
+        foreach ( $user_categories as $user_cat ) {
+            $is_catalog = get_term_meta( $user_cat->term_id, '_vc_is_catalog_category', true );
+            $cat_restaurant_id = (int) get_term_meta( $user_cat->term_id, '_vc_restaurant_id', true );
             
-            foreach ( $catalog_categories as $category ) {
-                // Pular se o restaurante já criou uma categoria com o mesmo nome
-                if ( in_array( strtolower( trim( $category->name ) ), $user_category_names, true ) ) {
-                    continue;
-                }
+            // Se não é do catálogo E pertence ao restaurante atual, adicionar à lista
+            if ( $is_catalog !== '1' && $cat_restaurant_id === $restaurant->ID ) {
+                $user_category_names[] = strtolower( trim( $user_cat->name ) );
+            }
+        }
+    }
+    
+    // Buscar todas as categorias de cardápio do catálogo
+    $catalog_categories = get_terms( [
+        'taxonomy'   => 'vc_menu_category',
+        'hide_empty' => false,
+        'meta_query' => [
+            [
+                'key'     => '_vc_is_catalog_category',
+                'value'   => '1',
+                'compare' => '=',
+            ],
+        ],
+    ] );
+    
+    if ( ! is_wp_error( $catalog_categories ) && ! empty( $catalog_categories ) ) {
+        $recommended = [];
+        $generic = []; // Categorias genéricas (sem vínculo específico)
+        
+        foreach ( $catalog_categories as $category ) {
+            // Pular se o restaurante já criou uma categoria com o mesmo nome
+            if ( in_array( strtolower( trim( $category->name ) ), $user_category_names, true ) ) {
+                continue;
+            }
+            
+            $recommended_for = get_term_meta( $category->term_id, '_vc_recommended_for_cuisines', true );
+            
+            if ( empty( $recommended_for ) ) {
+                // Categoria genérica (sem vínculo específico) - sempre mostrar
+                $generic[] = [
+                    'id'    => $category->term_id,
+                    'name'  => $category->name,
+                    'slug'  => $category->slug,
+                    'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                ];
+            } else {
+                $recommended_cuisine_ids = json_decode( $recommended_for, true );
                 
-                $recommended_for = get_term_meta( $category->term_id, '_vc_recommended_for_cuisines', true );
-                
-                if ( empty( $recommended_for ) ) {
-                    // Categoria genérica (sem vínculo específico)
-                    $generic[] = [
-                        'id'    => $category->term_id,
-                        'name'  => $category->name,
-                        'slug'  => $category->slug,
-                        'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
-                    ];
-                } else {
-                    $recommended_cuisine_ids = json_decode( $recommended_for, true );
+                if ( is_array( $recommended_cuisine_ids ) && ! empty( $cuisine_ids ) ) {
+                    // Verificar se alguma categoria do restaurante está na lista de recomendadas
+                    $intersection = array_intersect( $cuisine_ids, $recommended_cuisine_ids );
                     
-                    if ( is_array( $recommended_cuisine_ids ) ) {
-                        // Verificar se alguma categoria do restaurante está na lista de recomendadas
-                        $intersection = array_intersect( $cuisine_ids, $recommended_cuisine_ids );
-                        
-                        if ( ! empty( $intersection ) ) {
-                            $recommended[] = [
-                                'id'    => $category->term_id,
-                                'name'  => $category->name,
-                                'slug'  => $category->slug,
-                                'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
-                            ];
-                        }
+                    if ( ! empty( $intersection ) ) {
+                        $recommended[] = [
+                            'id'    => $category->term_id,
+                            'name'  => $category->name,
+                            'slug'  => $category->slug,
+                            'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                        ];
                     }
                 }
             }
-            
-            // Ordenar por ordem
-            usort( $recommended, function( $a, $b ) {
-                return $a['order'] <=> $b['order'];
-            } );
-            
-            usort( $generic, function( $a, $b ) {
-                return $a['order'] <=> $b['order'];
-            } );
-            
-            // Combinar: primeiro as recomendadas, depois as genéricas
-            $recommended_categories = array_merge( $recommended, $generic );
         }
+        
+        // Ordenar por ordem
+        usort( $recommended, function( $a, $b ) {
+            return $a['order'] <=> $b['order'];
+        } );
+        
+        usort( $generic, function( $a, $b ) {
+            return $a['order'] <=> $b['order'];
+        } );
+        
+        // Combinar: primeiro as recomendadas, depois as genéricas
+        // Sempre mostrar genéricas mesmo se não houver primárias
+        $recommended_categories = array_merge( $recommended, $generic );
     }
 }
 
@@ -273,6 +280,7 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     const cuisineOptionsTags = <?php echo wp_json_encode( $cuisine_options_tags ); ?>;
     const restaurantData = <?php echo wp_json_encode( $restaurant_data ); ?>;
     const recommendedCategories = <?php echo wp_json_encode( $recommended_categories ); ?>;
+    const hasPrimaryCuisine = <?php echo $has_primary_cuisine ? 'true' : 'false'; ?>;
     
     // Dados temporários do wizard
     let wizardData = {
@@ -465,6 +473,12 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     function getStep4Content() {
         // Renderizar categorias já carregadas do PHP
         let categoriesHtml = '';
+        let warningHtml = '';
+        
+        if (!hasPrimaryCuisine) {
+            warningHtml = '<div style="background:#fffbe2;padding:12px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#856404;border-left:4px solid #facb32;"><strong>⚠️ Aviso:</strong> Você não selecionou um tipo de cozinha principal. Mostrando apenas categorias genéricas. Para receber recomendações específicas, volte ao passo 1 e escolha pelo menos 1 tipo de cozinha principal (ex.: Hamburgueria, Pizzaria, Japonesa).</div>';
+        }
+        
         if (recommendedCategories && recommendedCategories.length > 0) {
             categoriesHtml = recommendedCategories.map(cat => `
                 <label class="category-checkbox">
@@ -473,12 +487,13 @@ $rest_url   = rest_url( 'vemcomer/v1' );
                 </label>
             `).join('');
         } else {
-            categoriesHtml = '<div style="text-align:center;padding:20px;color:#999;">Nenhuma categoria recomendada encontrada.</div>';
+            categoriesHtml = '<div style="text-align:center;padding:20px;color:#999;">Nenhuma categoria recomendada encontrada. <a href="#" onclick="wizardStep=1;renderStep();return false;" style="color:#2d8659;text-decoration:underline;">Volte ao passo 1</a> e escolha um tipo de cozinha principal.</div>';
         }
         
         return `
             <div class="wizard-title">Categorias do seu cardápio</div>
             <div class="wizard-subtitle">Sugerimos algumas categorias de cardápio para o tipo de restaurante que você escolheu. Você pode editar depois.</div>
+            ${warningHtml}
             <div id="wizardRecommendedCategories" style="margin-top:24px;">
                 ${categoriesHtml}
             </div>
