@@ -52,11 +52,99 @@ if ( ! is_wp_error( $all_cuisines ) && $all_cuisines ) {
     }
 }
 
-// Buscar categorias recomendadas de cardápio
+// Buscar categorias recomendadas de cardápio (pré-carregar no PHP)
 $recommended_categories = [];
-if ( $restaurant_data['primary_cuisine'] ) {
-    // Buscar categorias recomendadas baseadas no tipo de restaurante
-    // Isso será feito via JavaScript chamando o endpoint REST
+if ( $restaurant instanceof WP_Post ) {
+    // Buscar categorias de restaurante (vc_cuisine) associadas ao restaurante
+    $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'ids' ] );
+    
+    if ( ! is_wp_error( $cuisine_terms ) && ! empty( $cuisine_terms ) ) {
+        $cuisine_ids = array_map( 'intval', $cuisine_terms );
+        
+        // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)
+        $user_categories = get_terms( [
+            'taxonomy'   => 'vc_menu_category',
+            'hide_empty' => false,
+        ] );
+        
+        $user_category_names = [];
+        if ( ! is_wp_error( $user_categories ) && ! empty( $user_categories ) ) {
+            foreach ( $user_categories as $user_cat ) {
+                $is_catalog = get_term_meta( $user_cat->term_id, '_vc_is_catalog_category', true );
+                $cat_restaurant_id = (int) get_term_meta( $user_cat->term_id, '_vc_restaurant_id', true );
+                
+                // Se não é do catálogo E pertence ao restaurante atual, adicionar à lista
+                if ( $is_catalog !== '1' && $cat_restaurant_id === $restaurant->ID ) {
+                    $user_category_names[] = strtolower( trim( $user_cat->name ) );
+                }
+            }
+        }
+        
+        // Buscar todas as categorias de cardápio do catálogo
+        $catalog_categories = get_terms( [
+            'taxonomy'   => 'vc_menu_category',
+            'hide_empty' => false,
+            'meta_query' => [
+                [
+                    'key'     => '_vc_is_catalog_category',
+                    'value'   => '1',
+                    'compare' => '=',
+                ],
+            ],
+        ] );
+        
+        if ( ! is_wp_error( $catalog_categories ) && ! empty( $catalog_categories ) ) {
+            $recommended = [];
+            $generic = []; // Categorias genéricas (sem vínculo específico)
+            
+            foreach ( $catalog_categories as $category ) {
+                // Pular se o restaurante já criou uma categoria com o mesmo nome
+                if ( in_array( strtolower( trim( $category->name ) ), $user_category_names, true ) ) {
+                    continue;
+                }
+                
+                $recommended_for = get_term_meta( $category->term_id, '_vc_recommended_for_cuisines', true );
+                
+                if ( empty( $recommended_for ) ) {
+                    // Categoria genérica (sem vínculo específico)
+                    $generic[] = [
+                        'id'    => $category->term_id,
+                        'name'  => $category->name,
+                        'slug'  => $category->slug,
+                        'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                    ];
+                } else {
+                    $recommended_cuisine_ids = json_decode( $recommended_for, true );
+                    
+                    if ( is_array( $recommended_cuisine_ids ) ) {
+                        // Verificar se alguma categoria do restaurante está na lista de recomendadas
+                        $intersection = array_intersect( $cuisine_ids, $recommended_cuisine_ids );
+                        
+                        if ( ! empty( $intersection ) ) {
+                            $recommended[] = [
+                                'id'    => $category->term_id,
+                                'name'  => $category->name,
+                                'slug'  => $category->slug,
+                                'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                            ];
+                        }
+                    }
+                }
+            }
+            
+            // Ordenar por ordem
+            usort( $recommended, function( $a, $b ) {
+                return $a['order'] <=> $b['order'];
+            } );
+            
+            usort( $generic, function( $a, $b ) {
+                return $a['order'] <=> $b['order'];
+            } );
+            
+            // Combinar: primeiro as recomendadas, depois as genéricas
+            $recommended_categories = array_merge( $recommended, $generic );
+        }
+    }
 }
 
 $rest_nonce = wp_create_nonce( 'wp_rest' );
@@ -161,6 +249,7 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     
     const cuisineOptions = <?php echo wp_json_encode( $cuisine_options ); ?>;
     const restaurantData = <?php echo wp_json_encode( $restaurant_data ); ?>;
+    const recommendedCategories = <?php echo wp_json_encode( $recommended_categories ); ?>;
     
     // Dados temporários do wizard
     let wizardData = {
@@ -294,6 +383,9 @@ $rest_url   = rest_url( 'vemcomer/v1' );
         return `
             <div class="wizard-title">Endereço e horários</div>
             <div class="wizard-subtitle">Precisamos saber onde sua loja fica e quando ela está aberta para aceitar pedidos.</div>
+            <div style="background:#fffbe2;padding:12px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#856404;border-left:4px solid #facb32;">
+                <strong>⚠️ Importante:</strong> Se você marcar apenas "Entrega própria" e não marcar "Apenas retirada no local", sua loja <strong>não aparecerá</strong> para os clientes no marketplace. Para aparecer, você precisa marcar pelo menos "Apenas retirada no local" ou ambos os métodos.
+            </div>
             
             <h3 style="font-size:18px;font-weight:700;margin:24px 0 12px 0;color:#2d8659;">Endereço</h3>
             <input type="text" id="wizardAddress" value="${escapeHtml(wizardData.address)}" placeholder="Endereço completo" required>
@@ -932,9 +1024,8 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     const originalRenderStep = renderStep;
     renderStep = function() {
         originalRenderStep();
-        if (wizardStep === 4) {
-            loadRecommendedCategories();
-        } else if (wizardStep === 5) {
+        // Categorias já vêm pré-carregadas do PHP, não precisa chamar loadRecommendedCategories()
+        if (wizardStep === 5) {
             loadProductCategories();
         } else if (wizardStep === 6) {
             loadRecommendedAddons();
