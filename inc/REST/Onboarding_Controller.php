@@ -180,9 +180,11 @@ class Onboarding_Controller {
 
         // Logo (opcional)
         if ( isset( $payload['logo'] ) && ! empty( $payload['logo'] ) ) {
-            $logo_url = $this->handle_image_upload( $payload['logo'], $restaurant_id, 'logo' );
+            $logo_url = $this->handle_image_upload( $payload['logo'], $restaurant_id );
             if ( $logo_url ) {
                 update_post_meta( $restaurant_id, 'vc_restaurant_logo', $logo_url );
+                // Também definir como featured image
+                $this->set_logo_as_featured( $logo_url, $restaurant_id );
             }
         }
 
@@ -368,7 +370,7 @@ class Onboarding_Controller {
         return true;
     }
 
-    private function handle_image_upload( string $image_data, int $restaurant_id, string $type = 'logo' ): ?string {
+    private function handle_image_upload( string $image_data, int $restaurant_id ): ?string {
         // Se for data:image, converter para arquivo
         if ( strpos( $image_data, 'data:image' ) === 0 ) {
             // Reutilizar lógica do Merchant_Settings_Controller
@@ -384,6 +386,14 @@ class Onboarding_Controller {
         }
 
         return null;
+    }
+
+    private function set_logo_as_featured( string $logo_url, int $restaurant_id ): void {
+        // Buscar attachment pelo URL
+        $attachment_id = attachment_url_to_postid( $logo_url );
+        if ( $attachment_id ) {
+            set_post_thumbnail( $restaurant_id, $attachment_id );
+        }
     }
 
     private function get_restaurant_for_user() {
