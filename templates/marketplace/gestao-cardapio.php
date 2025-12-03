@@ -2932,6 +2932,15 @@ if ($restaurant instanceof WP_Post) {
         // Modal de Gerenciar Categorias
         let categoriesList = []; // Armazenar lista globalmente para acesso nos event listeners
         
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Atualizar contador de categorias via API ao carregar a página
+            // (Garante que o número corresponda ao que é visto no modal, corrigindo possíveis erros de renderização do PHP)
+            if (typeof updateCategoriesCount === 'function') {
+                updateCategoriesCount();
+            }
+        });
+        
         window.openManageCategoriesModal = async function() {
             const modal = document.getElementById('vcManageCategoriesModal');
             if (modal) {
