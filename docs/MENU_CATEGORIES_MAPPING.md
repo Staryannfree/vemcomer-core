@@ -487,6 +487,147 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 
 ---
 
+#### 37. **Restaurante de Alta Gastronomia / Fine Dining**
+**Tipos de restaurante vinculados:**
+- Restaurante de alta gastronomia / fine dining
+- Restaurante contemporâneo
+- Bistrô
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Sobremesas (ordem 3)
+- Menu degustação (ordem 4) - Apenas fine dining
+- Vinhos e bebidas (ordem 5)
+
+---
+
+#### 38. **Restaurante Tropical / Praiano**
+**Tipos de restaurante vinculados:**
+- Restaurante tropical / praiano
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Frutos do mar (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 39. **Comida Regional Brasileira**
+**Tipos de restaurante vinculados:**
+- Comida amazônica
+- Comida paraense
+- Comida caiçara
+- Comida pantaneira
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Pratos típicos regionais (ordem 3)
+- Acompanhamentos (ordem 4)
+- Sobremesas (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+#### 40. **Assados & Rotisserie**
+**Tipos de restaurante vinculados:**
+- Assados & rotisserie
+
+**Categorias de cardápio:**
+- Assados (ordem 1)
+- Rotisserie (ordem 2)
+- Acompanhamentos (ordem 3)
+- Saladas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 41. **Omeleteria**
+**Tipos de restaurante vinculados:**
+- Omeleteria
+
+**Categorias de cardápio:**
+- Omeletes salgadas (ordem 1)
+- Omeletes doces (ordem 2)
+- Acompanhamentos (ordem 3)
+- Bebidas (ordem 4)
+
+---
+
+#### 42. **Refeições Congeladas**
+**Tipos de restaurante vinculados:**
+- Refeições congeladas
+
+**Categorias de cardápio:**
+- Refeições congeladas (ordem 1)
+- Pratos individuais (ordem 2)
+- Porções familiares (ordem 3)
+- Sobremesas congeladas (ordem 4)
+
+---
+
+#### 43. **Quiosque de Praia / Trailer de Lanches**
+**Tipos de restaurante vinculados:**
+- Quiosque de praia
+- Trailer de lanches
+
+**Categorias de cardápio:**
+- Lanches (ordem 1)
+- Petiscos (ordem 2)
+- Bebidas (ordem 3)
+- Sobremesas (ordem 4)
+
+---
+
+#### 44. **Restaurante com Rodízio / Buffet**
+**Tipos de restaurante vinculados:**
+- Rodízio (geral)
+- Buffet livre
+
+**Categorias de cardápio:**
+- Rodízio (ordem 1) - Rodízio (geral)
+- Buffet livre (ordem 1) - Buffet livre
+- Acompanhamentos (ordem 2) - Ambos
+- Sobremesas (ordem 3) - Ambos
+- Bebidas (ordem 4) - Ambos
+
+---
+
+#### 45. **Restaurante com Restrições Dietéticas**
+**Tipos de restaurante vinculados:**
+- Sem glúten
+- Sem lactose
+- Orgânico
+- Comida funcional
+- Low carb
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Saladas e bowls (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 46. **Culinária Africana / Marroquina**
+**Tipos de restaurante vinculados:**
+- Culinária africana
+- Culinária marroquina
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Tajines e pratos típicos (ordem 3) - Apenas marroquina
+- Acompanhamentos (ordem 4)
+- Sobremesas (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
 ## 📊 Resumo Final
 
 ### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
@@ -527,6 +668,16 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 34. **Galeteria/Frango** (Frango assado, Frango frito estilo americano, Galeteria)
 35. **Espetinhos/Grelhados** (Espetinhos, Grelhados)
 36. **Poke** (Poke)
+37. **Restaurante de Alta Gastronomia/Fine Dining** (Restaurante de alta gastronomia / fine dining, Restaurante contemporâneo, Bistrô)
+38. **Restaurante Tropical/Praiano** (Restaurante tropical / praiano)
+39. **Comida Regional Brasileira** (Comida amazônica, Comida paraense, Comida caiçara, Comida pantaneira)
+40. **Assados & Rotisserie** (Assados & rotisserie)
+41. **Omeleteria** (Omeleteria)
+42. **Refeições Congeladas** (Refeições congeladas)
+43. **Quiosque de Praia/Trailer de Lanches** (Quiosque de praia, Trailer de lanches)
+44. **Restaurante com Rodízio/Buffet** (Rodízio (geral), Buffet livre)
+45. **Restaurante com Restrições Dietéticas** (Sem glúten, Sem lactose, Orgânico, Comida funcional, Low carb)
+46. **Culinária Africana/Marroquina** (Culinária africana, Culinária marroquina)
 
 ### 📝 Categorias Genéricas (aparecem para todos):
 - Entradas

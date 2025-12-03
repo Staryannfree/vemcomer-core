@@ -1614,6 +1614,427 @@ class Menu_Category_Catalog_Seeder {
                 ],
             ],
 
+            // Categorias para Restaurante de Alta Gastronomia / Fine Dining
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Restaurante de alta gastronomia / fine dining',
+                    'Restaurante contemporâneo',
+                    'Bistrô',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Restaurante de alta gastronomia / fine dining',
+                    'Restaurante contemporâneo',
+                    'Bistrô',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Restaurante de alta gastronomia / fine dining',
+                    'Restaurante contemporâneo',
+                    'Bistrô',
+                ],
+            ],
+            [
+                'name'         => 'Menu degustação',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Restaurante de alta gastronomia / fine dining',
+                ],
+            ],
+            [
+                'name'         => 'Vinhos e bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Restaurante de alta gastronomia / fine dining',
+                    'Restaurante contemporâneo',
+                    'Bistrô',
+                ],
+            ],
+
+            // Categorias para Restaurante Tropical / Praiano
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Restaurante tropical / praiano',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Restaurante tropical / praiano',
+                ],
+            ],
+            [
+                'name'         => 'Frutos do mar',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Restaurante tropical / praiano',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Restaurante tropical / praiano',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Restaurante tropical / praiano',
+                ],
+            ],
+
+            // Categorias para Comida Regional Brasileira (Amazônica, Paraense, Caiçara, Pantaneira)
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                ],
+            ],
+            [
+                'name'         => 'Pratos típicos regionais',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Comida amazônica',
+                    'Comida paraense',
+                    'Comida caiçara',
+                    'Comida pantaneira',
+                ],
+            ],
+
+            // Categorias para Assados & Rotisserie
+            [
+                'name'         => 'Assados',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Assados & rotisserie',
+                ],
+            ],
+            [
+                'name'         => 'Rotisserie',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Assados & rotisserie',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Assados & rotisserie',
+                ],
+            ],
+            [
+                'name'         => 'Saladas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Assados & rotisserie',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Assados & rotisserie',
+                ],
+            ],
+
+            // Categorias para Omeleteria
+            [
+                'name'         => 'Omeletes salgadas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Omeleteria',
+                ],
+            ],
+            [
+                'name'         => 'Omeletes doces',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Omeleteria',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Omeleteria',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Omeleteria',
+                ],
+            ],
+
+            // Categorias para Refeições Congeladas
+            [
+                'name'         => 'Refeições congeladas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Refeições congeladas',
+                ],
+            ],
+            [
+                'name'         => 'Pratos individuais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Refeições congeladas',
+                ],
+            ],
+            [
+                'name'         => 'Porções familiares',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Refeições congeladas',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas congeladas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Refeições congeladas',
+                ],
+            ],
+
+            // Categorias para Quiosque de Praia / Trailer de Lanches
+            [
+                'name'         => 'Lanches',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Quiosque de praia',
+                    'Trailer de lanches',
+                ],
+            ],
+            [
+                'name'         => 'Petiscos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Quiosque de praia',
+                    'Trailer de lanches',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Quiosque de praia',
+                    'Trailer de lanches',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Quiosque de praia',
+                    'Trailer de lanches',
+                ],
+            ],
+
+            // Categorias para Restaurante com Rodízio / Buffet
+            [
+                'name'         => 'Rodízio',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Rodízio (geral)',
+                ],
+            ],
+            [
+                'name'         => 'Buffet livre',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Buffet livre',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Rodízio (geral)',
+                    'Buffet livre',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Rodízio (geral)',
+                    'Buffet livre',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Rodízio (geral)',
+                    'Buffet livre',
+                ],
+            ],
+
+            // Categorias para Restaurante com Restrições Dietéticas
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Sem glúten',
+                    'Sem lactose',
+                    'Orgânico',
+                    'Comida funcional',
+                    'Low carb',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Sem glúten',
+                    'Sem lactose',
+                    'Orgânico',
+                    'Comida funcional',
+                    'Low carb',
+                ],
+            ],
+            [
+                'name'         => 'Saladas e bowls',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Sem glúten',
+                    'Sem lactose',
+                    'Orgânico',
+                    'Comida funcional',
+                    'Low carb',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Sem glúten',
+                    'Sem lactose',
+                    'Orgânico',
+                    'Comida funcional',
+                    'Low carb',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Sem glúten',
+                    'Sem lactose',
+                    'Orgânico',
+                    'Comida funcional',
+                    'Low carb',
+                ],
+            ],
+
+            // Categorias para Culinária Africana / Marroquina
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária africana',
+                    'Culinária marroquina',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária africana',
+                    'Culinária marroquina',
+                ],
+            ],
+            [
+                'name'         => 'Tajines e pratos típicos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária marroquina',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária africana',
+                    'Culinária marroquina',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária africana',
+                    'Culinária marroquina',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Culinária africana',
+                    'Culinária marroquina',
+                ],
+            ],
+
             // Categorias genéricas (para qualquer tipo)
             [
                 'name'         => 'Entradas',
