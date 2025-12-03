@@ -262,6 +262,8 @@ add_action( 'init', function () {
     
     if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
         \VC\Utils\Cuisine_Seeder::seed();
+        // Atualizar termos existentes com meta _vc_is_primary_cuisine
+        \VC\Utils\Cuisine_Seeder::update_existing_terms();
     }
     
     if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) ) {
