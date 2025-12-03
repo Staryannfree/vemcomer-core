@@ -256,7 +256,12 @@ if (empty($categories_for_view) && $restaurant instanceof WP_Post) {
 }
 
 // Atualiza estatística de categorias (sempre após processar tudo)
-$stats['categories'] = is_array($categories_for_view) ? count($categories_for_view) : 0;
+// Contar TODAS as categorias do restaurante (incluindo vazias), não apenas as com produtos
+$all_restaurant_categories_count = 0;
+if ($restaurant instanceof WP_Post && !empty($menu_categories)) {
+    $all_restaurant_categories_count = count($menu_categories);
+}
+$stats['categories'] = $all_restaurant_categories_count;
 ?>
 <?php
 // Verificar se precisa de onboarding de adicionais
