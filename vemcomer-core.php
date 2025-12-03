@@ -254,6 +254,11 @@ add_action( 'plugins_loaded', function () {
 
 // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
 add_action( 'init', function () {
+    // Não executar durante ativação/desativação do plugin
+    if ( defined( 'WP_UNINSTALL_PLUGIN' ) || ( is_admin() && ( isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) ) {
+        return;
+    }
+    
     if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
         \VC\Utils\Cuisine_Seeder::seed();
     }
