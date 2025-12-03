@@ -255,6 +255,46 @@ if (empty($categories_for_view) && $restaurant instanceof WP_Post) {
     $categories_for_view[] = $default_category;
 }
 
+<?php
+// IMPORTANTE: Buscar categorias ANTES de calcular $stats['categories']
+// Nova estratégia: Buscar todas as categorias e filtrar via PHP para garantir precisão
+// Isso evita problemas com meta_query complexas que podem falhar se o dado não existir
+$all_terms = get_terms( [
+    'taxonomy'   => 'vc_menu_category',
+    'hide_empty' => false,
+] );
+
+$menu_categories = [];
+$restaurant_id_stats = $restaurant ? $restaurant->ID : 0;
+
+if ( ! is_wp_error( $all_terms ) && ! empty( $all_terms ) ) {
+    foreach ( $all_terms as $term ) {
+        // Metadados
+        $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
+        $cat_rest_id = get_term_meta( $term->term_id, '_vc_restaurant_id', true );
+        
+        // 1. Ignorar se for do catálogo
+        if ( $is_catalog === '1' ) {
+            continue;
+        }
+
+        // 2. Verificar pertencimento
+        // Aceita se:
+        // - Tiver o ID do restaurante correto
+        // - OU se não tiver ID de restaurante (legado/criado antes da atualização)
+        if ( ! empty( $cat_rest_id ) ) {
+            if ( (int)$cat_rest_id === $restaurant_id_stats ) {
+                $menu_categories[] = $term;
+            }
+        } else {
+            // Sem ID vinculado: assume que é do usuário atual se ele não for admin vendo tudo
+            // Na prática, categorias sem ID são "órfãs" ou legadas. Vamos incluí-las na contagem por enquanto
+            // para manter compatibilidade com o que foi criado antes.
+            $menu_categories[] = $term;
+        }
+    }
+}
+
 // Atualiza estatística de categorias (sempre após processar tudo)
 // Contar TODAS as categorias do restaurante (incluindo vazias), não apenas as com produtos
 $all_restaurant_categories_count = 0;
@@ -263,6 +303,7 @@ if ($restaurant instanceof WP_Post && !empty($menu_categories)) {
 }
 $stats['categories'] = $all_restaurant_categories_count;
 ?>
+
 <?php
 // Verificar se precisa de onboarding de adicionais
 $needs_addons_onboarding = false;
@@ -385,46 +426,6 @@ if ($restaurant instanceof WP_Post) {
             to { transform: translateX(100%); opacity: 0; }
         }
     </style>
-
-    <?php
-    // Nova estratégia: Buscar todas as categorias e filtrar via PHP para garantir precisão
-    // Isso evita problemas com meta_query complexas que podem falhar se o dado não existir
-    $all_terms = get_terms( [
-        'taxonomy'   => 'vc_menu_category',
-        'hide_empty' => false,
-    ] );
-    
-    $menu_categories = [];
-    $restaurant_id_stats = $restaurant ? $restaurant->ID : 0;
-
-    if ( ! is_wp_error( $all_terms ) && ! empty( $all_terms ) ) {
-        foreach ( $all_terms as $term ) {
-            // Metadados
-            $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
-            $cat_rest_id = get_term_meta( $term->term_id, '_vc_restaurant_id', true );
-            
-            // 1. Ignorar se for do catálogo
-            if ( $is_catalog === '1' ) {
-                continue;
-            }
-
-            // 2. Verificar pertencimento
-            // Aceita se:
-            // - Tiver o ID do restaurante correto
-            // - OU se não tiver ID de restaurante (legado/criado antes da atualização)
-            if ( ! empty( $cat_rest_id ) ) {
-                if ( (int)$cat_rest_id === $restaurant_id_stats ) {
-                    $menu_categories[] = $term;
-                }
-            } else {
-                // Sem ID vinculado: assume que é do usuário atual se ele não for admin vendo tudo
-                // Na prática, categorias sem ID são "órfãs" ou legadas. Vamos incluí-las na contagem por enquanto
-                // para manter compatibilidade com o que foi criado antes.
-                $menu_categories[] = $term;
-            }
-        }
-    }
-    ?>
 
     <?php if ($needs_addons_onboarding) : ?>
     <!-- Banner de Onboarding de Adicionais -->
