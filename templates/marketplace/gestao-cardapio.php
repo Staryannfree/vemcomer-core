@@ -396,9 +396,16 @@ if ($restaurant instanceof WP_Post) {
         'meta_query' => [
             'relation' => 'AND',
             [
-                'key'     => '_vc_restaurant_id',
-                'value'   => $restaurant_id_stats,
-                'compare' => '=',
+                'relation' => 'OR',
+                [
+                    'key'     => '_vc_restaurant_id',
+                    'value'   => $restaurant_id_stats,
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => '_vc_restaurant_id',
+                    'compare' => 'NOT EXISTS',
+                ],
             ],
             [
                 'relation' => 'OR',
