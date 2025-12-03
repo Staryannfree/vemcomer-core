@@ -33,33 +33,54 @@ $onboarding_status = \VC\Utils\Onboarding_Helper::get_onboarding_status( $restau
 $current_step = $onboarding_status['current_step'] ?? 1;
 
 // Buscar categorias de cozinha disponíveis
+// Separar em primárias e tags/estilo
 $all_cuisines = get_terms( [
     'taxonomy'   => 'vc_cuisine',
     'hide_empty' => false,
 ] );
 
-$cuisine_options = [];
+$cuisine_options_primary = [];
+$cuisine_options_tags = [];
 if ( ! is_wp_error( $all_cuisines ) && $all_cuisines ) {
     foreach ( $all_cuisines as $term ) {
         // Filtrar apenas termos filhos (não grupos pais)
         if ( $term->parent === 0 && str_starts_with( (string) $term->slug, 'grupo-' ) ) {
             continue;
         }
-        $cuisine_options[] = [
+        
+        $is_primary = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
+        $cuisine_option = [
             'id'   => $term->term_id,
             'name' => $term->name,
         ];
+        
+        if ( $is_primary === '1' ) {
+            $cuisine_options_primary[] = $cuisine_option;
+        } else {
+            $cuisine_options_tags[] = $cuisine_option;
+        }
     }
 }
+
+// Combinar: primárias primeiro, depois tags
+$cuisine_options = array_merge( $cuisine_options_primary, $cuisine_options_tags );
 
 // Buscar categorias recomendadas de cardápio (pré-carregar no PHP)
 $recommended_categories = [];
 if ( $restaurant instanceof WP_Post ) {
     // Buscar categorias de restaurante (vc_cuisine) associadas ao restaurante
-    $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'ids' ] );
+    // FILTRAR APENAS CATEGORIAS PRIMÁRIAS (não tags/estilo)
+    $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'all' ] );
     
     if ( ! is_wp_error( $cuisine_terms ) && ! empty( $cuisine_terms ) ) {
-        $cuisine_ids = array_map( 'intval', $cuisine_terms );
+        // Filtrar apenas categorias primárias (_vc_is_primary_cuisine = '1')
+        $cuisine_ids = [];
+        foreach ( $cuisine_terms as $term ) {
+            $is_primary = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
+            if ( $is_primary === '1' ) {
+                $cuisine_ids[] = (int) $term->term_id;
+            }
+        }
         
         // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)
         $user_categories = get_terms( [
@@ -248,6 +269,8 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     const TOTAL_STEPS = 7;
     
     const cuisineOptions = <?php echo wp_json_encode( $cuisine_options ); ?>;
+    const cuisineOptionsPrimary = <?php echo wp_json_encode( $cuisine_options_primary ); ?>;
+    const cuisineOptionsTags = <?php echo wp_json_encode( $cuisine_options_tags ); ?>;
     const restaurantData = <?php echo wp_json_encode( $restaurant_data ); ?>;
     const recommendedCategories = <?php echo wp_json_encode( $recommended_categories ); ?>;
     
@@ -320,17 +343,42 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     // PASSO 1: Tipo de Restaurante
     function getStep1Content() {
         const selected = wizardData.cuisine_ids || [];
-        const optionsHtml = cuisineOptions.map(c => {
+        
+        // Verificar se há primárias selecionadas
+        const selectedPrimary = selected.filter(id => {
+            return cuisineOptionsPrimary.some(opt => opt.id === id);
+        });
+        
+        const hasPrimary = selectedPrimary.length > 0;
+        const warningHtml = !hasPrimary && selected.length > 0 
+            ? '<div style="background:#fffbe2;padding:12px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#856404;border-left:4px solid #facb32;"><strong>⚠️ Importante:</strong> Escolha pelo menos 1 tipo de cozinha principal (ex.: Hamburgueria, Pizzaria, Japonesa) para receber recomendações de categorias de cardápio.</div>'
+            : '';
+        
+        // Separar primárias e tags
+        const primaryHtml = cuisineOptionsPrimary.map(c => {
             const isSelected = selected.includes(c.id);
             return `<div class="cuisine-option ${isSelected ? 'selected' : ''}" onclick="vcToggleCuisine(${c.id})">${escapeHtml(c.name)}</div>`;
         }).join('');
+        
+        const tagsHtml = cuisineOptionsTags.length > 0 ? `
+            <div style="margin-top:32px;padding-top:24px;border-top:2px solid #e0e0e0;">
+                <div style="font-weight:700;font-size:14px;color:#6b7672;margin-bottom:16px;">Estilo e formato (opcional)</div>
+                ${cuisineOptionsTags.map(c => {
+                    const isSelected = selected.includes(c.id);
+                    return `<div class="cuisine-option ${isSelected ? 'selected' : ''}" onclick="vcToggleCuisine(${c.id})">${escapeHtml(c.name)}</div>`;
+                }).join('')}
+            </div>
+        ` : '';
 
         return `
             <div class="wizard-title">Bem-vindo ao PedeVem!</div>
             <div class="wizard-subtitle">Vamos colocar sua loja no ar em poucos minutos. Primeiro, diga que tipo de negócio você tem.</div>
+            ${warningHtml}
             <div style="margin-top:24px;">
-                ${optionsHtml}
+                <div style="font-weight:700;font-size:14px;color:#2d8659;margin-bottom:16px;">Tipo de cozinha principal *</div>
+                ${primaryHtml}
             </div>
+            ${tagsHtml}
             <div style="margin-top:16px;font-size:13px;color:#6b7672;">Você pode selecionar até 3 tipos de restaurante.</div>
         `;
     }
@@ -581,6 +629,14 @@ $rest_url   = rest_url( 'vemcomer/v1' );
             case 1:
                 if (!wizardData.cuisine_ids || wizardData.cuisine_ids.length === 0) {
                     showError('Selecione pelo menos um tipo de restaurante.');
+                    return false;
+                }
+                // Validar que pelo menos 1 é primária
+                const selectedPrimary = wizardData.cuisine_ids.filter(id => {
+                    return cuisineOptionsPrimary.some(opt => opt.id === id);
+                });
+                if (selectedPrimary.length === 0) {
+                    showError('Escolha pelo menos 1 tipo de cozinha principal (ex.: Hamburgueria, Pizzaria, Japonesa) para receber recomendações de categorias de cardápio.');
                     return false;
                 }
                 break;

@@ -319,6 +319,11 @@ class Menu_Categories_Controller {
      * GET /wp-json/vemcomer/v1/menu-categories/recommended
      * Retorna categorias de cardápio recomendadas baseadas no tipo de restaurante do usuário
      */
+    /**
+     * GET /wp-json/vemcomer/v1/menu-categories/recommended
+     * Retorna categorias de cardápio recomendadas baseadas no tipo de restaurante
+     * Agora filtra apenas categorias de cozinha PRIMÁRIAS (não tags/estilo)
+     */
     public function get_recommended_categories( WP_REST_Request $request ): WP_REST_Response|WP_Error {
         if ( ! is_user_logged_in() ) {
             return new WP_Error(
@@ -355,13 +360,21 @@ class Menu_Categories_Controller {
         }
 
         // Buscar categorias de restaurante (vc_cuisine) associadas ao restaurante
-        $cuisine_terms = wp_get_post_terms( $restaurant_id, 'vc_cuisine', [ 'fields' => 'ids' ] );
+        // FILTRAR APENAS CATEGORIAS PRIMÁRIAS (não tags/estilo)
+        $cuisine_terms = wp_get_post_terms( $restaurant_id, 'vc_cuisine', [ 'fields' => 'all' ] );
 
         if ( is_wp_error( $cuisine_terms ) || empty( $cuisine_terms ) ) {
             // Se não tiver categorias, retornar categorias genéricas (sem vínculo específico)
             $cuisine_ids = [];
         } else {
-            $cuisine_ids = array_map( 'intval', $cuisine_terms );
+            // Filtrar apenas categorias primárias (_vc_is_primary_cuisine = '1')
+            $cuisine_ids = [];
+            foreach ( $cuisine_terms as $term ) {
+                $is_primary = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
+                if ( $is_primary === '1' ) {
+                    $cuisine_ids[] = (int) $term->term_id;
+                }
+            }
         }
 
         // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)

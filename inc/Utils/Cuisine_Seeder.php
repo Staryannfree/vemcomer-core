@@ -253,22 +253,75 @@ class Cuisine_Seeder {
             foreach ( $group['items'] as $label ) {
                 $slug = sanitize_title( $label );
 
-                if ( term_exists( $slug, 'vc_cuisine' ) ) {
-                    continue;
+                $existing_term = get_term_by( 'slug', $slug, 'vc_cuisine' );
+                $term_id = null;
+
+                if ( $existing_term && ! is_wp_error( $existing_term ) ) {
+                    $term_id = $existing_term->term_id;
+                } else {
+                    $result = wp_insert_term(
+                        $label,
+                        'vc_cuisine',
+                        [
+                            'slug'   => $slug,
+                            'parent' => $parent_term ?: 0,
+                        ]
+                    );
+
+                    if ( ! is_wp_error( $result ) ) {
+                        $term_id = is_array( $result ) ? $result['term_id'] : $result;
+                    }
                 }
 
-                wp_insert_term(
-                    $label,
-                    'vc_cuisine',
-                    [
-                        'slug'   => $slug,
-                        'parent' => $parent_term ?: 0,
-                    ]
-                );
+                // Marcar se é tipo de cozinha principal ou tag/estilo
+                if ( $term_id ) {
+                    $is_primary = self::is_primary_cuisine( $group_key, $label );
+                    update_term_meta( $term_id, '_vc_is_primary_cuisine', $is_primary ? '1' : '0' );
+                }
             }
         }
 
         update_option( 'vemcomer_cuisines_seeded', 1 );
+    }
+
+    /**
+     * Determina se uma categoria de restaurante é tipo de cozinha principal (1) ou tag/estilo (0)
+     * 
+     * @param string $group_key Chave do grupo (brasileira, internacional, etc.)
+     * @param string $label Nome da categoria
+     * @return bool true se for primária, false se for tag/estilo
+     */
+    private static function is_primary_cuisine( string $group_key, string $label ): bool {
+        // Tags/estilos que NÃO são tipos de cozinha principal
+        $style_tags = [
+            // Estilo, experiência & formato de serviço
+            'Restaurante familiar / kids friendly',
+            'Restaurante romântico',
+            'Restaurante temático',
+            'Restaurante com música ao vivo',
+            'Rodízio (geral)',
+            'Buffet livre',
+            'À la carte',
+            'Delivery only / Dark kitchen',
+            'Drive-thru',
+            'Take-away / para levar',
+            'Praça de alimentação / food court',
+            // Outros formatos
+            'Self-service / por quilo',
+            'Restaurante executivo',
+            'Restaurante contemporâneo',
+            'Restaurante de alta gastronomia / fine dining',
+            'Bistrô',
+            'Restaurante tropical / praiano',
+        ];
+
+        // Se está na lista de tags, retorna false
+        if ( in_array( $label, $style_tags, true ) ) {
+            return false;
+        }
+
+        // Todos os outros são tipos de cozinha principal
+        return true;
     }
 }
 
