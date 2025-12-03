@@ -1031,6 +1031,10 @@ if ($restaurant instanceof WP_Post) {
             }
         };
 
+        // Variável global para armazenar o valor correto de categorias
+        window.correctCategoriesCount = null;
+        window.categoriesGuardInterval = null;
+
         // Função para atualizar apenas o contador de categorias via API
         const updateCategoriesCount = async () => {
             console.log('[DEBUG] updateCategoriesCount() chamada');
@@ -1044,11 +1048,14 @@ if ($restaurant instanceof WP_Post) {
                 if (response.ok) {
                     const categories = await response.json();
                     console.log('[DEBUG] Resposta da API:', categories);
-                    console.log('[DEBUG] Número de categorias recebidas:', Array.isArray(categories) ? categories.length : 0);
+                    const newValue = Array.isArray(categories) ? categories.length : 0;
+                    console.log('[DEBUG] Número de categorias recebidas:', newValue);
+                    
+                    // Salvar o valor correto globalmente
+                    window.correctCategoriesCount = newValue;
                     
                     const statNode = document.querySelector('[data-stat="categories"]');
                     if (statNode) {
-                        const newValue = Array.isArray(categories) ? categories.length : 0;
                         console.log('[DEBUG] Atualizando DOM: valor antigo =', statNode.textContent, ', valor novo =', newValue);
                         statNode.textContent = newValue;
                         console.log('[DEBUG] DOM atualizado. Valor atual no elemento:', statNode.textContent);
@@ -1060,16 +1067,15 @@ if ($restaurant instanceof WP_Post) {
                                 mutations.forEach(function(mutation) {
                                     if (mutation.type === 'childList' || mutation.type === 'characterData') {
                                         const currentValue = statNode.textContent.trim();
-                                        console.warn('[DEBUG] ⚠️ VALOR DE CATEGORIAS FOI ALTERADO! Novo valor:', currentValue);
-                                        console.trace('[DEBUG] Stack trace da alteração:');
-                                        
-                                        // Se voltou para 0, tentar corrigir novamente
-                                        if (currentValue === '0' && newValue > 0) {
-                                            console.log('[DEBUG] Tentando corrigir valor de volta para', newValue);
-                                            setTimeout(() => {
-                                                statNode.textContent = newValue;
-                                                console.log('[DEBUG] Valor corrigido para', newValue);
-                                            }, 100);
+                                        if (currentValue !== String(window.correctCategoriesCount)) {
+                                            console.warn('[DEBUG] ⚠️ VALOR DE CATEGORIAS FOI ALTERADO! Esperado:', window.correctCategoriesCount, 'Atual:', currentValue);
+                                            console.trace('[DEBUG] Stack trace da alteração:');
+                                            
+                                            // Corrigir imediatamente
+                                            if (window.correctCategoriesCount !== null) {
+                                                console.log('[DEBUG] Corrigindo valor de volta para', window.correctCategoriesCount);
+                                                statNode.textContent = window.correctCategoriesCount;
+                                            }
                                         }
                                     }
                                 });
@@ -1083,6 +1089,29 @@ if ($restaurant instanceof WP_Post) {
                             
                             console.log('[DEBUG] MutationObserver adicionado ao elemento de categorias');
                         }
+                        
+                        // Iniciar guarda periódica (verifica a cada 500ms por 10 segundos)
+                        if (window.categoriesGuardInterval) {
+                            clearInterval(window.categoriesGuardInterval);
+                        }
+                        
+                        let guardCount = 0;
+                        window.categoriesGuardInterval = setInterval(() => {
+                            guardCount++;
+                            const currentValue = statNode.textContent.trim();
+                            if (currentValue !== String(window.correctCategoriesCount) && window.correctCategoriesCount !== null) {
+                                console.warn('[DEBUG] 🛡️ GUARDA: Valor incorreto detectado! Esperado:', window.correctCategoriesCount, 'Atual:', currentValue, 'Tentativa:', guardCount);
+                                statNode.textContent = window.correctCategoriesCount;
+                            }
+                            
+                            // Parar após 20 verificações (10 segundos)
+                            if (guardCount >= 20) {
+                                clearInterval(window.categoriesGuardInterval);
+                                window.categoriesGuardInterval = null;
+                                console.log('[DEBUG] Guarda periódica finalizada após 10 segundos');
+                            }
+                        }, 500);
+                        
                     } else {
                         console.warn('[DEBUG] Elemento [data-stat="categories"] não encontrado no DOM');
                     }
