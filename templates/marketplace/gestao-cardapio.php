@@ -255,7 +255,6 @@ if (empty($categories_for_view) && $restaurant instanceof WP_Post) {
     $categories_for_view[] = $default_category;
 }
 
-<?php
 // IMPORTANTE: Buscar categorias ANTES de calcular $stats['categories']
 // Nova estratégia: Buscar todas as categorias e filtrar via PHP para garantir precisão
 // Isso evita problemas com meta_query complexas que podem falhar se o dado não existir
