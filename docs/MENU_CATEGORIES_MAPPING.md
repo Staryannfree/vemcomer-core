@@ -762,6 +762,91 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 
 ---
 
+#### 57. **À la Carte**
+**Tipos de restaurante vinculados:**
+- À la carte
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Sobremesas (ordem 3)
+- Vinhos e bebidas (ordem 4)
+
+---
+
+#### 58. **Açougue Gourmet**
+**Tipos de restaurante vinculados:**
+- Açougue gourmet
+
+**Categorias de cardápio:**
+- Carnes especiais (ordem 1)
+- Cortes especiais (ordem 2)
+- Produtos prontos (ordem 3)
+- Acompanhamentos (ordem 4)
+
+---
+
+#### 59. **Hortifruti**
+**Tipos de restaurante vinculados:**
+- Hortifruti
+
+**Categorias de cardápio:**
+- Frutas (ordem 1)
+- Verduras e legumes (ordem 2)
+- Produtos orgânicos (ordem 3)
+- Sucos e bebidas (ordem 4)
+
+---
+
+#### 60. **Peixaria**
+**Tipos de restaurante vinculados:**
+- Peixaria
+
+**Categorias de cardápio:**
+- Peixes frescos (ordem 1)
+- Frutos do mar (ordem 2)
+- Pratos prontos (ordem 3)
+- Acompanhamentos (ordem 4)
+
+---
+
+#### 61. **Loja de Conveniência**
+**Tipos de restaurante vinculados:**
+- Loja de conveniência
+
+**Categorias de cardápio:**
+- Lanches rápidos (ordem 1)
+- Bebidas (ordem 2)
+- Produtos diversos (ordem 3)
+- Sobremesas (ordem 4)
+
+---
+
+#### 62. **Loja de Vinhos e Destilados**
+**Tipos de restaurante vinculados:**
+- Loja de vinhos e destilados
+
+**Categorias de cardápio:**
+- Vinhos (ordem 1)
+- Destilados (ordem 2)
+- Cervejas especiais (ordem 3)
+- Acessórios e petiscos (ordem 4)
+
+---
+
+#### 63. **Refeição Rápida / Fast-food**
+**Tipos de restaurante vinculados:**
+- Refeição rápida / fast-food
+
+**Categorias de cardápio:**
+- Lanches (ordem 1)
+- Combos (ordem 2)
+- Acompanhamentos (ordem 3)
+- Bebidas (ordem 4)
+- Sobremesas (ordem 5)
+
+---
+
 ## 📊 Resumo Final
 
 ### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
@@ -822,6 +907,13 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 54. **Drive-thru/Take-away** (Drive-thru, Take-away / para levar)
 55. **Praça de Alimentação/Food Court** (Praça de alimentação / food court)
 56. **Mercado/Empório/Loja de Produtos Naturais** (Mercado / mini mercado, Empório, Loja de produtos naturais)
+57. **À la Carte** (À la carte)
+58. **Açougue Gourmet** (Açougue gourmet)
+59. **Hortifruti** (Hortifruti)
+60. **Peixaria** (Peixaria)
+61. **Loja de Conveniência** (Loja de conveniência)
+62. **Loja de Vinhos e Destilados** (Loja de vinhos e destilados)
+63. **Refeição Rápida/Fast-food** (Refeição rápida / fast-food)
 
 ### 📝 Categorias Genéricas (aparecem para todos):
 - Entradas

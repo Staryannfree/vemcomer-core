@@ -2404,6 +2404,223 @@ class Menu_Category_Catalog_Seeder {
                 ],
             ],
 
+            // Categorias para À la Carte
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'À la carte',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'À la carte',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'À la carte',
+                ],
+            ],
+            [
+                'name'         => 'Vinhos e bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'À la carte',
+                ],
+            ],
+
+            // Categorias para Açougue Gourmet
+            [
+                'name'         => 'Carnes especiais',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Açougue gourmet',
+                ],
+            ],
+            [
+                'name'         => 'Cortes especiais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Açougue gourmet',
+                ],
+            ],
+            [
+                'name'         => 'Produtos prontos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Açougue gourmet',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Açougue gourmet',
+                ],
+            ],
+
+            // Categorias para Hortifruti
+            [
+                'name'         => 'Frutas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Hortifruti',
+                ],
+            ],
+            [
+                'name'         => 'Verduras e legumes',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Hortifruti',
+                ],
+            ],
+            [
+                'name'         => 'Produtos orgânicos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Hortifruti',
+                ],
+            ],
+            [
+                'name'         => 'Sucos e bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Hortifruti',
+                ],
+            ],
+
+            // Categorias para Peixaria
+            [
+                'name'         => 'Peixes frescos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Peixaria',
+                ],
+            ],
+            [
+                'name'         => 'Frutos do mar',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Peixaria',
+                ],
+            ],
+            [
+                'name'         => 'Pratos prontos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Peixaria',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Peixaria',
+                ],
+            ],
+
+            // Categorias para Loja de Conveniência
+            [
+                'name'         => 'Lanches rápidos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Loja de conveniência',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Loja de conveniência',
+                ],
+            ],
+            [
+                'name'         => 'Produtos diversos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Loja de conveniência',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Loja de conveniência',
+                ],
+            ],
+
+            // Categorias para Loja de Vinhos e Destilados
+            [
+                'name'         => 'Vinhos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Loja de vinhos e destilados',
+                ],
+            ],
+            [
+                'name'         => 'Destilados',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Loja de vinhos e destilados',
+                ],
+            ],
+            [
+                'name'         => 'Cervejas especiais',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Loja de vinhos e destilados',
+                ],
+            ],
+            [
+                'name'         => 'Acessórios e petiscos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Loja de vinhos e destilados',
+                ],
+            ],
+
+            // Categorias para Refeição Rápida / Fast-food
+            [
+                'name'         => 'Lanches',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Refeição rápida / fast-food',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Refeição rápida / fast-food',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Refeição rápida / fast-food',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Refeição rápida / fast-food',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Refeição rápida / fast-food',
+                ],
+            ],
+
             // Categorias genéricas (para qualquer tipo)
             [
                 'name'         => 'Entradas',
