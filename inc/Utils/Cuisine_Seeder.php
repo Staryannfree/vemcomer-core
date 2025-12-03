@@ -285,6 +285,42 @@ class Cuisine_Seeder {
     }
 
     /**
+     * Atualiza termos existentes com a meta _vc_is_primary_cuisine
+     * Útil para atualizar termos criados antes desta funcionalidade
+     */
+    public static function update_existing_terms(): void {
+        if ( ! taxonomy_exists( 'vc_cuisine' ) ) {
+            return;
+        }
+
+        $all_terms = get_terms( [
+            'taxonomy'   => 'vc_cuisine',
+            'hide_empty' => false,
+        ] );
+
+        if ( is_wp_error( $all_terms ) || empty( $all_terms ) ) {
+            return;
+        }
+
+        foreach ( $all_terms as $term ) {
+            // Pular grupos pais
+            if ( $term->parent === 0 && str_starts_with( (string) $term->slug, 'grupo-' ) ) {
+                continue;
+            }
+
+            // Verificar se já tem a meta definida
+            $existing_meta = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
+            if ( $existing_meta !== '' ) {
+                continue; // Já foi atualizado
+            }
+
+            // Determinar se é primária
+            $is_primary = self::is_primary_cuisine( '', $term->name );
+            update_term_meta( $term->term_id, '_vc_is_primary_cuisine', $is_primary ? '1' : '0' );
+        }
+    }
+
+    /**
      * Determina se uma categoria de restaurante é tipo de cozinha principal (1) ou tag/estilo (0)
      * 
      * @param string $group_key Chave do grupo (brasileira, internacional, etc.)
