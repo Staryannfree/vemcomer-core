@@ -1,0 +1,244 @@
+# Mapeamento de Categorias de Cardápio por Tipo de Restaurante
+
+Este documento lista todas as categorias de cardápio criadas e seus vínculos com tipos de restaurantes (vc_cuisine).
+
+## Status Atual
+
+### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
+
+1. **Hamburgueria** (Hamburgueria artesanal, Hamburgueria smash, Lanchonete, Food truck, Culinária norte-americana)
+   - Entradas / Porções
+   - Hambúrgueres
+   - Combos
+   - Sobremesas
+   - Bebidas
+
+2. **Pizzaria** (Pizzaria tradicional, Pizzaria napolitana, Pizzaria rodízio, Pizzaria delivery, Culinária italiana)
+   - Pizzas salgadas
+   - Pizzas doces
+   - Combos
+   - Bebidas
+
+3. **Sorveteria/Açaíteria** (Sorveteria, Gelateria, Açaíteria, Yogurteria)
+   - Monte seu açaí / sorvete
+   - Combos
+   - Adicionais
+   - Bebidas
+
+4. **Bar/Boteco** (Bar, Boteco, Gastrobar, Pub, Sports bar, Comida de boteco, Cervejaria artesanal, Choperia, Bar de vinhos, Bar de drinks)
+   - Petiscos e porções
+   - Pratos principais
+   - Bebidas
+
+5. **Cafeteria/Padaria** (Cafeteria, Coffee shop especializado, Padaria tradicional, Padaria gourmet, Confeitaria, Doceria)
+   - Cafés
+   - Salgados
+   - Doces e sobremesas
+   - Bebidas
+
+6. **Restaurante Japonês** (Culinária japonesa, Sushi bar, Temakeria, Restaurante de lámen / ramen, Izakaya)
+   - Entradas
+   - Sushis e sashimis
+   - Temakis
+   - Pratos quentes
+   - Bebidas
+
+### 📝 Categorias Genéricas (aparecem para todos):
+- Entradas
+- Pratos principais
+- Sobremesas
+- Bebidas
+
+---
+
+## 🆕 Novas Categorias Criadas
+
+### ✅ Categorias de Restaurantes que AGORA TÊM categorias próprias:
+
+#### 7. **Marmitaria / Marmitex / Prato feito (PF)**
+**Tipos de restaurante vinculados:**
+- Marmitaria / Marmitex
+- Prato feito (PF)
+- Self-service / por quilo
+- Restaurante executivo
+- Marmita fitness
+
+**Categorias de cardápio:**
+- Marmitas (ordem 1)
+- Pratos executivos (ordem 2)
+- Acompanhamentos (ordem 3)
+- Bebidas (ordem 4)
+
+---
+
+#### 8. **Churrascaria**
+**Tipos de restaurante vinculados:**
+- Churrascaria rodízio
+- Churrascaria à la carte
+- Steakhouse
+
+**Categorias de cardápio:**
+- Carnes (ordem 1)
+- Acompanhamentos (ordem 2)
+- Saladas (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 9. **Restaurante Chinês**
+**Tipos de restaurante vinculados:**
+- Culinária chinesa
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Yakissoba / Macarrão (ordem 3)
+- Combos (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 10. **Restaurante Árabe / Libanês**
+**Tipos de restaurante vinculados:**
+- Culinária árabe
+- Culinária libanesa
+- Culinária turca
+- Esfiharia
+
+**Categorias de cardápio:**
+- Entradas / Mezze (ordem 1)
+- Esfihas / Pães (ordem 2)
+- Pratos principais (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 11. **Restaurante Mexicano / Tex-Mex**
+**Tipos de restaurante vinculados:**
+- Culinária mexicana
+- Tex-Mex
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Tacos / Burritos (ordem 2)
+- Pratos principais (ordem 3)
+- Molhos e acompanhamentos (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 12. **Restaurante de Frutos do Mar / Peixes**
+**Tipos de restaurante vinculados:**
+- Frutos do mar
+- Peixes
+- Cevicheria
+- Culinária peruana
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Peixes (ordem 2)
+- Frutos do mar (ordem 3)
+- Ceviches (ordem 4)
+- Acompanhamentos (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+#### 13. **Restaurante Vegetariano / Vegano**
+**Tipos de restaurante vinculados:**
+- Vegetariano
+- Vegano
+- Plant-based
+- Comida fit / saudável
+- Natural / saudável
+- Saladas & bowls
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Saladas e bowls (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 14. **Pastelaria / Esfiharia**
+**Tipos de restaurante vinculados:**
+- Pastelaria
+- Esfiharia
+
+**Categorias de cardápio:**
+- Pastéis salgados (ordem 1) - Pastelaria
+- Pastéis doces (ordem 2) - Pastelaria
+- Esfihas (ordem 3) - Esfiharia
+- Bebidas (ordem 4) - Ambos
+
+---
+
+#### 15. **Restaurante de Massas / Risotos**
+**Tipos de restaurante vinculados:**
+- Massas & risotos
+- Culinária italiana
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Massas (ordem 2)
+- Risotos (ordem 3)
+- Pratos principais (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 16. **Restaurante Brasileiro / Caseiro**
+**Tipos de restaurante vinculados:**
+- Restaurante brasileiro caseiro
+- Comida caseira
+- Comida mineira
+- Comida baiana
+- Comida nordestina
+- Comida gaúcha
+- Feijoada
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Feijoada (ordem 3)
+- Acompanhamentos (ordem 4)
+- Sobremesas (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+## 📊 Resumo Final
+
+### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
+
+1. **Hamburgueria** (Hamburgueria artesanal, Hamburgueria smash, Lanchonete, Food truck, Culinária norte-americana)
+2. **Pizzaria** (Pizzaria tradicional, Pizzaria napolitana, Pizzaria rodízio, Pizzaria delivery, Culinária italiana)
+3. **Sorveteria/Açaíteria** (Sorveteria, Gelateria, Açaíteria, Yogurteria)
+4. **Bar/Boteco** (Bar, Boteco, Gastrobar, Pub, Sports bar, Comida de boteco, Cervejaria artesanal, Choperia, Bar de vinhos, Bar de drinks)
+5. **Cafeteria/Padaria** (Cafeteria, Coffee shop especializado, Padaria tradicional, Padaria gourmet, Confeitaria, Doceria)
+6. **Restaurante Japonês** (Culinária japonesa, Sushi bar, Temakeria, Restaurante de lámen / ramen, Izakaya)
+7. **Marmitaria/Marmitex** (Marmitaria / Marmitex, Prato feito (PF), Self-service / por quilo, Restaurante executivo, Marmita fitness)
+8. **Churrascaria** (Churrascaria rodízio, Churrascaria à la carte, Steakhouse)
+9. **Restaurante Chinês** (Culinária chinesa)
+10. **Restaurante Árabe/Libanês** (Culinária árabe, Culinária libanesa, Culinária turca, Esfiharia)
+11. **Restaurante Mexicano** (Culinária mexicana, Tex-Mex)
+12. **Restaurante de Frutos do Mar** (Frutos do mar, Peixes, Cevicheria, Culinária peruana)
+13. **Restaurante Vegetariano/Vegano** (Vegetariano, Vegano, Plant-based, Comida fit / saudável, Natural / saudável, Saladas & bowls)
+14. **Pastelaria/Esfiharia** (Pastelaria, Esfiharia)
+15. **Restaurante de Massas** (Massas & risotos, Culinária italiana)
+16. **Restaurante Brasileiro** (Restaurante brasileiro caseiro, Comida caseira, Comida mineira, Comida baiana, Comida nordestina, Comida gaúcha, Feijoada)
+
+### 📝 Categorias Genéricas (aparecem para todos):
+- Entradas
+- Pratos principais
+- Sobremesas
+- Bebidas
+
+---
+
+*Última atualização: 2024-12-19*
+

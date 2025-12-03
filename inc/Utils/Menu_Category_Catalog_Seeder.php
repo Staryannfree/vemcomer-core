@@ -369,6 +369,481 @@ class Menu_Category_Catalog_Seeder {
                 ],
             ],
 
+            // Categorias para Marmitaria / Marmitex / Prato feito (PF)
+            [
+                'name'         => 'Marmitas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Marmitaria / Marmitex',
+                    'Prato feito (PF)',
+                    'Self-service / por quilo',
+                    'Restaurante executivo',
+                    'Marmita fitness',
+                ],
+            ],
+            [
+                'name'         => 'Pratos executivos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Marmitaria / Marmitex',
+                    'Prato feito (PF)',
+                    'Self-service / por quilo',
+                    'Restaurante executivo',
+                    'Marmita fitness',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Marmitaria / Marmitex',
+                    'Prato feito (PF)',
+                    'Self-service / por quilo',
+                    'Restaurante executivo',
+                    'Marmita fitness',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Marmitaria / Marmitex',
+                    'Prato feito (PF)',
+                    'Self-service / por quilo',
+                    'Restaurante executivo',
+                    'Marmita fitness',
+                ],
+            ],
+
+            // Categorias para Churrascaria
+            [
+                'name'         => 'Carnes',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Churrascaria rodízio',
+                    'Churrascaria à la carte',
+                    'Steakhouse',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Churrascaria rodízio',
+                    'Churrascaria à la carte',
+                    'Steakhouse',
+                ],
+            ],
+            [
+                'name'         => 'Saladas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Churrascaria rodízio',
+                    'Churrascaria à la carte',
+                    'Steakhouse',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Churrascaria rodízio',
+                    'Churrascaria à la carte',
+                    'Steakhouse',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Churrascaria rodízio',
+                    'Churrascaria à la carte',
+                    'Steakhouse',
+                ],
+            ],
+
+            // Categorias para Restaurante Chinês
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária chinesa',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária chinesa',
+                ],
+            ],
+            [
+                'name'         => 'Yakissoba / Macarrão',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária chinesa',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária chinesa',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária chinesa',
+                ],
+            ],
+
+            // Categorias para Restaurante Árabe / Libanês
+            [
+                'name'         => 'Entradas / Mezze',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária árabe',
+                    'Culinária libanesa',
+                    'Culinária turca',
+                ],
+            ],
+            [
+                'name'         => 'Esfihas / Pães',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária árabe',
+                    'Culinária libanesa',
+                    'Culinária turca',
+                    'Esfiharia',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária árabe',
+                    'Culinária libanesa',
+                    'Culinária turca',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária árabe',
+                    'Culinária libanesa',
+                    'Culinária turca',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária árabe',
+                    'Culinária libanesa',
+                    'Culinária turca',
+                ],
+            ],
+
+            // Categorias para Restaurante Mexicano / Tex-Mex
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária mexicana',
+                    'Tex-Mex',
+                ],
+            ],
+            [
+                'name'         => 'Tacos / Burritos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária mexicana',
+                    'Tex-Mex',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária mexicana',
+                    'Tex-Mex',
+                ],
+            ],
+            [
+                'name'         => 'Molhos e acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária mexicana',
+                    'Tex-Mex',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária mexicana',
+                    'Tex-Mex',
+                ],
+            ],
+
+            // Categorias para Restaurante de Frutos do Mar / Peixes
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Frutos do mar',
+                    'Peixes',
+                    'Cevicheria',
+                ],
+            ],
+            [
+                'name'         => 'Peixes',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Frutos do mar',
+                    'Peixes',
+                ],
+            ],
+            [
+                'name'         => 'Frutos do mar',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Frutos do mar',
+                    'Cevicheria',
+                ],
+            ],
+            [
+                'name'         => 'Ceviches',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Cevicheria',
+                    'Culinária peruana',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Frutos do mar',
+                    'Peixes',
+                    'Cevicheria',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Frutos do mar',
+                    'Peixes',
+                    'Cevicheria',
+                ],
+            ],
+
+            // Categorias para Restaurante Vegetariano / Vegano
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Vegetariano',
+                    'Vegano',
+                    'Plant-based',
+                    'Comida fit / saudável',
+                    'Natural / saudável',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Vegetariano',
+                    'Vegano',
+                    'Plant-based',
+                    'Comida fit / saudável',
+                    'Natural / saudável',
+                ],
+            ],
+            [
+                'name'         => 'Saladas e bowls',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Vegetariano',
+                    'Vegano',
+                    'Plant-based',
+                    'Comida fit / saudável',
+                    'Natural / saudável',
+                    'Saladas & bowls',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Vegetariano',
+                    'Vegano',
+                    'Plant-based',
+                    'Comida fit / saudável',
+                    'Natural / saudável',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Vegetariano',
+                    'Vegano',
+                    'Plant-based',
+                    'Comida fit / saudável',
+                    'Natural / saudável',
+                ],
+            ],
+
+            // Categorias para Pastelaria / Esfiharia
+            [
+                'name'         => 'Pastéis salgados',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Pastelaria',
+                ],
+            ],
+            [
+                'name'         => 'Pastéis doces',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Pastelaria',
+                ],
+            ],
+            [
+                'name'         => 'Esfihas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Esfiharia',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Pastelaria',
+                    'Esfiharia',
+                ],
+            ],
+
+            // Categorias para Restaurante de Massas / Risotos
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Massas & risotos',
+                    'Culinária italiana',
+                ],
+            ],
+            [
+                'name'         => 'Massas',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Massas & risotos',
+                    'Culinária italiana',
+                ],
+            ],
+            [
+                'name'         => 'Risotos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Massas & risotos',
+                    'Culinária italiana',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Massas & risotos',
+                    'Culinária italiana',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Massas & risotos',
+                    'Culinária italiana',
+                ],
+            ],
+
+            // Categorias para Restaurante Brasileiro / Caseiro
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Restaurante brasileiro caseiro',
+                    'Comida caseira',
+                    'Comida mineira',
+                    'Comida baiana',
+                    'Comida nordestina',
+                    'Comida gaúcha',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Restaurante brasileiro caseiro',
+                    'Comida caseira',
+                    'Comida mineira',
+                    'Comida baiana',
+                    'Comida nordestina',
+                    'Comida gaúcha',
+                ],
+            ],
+            [
+                'name'         => 'Feijoada',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Feijoada',
+                    'Restaurante brasileiro caseiro',
+                    'Comida caseira',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Restaurante brasileiro caseiro',
+                    'Comida caseira',
+                    'Comida mineira',
+                    'Comida baiana',
+                    'Comida nordestina',
+                    'Comida gaúcha',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Restaurante brasileiro caseiro',
+                    'Comida caseira',
+                    'Comida mineira',
+                    'Comida baiana',
+                    'Comida nordestina',
+                    'Comida gaúcha',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Restaurante brasileiro caseiro',
+                    'Comida caseira',
+                    'Comida mineira',
+                    'Comida baiana',
+                    'Comida nordestina',
+                    'Comida gaúcha',
+                ],
+            ],
+
             // Categorias genéricas (para qualquer tipo)
             [
                 'name'         => 'Entradas',
