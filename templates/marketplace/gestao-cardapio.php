@@ -387,42 +387,43 @@ if ($restaurant instanceof WP_Post) {
     </style>
 
     <?php
-    // Buscar categorias do cardápio (apenas as criadas pelo usuário, não as do catálogo, e do restaurante atual)
-    $restaurant_id_stats = $restaurant ? $restaurant->ID : 0;
-    
-    $all_menu_categories = get_terms( [
+    // Nova estratégia: Buscar todas as categorias e filtrar via PHP para garantir precisão
+    // Isso evita problemas com meta_query complexas que podem falhar se o dado não existir
+    $all_terms = get_terms( [
         'taxonomy'   => 'vc_menu_category',
         'hide_empty' => false,
-        'meta_query' => [
-            'relation' => 'AND',
-            [
-                'relation' => 'OR',
-                [
-                    'key'     => '_vc_restaurant_id',
-                    'value'   => $restaurant_id_stats,
-                    'compare' => '=',
-                ],
-                [
-                    'key'     => '_vc_restaurant_id',
-                    'compare' => 'NOT EXISTS',
-                ],
-            ],
-            [
-                'relation' => 'OR',
-                [
-                    'key'     => '_vc_is_catalog_category',
-                    'compare' => 'NOT EXISTS',
-                ],
-                [
-                    'key'     => '_vc_is_catalog_category',
-                    'value'   => '1',
-                    'compare' => '!=',
-                ],
-            ],
-        ],
     ] );
     
-    $menu_categories = ! is_wp_error( $all_menu_categories ) ? $all_menu_categories : [];
+    $menu_categories = [];
+    $restaurant_id_stats = $restaurant ? $restaurant->ID : 0;
+
+    if ( ! is_wp_error( $all_terms ) && ! empty( $all_terms ) ) {
+        foreach ( $all_terms as $term ) {
+            // Metadados
+            $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
+            $cat_rest_id = get_term_meta( $term->term_id, '_vc_restaurant_id', true );
+            
+            // 1. Ignorar se for do catálogo
+            if ( $is_catalog === '1' ) {
+                continue;
+            }
+
+            // 2. Verificar pertencimento
+            // Aceita se:
+            // - Tiver o ID do restaurante correto
+            // - OU se não tiver ID de restaurante (legado/criado antes da atualização)
+            if ( ! empty( $cat_rest_id ) ) {
+                if ( (int)$cat_rest_id === $restaurant_id_stats ) {
+                    $menu_categories[] = $term;
+                }
+            } else {
+                // Sem ID vinculado: assume que é do usuário atual se ele não for admin vendo tudo
+                // Na prática, categorias sem ID são "órfãs" ou legadas. Vamos incluí-las na contagem por enquanto
+                // para manter compatibilidade com o que foi criado antes.
+                $menu_categories[] = $term;
+            }
+        }
+    }
     ?>
 
     <?php if ($needs_addons_onboarding) : ?>
