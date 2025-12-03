@@ -1004,6 +1004,7 @@ if ($restaurant instanceof WP_Post) {
         const restNonce = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
 
         const updateStats = () => {
+            console.log('[DEBUG] updateStats() chamada');
             const statNodes = {
                 active: document.querySelector('[data-stat="active"]'),
                 paused: document.querySelector('[data-stat="paused"]'),
@@ -1022,12 +1023,17 @@ if ($restaurant instanceof WP_Post) {
             if (statNodes.active) statNodes.active.textContent = active;
             if (statNodes.paused) statNodes.paused.textContent = paused;
             if (statNodes.noThumb) statNodes.noThumb.textContent = noThumb;
+            
             // Não atualizar categorias aqui, pois depende das abas renderizadas (stale). 
             // O contador de categorias é atualizado via updateCategoriesCount()
+            if (statNodes.categories) {
+                console.log('[DEBUG] updateStats() NÃO atualizou categorias. Valor atual mantido:', statNodes.categories.textContent);
+            }
         };
 
         // Função para atualizar apenas o contador de categorias via API
         const updateCategoriesCount = async () => {
+            console.log('[DEBUG] updateCategoriesCount() chamada');
             try {
                 const response = await fetch('<?php echo esc_js(rest_url('vemcomer/v1/menu-categories')); ?>', {
                     headers: {
@@ -1037,13 +1043,23 @@ if ($restaurant instanceof WP_Post) {
 
                 if (response.ok) {
                     const categories = await response.json();
+                    console.log('[DEBUG] Resposta da API:', categories);
+                    console.log('[DEBUG] Número de categorias recebidas:', Array.isArray(categories) ? categories.length : 0);
+                    
                     const statNode = document.querySelector('[data-stat="categories"]');
                     if (statNode) {
-                        statNode.textContent = Array.isArray(categories) ? categories.length : 0;
+                        const newValue = Array.isArray(categories) ? categories.length : 0;
+                        console.log('[DEBUG] Atualizando DOM: valor antigo =', statNode.textContent, ', valor novo =', newValue);
+                        statNode.textContent = newValue;
+                        console.log('[DEBUG] DOM atualizado. Valor atual no elemento:', statNode.textContent);
+                    } else {
+                        console.warn('[DEBUG] Elemento [data-stat="categories"] não encontrado no DOM');
                     }
+                } else {
+                    console.error('[DEBUG] Resposta da API não foi OK:', response.status, response.statusText);
                 }
             } catch (e) {
-                console.error('Erro ao atualizar contador de categorias:', e);
+                console.error('[DEBUG] Erro ao atualizar contador de categorias:', e);
             }
         };
 
@@ -2934,10 +2950,17 @@ if ($restaurant instanceof WP_Post) {
         
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('[DEBUG] DOMContentLoaded disparado');
+            const initialValue = document.querySelector('[data-stat="categories"]')?.textContent;
+            console.log('[DEBUG] Valor inicial de categorias no DOM:', initialValue);
+            
             // Atualizar contador de categorias via API ao carregar a página
             // (Garante que o número corresponda ao que é visto no modal, corrigindo possíveis erros de renderização do PHP)
             if (typeof updateCategoriesCount === 'function') {
+                console.log('[DEBUG] Chamando updateCategoriesCount() após DOMContentLoaded');
                 updateCategoriesCount();
+            } else {
+                console.error('[DEBUG] updateCategoriesCount não está definida!');
             }
         });
         
