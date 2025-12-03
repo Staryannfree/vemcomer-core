@@ -18,6 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// Carregar helpers se necessário
+if ( ! function_exists( 'vc_marketplace_current_restaurant' ) ) {
+    require_once __DIR__ . '/helpers.php';
+}
+
 $restaurant = vc_marketplace_current_restaurant();
 if ( ! $restaurant ) {
     return;
