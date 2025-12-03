@@ -347,6 +347,146 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 
 ---
 
+#### 27. **Restaurante Francês / Bistrô**
+**Tipos de restaurante vinculados:**
+- Culinária francesa
+- Bistrô
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Sobremesas (ordem 3)
+- Vinhos e bebidas (ordem 4)
+
+---
+
+#### 28. **Restaurante Português**
+**Tipos de restaurante vinculados:**
+- Culinária portuguesa
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Bacalhau (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 29. **Restaurante Espanhol / Tapas**
+**Tipos de restaurante vinculados:**
+- Culinária espanhola
+- Tapas
+
+**Categorias de cardápio:**
+- Tapas (ordem 1)
+- Pratos principais (ordem 2)
+- Paella (ordem 3)
+- Sobremesas (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 30. **Sanduíches & Wraps**
+**Tipos de restaurante vinculados:**
+- Sanduíches & baguetes
+- Wraps & tortillas
+
+**Categorias de cardápio:**
+- Sanduíches (ordem 1) - Sanduíches & baguetes
+- Baguetes (ordem 2) - Sanduíches & baguetes
+- Wraps / Tortillas (ordem 1) - Wraps & tortillas
+- Combos (ordem 2) - Ambos
+- Bebidas (ordem 3) - Ambos
+
+---
+
+#### 31. **Salgados & Frituras**
+**Tipos de restaurante vinculados:**
+- Salgados variados
+- Coxinha & frituras
+
+**Categorias de cardápio:**
+- Salgados variados (ordem 1) - Salgados variados
+- Coxinhas & frituras (ordem 1) - Coxinha & frituras
+- Combos (ordem 2) - Ambos
+- Bebidas (ordem 3) - Ambos
+
+---
+
+#### 32. **Doces & Sobremesas Especializadas**
+**Tipos de restaurante vinculados:**
+- Brigaderia
+- Brownieria
+- Loja de donuts
+- Casa de bolos
+- Chocolateria
+- Bomboniere
+
+**Categorias de cardápio:**
+- Brigadeiros (ordem 1) - Brigaderia
+- Brownies (ordem 1) - Brownieria
+- Donuts (ordem 1) - Loja de donuts
+- Bolos (ordem 1) - Casa de bolos
+- Chocolates (ordem 1) - Chocolateria, Bomboniere
+- Bebidas (ordem 2) - Todos
+
+---
+
+#### 33. **Waffle House / Casa de Chá**
+**Tipos de restaurante vinculados:**
+- Waffle house
+- Casa de chá
+
+**Categorias de cardápio:**
+- Waffles (ordem 1) - Waffle house
+- Chás (ordem 1) - Casa de chá
+- Acompanhamentos (ordem 2) - Ambos
+- Bebidas (ordem 3) - Ambos
+
+---
+
+#### 34. **Galeteria / Frango**
+**Tipos de restaurante vinculados:**
+- Frango assado
+- Frango frito estilo americano
+- Galeteria
+
+**Categorias de cardápio:**
+- Frango assado (ordem 1) - Frango assado, Galeteria
+- Frango frito (ordem 1) - Frango frito estilo americano
+- Acompanhamentos (ordem 2) - Todos
+- Combos (ordem 3) - Todos
+- Bebidas (ordem 4) - Todos
+
+---
+
+#### 35. **Espetinhos / Grelhados**
+**Tipos de restaurante vinculados:**
+- Espetinhos
+- Grelhados
+
+**Categorias de cardápio:**
+- Espetinhos (ordem 1) - Espetinhos
+- Grelhados (ordem 1) - Grelhados
+- Acompanhamentos (ordem 2) - Ambos
+- Bebidas (ordem 3) - Ambos
+
+---
+
+#### 36. **Poke**
+**Tipos de restaurante vinculados:**
+- Poke
+
+**Categorias de cardápio:**
+- Pokes (ordem 1)
+- Bases (ordem 2)
+- Proteínas (ordem 3)
+- Molhos e complementos (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
 ## 📊 Resumo Final
 
 ### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
@@ -377,6 +517,16 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 24. **Tapiocaria/Panquecaria** (Tapiocaria, Panquecaria)
 25. **Creperia** (Creperia salgada, Creperia doce)
 26. **Restaurante de Sopas/Caldos** (Sopas & caldos)
+27. **Restaurante Francês/Bistrô** (Culinária francesa, Bistrô)
+28. **Restaurante Português** (Culinária portuguesa)
+29. **Restaurante Espanhol/Tapas** (Culinária espanhola, Tapas)
+30. **Sanduíches & Wraps** (Sanduíches & baguetes, Wraps & tortillas)
+31. **Salgados & Frituras** (Salgados variados, Coxinha & frituras)
+32. **Doces & Sobremesas Especializadas** (Brigaderia, Brownieria, Loja de donuts, Casa de bolos, Chocolateria, Bomboniere)
+33. **Waffle House/Casa de Chá** (Waffle house, Casa de chá)
+34. **Galeteria/Frango** (Frango assado, Frango frito estilo americano, Galeteria)
+35. **Espetinhos/Grelhados** (Espetinhos, Grelhados)
+36. **Poke** (Poke)
 
 ### 📝 Categorias Genéricas (aparecem para todos):
 - Entradas

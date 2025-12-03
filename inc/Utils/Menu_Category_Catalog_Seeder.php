@@ -1238,6 +1238,382 @@ class Menu_Category_Catalog_Seeder {
                 ],
             ],
 
+            // Categorias para Restaurante Francês
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária francesa',
+                    'Bistrô',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária francesa',
+                    'Bistrô',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária francesa',
+                    'Bistrô',
+                ],
+            ],
+            [
+                'name'         => 'Vinhos e bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária francesa',
+                    'Bistrô',
+                ],
+            ],
+
+            // Categorias para Restaurante Português
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária portuguesa',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária portuguesa',
+                ],
+            ],
+            [
+                'name'         => 'Bacalhau',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária portuguesa',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária portuguesa',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária portuguesa',
+                ],
+            ],
+
+            // Categorias para Restaurante Espanhol / Tapas
+            [
+                'name'         => 'Tapas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária espanhola',
+                    'Tapas',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária espanhola',
+                ],
+            ],
+            [
+                'name'         => 'Paella',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária espanhola',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária espanhola',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária espanhola',
+                    'Tapas',
+                ],
+            ],
+
+            // Categorias para Sanduíches & Wraps
+            [
+                'name'         => 'Sanduíches',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Sanduíches & baguetes',
+                ],
+            ],
+            [
+                'name'         => 'Baguetes',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Sanduíches & baguetes',
+                ],
+            ],
+            [
+                'name'         => 'Wraps / Tortillas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Wraps & tortillas',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Sanduíches & baguetes',
+                    'Wraps & tortillas',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Sanduíches & baguetes',
+                    'Wraps & tortillas',
+                ],
+            ],
+
+            // Categorias para Salgados & Frituras
+            [
+                'name'         => 'Salgados variados',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Salgados variados',
+                ],
+            ],
+            [
+                'name'         => 'Coxinhas & frituras',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Coxinha & frituras',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Salgados variados',
+                    'Coxinha & frituras',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Salgados variados',
+                    'Coxinha & frituras',
+                ],
+            ],
+
+            // Categorias para Doces & Sobremesas Especializadas
+            [
+                'name'         => 'Brigadeiros',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Brigaderia',
+                ],
+            ],
+            [
+                'name'         => 'Brownies',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Brownieria',
+                ],
+            ],
+            [
+                'name'         => 'Donuts',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Loja de donuts',
+                ],
+            ],
+            [
+                'name'         => 'Bolos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Casa de bolos',
+                ],
+            ],
+            [
+                'name'         => 'Chocolates',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Chocolateria',
+                    'Bomboniere',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Brigaderia',
+                    'Brownieria',
+                    'Loja de donuts',
+                    'Casa de bolos',
+                    'Chocolateria',
+                    'Bomboniere',
+                ],
+            ],
+
+            // Categorias para Waffle House / Casa de Chá
+            [
+                'name'         => 'Waffles',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Waffle house',
+                ],
+            ],
+            [
+                'name'         => 'Chás',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Casa de chá',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Waffle house',
+                    'Casa de chá',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Waffle house',
+                    'Casa de chá',
+                ],
+            ],
+
+            // Categorias para Galeteria / Frango
+            [
+                'name'         => 'Frango assado',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Frango assado',
+                    'Galeteria',
+                ],
+            ],
+            [
+                'name'         => 'Frango frito',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Frango frito estilo americano',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Frango assado',
+                    'Frango frito estilo americano',
+                    'Galeteria',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Frango assado',
+                    'Frango frito estilo americano',
+                    'Galeteria',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Frango assado',
+                    'Frango frito estilo americano',
+                    'Galeteria',
+                ],
+            ],
+
+            // Categorias para Espetinhos / Grelhados
+            [
+                'name'         => 'Espetinhos',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Espetinhos',
+                ],
+            ],
+            [
+                'name'         => 'Grelhados',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Grelhados',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Espetinhos',
+                    'Grelhados',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Espetinhos',
+                    'Grelhados',
+                ],
+            ],
+
+            // Categorias para Poke
+            [
+                'name'         => 'Pokes',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Poke',
+                ],
+            ],
+            [
+                'name'         => 'Bases',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Poke',
+                ],
+            ],
+            [
+                'name'         => 'Proteínas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Poke',
+                ],
+            ],
+            [
+                'name'         => 'Molhos e complementos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Poke',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Poke',
+                ],
+            ],
+
             // Categorias genéricas (para qualquer tipo)
             [
                 'name'         => 'Entradas',
