@@ -844,6 +844,400 @@ class Menu_Category_Catalog_Seeder {
                 ],
             ],
 
+            // Categorias para Restaurante Tailandês / Vietnamita
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária tailandesa',
+                    'Culinária vietnamita',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária tailandesa',
+                    'Culinária vietnamita',
+                ],
+            ],
+            [
+                'name'         => 'Pad Thai / Pho / Sopas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária tailandesa',
+                    'Culinária vietnamita',
+                ],
+            ],
+            [
+                'name'         => 'Curries',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária tailandesa',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária tailandesa',
+                    'Culinária vietnamita',
+                ],
+            ],
+
+            // Categorias para Restaurante Coreano
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária coreana',
+                    'Churrasco coreano (K-BBQ)',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária coreana',
+                    'Churrasco coreano (K-BBQ)',
+                ],
+            ],
+            [
+                'name'         => 'Bibimbap / Tteokbokki',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária coreana',
+                ],
+            ],
+            [
+                'name'         => 'Carnes grelhadas (K-BBQ)',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Churrasco coreano (K-BBQ)',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos (Banchan)',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária coreana',
+                    'Churrasco coreano (K-BBQ)',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Culinária coreana',
+                    'Churrasco coreano (K-BBQ)',
+                ],
+            ],
+
+            // Categorias para Restaurante Indiano
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária indiana',
+                ],
+            ],
+            [
+                'name'         => 'Curries',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária indiana',
+                ],
+            ],
+            [
+                'name'         => 'Tandoori / Grelhados',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária indiana',
+                ],
+            ],
+            [
+                'name'         => 'Pães (Naan, Roti)',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária indiana',
+                ],
+            ],
+            [
+                'name'         => 'Arroz e Biryani',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária indiana',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Culinária indiana',
+                ],
+            ],
+
+            // Categorias para Restaurante Grego / Mediterrâneo
+            [
+                'name'         => 'Entradas / Mezze',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+            ],
+            [
+                'name'         => 'Pratos principais',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+            ],
+            [
+                'name'         => 'Grelhados',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+            ],
+            [
+                'name'         => 'Saladas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Culinária grega',
+                    'Culinária mediterrânea',
+                ],
+            ],
+
+            // Categorias para Restaurante Argentino / Uruguaio
+            [
+                'name'         => 'Entradas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                ],
+            ],
+            [
+                'name'         => 'Carnes',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                ],
+            ],
+            [
+                'name'         => 'Empanadas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                ],
+            ],
+            [
+                'name'         => 'Sobremesas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 6,
+                'cuisine_types' => [
+                    'Culinária argentina',
+                    'Culinária uruguaia',
+                ],
+            ],
+
+            // Categorias para Hot Dog / Cachorro-quente
+            [
+                'name'         => 'Cachorros-quentes',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Hot dog / Cachorro-quente',
+                ],
+            ],
+            [
+                'name'         => 'Combos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Hot dog / Cachorro-quente',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Hot dog / Cachorro-quente',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Hot dog / Cachorro-quente',
+                ],
+            ],
+
+            // Categorias para Kebab / Shawarma
+            [
+                'name'         => 'Kebabs / Shawarmas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Kebab / shawarma',
+                ],
+            ],
+            [
+                'name'         => 'Pratos no prato',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Kebab / shawarma',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Kebab / shawarma',
+                ],
+            ],
+            [
+                'name'         => 'Molhos',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Kebab / shawarma',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 5,
+                'cuisine_types' => [
+                    'Kebab / shawarma',
+                ],
+            ],
+
+            // Categorias para Tapiocaria / Panquecaria
+            [
+                'name'         => 'Tapiocas salgadas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Tapiocaria',
+                ],
+            ],
+            [
+                'name'         => 'Tapiocas doces',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Tapiocaria',
+                ],
+            ],
+            [
+                'name'         => 'Panquecas salgadas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Panquecaria',
+                ],
+            ],
+            [
+                'name'         => 'Panquecas doces',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Panquecaria',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Tapiocaria',
+                    'Panquecaria',
+                ],
+            ],
+
+            // Categorias para Creperia
+            [
+                'name'         => 'Crepes salgadas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Creperia salgada',
+                    'Creperia doce',
+                ],
+            ],
+            [
+                'name'         => 'Crepes doces',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Creperia doce',
+                    'Creperia salgada',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Creperia salgada',
+                    'Creperia doce',
+                ],
+            ],
+
+            // Categorias para Restaurante de Sopas / Caldos
+            [
+                'name'         => 'Sopas',
+                'order'        => 1,
+                'cuisine_types' => [
+                    'Sopas & caldos',
+                ],
+            ],
+            [
+                'name'         => 'Caldos',
+                'order'        => 2,
+                'cuisine_types' => [
+                    'Sopas & caldos',
+                ],
+            ],
+            [
+                'name'         => 'Acompanhamentos',
+                'order'        => 3,
+                'cuisine_types' => [
+                    'Sopas & caldos',
+                ],
+            ],
+            [
+                'name'         => 'Bebidas',
+                'order'        => 4,
+                'cuisine_types' => [
+                    'Sopas & caldos',
+                ],
+            ],
+
             // Categorias genéricas (para qualquer tipo)
             [
                 'name'         => 'Entradas',

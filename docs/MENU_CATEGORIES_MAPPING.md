@@ -211,6 +211,142 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 
 ---
 
+#### 17. **Restaurante Tailandês / Vietnamita**
+**Tipos de restaurante vinculados:**
+- Culinária tailandesa
+- Culinária vietnamita
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Pad Thai / Pho / Sopas (ordem 3)
+- Curries (ordem 4) - Apenas tailandês
+- Bebidas (ordem 5)
+
+---
+
+#### 18. **Restaurante Coreano**
+**Tipos de restaurante vinculados:**
+- Culinária coreana
+- Churrasco coreano (K-BBQ)
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Pratos principais (ordem 2)
+- Bibimbap / Tteokbokki (ordem 3)
+- Carnes grelhadas (K-BBQ) (ordem 4) - Apenas K-BBQ
+- Acompanhamentos (Banchan) (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+#### 19. **Restaurante Indiano**
+**Tipos de restaurante vinculados:**
+- Culinária indiana
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Curries (ordem 2)
+- Tandoori / Grelhados (ordem 3)
+- Pães (Naan, Roti) (ordem 4)
+- Arroz e Biryani (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+#### 20. **Restaurante Grego / Mediterrâneo**
+**Tipos de restaurante vinculados:**
+- Culinária grega
+- Culinária mediterrânea
+
+**Categorias de cardápio:**
+- Entradas / Mezze (ordem 1)
+- Pratos principais (ordem 2)
+- Grelhados (ordem 3)
+- Saladas (ordem 4)
+- Sobremesas (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+#### 21. **Restaurante Argentino / Uruguaio**
+**Tipos de restaurante vinculados:**
+- Culinária argentina
+- Culinária uruguaia
+
+**Categorias de cardápio:**
+- Entradas (ordem 1)
+- Carnes (ordem 2)
+- Empanadas (ordem 3)
+- Acompanhamentos (ordem 4)
+- Sobremesas (ordem 5)
+- Bebidas (ordem 6)
+
+---
+
+#### 22. **Hot Dog / Cachorro-quente**
+**Tipos de restaurante vinculados:**
+- Hot dog / Cachorro-quente
+
+**Categorias de cardápio:**
+- Cachorros-quentes (ordem 1)
+- Combos (ordem 2)
+- Acompanhamentos (ordem 3)
+- Bebidas (ordem 4)
+
+---
+
+#### 23. **Kebab / Shawarma**
+**Tipos de restaurante vinculados:**
+- Kebab / shawarma
+
+**Categorias de cardápio:**
+- Kebabs / Shawarmas (ordem 1)
+- Pratos no prato (ordem 2)
+- Acompanhamentos (ordem 3)
+- Molhos (ordem 4)
+- Bebidas (ordem 5)
+
+---
+
+#### 24. **Tapiocaria / Panquecaria**
+**Tipos de restaurante vinculados:**
+- Tapiocaria
+- Panquecaria
+
+**Categorias de cardápio:**
+- Tapiocas salgadas (ordem 1) - Tapiocaria
+- Tapiocas doces (ordem 2) - Tapiocaria
+- Panquecas salgadas (ordem 1) - Panquecaria
+- Panquecas doces (ordem 2) - Panquecaria
+- Bebidas (ordem 3) - Ambos
+
+---
+
+#### 25. **Creperia**
+**Tipos de restaurante vinculados:**
+- Creperia salgada
+- Creperia doce
+
+**Categorias de cardápio:**
+- Crepes salgadas (ordem 1)
+- Crepes doces (ordem 2)
+- Bebidas (ordem 3)
+
+---
+
+#### 26. **Restaurante de Sopas / Caldos**
+**Tipos de restaurante vinculados:**
+- Sopas & caldos
+
+**Categorias de cardápio:**
+- Sopas (ordem 1)
+- Caldos (ordem 2)
+- Acompanhamentos (ordem 3)
+- Bebidas (ordem 4)
+
+---
+
 ## 📊 Resumo Final
 
 ### ✅ Categorias de Restaurantes que JÁ TÊM categorias de cardápio próprias:
@@ -231,6 +367,16 @@ Este documento lista todas as categorias de cardápio criadas e seus vínculos c
 14. **Pastelaria/Esfiharia** (Pastelaria, Esfiharia)
 15. **Restaurante de Massas** (Massas & risotos, Culinária italiana)
 16. **Restaurante Brasileiro** (Restaurante brasileiro caseiro, Comida caseira, Comida mineira, Comida baiana, Comida nordestina, Comida gaúcha, Feijoada)
+17. **Restaurante Tailandês/Vietnamita** (Culinária tailandesa, Culinária vietnamita)
+18. **Restaurante Coreano** (Culinária coreana, Churrasco coreano (K-BBQ))
+19. **Restaurante Indiano** (Culinária indiana)
+20. **Restaurante Grego/Mediterrâneo** (Culinária grega, Culinária mediterrânea)
+21. **Restaurante Argentino/Uruguaio** (Culinária argentina, Culinária uruguaia)
+22. **Hot Dog/Cachorro-quente** (Hot dog / Cachorro-quente)
+23. **Kebab/Shawarma** (Kebab / shawarma)
+24. **Tapiocaria/Panquecaria** (Tapiocaria, Panquecaria)
+25. **Creperia** (Creperia salgada, Creperia doce)
+26. **Restaurante de Sopas/Caldos** (Sopas & caldos)
 
 ### 📝 Categorias Genéricas (aparecem para todos):
 - Entradas
