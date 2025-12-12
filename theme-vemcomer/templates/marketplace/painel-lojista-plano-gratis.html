@@ -10,6 +10,10 @@
 
     .dash-container { max-width: 474px; margin: 0 auto; padding: 17px 10px 38px 10px; }
 
+    .dash-menu { display: flex; flex-wrap: wrap; gap: 8px; background:#ffffff; border:1px solid #e2e8e4; border-radius:12px; padding:8px; margin: 0 0 16px 0; box-shadow:0 2px 12px #2d86590f; position: sticky; top: 0; z-index: 9; }
+    .dash-menu a { flex: 1 1 120px; text-decoration: none; background:#f7fbf8; border:1px solid #e2e8e4; color:#2d8659; padding:9px 10px; border-radius:10px; font-weight:700; font-size:.95em; text-align:center; transition:.16s; }
+    .dash-menu a:hover { background:#2d8659; color:#fff; border-color:#2d8659; box-shadow:0 3px 14px #2d865915; transform: translateY(-1px); }
+
     .dash-title { font-size: 1.18em; font-weight: 700; color: #2d8659; margin-bottom: 18px;}
 
     .dash-row { display: flex; flex-wrap: wrap; gap:18px;margin-bottom:19px;}
@@ -74,7 +78,18 @@
 </head>
 <body>
   <div class="dash-container">
-    <div class="dash-title">Visão Geral da Loja</div>
+    <nav class="dash-menu" aria-label="Menu do Lojista">
+      <a href="#overview">Dashboard</a>
+      <a href="/gestao-cardapio/">Cardápio</a>
+      <a href="/configuracao-loja/">Configuração da Loja</a>
+      <a href="/wizard-onboarding/">Onboarding</a>
+      <a href="/central-marketing/">Marketing</a>
+      <a href="/gestor-eventos/">Eventos</a>
+      <a href="#analytics">Analytics</a>
+      <a href="#planos">Planos</a>
+    </nav>
+
+    <div class="dash-title" id="overview">Visão Geral da Loja</div>
     <!-- Resumo de vendas -->
     <div class="dash-row">
       <div class="dash-card">
@@ -112,7 +127,7 @@
       </div>
     </div>
     <!-- Analytics rápidos -->
-    <div class="analytics-wrap">
+    <div class="analytics-wrap" id="analytics">
       <div class="analytics-title">Analytics Express</div>
       <div class="analytics-row">
         <div class="analytics-metric">
@@ -131,7 +146,7 @@
       </div>
     </div>
     <!-- Widget do plano ativo -->
-    <div class="plan-widget">
+    <div class="plan-widget" id="planos">
       <div class="plan-type">Plano Atual: <b>Vitrine</b></div>
       <div class="plan-bar">
         <div class="plan-bar-inner" style="width:70%;"></div>
