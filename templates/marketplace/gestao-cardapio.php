@@ -76,6 +76,7 @@ $restaurant = vc_marketplace_get_restaurant_for_user();
 
 // Inicializar variáveis sempre
 $categories = [];
+$all_items = [];
 $default_category = [
     'id'    => 'sem-categoria',
     'name'  => __('Sem categoria', 'vemcomer'),
@@ -212,6 +213,9 @@ if ($restaurant instanceof WP_Post) {
                 ];
 
                 $categories[$term_id]['items'][] = $item_payload;
+
+                // Adiciona na lista agregada de todos os itens para a aba "Todos"
+                $all_items[] = $item_payload;
                 // error_log('VC Debug: Adicionado item ' . $item->ID . ' na categoria ' . $term_id . '. Total itens agora: ' . count($categories[$term_id]['items']));
 
                 $stats['total']++;
@@ -256,16 +260,8 @@ if (empty($categories_for_view) && $restaurant instanceof WP_Post) {
     $categories_for_view[] = $default_category;
 }
 
-$all_items = [];
-if (!empty($categories_for_view)) {
-    foreach ($categories_for_view as $cat) {
-        if (isset($cat['items']) && is_array($cat['items'])) {
-            foreach ($cat['items'] as $item_data) {
-                $all_items[] = $item_data;
-            }
-        }
-    }
-}
+// Garante que a lista agregada exista mesmo se não houver categorias específicas
+$all_items = $all_items ?? [];
 
 // IMPORTANTE: Buscar categorias ANTES de calcular $stats['categories']
 // Nova estratégia: Buscar todas as categorias e filtrar via PHP para garantir precisão
