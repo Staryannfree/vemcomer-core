@@ -52,7 +52,7 @@ class Limits_Validator {
 		}
 
 		// Contar itens atuais do restaurante
-		$current_count = $this->count_menu_items( $restaurant_id );
+                $current_count = self::count_menu_items( $restaurant_id );
 
 		if ( $current_count >= $max_items ) {
 			// Remover o post que acabou de ser criado
@@ -101,7 +101,7 @@ class Limits_Validator {
 			}
 
 			// Contar modificadores atuais do item
-			$current_count = $this->count_modifiers_for_item( $menu_item_id );
+                        $current_count = self::count_modifiers_for_item( $menu_item_id );
 
 			if ( $current_count >= $max_modifiers ) {
 				// Remover o post que acabou de ser criado
@@ -124,43 +124,49 @@ class Limits_Validator {
 	/**
 	 * Conta itens do cardápio de um restaurante.
 	 */
-	private function count_menu_items( int $restaurant_id ): int {
-		$query = new \WP_Query( [
-			'post_type'      => CPT_MenuItem::SLUG,
-			'posts_per_page' => -1,
-			'post_status'    => 'any',
-			'fields'         => 'ids',
-			'meta_query'     => [
-				[
-					'key'   => '_vc_restaurant_id',
-					'value' => (string) $restaurant_id,
-				],
-			],
-		] );
+        private static function count_menu_items( int $restaurant_id ): int {
+                $query = new \WP_Query( [
+                        'post_type'              => CPT_MenuItem::SLUG,
+                        'posts_per_page'         => 1,
+                        'post_status'            => [ 'publish', 'pending', 'draft' ],
+                        'fields'                 => 'ids',
+                        'meta_query'             => [
+                                [
+                                        'key'   => '_vc_restaurant_id',
+                                        'value' => (string) $restaurant_id,
+                                ],
+                        ],
+                        'no_found_rows'          => false,
+                        'update_post_meta_cache' => false,
+                        'update_post_term_cache' => false,
+                ] );
 
-		return $query->found_posts;
-	}
+                return (int) $query->found_posts;
+        }
 
 	/**
 	 * Conta modificadores vinculados a um item.
 	 */
-	private function count_modifiers_for_item( int $menu_item_id ): int {
-		$query = new \WP_Query( [
-			'post_type'      => CPT_ProductModifier::SLUG,
-			'posts_per_page' => -1,
-			'post_status'    => 'any',
-			'fields'         => 'ids',
-			'meta_query'     => [
-				[
-					'key'     => '_vc_modifier_menu_items',
-					'value'   => (string) $menu_item_id,
-					'compare' => 'LIKE',
-				],
-			],
-		] );
+        private static function count_modifiers_for_item( int $menu_item_id ): int {
+                $query = new \WP_Query( [
+                        'post_type'              => CPT_ProductModifier::SLUG,
+                        'posts_per_page'         => 1,
+                        'post_status'            => [ 'publish', 'pending', 'draft' ],
+                        'fields'                 => 'ids',
+                        'meta_query'             => [
+                                [
+                                        'key'     => '_vc_modifier_menu_items',
+                                        'value'   => (string) $menu_item_id,
+                                        'compare' => 'LIKE',
+                                ],
+                        ],
+                        'no_found_rows'          => false,
+                        'update_post_meta_cache' => false,
+                        'update_post_term_cache' => false,
+                ] );
 
-		return $query->found_posts;
-	}
+                return (int) $query->found_posts;
+        }
 
 	/**
 	 * Valida se pode criar item (para uso em REST API).
@@ -174,26 +180,15 @@ class Limits_Validator {
 			return null; // Ilimitado
 		}
 
-		$query = new \WP_Query( [
-			'post_type'      => CPT_MenuItem::SLUG,
-			'posts_per_page' => -1,
-			'post_status'    => 'any',
-			'fields'         => 'ids',
-			'meta_query'     => [
-				[
-					'key'   => '_vc_restaurant_id',
-					'value' => (string) $restaurant_id,
-				],
-			],
-		] );
+                $current_items = self::count_menu_items( $restaurant_id );
 
-		if ( $query->found_posts >= $max_items ) {
-			return new WP_Error(
-				'vc_limit_reached',
-				sprintf( __( 'Limite de itens no cardápio atingido! Seu plano permite no máximo %d itens.', 'vemcomer' ), $max_items ),
-				[ 'status' => 403, 'limit' => $max_items, 'current' => $query->found_posts ]
-			);
-		}
+                if ( $current_items >= $max_items ) {
+                        return new WP_Error(
+                                'vc_limit_reached',
+                                sprintf( __( 'Limite de itens no cardápio atingido! Seu plano permite no máximo %d itens.', 'vemcomer' ), $max_items ),
+                                [ 'status' => 403, 'limit' => $max_items, 'current' => $current_items ]
+                        );
+                }
 
 		return null;
 	}
@@ -215,27 +210,15 @@ class Limits_Validator {
 			return null; // Ilimitado
 		}
 
-		$query = new \WP_Query( [
-			'post_type'      => CPT_ProductModifier::SLUG,
-			'posts_per_page' => -1,
-			'post_status'    => 'any',
-			'fields'         => 'ids',
-			'meta_query'     => [
-				[
-					'key'     => '_vc_modifier_menu_items',
-					'value'   => (string) $menu_item_id,
-					'compare' => 'LIKE',
-				],
-			],
-		] );
+                $current_modifiers = self::count_modifiers_for_item( $menu_item_id );
 
-		if ( $query->found_posts >= $max_modifiers ) {
-			return new WP_Error(
-				'vc_limit_reached',
-				sprintf( __( 'Limite de modificadores por item atingido! Seu plano permite no máximo %d modificadores por item.', 'vemcomer' ), $max_modifiers ),
-				[ 'status' => 403, 'limit' => $max_modifiers, 'current' => $query->found_posts ]
-			);
-		}
+                if ( $current_modifiers >= $max_modifiers ) {
+                        return new WP_Error(
+                                'vc_limit_reached',
+                                sprintf( __( 'Limite de modificadores por item atingido! Seu plano permite no máximo %d modificadores por item.', 'vemcomer' ), $max_modifiers ),
+                                [ 'status' => 403, 'limit' => $max_modifiers, 'current' => $current_modifiers ]
+                        );
+                }
 
 		return null;
 	}
