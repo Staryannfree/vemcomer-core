@@ -61,6 +61,10 @@ class VC_Restaurants_Table extends WP_List_Table {
         $actions['enable_delivery']  = __( 'Ativar delivery', 'vemcomer' );
         $actions['disable_delivery'] = __( 'Desativar delivery', 'vemcomer' );
 
+        if ( current_user_can( 'manage_options' ) ) {
+            $actions['reset_onboarding'] = __( 'Resetar onboarding (primeira visita)', 'vemcomer' );
+        }
+
         return $actions;
     }
 
@@ -90,6 +94,20 @@ class VC_Restaurants_Table extends WP_List_Table {
                 'vc_approve_restaurant'
             );
             $actions['approve'] = sprintf( '<a href="%s">%s</a>', esc_url( $approve_url ), esc_html__( 'Aprovar', 'vemcomer' ) );
+        }
+        if ( current_user_can( 'manage_options' ) ) {
+            $page      = sanitize_key( $_REQUEST['page'] ?? 'vemcomer-restaurants' );
+            $reset_url = wp_nonce_url(
+                add_query_arg(
+                    [
+                        'page'          => $page,
+                        'action'        => 'reset_onboarding',
+                        'vc_restaurant' => $item->ID,
+                    ]
+                ),
+                'vc_reset_onboarding'
+            );
+            $actions['reset_onboarding'] = sprintf( '<a href="%s">%s</a>', esc_url( $reset_url ), esc_html__( 'Resetar onboarding', 'vemcomer' ) );
         }
         if ( get_post_status( $item ) === 'publish' ) {
             $actions['view'] = sprintf( '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>', esc_url( get_permalink( $item ) ), esc_html__( 'Ver', 'vemcomer' ) );
@@ -339,7 +357,7 @@ class VC_Restaurants_Table extends WP_List_Table {
 
     protected function process_bulk_action(): void {
         $action = $this->current_action();
-        if ( ! $action || ! in_array( $action, [ 'enable_delivery', 'disable_delivery', 'approve' ], true ) ) {
+        if ( ! $action || ! in_array( $action, [ 'enable_delivery', 'disable_delivery', 'approve', 'reset_onboarding' ], true ) ) {
             return;
         }
 
@@ -348,7 +366,7 @@ class VC_Restaurants_Table extends WP_List_Table {
         }
 
         $nonce = isset( $_REQUEST['_wpnonce'] ) ? (string) $_REQUEST['_wpnonce'] : '';
-        if ( ! wp_verify_nonce( $nonce, 'bulk-' . $this->_args['plural'] ) && ! wp_verify_nonce( $nonce, 'vc_approve_restaurant' ) ) {
+        if ( ! wp_verify_nonce( $nonce, 'bulk-' . $this->_args['plural'] ) && ! wp_verify_nonce( $nonce, 'vc_approve_restaurant' ) && ! wp_verify_nonce( $nonce, 'vc_reset_onboarding' ) ) {
             return;
         }
 
@@ -361,6 +379,11 @@ class VC_Restaurants_Table extends WP_List_Table {
 
         if ( 'approve' === $action ) {
             $this->approve_restaurants( $ids );
+            return;
+        }
+
+        if ( 'reset_onboarding' === $action ) {
+            $this->reset_onboarding( $ids );
             return;
         }
 
@@ -400,6 +423,32 @@ class VC_Restaurants_Table extends WP_List_Table {
 
         if ( $updated ) {
             add_settings_error( 'vc_restaurants', 'vc_restaurants_notice', __( 'Restaurantes aprovados.', 'vemcomer' ), 'updated' );
+        }
+    }
+
+    private function reset_onboarding( array $ids ): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        $updated = 0;
+
+        foreach ( $ids as $post_id ) {
+            if ( self::POST_TYPE !== get_post_type( $post_id ) ) {
+                continue;
+            }
+
+            \VC\Utils\Onboarding_Helper::reset_to_first_visit( $post_id );
+            $updated++;
+        }
+
+        if ( $updated ) {
+            add_settings_error(
+                'vc_restaurants',
+                'vc_restaurants_notice',
+                __( 'Onboarding resetado: os lojistas verão a experiência de primeira visita.', 'vemcomer' ),
+                'updated'
+            );
         }
     }
 
