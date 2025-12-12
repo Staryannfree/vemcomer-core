@@ -130,11 +130,24 @@ function vemcomer_fix_wppusher_php82() {
 }
 
 register_activation_hook( __FILE__, function () {
+    $started_buffer = ob_get_level();
+    ob_start();
+
     // Corrige WP Pusher automaticamente
     vemcomer_fix_wppusher_php82();
-    
+
     if ( class_exists( '\\VC\\Admin\\Installer' ) ) {
         ( new \VC\Admin\Installer() )->install_defaults();
+    }
+
+    $activation_output = ob_get_clean();
+    if ( $activation_output !== '' ) {
+        error_log( sprintf( 'VemComer Core suppressing %d bytes of activation output', strlen( $activation_output ) ) );
+
+        // Limpa buffers adicionais que possam ter sido iniciados antes deste hook
+        while ( ob_get_level() > $started_buffer ) {
+            ob_end_clean();
+        }
     }
 } );
 
