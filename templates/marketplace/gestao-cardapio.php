@@ -76,6 +76,7 @@ $restaurant = vc_marketplace_get_restaurant_for_user();
 
 // Inicializar variáveis sempre
 $categories = [];
+$all_items = [];
 $default_category = [
     'id'    => 'sem-categoria',
     'name'  => __('Sem categoria', 'vemcomer'),
@@ -208,9 +209,13 @@ if ($restaurant instanceof WP_Post) {
                     'thumb'      => $thumb,
                     'edit_url'   => get_edit_post_link($item->ID),
                     'modifiers'  => $modifier_titles,
+                    'category_id'=> $term_id,
                 ];
 
                 $categories[$term_id]['items'][] = $item_payload;
+
+                // Adiciona na lista agregada de todos os itens para a aba "Todos"
+                $all_items[] = $item_payload;
                 // error_log('VC Debug: Adicionado item ' . $item->ID . ' na categoria ' . $term_id . '. Total itens agora: ' . count($categories[$term_id]['items']));
 
                 $stats['total']++;
@@ -254,6 +259,9 @@ if (!empty($categories) && is_array($categories)) {
 if (empty($categories_for_view) && $restaurant instanceof WP_Post) {
     $categories_for_view[] = $default_category;
 }
+
+// Garante que a lista agregada exista mesmo se não houver categorias específicas
+$all_items = $all_items ?? [];
 
 // IMPORTANTE: Buscar categorias ANTES de calcular $stats['categories']
 // Nova estratégia: Buscar todas as categorias e filtrar via PHP para garantir precisão
@@ -512,14 +520,102 @@ if ($restaurant instanceof WP_Post) {
         <?php else : ?>
         
         <!-- Debug: Total de categorias para visualização: <?php echo count($categories_for_view); ?> -->
-        
+
         <div class="tabs-cat">
+            <button class="cat-tab-btn active" data-target="cat-all">
+                <?php echo esc_html__('Todos', 'vemcomer'); ?>
+                <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($all_items); ?>)</span>
+            </button>
             <?php foreach ($categories_for_view as $index => $cat) : ?>
-                <button class="cat-tab-btn<?php echo 0 === $index ? ' active' : ''; ?>" data-target="cat-index-<?php echo $index; ?>">
-                    <?php echo esc_html($cat['name']); ?> 
+                <button class="cat-tab-btn" data-target="cat-index-<?php echo $index; ?>">
+                    <?php echo esc_html($cat['name']); ?>
                     <span style="font-size:0.8em;opacity:0.7;">(<?php echo count($cat['items'] ?? []); ?>)</span>
                 </button>
             <?php endforeach; ?>
+        </div>
+
+        <div class="tab-content" id="cat-all" style="display:block;">
+            <div class="prod-list">
+                <?php if (empty($all_items)) : ?>
+                    <div class="empty-state" style="width:100%;"><?php echo esc_html__('Nenhum item cadastrado ainda.', 'vemcomer'); ?></div>
+                <?php else : ?>
+                    <?php foreach ($all_items as $item) : ?>
+                        <?php
+                        $item_id = isset($item['id']) && !empty($item['id']) ? (int) $item['id'] : 0;
+                        $item_title = isset($item['title']) && !empty($item['title']) ? (string) $item['title'] : '';
+
+                        if (empty($item_title) && $item_id > 0) {
+                            $post_obj = get_post($item_id);
+                            if ($post_obj) {
+                                $item_title = $post_obj->post_title;
+                            } else {
+                                $item_title = __('Produto sem nome', 'vemcomer');
+                            }
+                        }
+
+                        $item_thumb = isset($item['thumb']) ? (string) $item['thumb'] : '';
+                        $item_status = isset($item['status']) ? (string) $item['status'] : 'pausado';
+                        $item_price = isset($item['price']) ? (string) $item['price'] : '';
+                        $item_desc = isset($item['description']) ? (string) $item['description'] : '';
+                        $item_prep_time = isset($item['prep_time']) ? (int) $item['prep_time'] : 0;
+                        $item_category_id = isset($item['category_id']) ? (int) $item['category_id'] : 0;
+                        ?>
+                        <div class="prod-card" data-item-id="<?php echo esc_attr($item_id); ?>" data-available="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
+                            <div style="display:flex;align-items:center;">
+                                <?php if (!empty($item_thumb)) : ?>
+                                    <img src="<?php echo esc_url($item_thumb); ?>" class="prod-img" alt="<?php echo esc_attr($item_title); ?>" />
+                                <?php else : ?>
+                                    <img src="" class="prod-img" style="background:#ffe7e7;" alt="<?php echo esc_attr__('Sem foto', 'vemcomer'); ?>" />
+                                <?php endif; ?>
+                                <div class="prod-info">
+                                    <div class="prod-nome">
+                                        <?php echo esc_html($item_title); ?>
+                                        <?php if ('ativo' === $item_status) : ?>
+                                            <span class="prod-ativo"><?php echo esc_html__('Ativo', 'vemcomer'); ?></span>
+                                        <?php else : ?>
+                                            <span class="prod-pausado"><?php echo esc_html__('Pausado', 'vemcomer'); ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="prod-desc"><?php echo esc_html($item_desc); ?></div>
+                                    <div class="prod-preco"><?php echo esc_html($item_price); ?></div>
+                                </div>
+                            </div>
+                            <div class="prod-actions">
+                                <button class="pedit-btn js-edit-product" data-item-id="<?php echo esc_attr($item_id); ?>" data-item-title="<?php echo esc_attr($item_title); ?>" data-item-desc="<?php echo esc_attr($item_desc); ?>" data-item-price="<?php echo esc_attr(str_replace(['R$', ' '], '', $item_price)); ?>" data-item-prep-time="<?php echo esc_attr($item_prep_time); ?>" data-item-thumb="<?php echo esc_attr($item_thumb); ?>" data-item-status="<?php echo esc_attr($item_status); ?>" data-item-category="<?php echo esc_attr($item_category_id); ?>"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
+                                <button class="pedit-btn pause js-toggle-availability" data-is-active="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
+                                    <?php echo 'ativo' === $item_status ? esc_html__('Pausar', 'vemcomer') : esc_html__('Ativar', 'vemcomer'); ?>
+                                </button>
+                                <button class="pedit-btn del js-delete-item"><?php echo esc_html__('Deletar', 'vemcomer'); ?></button>
+                            </div>
+                            <div class="modif-box">
+                                <div class="modif-title"><?php echo esc_html__('Adicionais:', 'vemcomer'); ?></div>
+                                <div class="modif-list">
+                                    <?php if (isset($item['modifiers']) && ! empty($item['modifiers']) && is_array($item['modifiers'])) : ?>
+                                        <?php foreach ($item['modifiers'] as $mod_data) : ?>
+                                            <?php
+                                            $mod_id = is_array($mod_data) ? $mod_data['id'] : null;
+                                            $mod_title = is_array($mod_data) ? $mod_data['title'] : $mod_data;
+                                            ?>
+                                            <div class="modif-badge" data-group-id="<?php echo esc_attr($mod_id); ?>" data-product-id="<?php echo esc_attr($item_id); ?>">
+                                                <?php echo esc_html($mod_title); ?>
+                                                <?php if ($mod_id) : ?>
+                                                    <span class="modif-edit-price" onclick="openEditAddonPricesModal(<?php echo esc_attr($mod_id); ?>, '<?php echo esc_js($mod_title); ?>'); return false;" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Editar preços dos itens', 'vemcomer'); ?>">✏️</span>
+                                                    <span class="modif-apply-multiple" onclick="openApplyGroupModal(<?php echo esc_attr($mod_id); ?>); return false;" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Aplicar a múltiplos produtos', 'vemcomer'); ?>" style="cursor:pointer;color:#3176da;font-size:14px;font-weight:bold;line-height:1;padding:0 2px;opacity:0.7;transition:opacity 0.2s;">📋</span>
+                                                    <span class="modif-save-template" onclick="saveGroupAsTemplate(<?php echo esc_attr($mod_id); ?>); return false;" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Salvar como modelo', 'vemcomer'); ?>" style="cursor:pointer;color:#2d8659;font-size:14px;font-weight:bold;line-height:1;padding:0 2px;opacity:0.7;transition:opacity 0.2s;">⭐</span>
+                                                    <span class="modif-remove" onclick="removeAddonGroup(<?php echo esc_attr($item_id); ?>, <?php echo esc_attr($mod_id); ?>, this); return false;" data-product-id="<?php echo esc_attr($item_id); ?>" data-group-id="<?php echo esc_attr($mod_id); ?>" title="<?php echo esc_attr__('Remover adicional', 'vemcomer'); ?>">×</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else : ?>
+                                        <div class="modif-badge" style="background:#fff;color:#6b7672;border:1px dashed #cbdad1;"><?php echo esc_html__('Nenhum adicional', 'vemcomer'); ?></div>
+                                    <?php endif; ?>
+                                    <div class="modif-edit" onclick="openAddonsModal(<?php echo esc_attr($item_id); ?>)">+ <?php echo esc_html__('Adicionais', 'vemcomer'); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
 
         <?php foreach ($categories_for_view as $index => $cat) : ?>
@@ -530,7 +626,7 @@ if ($restaurant instanceof WP_Post) {
             }
             ?>
             <!-- Debug: Renderizando conteúdo para índice <?php echo $index; ?> -->
-            <div class="tab-content" id="cat-index-<?php echo $index; ?>" style="<?php echo 0 === $index ? 'display:block;' : 'display:none;'; ?>">
+            <div class="tab-content" id="cat-index-<?php echo $index; ?>" style="display:none;">
                 <div class="prod-list">
                     <?php if (empty($cat_items)) : ?>
                         <!-- Debug: Categoria vazia -->
@@ -560,6 +656,7 @@ if ($restaurant instanceof WP_Post) {
                             $item_price = isset($item['price']) ? (string) $item['price'] : '';
                             $item_desc = isset($item['description']) ? (string) $item['description'] : '';
                             $item_prep_time = isset($item['prep_time']) ? (int) $item['prep_time'] : 0;
+                            $item_category_id = isset($item['category_id']) ? (int) $item['category_id'] : (isset($cat['id']) ? (int) $cat['id'] : 0);
                             ?>
                             <div class="prod-card" data-item-id="<?php echo esc_attr($item_id); ?>" data-available="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
                                 <div style="display:flex;align-items:center;">
@@ -582,7 +679,7 @@ if ($restaurant instanceof WP_Post) {
                                     </div>
                                 </div>
                                 <div class="prod-actions">
-                                    <button class="pedit-btn js-edit-product" data-item-id="<?php echo esc_attr($item_id); ?>" data-item-title="<?php echo esc_attr($item_title); ?>" data-item-desc="<?php echo esc_attr($item_desc); ?>" data-item-price="<?php echo esc_attr(str_replace(['R$', ' '], '', $item_price)); ?>" data-item-prep-time="<?php echo esc_attr($item_prep_time); ?>" data-item-thumb="<?php echo esc_attr($item_thumb); ?>" data-item-status="<?php echo esc_attr($item_status); ?>" data-item-category="<?php echo esc_attr($cat['id']); ?>"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
+                                    <button class="pedit-btn js-edit-product" data-item-id="<?php echo esc_attr($item_id); ?>" data-item-title="<?php echo esc_attr($item_title); ?>" data-item-desc="<?php echo esc_attr($item_desc); ?>" data-item-price="<?php echo esc_attr(str_replace(['R$', ' '], '', $item_price)); ?>" data-item-prep-time="<?php echo esc_attr($item_prep_time); ?>" data-item-thumb="<?php echo esc_attr($item_thumb); ?>" data-item-status="<?php echo esc_attr($item_status); ?>" data-item-category="<?php echo esc_attr($item_category_id); ?>"><?php echo esc_html__('Editar', 'vemcomer'); ?></button>
                                     <button class="pedit-btn pause js-toggle-availability" data-is-active="<?php echo esc_attr('ativo' === $item_status ? '1' : '0'); ?>">
                                         <?php echo 'ativo' === $item_status ? esc_html__('Pausar', 'vemcomer') : esc_html__('Ativar', 'vemcomer'); ?>
                                     </button>

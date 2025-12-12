@@ -90,6 +90,10 @@ body {
     color: var(--color-primary);
 }
 
+.lojista-mobile-menu {
+    display: none;
+}
+
 .site-header__actions {
     display: flex;
     align-items: center;
@@ -528,7 +532,46 @@ section {
         padding: var(--spacing-md);
         font-size: 1.1rem;
     }
-    
+
+    .main-navigation .lojista-mobile-menu {
+        display: block;
+        padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .lojista-mobile-menu__title {
+        font-weight: 700;
+        color: #2d8659;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .lojista-mobile-menu__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+    }
+
+    .lojista-mobile-menu__list a {
+        display: block;
+        text-decoration: none;
+        background: #f7fbf8;
+        border: 1px solid #e2e8e4;
+        color: #2d8659;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .lojista-mobile-menu__list a:hover {
+        background: #2d8659;
+        color: #fff;
+        border-color: #2d8659;
+    }
+
     /* Hero Mobile */
     .home-hero {
         padding: var(--spacing-lg) 0;
