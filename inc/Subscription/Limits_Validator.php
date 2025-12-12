@@ -17,8 +17,19 @@ class Limits_Validator {
 		// Hook ao criar/atualizar item do cardápio
 		add_action( 'save_post_' . CPT_MenuItem::SLUG, [ $this, 'validate_menu_item_limits' ], 10, 3 );
 
+		// Limpar cache de contagens ao salvar/atualizar itens do cardápio
+		add_action( 'save_post_' . CPT_MenuItem::SLUG, [ $this, 'clear_menu_item_count_cache' ], 20, 3 );
+
 		// Hook ao criar modificador
 		add_action( 'save_post_' . CPT_ProductModifier::SLUG, [ $this, 'validate_modifier_limits' ], 10, 3 );
+
+		// Limpar cache de contagens ao salvar/atualizar modificadores
+		add_action( 'save_post_' . CPT_ProductModifier::SLUG, [ $this, 'clear_modifier_count_cache' ], 20, 3 );
+
+		// Limpar caches de contagem em alterações de status/remoção
+		add_action( 'trashed_post', [ $this, 'clear_cache_on_status_change' ], 10, 1 );
+		add_action( 'untrashed_post', [ $this, 'clear_cache_on_status_change' ], 10, 1 );
+		add_action( 'before_delete_post', [ $this, 'clear_cache_on_status_change' ], 10, 1 );
 	}
 
 	/**
@@ -124,49 +135,148 @@ class Limits_Validator {
 	/**
 	 * Conta itens do cardápio de um restaurante.
 	 */
-        private static function count_menu_items( int $restaurant_id ): int {
-                $query = new \WP_Query( [
-                        'post_type'              => CPT_MenuItem::SLUG,
-                        'posts_per_page'         => 1,
-                        'post_status'            => [ 'publish', 'pending', 'draft' ],
-                        'fields'                 => 'ids',
-                        'meta_query'             => [
-                                [
-                                        'key'   => '_vc_restaurant_id',
-                                        'value' => (string) $restaurant_id,
-                                ],
-                        ],
-                        'no_found_rows'          => false,
-                        'update_post_meta_cache' => false,
-                        'update_post_term_cache' => false,
-                ] );
+	private static function count_menu_items( int $restaurant_id ): int {
+		$cache_key = 'vc_menu_items_count_' . $restaurant_id;
+		$cached    = get_transient( $cache_key );
 
-                return (int) $query->found_posts;
-        }
+		if ( false !== $cached ) {
+			return (int) $cached;
+		}
+
+		$query = new \WP_Query( [
+			'post_type'              => CPT_MenuItem::SLUG,
+			'posts_per_page'         => 1,
+			'post_status'            => [ 'publish', 'pending', 'draft' ],
+			'fields'                 => 'ids',
+			'meta_query'             => [
+				[
+					'key'   => '_vc_restaurant_id',
+					'value' => (string) $restaurant_id,
+				],
+			],
+			'no_found_rows'          => false,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		] );
+		$count = (int) $query->found_posts;
+
+		set_transient( $cache_key, $count, MINUTE_IN_SECONDS );
+
+		return $count;
+	}
 
 	/**
 	 * Conta modificadores vinculados a um item.
 	 */
-        private static function count_modifiers_for_item( int $menu_item_id ): int {
-                $query = new \WP_Query( [
-                        'post_type'              => CPT_ProductModifier::SLUG,
-                        'posts_per_page'         => 1,
-                        'post_status'            => [ 'publish', 'pending', 'draft' ],
-                        'fields'                 => 'ids',
-                        'meta_query'             => [
-                                [
-                                        'key'     => '_vc_modifier_menu_items',
-                                        'value'   => (string) $menu_item_id,
-                                        'compare' => 'LIKE',
-                                ],
-                        ],
-                        'no_found_rows'          => false,
-                        'update_post_meta_cache' => false,
-                        'update_post_term_cache' => false,
-                ] );
+	private static function count_modifiers_for_item( int $menu_item_id ): int {
+		$cache_key = 'vc_modifiers_count_' . $menu_item_id;
+		$cached    = get_transient( $cache_key );
 
-                return (int) $query->found_posts;
-        }
+		if ( false !== $cached ) {
+			return (int) $cached;
+		}
+
+		$query = new \WP_Query( [
+			'post_type'              => CPT_ProductModifier::SLUG,
+			'posts_per_page'         => 1,
+			'post_status'            => [ 'publish', 'pending', 'draft' ],
+			'fields'                 => 'ids',
+			'meta_query'             => [
+				[
+					'key'     => '_vc_modifier_menu_items',
+					'value'   => (string) $menu_item_id,
+					'compare' => 'LIKE',
+				],
+			],
+			'no_found_rows'          => false,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		] );
+		$count = (int) $query->found_posts;
+
+		set_transient( $cache_key, $count, MINUTE_IN_SECONDS );
+
+		return $count;
+	}
+
+	/**
+	 * Limpa cache de contagem de itens do cardápio ao alterar o post.
+	 */
+	public function clear_menu_item_count_cache( int $post_id, ?\WP_Post $post = null, bool $update = false ): void {
+		$restaurant_id = (int) get_post_meta( $post_id, '_vc_restaurant_id', true );
+
+		if ( $restaurant_id ) {
+			self::delete_menu_item_count_cache( $restaurant_id );
+		}
+	}
+
+	/**
+	 * Limpa cache de contagem de modificadores ao alterar o post.
+	 */
+	public function clear_modifier_count_cache( int $post_id ): void {
+		$menu_items = get_post_meta( $post_id, '_vc_modifier_menu_items', true );
+
+		if ( ! is_array( $menu_items ) ) {
+			return;
+		}
+
+		foreach ( $menu_items as $menu_item_id ) {
+			$menu_item_id = (int) $menu_item_id;
+
+			if ( $menu_item_id ) {
+				self::delete_modifier_count_cache( $menu_item_id );
+			}
+		}
+	}
+
+	/**
+	 * Limpa caches em mudanças de status ou exclusões.
+	 */
+	public function clear_cache_on_status_change( int $post_id ): void {
+		$post = get_post( $post_id );
+
+		if ( ! $post ) {
+			return;
+		}
+
+		if ( CPT_MenuItem::SLUG === $post->post_type ) {
+			$restaurant_id = (int) get_post_meta( $post_id, '_vc_restaurant_id', true );
+
+			if ( $restaurant_id ) {
+				self::delete_menu_item_count_cache( $restaurant_id );
+			}
+		}
+
+		if ( CPT_ProductModifier::SLUG === $post->post_type ) {
+			$menu_items = get_post_meta( $post_id, '_vc_modifier_menu_items', true );
+
+			if ( ! is_array( $menu_items ) ) {
+				return;
+			}
+
+			foreach ( $menu_items as $menu_item_id ) {
+				$menu_item_id = (int) $menu_item_id;
+
+				if ( $menu_item_id ) {
+					self::delete_modifier_count_cache( $menu_item_id );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Remove cache de contagem de itens do cardápio.
+	 */
+	private static function delete_menu_item_count_cache( int $restaurant_id ): void {
+		delete_transient( 'vc_menu_items_count_' . $restaurant_id );
+	}
+
+	/**
+	 * Remove cache de contagem de modificadores.
+	 */
+	private static function delete_modifier_count_cache( int $menu_item_id ): void {
+		delete_transient( 'vc_modifiers_count_' . $menu_item_id );
+	}
 
 	/**
 	 * Valida se pode criar item (para uso em REST API).
