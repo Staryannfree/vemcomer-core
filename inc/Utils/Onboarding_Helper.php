@@ -58,6 +58,7 @@ class Onboarding_Helper {
         $onboarding_step_meta      = (int) get_post_meta( $restaurant_id, '_vc_onboarding_step', true );
         $completed_steps_meta      = get_post_meta( $restaurant_id, '_vc_onboarding_completed_steps', true );
         $completed_steps           = is_array( $completed_steps_meta ) ? $completed_steps_meta : [];
+        $forced_first_visit        = get_post_meta( $restaurant_id, '_vc_onboarding_force_first_visit', true ) === '1';
 
         // Verificar dados reais da loja
         $has_categories = self::has_menu_categories( $restaurant_id );
@@ -88,7 +89,7 @@ class Onboarding_Helper {
         }
 
         // Se tem todos os dados essenciais, considera concluído (mesmo que o meta não esteja setado)
-        $needs_onboarding = ! empty( $missing_data );
+        $needs_onboarding = ! empty( $missing_data ) || $forced_first_visit;
 
         // Se o meta diz que está concluído mas faltam dados, forçar onboarding
         if ( $onboarding_completed_meta && $needs_onboarding ) {
@@ -96,7 +97,9 @@ class Onboarding_Helper {
         }
 
         // Determinar passo atual baseado no que falta
-        $current_step = self::determine_current_step( $missing_data, $completed_steps, $onboarding_step_meta );
+        $current_step = $forced_first_visit
+            ? 1
+            : self::determine_current_step( $missing_data, $completed_steps, $onboarding_step_meta );
 
         return [
             'needs_onboarding' => $needs_onboarding,
@@ -303,6 +306,7 @@ class Onboarding_Helper {
     public static function complete_onboarding( int $restaurant_id ): void {
         update_post_meta( $restaurant_id, '_vc_onboarding_completed', '1' );
         update_post_meta( $restaurant_id, '_vc_onboarding_step', 7 );
+        delete_post_meta( $restaurant_id, '_vc_onboarding_force_first_visit' );
         
         // Garantir que a loja está ativa
         $restaurant = get_post( $restaurant_id );
@@ -314,6 +318,23 @@ class Onboarding_Helper {
                 ] );
             }
         }
+    }
+
+    /**
+     * Restaura o estado de primeira visita para o restaurante.
+     *
+     * @param int $restaurant_id ID do restaurante
+     */
+    public static function reset_to_first_visit( int $restaurant_id ): void {
+        $restaurant = get_post( $restaurant_id );
+        if ( ! $restaurant || 'vc_restaurant' !== $restaurant->post_type ) {
+            return;
+        }
+
+        delete_post_meta( $restaurant_id, '_vc_onboarding_completed' );
+        delete_post_meta( $restaurant_id, '_vc_onboarding_step' );
+        delete_post_meta( $restaurant_id, '_vc_onboarding_completed_steps' );
+        update_post_meta( $restaurant_id, '_vc_onboarding_force_first_visit', '1' );
     }
 
     /**
