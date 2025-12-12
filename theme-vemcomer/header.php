@@ -90,7 +90,40 @@
                     'container'      => false,
                     'fallback_cb'    => 'vemcomer_default_menu',
                 ]);
+
+                $lojista_links = [];
+
+                if ( is_user_logged_in() ) {
+                    $current_user = wp_get_current_user();
+
+                    if ( $current_user instanceof WP_User && in_array( 'lojista', (array) $current_user->roles, true ) ) {
+                        $panel_page = vemcomer_get_marketplace_template_page( 'templates/marketplace/painel-lojista-plano-gratis.php' );
+                        $panel_url  = $panel_page ? get_permalink( $panel_page ) : home_url( '/painel-restaurante/' );
+
+                        $lojista_links = [
+                            [ 'label' => __( 'Dashboard', 'vemcomer' ), 'href' => $panel_url ],
+                            [ 'label' => __( 'Cardápio', 'vemcomer' ), 'href' => home_url( '/gestao-cardapio/' ) ],
+                            [ 'label' => __( 'Configuração da Loja', 'vemcomer' ), 'href' => home_url( '/configuracao-loja/' ) ],
+                            [ 'label' => __( 'Onboarding', 'vemcomer' ), 'href' => home_url( '/wizard-onboarding/' ) ],
+                            [ 'label' => __( 'Marketing', 'vemcomer' ), 'href' => home_url( '/central-marketing/' ) ],
+                            [ 'label' => __( 'Eventos', 'vemcomer' ), 'href' => home_url( '/gestor-eventos/' ) ],
+                            [ 'label' => __( 'Analytics', 'vemcomer' ), 'href' => $panel_url . '#analytics' ],
+                            [ 'label' => __( 'Planos', 'vemcomer' ), 'href' => $panel_url . '#planos' ],
+                        ];
+                    }
+                }
                 ?>
+
+                <?php if ( ! empty( $lojista_links ) ) : ?>
+                    <div class="lojista-mobile-menu" aria-label="<?php esc_attr_e( 'Menu do Lojista', 'vemcomer' ); ?>">
+                        <div class="lojista-mobile-menu__title"><?php esc_html_e( 'Menu do Lojista', 'vemcomer' ); ?></div>
+                        <ul class="lojista-mobile-menu__list">
+                            <?php foreach ( $lojista_links as $item ) : ?>
+                                <li><a href="<?php echo esc_url( $item['href'] ); ?>"><?php echo esc_html( $item['label'] ); ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
             </nav>
 
             <div class="site-header__actions">

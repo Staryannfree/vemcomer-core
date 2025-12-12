@@ -25,6 +25,11 @@ if (! $vc_marketplace_inline) {
     <style>
         body { background: #f6f9f6; font-family: 'Montserrat', Arial, sans-serif; margin: 0; color: #232a2c; }
         .dash-container { max-width: 474px; margin: 0 auto; padding: 17px 10px 38px 10px; }
+        .dash-menu { display: flex; flex-wrap: wrap; gap: 8px; background:#ffffff; border:1px solid #e2e8e4; border-radius:12px; padding:8px; margin: 0 0 16px 0; box-shadow:0 2px 12px #2d86590f; position: sticky; top: 0; z-index: 9; }
+        .dash-menu::-webkit-scrollbar { height: 6px; }
+        .dash-menu::-webkit-scrollbar-thumb { background: #c7d7cf; border-radius: 10px; }
+        .dash-menu a { flex: 1 1 120px; text-decoration: none; background:#f7fbf8; border:1px solid #e2e8e4; color:#2d8659; padding:9px 10px; border-radius:10px; font-weight:700; font-size:.95em; text-align:center; transition:.16s; }
+        .dash-menu a:hover { background:#2d8659; color:#fff; border-color:#2d8659; box-shadow:0 3px 14px #2d865915; transform: translateY(-1px); }
         .dash-quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
         .dash-quick a,
         .dash-quick button { background:#ffffff; border:1px solid #e2e8e4; border-radius:12px; padding:11px 12px; font-weight:700; color:#2d8659; text-decoration:none; text-align:left; box-shadow:0 2px 12px #2d865910; cursor:pointer; transition:.14s; font-size:.98em; }
@@ -96,6 +101,41 @@ $quick_links = [
     'events'     => home_url( '/gestor-eventos/' ),
 ];
 
+$lojista_menu = [
+    [
+        'label' => 'Dashboard',
+        'href'  => get_permalink(),
+    ],
+    [
+        'label' => 'Cardápio',
+        'href'  => $quick_links['menu'],
+    ],
+    [
+        'label' => 'Configuração da Loja',
+        'href'  => $quick_links['config'],
+    ],
+    [
+        'label' => 'Onboarding',
+        'href'  => home_url( '/wizard-onboarding/' ),
+    ],
+    [
+        'label' => 'Marketing',
+        'href'  => $quick_links['marketing'],
+    ],
+    [
+        'label' => 'Eventos',
+        'href'  => $quick_links['events'],
+    ],
+    [
+        'label' => 'Analytics',
+        'href'  => '#analytics',
+    ],
+    [
+        'label' => 'Planos',
+        'href'  => '#planos',
+    ],
+];
+
 if ( $current_user instanceof WP_User && $current_user->ID ) {
     $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $current_user );
     if ( $filtered > 0 ) {
@@ -155,6 +195,12 @@ $is_open = ! empty( $store_status['is_open'] );
 $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $is_open ? 'ABERTO' : 'FECHADO' );
 ?>
 
+    <nav class="dash-menu" aria-label="Menu do Lojista">
+        <?php foreach ( $lojista_menu as $item ) : ?>
+            <a href="<?php echo esc_url( $item['href'] ); ?>"><?php echo esc_html( $item['label'] ); ?></a>
+        <?php endforeach; ?>
+    </nav>
+
     <div class="dash-quick">
         <button type="button" class="dash-cta-primary" onclick="vcOpenOnboardingWizard()">⚡ Configuração Rápida</button>
         <a href="<?php echo esc_url( $quick_links['config'] ); ?>">Editar dados</a>
@@ -164,7 +210,7 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
         <a href="<?php echo esc_url( $quick_links['events'] ); ?>">Eventos</a>
     </div>
 
-    <div class="dash-title">Visão Geral da Loja</div>
+    <div class="dash-title" id="overview">Visão Geral da Loja</div>
 
     <div class="dash-row">
         <div class="dash-card">
@@ -203,7 +249,7 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
         </div>
     </div>
 
-    <div class="analytics-wrap">
+    <div class="analytics-wrap" id="analytics">
         <div class="analytics-title">Analytics Express</div>
         <div class="analytics-row">
             <div class="analytics-metric">
@@ -222,7 +268,7 @@ $status_label = ! empty( $store_status['label'] ) ? $store_status['label'] : ( $
         </div>
     </div>
 
-    <div class="plan-widget">
+    <div class="plan-widget" id="planos">
         <div class="plan-type">Plano Atual: <b><?php echo esc_html( $plan_name ); ?></b></div>
         <div class="plan-bar">
             <div class="plan-bar-inner" style="width:<?php echo esc_attr( $plan_percent ); ?>%;"></div>
