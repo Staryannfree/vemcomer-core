@@ -7,6 +7,7 @@
 namespace VC\REST;
 
 use VC\Model\CPT_MenuItem;
+use VC\Utils\Restaurant_Helper;
 use WP_Error;
 use WP_Query;
 use WP_REST_Request;
@@ -187,8 +188,13 @@ class Menu_Items_Controller {
      * Cria um novo item do cardápio
      */
     public function create_menu_item( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        // Aceitar tanto JSON quanto body_params (para requisições internas do onboarding)
         $body = $request->get_json_params();
         if ( ! $body ) {
+            $body = $request->get_body_params();
+        }
+        
+        if ( ! $body || ! is_array( $body ) ) {
             return new WP_Error(
                 'vc_invalid_json',
                 __( 'JSON inválido no body da requisição.', 'vemcomer' ),
@@ -208,25 +214,7 @@ class Menu_Items_Controller {
 
         // Obter restaurante do usuário logado
         $user_id = get_current_user_id();
-        $restaurant_id = 0;
-
-        // Tentar obter restaurante via meta do usuário
-        $meta_restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
-        if ( $meta_restaurant_id > 0 ) {
-            $restaurant_id = $meta_restaurant_id;
-        } else {
-            // Tentar obter restaurante via post_author
-            $restaurant_query = new WP_Query( [
-                'post_type'      => 'vc_restaurant',
-                'author'         => $user_id,
-                'posts_per_page' => 1,
-                'post_status'    => [ 'publish', 'pending', 'draft' ],
-            ] );
-            if ( $restaurant_query->have_posts() ) {
-                $restaurant_id = $restaurant_query->posts[0]->ID;
-            }
-            wp_reset_postdata();
-        }
+        $restaurant_id = Restaurant_Helper::get_restaurant_id_for_user( $user_id );
 
         if ( $restaurant_id <= 0 ) {
             return new WP_Error(
@@ -236,20 +224,75 @@ class Menu_Items_Controller {
             );
         }
 
-        // Criar o post
-        $post_data = [
-            'post_title'   => $title,
-            'post_content' => wp_kses_post( $body['description'] ?? '' ),
-            'post_excerpt' => wp_trim_words( wp_kses_post( $body['description'] ?? '' ), 20 ),
-            'post_type'    => CPT_MenuItem::SLUG,
-            'post_status'  => 'publish',
-            'post_author'  => $user_id,
-        ];
-
-        $post_id = wp_insert_post( $post_data, true );
-        if ( is_wp_error( $post_id ) ) {
-            return $post_id;
+        // Verificar capabilities antes de criar
+        $can_create = current_user_can( 'create_vc_menu_items' );
+        $can_publish = current_user_can( 'publish_vc_menu_items' );
+        error_log( sprintf( 'Menu_Items_Controller::create_menu_item - Permissões: can_create=%s, can_publish=%s, user_id=%d', 
+            $can_create ? 'true' : 'false',
+            $can_publish ? 'true' : 'false',
+            $user_id
+        ) );
+        
+        // Garantir datas válidas
+        $now_local = current_time( 'mysql' );
+        $now_gmt   = current_time( 'mysql', true );
+        
+        error_log( sprintf( 'Menu_Items_Controller::create_menu_item - Tentando criar post "%s" via inserção direta no banco', $title ) );
+        
+        // Verificar se o post type está registrado
+        if ( ! post_type_exists( CPT_MenuItem::SLUG ) ) {
+            error_log( 'Menu_Items_Controller::create_menu_item - ERRO: Post type não está registrado!' );
+            return new WP_Error(
+                'vc_post_type_not_registered',
+                __( 'Tipo de post não está registrado.', 'vemcomer' ),
+                [ 'status' => 500 ]
+            );
         }
+        
+        global $wpdb;
+        
+        // NOVO MÉTODO: Inserir direto no banco, ignorando wp_insert_post
+        $wpdb->insert(
+            $wpdb->posts,
+            [
+                'post_author'           => $user_id,
+                'post_date'             => $now_local,
+                'post_date_gmt'         => $now_gmt,
+                'post_content'          => wp_kses_post( $body['description'] ?? '' ),
+                'post_title'            => $title,
+                'post_excerpt'          => wp_trim_words( wp_kses_post( $body['description'] ?? '' ), 20 ),
+                'post_status'           => 'publish',
+                'comment_status'        => 'closed',
+                'ping_status'           => 'closed',
+                'post_name'             => sanitize_title( $title ),
+                'post_modified'         => $now_local,
+                'post_modified_gmt'     => $now_gmt,
+                'post_parent'           => 0,
+                'menu_order'            => 0,
+                'post_type'             => CPT_MenuItem::SLUG,
+                'post_mime_type'        => '',
+                'comment_count'         => 0,
+            ],
+            [ '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%d' ]
+        );
+        
+        $post_id = $wpdb->insert_id;
+        
+        if ( ! $post_id || $post_id === 0 ) {
+            error_log( sprintf( 'Menu_Items_Controller::create_menu_item - ERRO ao inserir no banco: %s', $wpdb->last_error ) );
+            return new WP_Error(
+                'vc_db_insert_failed',
+                __( 'Erro ao inserir produto no banco de dados.', 'vemcomer' ),
+                [ 'status' => 500, 'db_error' => $wpdb->last_error ]
+            );
+        }
+        
+        error_log( sprintf( 'Menu_Items_Controller::create_menu_item - Produto inserido direto no banco com ID: %d', $post_id ) );
+        
+        // Limpar cache
+        clean_post_cache( $post_id );
+
+        error_log( sprintf( 'Menu_Items_Controller::create_menu_item - Post criado com sucesso (ID: %d, título: %s)', $post_id, $title ) );
 
         // Salvar meta fields
         if ( isset( $body['price'] ) ) {
@@ -271,15 +314,32 @@ class Menu_Items_Controller {
         }
 
         // Vincular ao restaurante
-        update_post_meta( $post_id, '_vc_restaurant_id', $restaurant_id );
-        update_post_meta( $post_id, '_vc_menu_item_restaurant', $restaurant_id );
+        Restaurant_Helper::attach_restaurant_to_product( $post_id, $restaurant_id );
 
         // Categoria
+        $category_id = 0;
         if ( isset( $body['category_id'] ) && is_numeric( $body['category_id'] ) ) {
             $category_id = absint( $body['category_id'] );
-            if ( term_exists( $category_id, 'vc_menu_category' ) ) {
-                wp_set_object_terms( $post_id, [ $category_id ], 'vc_menu_category', false );
+        } elseif ( isset( $body['category'] ) && ! empty( $body['category'] ) ) {
+            // Fallback: buscar por nome (usado no onboarding)
+            $cat_name = sanitize_text_field( $body['category'] );
+            // Tentar slug único com ID do restaurante primeiro
+            $base_slug = sanitize_title( $cat_name );
+            $unique_slug = $base_slug . '-rest-' . $restaurant_id;
+            
+            $term = get_term_by( 'slug', $unique_slug, 'vc_menu_category' );
+            if ( ! $term || is_wp_error( $term ) ) {
+                // Tentar só pelo nome
+                $term = get_term_by( 'name', $cat_name, 'vc_menu_category' );
             }
+            
+            if ( $term && ! is_wp_error( $term ) ) {
+                $category_id = $term->term_id;
+            }
+        }
+
+        if ( $category_id > 0 && term_exists( $category_id, 'vc_menu_category' ) ) {
+            wp_set_object_terms( $post_id, [ $category_id ], 'vc_menu_category', false );
         }
 
         // Imagem (data:image ou URL)
@@ -342,7 +402,7 @@ class Menu_Items_Controller {
         }
 
         $user_id = get_current_user_id();
-        $user_restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+        $user_restaurant_id = Restaurant_Helper::get_restaurant_id_for_user( $user_id );
 
         if ( $user_restaurant_id === $restaurant_id ) {
             return true;

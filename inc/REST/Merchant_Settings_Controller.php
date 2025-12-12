@@ -5,6 +5,7 @@
 
 namespace VC\REST;
 
+use VC\Utils\Restaurant_Helper;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -29,7 +30,7 @@ class Merchant_Settings_Controller {
 
     public function can_edit(): bool {
         // Tenta resolver o restaurante do usuário logado
-        $restaurant = $this->get_restaurant_for_user();
+        $restaurant = Restaurant_Helper::get_restaurant_for_user();
 
         // Admin sempre pode editar (útil para testes e suporte)
         if ( current_user_can( 'manage_options' ) ) {
@@ -64,7 +65,7 @@ class Merchant_Settings_Controller {
     }
 
     public function update_settings( WP_REST_Request $request ) {
-        $restaurant = $this->get_restaurant_for_user();
+        $restaurant = Restaurant_Helper::get_restaurant_for_user();
 
         if ( ! $restaurant ) {
             return new WP_REST_Response( [ 'message' => __( 'Restaurante não encontrado para este usuário.', 'vemcomer' ) ], 404 );
@@ -78,54 +79,6 @@ class Merchant_Settings_Controller {
         return new WP_REST_Response( [ 'success' => true ] );
     }
 
-    private function get_restaurant_for_user() {
-        // Se o helper global do marketplace existir, reutiliza a mesma lógica
-        if ( function_exists( '\\vc_marketplace_current_restaurant' ) ) {
-            $candidate = \vc_marketplace_current_restaurant();
-            if ( $candidate instanceof \WP_Post && 'vc_restaurant' === $candidate->post_type ) {
-                return $candidate;
-            }
-        }
-
-        $user = wp_get_current_user();
-
-        if ( ! ( $user instanceof \WP_User ) || 0 === $user->ID ) {
-            return null;
-        }
-
-        $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $user );
-        if ( $filtered > 0 ) {
-            $candidate = get_post( $filtered );
-            if ( $candidate instanceof \WP_Post && 'vc_restaurant' === $candidate->post_type ) {
-                return $candidate;
-            }
-        }
-
-        $meta_id = (int) get_user_meta( $user->ID, 'vc_restaurant_id', true );
-        if ( $meta_id ) {
-            $candidate = get_post( $meta_id );
-            if ( $candidate instanceof \WP_Post && 'vc_restaurant' === $candidate->post_type ) {
-                return $candidate;
-            }
-        }
-
-        $q = new \WP_Query([
-            'post_type'      => 'vc_restaurant',
-            'author'         => $user->ID,
-            'posts_per_page' => 1,
-            'post_status'    => [ 'publish', 'pending', 'draft' ],
-            'no_found_rows'  => true,
-        ]);
-
-        if ( $q->have_posts() ) {
-            $candidate = $q->posts[0];
-            wp_reset_postdata();
-            return $candidate instanceof \WP_Post ? $candidate : null;
-        }
-
-        wp_reset_postdata();
-        return null;
-    }
 
     private function update_post_core( int $restaurant_id, array $payload ): void {
         $title = isset( $payload['title'] ) ? sanitize_text_field( (string) $payload['title'] ) : null;

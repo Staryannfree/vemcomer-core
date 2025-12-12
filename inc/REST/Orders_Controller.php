@@ -320,6 +320,19 @@ class Orders_Controller {
             return new WP_Error( 'vc_restaurant_closed', __( 'Restaurante está fechado no momento.', 'vemcomer' ), [ 'status' => 403 ] );
         }
 
+        // Verificar se o restaurante está ativo (status de ativação)
+        $status = \VC\Services\Restaurant_Status_Service::get_status_for_restaurant( $restaurant_id );
+        if ( ! $status['active'] ) {
+            return new WP_Error(
+                'restaurant_not_active',
+                __( 'Este restaurante ainda não está pronto para receber pedidos.', 'vemcomer' ),
+                [
+                    'status' => 400,
+                    'activation_progress' => $status['checks'],
+                ]
+            );
+        }
+
         // Calcular totais
         $subtotal = 0.0;
         $clean_items = [];

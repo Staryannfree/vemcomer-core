@@ -471,8 +471,17 @@ class CPT_Review {
 
 	/**
 	 * Invalida cache de rating ao salvar avaliação.
+	 * 
+	 * @param int      $post_id ID do post.
+	 * @param \WP_Post|null $post   Objeto do post (pode ser null ao criar novo post).
+	 * @param bool     $update  Se é atualização ou criação.
 	 */
-	public function invalidate_rating_cache_on_save( int $post_id, \WP_Post $post, bool $update ): void {
+	public function invalidate_rating_cache_on_save( int $post_id, $post, bool $update ): void {
+		// O WordPress pode passar null quando um post está sendo criado pela primeira vez
+		if ( ! $post || ! ( $post instanceof \WP_Post ) ) {
+			return;
+		}
+
 		if ( self::SLUG !== $post->post_type ) {
 			return;
 		}

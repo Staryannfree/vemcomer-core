@@ -35,6 +35,18 @@ class CPT_MenuItem {
             return $data;
         }
 
+        // Bypass durante REST requests (onboarding via API)
+        if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+            // Debug para confirmar bypass
+            // error_log( 'CPT_MenuItem::check_limit_on_save - Bypass REST ativado para ' . $data['post_title'] );
+            return $data;
+        }
+        
+        // Bypass manual via flag nos dados
+        if ( ! empty( $postarr['_vc_bypass_limit_check'] ) || ! empty( $data['_vc_bypass_limit_check'] ) ) {
+             return $data;
+        }
+
         // Se não for publicação, permite (rascunhos são livres, ou não?)
         // Vamos bloquear apenas status 'publish'
         if ( $data['post_status'] !== 'publish' ) {

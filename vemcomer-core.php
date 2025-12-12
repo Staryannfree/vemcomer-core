@@ -53,6 +53,8 @@ spl_autoload_register( function ( $class ) {
 } );
 
 require_once VEMCOMER_CORE_DIR . 'inc/helpers-sanitize.php';
+// Helper central para restaurante do usuário (fonte de verdade)
+require_once VEMCOMER_CORE_DIR . 'inc/Utils/Restaurant_Helper.php';
 // Para desativar checkout temporariamente, comente a linha abaixo:
 // define( 'VEMCOMER_DISABLE_CHECKOUT', true ); // Adicione no wp-config.php ou descomente aqui
 if ( ! defined( 'VEMCOMER_DISABLE_CHECKOUT' ) || ! VEMCOMER_DISABLE_CHECKOUT ) {
@@ -149,6 +151,15 @@ add_action( 'plugins_loaded', function () {
 }, 1 );
 
 add_action( 'plugins_loaded', function () {
+    // Carregar melhorias de logging se VC_DEBUG estiver ativo
+    // DESABILITADO temporariamente para melhorar performance do wizard
+    // if ( defined( 'VC_DEBUG' ) && VC_DEBUG ) {
+    //     $vc_debug_file = __DIR__ . '/scripts/enhance-debug-logging.php';
+    //     if ( file_exists( $vc_debug_file ) ) {
+    //         require_once $vc_debug_file;
+    //     }
+    // }
+    
     // (carrega os módulos já existentes dos Pacotes 1..7)
     if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); }
     if ( class_exists( 'VC_CPT_Produto' ) ) { ( new \VC_CPT_Produto() )->init(); }
@@ -182,6 +193,14 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\REST\\Menu_Categories_Controller' ) ) { ( new \VC\REST\Menu_Categories_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Addon_Catalog_Controller' ) ) { ( new \VC\REST\Addon_Catalog_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Onboarding_Controller' ) ) { ( new \VC\REST\Onboarding_Controller() )->init(); }
+    // Registrar Debug Controller
+    if ( class_exists( '\\VC\\REST\\Debug_Controller' ) ) {
+        ( new \VC\REST\Debug_Controller() )->init();
+    }
+    // Registrar Browser Debug Controller
+    if ( class_exists( '\\VC\\REST\\Browser_Debug_Controller' ) ) {
+        ( new \VC\REST\Browser_Debug_Controller() )->init();
+    }
     if ( class_exists( '\\VC\\REST\\Quick_Toggle_Controller' ) ) { ( new \VC\REST\Quick_Toggle_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Subscription_Controller' ) ) { ( new \VC\REST\Subscription_Controller() )->init(); }
     if ( class_exists( '\\VC\\REST\\Addresses_Controller' ) ) { ( new \VC\REST\Addresses_Controller() )->init(); }
@@ -211,9 +230,12 @@ add_action( 'plugins_loaded', function () {
     }
 
     if ( class_exists( '\\VC\\Admin\\Settings' ) )            { ( new \VC\Admin\Settings() )->init(); }
+    if ( class_exists( '\\VC\\Admin\\Archetypes_Manager' ) )  { ( new \VC\Admin\Archetypes_Manager() )->init(); }
     if ( class_exists( '\\VC\\Order\\Statuses' ) )            { ( new \VC\Order\Statuses() )->init(); }
     if ( class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); }
     if ( class_exists( '\\VC\\CLI\\Seed' ) )                  { ( new \VC\CLI\Seed() )->init(); }
+    if ( class_exists( '\\VC\\CLI\\Migrate_Command' ) )       { ( new \VC\CLI\Migrate_Command() )->init(); }
+    if ( class_exists( '\\VC\\CLI\\Migrate_Cuisine_Archetypes' ) ) { ( new \VC\CLI\Migrate_Cuisine_Archetypes() )->init(); }
 
     if ( class_exists( '\\VC\\Frontend\\Shortcodes' ) )        { ( new \VC\Frontend\Shortcodes() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Shipping' ) )          { ( new \VC\Frontend\Shipping() )->init(); }
@@ -224,6 +246,7 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Frontend\\Marketplace_Templates' ) ) { ( new \VC\Frontend\Marketplace_Templates() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Home_Template' ) )     { ( new \VC\Frontend\Home_Template() )->init(); }
     if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
+    if ( class_exists( '\\VC\\REST\\Seeder_Controller' ) )     { ( new \VC\REST\Seeder_Controller() )->init(); }
 
     if ( class_exists( '\\VC\\Frontend\\Coupons' ) )           { ( new \VC\Frontend\Coupons() )->init(); }
     if ( class_exists( '\\VC\\REST\\Coupons_Controller' ) )    { ( new \VC\REST\Coupons_Controller() )->init(); }

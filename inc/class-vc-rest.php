@@ -68,6 +68,7 @@ class VC_REST {
             if ( $restaurant_from_payload && $restaurant_from_payload !== $product_restaurant ) {
                 return new WP_Error( 'vc_restaurant_mismatch', __( 'O restaurante informado não corresponde aos itens.', 'vemcomer' ), [ 'status' => 400 ] );
             }
+            
             $price_raw = get_post_meta( $product_id, '_vc_price', true );
             $price     = (float) str_replace( ',', '.', (string) $price_raw );
             $line      = $price * $qty;
@@ -82,6 +83,21 @@ class VC_REST {
 
         if ( $restaurant_id <= 0 ) {
             return new WP_Error( 'vc_missing_restaurant', __( 'Restaurante inválido.', 'vemcomer' ), [ 'status' => 400 ] );
+        }
+
+        // Verificar se o restaurante está ativo (status de ativação)
+        if ( class_exists( '\\VC\\Services\\Restaurant_Status_Service' ) ) {
+            $status = \VC\Services\Restaurant_Status_Service::get_status_for_restaurant( $restaurant_id );
+            if ( ! $status['active'] ) {
+                return new WP_Error(
+                    'restaurant_not_active',
+                    __( 'Este restaurante ainda não está pronto para receber pedidos.', 'vemcomer' ),
+                    [
+                        'status' => 400,
+                        'activation_progress' => $status['checks'],
+                    ]
+                );
+            }
         }
 
         $order_context = [

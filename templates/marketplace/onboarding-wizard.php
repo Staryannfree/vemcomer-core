@@ -175,8 +175,178 @@ if ( $restaurant instanceof WP_Post ) {
     }
 }
 
+// Preparar dados do wizard
+$schedule_json = get_post_meta( $restaurant->ID, '_vc_restaurant_schedule', true );
+$schedule = [];
+if ( $schedule_json ) {
+    $schedule_decoded = json_decode( $schedule_json, true );
+    if ( is_array( $schedule_decoded ) ) {
+        $days_map = [
+            'monday'    => 'seg',
+            'tuesday'   => 'ter',
+            'wednesday' => 'qua',
+            'thursday'  => 'qui',
+            'friday'    => 'sex',
+            'saturday'  => 'sab',
+            'sunday'    => 'dom',
+        ];
+        foreach ( $days_map as $meta_key => $slug ) {
+            $day_data = $schedule_decoded[ $meta_key ] ?? [];
+            $schedule[ $slug ] = [
+                'enabled' => ! empty( $day_data['enabled'] ),
+                'ranges'  => $day_data['periods'] ?? [ [ 'open' => '09:00', 'close' => '18:00' ] ],
+            ];
+        }
+    }
+}
+
+// Buscar cuisine_ids salvos (passo 1)
+$cuisine_ids = [];
+$primary_cuisine = (int) get_post_meta( $restaurant->ID, '_vc_primary_cuisine', true );
+if ( $primary_cuisine > 0 ) {
+    $cuisine_ids[] = $primary_cuisine;
+}
+$secondary_cuisines_json = get_post_meta( $restaurant->ID, '_vc_secondary_cuisines', true );
+if ( $secondary_cuisines_json ) {
+    $secondary_cuisines = json_decode( $secondary_cuisines_json, true );
+    if ( is_array( $secondary_cuisines ) ) {
+        $cuisine_ids = array_merge( $cuisine_ids, array_map( 'intval', $secondary_cuisines ) );
+    }
+}
+// Se não encontrou via meta, buscar da taxonomia
+if ( empty( $cuisine_ids ) ) {
+    $cuisine_terms = wp_get_post_terms( $restaurant->ID, 'vc_cuisine', [ 'fields' => 'ids' ] );
+    if ( ! is_wp_error( $cuisine_terms ) && ! empty( $cuisine_terms ) ) {
+        $cuisine_ids = array_map( 'intval', $cuisine_terms );
+    }
+}
+
+// Buscar categorias já criadas
+$category_names = [];
+$user_categories = get_terms( [
+    'taxonomy'   => 'vc_menu_category',
+    'hide_empty' => false,
+    'meta_query' => [
+        [
+            'key'   => '_vc_restaurant_id',
+            'value' => $restaurant->ID,
+        ],
+    ],
+] );
+if ( ! is_wp_error( $user_categories ) && ! empty( $user_categories ) ) {
+    foreach ( $user_categories as $cat ) {
+        $is_catalog = get_term_meta( $cat->term_id, '_vc_is_catalog_category', true );
+        if ( $is_catalog !== '1' ) {
+            $category_names[] = $cat->name;
+        }
+    }
+}
+
+// Buscar produtos já criados
+$products = [];
+$menu_items = get_posts( [
+    'post_type'      => 'vc_menu_item',
+    'posts_per_page' => -1,
+    'post_status'    => 'any',
+    'meta_query'     => [
+        [
+            'key'   => '_vc_restaurant_id',
+            'value' => $restaurant->ID,
+        ],
+    ],
+] );
+foreach ( $menu_items as $item ) {
+    $category_terms = wp_get_post_terms( $item->ID, 'vc_menu_category', [ 'fields' => 'names' ] );
+    $category_name = ! is_wp_error( $category_terms ) && ! empty( $category_terms ) ? $category_terms[0] : '';
+    
+    $products[] = [
+        'name'        => $item->post_title,
+        'category'    => $category_name,
+        'category_id' => 0,
+        'price'       => (float) get_post_meta( $item->ID, '_vc_price', true ),
+        'description' => $item->post_content,
+    ];
+}
+
+// Preparar wizard_data para passar aos parciais
+$wizard_data = [
+    'restaurant_id'  => $restaurant->ID, // Adicionar ID do restaurante para o Passo 7 buscar dados reais
+    'cuisine_ids'    => $cuisine_ids ?? [],
+    'name'           => $restaurant->post_title,
+    'whatsapp'       => $restaurant_data['whatsapp'] ?? '',
+    'logo'           => $restaurant_data['logo'] ?? '',
+    'address'        => $restaurant_data['endereco'] ?? '',
+    'neighborhood'   => $restaurant_data['bairro'] ?? '',
+    'city'           => '',
+    'zipcode'        => '',
+    'delivery'       => get_post_meta( $restaurant->ID, 'vc_restaurant_delivery', true ) === '1',
+    'pickup'         => false,
+    'schedule'       => $schedule,
+    'category_names' => $category_names,
+    'products'       => $products,
+    'addon_groups'   => [],
+];
+
 $rest_nonce = wp_create_nonce( 'wp_rest' );
 $rest_url   = rest_url( 'vemcomer/v1' );
+
+// Enfileirar Leaflet para o mapa do passo 3
+wp_enqueue_style(
+    'leaflet-css',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+    [],
+    '1.9.4'
+);
+wp_enqueue_script(
+    'leaflet-js',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+    [],
+    '1.9.4',
+    true
+);
+
+// Enfileirar script do wizard (depende do Leaflet)
+wp_enqueue_script(
+    'vemcomer-onboarding-wizard',
+    VEMCOMER_CORE_URL . 'assets/js/onboarding-wizard.js',
+    [ 'jquery', 'leaflet-js' ],
+    VEMCOMER_CORE_VERSION,
+    true
+);
+
+// Preparar wizard_data inicial com dados salvos
+$wizard_data_initial = [
+    'restaurant_id'  => $wizard_data['restaurant_id'], // CRÍTICO para o Passo 7
+    'cuisine_ids'    => $wizard_data['cuisine_ids'],
+    'name'           => $wizard_data['name'],
+    'whatsapp'       => $wizard_data['whatsapp'],
+    'logo'           => $wizard_data['logo'],
+    'address'        => $wizard_data['address'],
+    'neighborhood'   => $wizard_data['neighborhood'],
+    'city'           => $wizard_data['city'],
+    'zipcode'        => $wizard_data['zipcode'],
+    'delivery'       => $wizard_data['delivery'],
+    'pickup'         => $wizard_data['pickup'],
+    'schedule'       => $wizard_data['schedule'],
+    'category_names' => $wizard_data['category_names'],
+    'products'       => $wizard_data['products'],
+    'addon_groups'   => $wizard_data['addon_groups'],
+];
+
+// Passar dados para o JavaScript
+wp_localize_script( 'vemcomer-onboarding-wizard', 'vcOnboardingWizard', [
+    'restBase'              => $rest_url,
+    'restNonce'              => $rest_nonce,
+    'restaurantId'           => $restaurant->ID,
+    'currentStep'            => $current_step,
+    'cuisineOptions'         => $cuisine_options,
+    'cuisineOptionsPrimary'  => $cuisine_options_primary,
+    'cuisineOptionsTags'      => $cuisine_options_tags,
+    'restaurantData'         => $restaurant_data,
+    'recommendedCategories'   => $recommended_categories,
+    'hasPrimaryCuisine'      => $has_primary_cuisine,
+    'initialWizardData'     => $wizard_data_initial, // Dados salvos para inicializar
+] );
 ?>
 
 <div id="vcOnboardingWizard" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;">
@@ -184,26 +354,34 @@ $rest_url   = rest_url( 'vemcomer/v1' );
         <!-- Barra de Progresso -->
         <div style="position:sticky;top:0;background:#2d8659;color:#fff;padding:12px 24px;border-radius:16px 16px 0 0;z-index:10;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <div id="vcWizardStepTitle" style="font-weight:700;font-size:16px;">Passo 1 de 7</div>
+                <div id="vcWizardStepTitle" style="font-weight:700;font-size:16px;">Passo <?php echo esc_html( $current_step ); ?> de 7</div>
                 <button onclick="vcCloseOnboardingWizard()" style="background:transparent;border:none;color:#fff;font-size:24px;cursor:pointer;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='transparent'">×</button>
             </div>
             <div style="background:rgba(255,255,255,0.3);height:4px;border-radius:2px;overflow:hidden;">
-                <div id="vcWizardProgressBar" style="background:#fff;height:100%;width:14.28%;transition:width 0.3s;"></div>
+                <div id="vcWizardProgressBar" style="background:#fff;height:100%;width:<?php echo esc_attr( ( $current_step / 7 ) * 100 ); ?>%;transition:width 0.3s;"></div>
             </div>
         </div>
 
         <!-- Conteúdo do Wizard -->
-        <div style="padding:32px;">
+        <div id="vcWizardContentWrapper" style="padding:32px;">
             <div id="vcWizardContent">
-                <!-- Conteúdo será preenchido via JavaScript -->
+                <?php
+                // Incluir o parcial do passo atual
+                $partial_path = __DIR__ . '/onboarding/onboarding-step-' . $current_step . '.php';
+                if ( file_exists( $partial_path ) ) {
+                    include $partial_path;
+                } else {
+                    echo '<div style="text-align:center;padding:40px;color:#999;">Passo não encontrado.</div>';
+                }
+                ?>
             </div>
         </div>
 
         <!-- Botões de Navegação -->
-        <div style="padding:20px 32px;border-top:2px solid #eaf8f1;display:flex;justify-content:space-between;gap:12px;background:#f9f9f9;border-radius:0 0 16px 16px;">
-            <button id="vcWizardBtnPrev" onclick="vcWizardPrev()" style="background:#fff;color:#2d8659;border:2px solid #2d8659;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;display:none;">Voltar</button>
+        <div id="vcWizardButtons" style="padding:20px 32px;border-top:2px solid #eaf8f1;display:flex;justify-content:space-between;gap:12px;background:#f9f9f9;border-radius:0 0 16px 16px;">
+            <button id="vcWizardBtnPrev" onclick="vcWizardPrev()" style="background:#fff;color:#2d8659;border:2px solid #2d8659;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;display:<?php echo $current_step > 1 ? 'block' : 'none'; ?>;">Voltar</button>
             <div style="flex:1;"></div>
-            <button id="vcWizardBtnNext" onclick="vcWizardNext()" style="background:#2d8659;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;cursor:pointer;min-width:120px;">Continuar</button>
+            <button id="vcWizardBtnNext" onclick="vcWizardNext()" style="background:#2d8659;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;cursor:pointer;min-width:120px;"><?php echo $current_step === 7 ? 'Ativar minha loja' : 'Continuar'; ?></button>
         </div>
     </div>
 </div>
@@ -261,872 +439,132 @@ $rest_url   = rest_url( 'vemcomer/v1' );
     #vcOnboardingWizard .error-message {
         background:#ffe7e7;color:#ea5252;padding:12px;border-radius:8px;margin-bottom:16px;font-weight:600;
     }
+    
+    /* Responsividade Mobile */
+    @media (max-width: 768px) {
+        #vcOnboardingWizard {
+            padding: 0 !important;
+            align-items: flex-start !important;
+        }
+        
+        #vcOnboardingWizard > div {
+            max-height: 100vh !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        #vcWizardContentWrapper {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            padding: 24px 20px 100px 20px !important; /* Ajuste de padding no mobile + espaço para botões */
+            -webkit-overflow-scrolling: touch !important; /* Scroll suave no iOS */
+        }
+        
+        /* Barra de progresso no mobile */
+        #vcOnboardingWizard > div > div:first-child {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 11 !important;
+            border-radius: 0 !important;
+        }
+        
+        #vcWizardButtons {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            padding: 16px 20px !important;
+            border-radius: 0 !important;
+            border-top: 2px solid #eaf8f1 !important;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1) !important;
+            z-index: 100000 !important;
+        }
+        
+        #vcWizardBtnPrev,
+        #vcWizardBtnNext {
+            padding: 14px 20px !important;
+            font-size: 15px !important;
+            min-width: auto !important;
+            flex: 1 !important;
+        }
+        
+        #vcWizardButtons > div {
+            display: none !important; /* Remove o espaçador no mobile */
+        }
+        
+        #vcWizardButtons {
+            gap: 12px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        #vcWizardButtons {
+            padding: 12px 16px !important;
+        }
+        
+        #vcWizardBtnPrev,
+        #vcWizardBtnNext {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+        }
+        
+        #vcWizardContentWrapper {
+            padding: 20px 16px 100px 16px !important;
+        }
+        
+        #vcWizardStepTitle {
+            font-size: 14px !important;
+        }
+        
+        .wizard-title {
+            font-size: 20px !important;
+        }
+        
+        .wizard-subtitle {
+            font-size: 14px !important;
+        }
+        
+        /* Mapa no mobile */
+        #vcWizardMap {
+            height: 250px !important;
+            min-height: 250px !important;
+        }
+    }
+    
+    /* Estilos específicos para o mapa */
+    #vcWizardMap {
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    #vcWizardMap .leaflet-container {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 8px !important;
+    }
+    
+    #vcWizardMapLoading {
+        position: absolute;
+        z-index: 1000;
+        pointer-events: none;
+    }
+    
+    @media (max-width: 768px) {
+        #vcWizardMap {
+            height: 250px !important;
+            min-height: 250px !important;
+            max-height: 250px !important;
+        }
+        
+        #vcWizardUseLocation {
+            padding: 14px 20px !important;
+            font-size: 16px !important;
+            -webkit-tap-highlight-color: rgba(45, 134, 89, 0.3);
+        }
+    }
 </style>
-
-<script>
-(function() {
-    'use strict';
-
-    const REST_BASE = '<?php echo esc_js( $rest_url ); ?>';
-    const REST_NONCE = '<?php echo esc_js( $rest_nonce ); ?>';
-    const RESTAURANT_ID = <?php echo $restaurant->ID; ?>;
-    const CURRENT_STEP = <?php echo $current_step; ?>;
-    
-    let wizardStep = CURRENT_STEP;
-    const TOTAL_STEPS = 7;
-    
-    const cuisineOptions = <?php echo wp_json_encode( $cuisine_options ); ?>;
-    const cuisineOptionsPrimary = <?php echo wp_json_encode( $cuisine_options_primary ); ?>;
-    const cuisineOptionsTags = <?php echo wp_json_encode( $cuisine_options_tags ); ?>;
-    const restaurantData = <?php echo wp_json_encode( $restaurant_data ); ?>;
-    const recommendedCategories = <?php echo wp_json_encode( $recommended_categories ); ?>;
-    const hasPrimaryCuisine = <?php echo $has_primary_cuisine ? 'true' : 'false'; ?>;
-    
-    // Dados temporários do wizard
-    let wizardData = {
-        cuisine_ids: [],
-        name: restaurantData.nome || '',
-        whatsapp: restaurantData.whatsapp || '',
-        logo: restaurantData.logo || '',
-        address: restaurantData.endereco || '',
-        neighborhood: restaurantData.bairro || '',
-        city: '',
-        zipcode: '',
-        delivery: true,
-        pickup: false,
-        schedule: {},
-        category_names: [],
-        products: [],
-        addon_groups: [],
-    };
-
-    // Inicializar wizard
-    function initWizard() {
-        renderStep();
-    }
-
-    // Renderizar passo atual
-    function renderStep() {
-        const stepTitle = getStepTitle(wizardStep);
-        document.getElementById('vcWizardStepTitle').textContent = `Passo ${wizardStep} de ${TOTAL_STEPS} - ${stepTitle}`;
-        document.getElementById('vcWizardProgressBar').style.width = `${(wizardStep / TOTAL_STEPS) * 100}%`;
-        
-        const content = getStepContent(wizardStep);
-        document.getElementById('vcWizardContent').innerHTML = content;
-        
-        // Atualizar botões
-        const btnPrev = document.getElementById('vcWizardBtnPrev');
-        const btnNext = document.getElementById('vcWizardBtnNext');
-        
-        btnPrev.style.display = wizardStep > 1 ? 'block' : 'none';
-        btnNext.textContent = wizardStep === TOTAL_STEPS ? 'Ativar minha loja' : 'Continuar';
-    }
-
-    function getStepTitle(step) {
-        const titles = {
-            1: 'Tipo de Restaurante',
-            2: 'Dados Básicos',
-            3: 'Endereço e Horários',
-            4: 'Categorias do Cardápio',
-            5: 'Primeiros Produtos',
-            6: 'Adicionais',
-            7: 'Revisão',
-        };
-        return titles[step] || '';
-    }
-
-    function getStepContent(step) {
-        switch(step) {
-            case 1: return getStep1Content();
-            case 2: return getStep2Content();
-            case 3: return getStep3Content();
-            case 4: return getStep4Content();
-            case 5: return getStep5Content();
-            case 6: return getStep6Content();
-            case 7: return getStep7Content();
-            default: return '';
-        }
-    }
-
-    // PASSO 1: Tipo de Restaurante
-    function getStep1Content() {
-        const selected = wizardData.cuisine_ids || [];
-        
-        // Verificar se há primárias selecionadas
-        const selectedPrimary = selected.filter(id => {
-            return cuisineOptionsPrimary.some(opt => opt.id === id);
-        });
-        
-        const hasPrimary = selectedPrimary.length > 0;
-        const warningHtml = !hasPrimary && selected.length > 0 
-            ? '<div style="background:#fffbe2;padding:12px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#856404;border-left:4px solid #facb32;"><strong>⚠️ Importante:</strong> Escolha pelo menos 1 tipo de cozinha principal (ex.: Hamburgueria, Pizzaria, Japonesa) para receber recomendações de categorias de cardápio.</div>'
-            : '';
-        
-        // Separar primárias e tags
-        const primaryHtml = cuisineOptionsPrimary.map(c => {
-            const isSelected = selected.includes(c.id);
-            return `<div class="cuisine-option ${isSelected ? 'selected' : ''}" onclick="vcToggleCuisine(${c.id})">${escapeHtml(c.name)}</div>`;
-        }).join('');
-        
-        const tagsHtml = cuisineOptionsTags.length > 0 ? `
-            <div style="margin-top:32px;padding-top:24px;border-top:2px solid #e0e0e0;">
-                <div style="font-weight:700;font-size:14px;color:#6b7672;margin-bottom:16px;">Estilo e formato (opcional)</div>
-                ${cuisineOptionsTags.map(c => {
-                    const isSelected = selected.includes(c.id);
-                    return `<div class="cuisine-option ${isSelected ? 'selected' : ''}" onclick="vcToggleCuisine(${c.id})">${escapeHtml(c.name)}</div>`;
-                }).join('')}
-            </div>
-        ` : '';
-
-        return `
-            <div class="wizard-title">Bem-vindo ao PedeVem!</div>
-            <div class="wizard-subtitle">Vamos colocar sua loja no ar em poucos minutos. Primeiro, diga que tipo de negócio você tem.</div>
-            ${warningHtml}
-            <div style="margin-top:24px;">
-                <div style="font-weight:700;font-size:14px;color:#2d8659;margin-bottom:16px;">Tipo de cozinha principal *</div>
-                ${primaryHtml}
-            </div>
-            ${tagsHtml}
-            <div style="margin-top:16px;font-size:13px;color:#6b7672;">Você pode selecionar até 3 tipos de restaurante.</div>
-        `;
-    }
-
-    // PASSO 2: Dados Básicos
-    function getStep2Content() {
-        return `
-            <div class="wizard-title">Dados básicos da sua loja</div>
-            <div class="wizard-subtitle">Essas informações aparecem para os clientes. Você pode alterar depois quando quiser.</div>
-            
-            <label style="display:block;font-weight:700;margin-bottom:8px;color:#232a2c;">Nome da loja *</label>
-            <input type="text" id="wizardName" value="${escapeHtml(wizardData.name)}" placeholder="Ex: Hamburgueria do João" required>
-            
-            <label style="display:block;font-weight:700;margin-bottom:8px;color:#232a2c;">Telefone / WhatsApp *</label>
-            <input type="tel" id="wizardWhatsapp" value="${escapeHtml(wizardData.whatsapp)}" placeholder="(00) 00000-0000" required>
-            
-            <label style="display:block;font-weight:700;margin-bottom:8px;color:#232a2c;">Logo (opcional)</label>
-            <div style="margin-bottom:16px;">
-                <input type="file" id="wizardLogo" accept="image/*" onchange="vcHandleLogoUpload(event)" style="margin-bottom:8px;">
-                <div id="wizardLogoPreview" style="margin-top:12px;"></div>
-            </div>
-        `;
-    }
-
-    // PASSO 3: Endereço e Horários
-    function getStep3Content() {
-        const days = [
-            { key: 'seg', name: 'Segunda-feira' },
-            { key: 'ter', name: 'Terça-feira' },
-            { key: 'qua', name: 'Quarta-feira' },
-            { key: 'qui', name: 'Quinta-feira' },
-            { key: 'sex', name: 'Sexta-feira' },
-            { key: 'sab', name: 'Sábado' },
-            { key: 'dom', name: 'Domingo' },
-        ];
-
-        const scheduleHtml = days.map(day => {
-            const dayData = wizardData.schedule[day.key] || { enabled: false, ranges: [{ open: '09:00', close: '18:00' }] };
-            return `
-                <div class="schedule-day">
-                    <input type="checkbox" id="schedule_${day.key}" ${dayData.enabled ? 'checked' : ''} onchange="vcToggleScheduleDay('${day.key}')">
-                    <label for="schedule_${day.key}" style="flex:1;font-weight:600;">${day.name}</label>
-                    <input type="time" id="schedule_${day.key}_open" value="${dayData.ranges[0]?.open || '09:00'}" onchange="vcUpdateSchedule('${day.key}')" ${!dayData.enabled ? 'disabled' : ''}>
-                    <span>até</span>
-                    <input type="time" id="schedule_${day.key}_close" value="${dayData.ranges[0]?.close || '18:00'}" onchange="vcUpdateSchedule('${day.key}')" ${!dayData.enabled ? 'disabled' : ''}>
-                </div>
-            `;
-        }).join('');
-
-        return `
-            <div class="wizard-title">Endereço e horários</div>
-            <div class="wizard-subtitle">Precisamos saber onde sua loja fica e quando ela está aberta para aceitar pedidos.</div>
-            <div style="background:#fffbe2;padding:12px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#856404;border-left:4px solid #facb32;">
-                <strong>⚠️ Importante:</strong> Se você marcar apenas "Entrega própria" e não marcar "Apenas retirada no local", sua loja <strong>não aparecerá</strong> para os clientes no marketplace. Para aparecer, você precisa marcar pelo menos "Apenas retirada no local" ou ambos os métodos.
-            </div>
-            
-            <h3 style="font-size:18px;font-weight:700;margin:24px 0 12px 0;color:#2d8659;">Endereço</h3>
-            <input type="text" id="wizardAddress" value="${escapeHtml(wizardData.address)}" placeholder="Endereço completo" required>
-            <input type="text" id="wizardNeighborhood" value="${escapeHtml(wizardData.neighborhood)}" placeholder="Bairro">
-            <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
-                <input type="text" id="wizardCity" value="${escapeHtml(wizardData.city)}" placeholder="Cidade">
-                <input type="text" id="wizardZipcode" value="${escapeHtml(wizardData.zipcode)}" placeholder="CEP">
-            </div>
-            
-            <h3 style="font-size:18px;font-weight:700;margin:24px 0 12px 0;color:#2d8659;">Método de Atendimento</h3>
-            <label style="display:flex;align-items:center;padding:12px;background:#f9f9f9;border-radius:8px;margin-bottom:8px;cursor:pointer;">
-                <input type="checkbox" id="wizardDelivery" ${wizardData.delivery ? 'checked' : ''} style="width:20px;height:20px;margin-right:12px;">
-                <span style="font-weight:600;">Entrega própria</span>
-            </label>
-            <label style="display:flex;align-items:center;padding:12px;background:#f9f9f9;border-radius:8px;margin-bottom:8px;cursor:pointer;">
-                <input type="checkbox" id="wizardPickup" ${wizardData.pickup ? 'checked' : ''} style="width:20px;height:20px;margin-right:12px;">
-                <span style="font-weight:600;">Apenas retirada no local</span>
-            </label>
-            
-            <h3 style="font-size:18px;font-weight:700;margin:24px 0 12px 0;color:#2d8659;">Horários de Funcionamento</h3>
-            <div style="margin-bottom:12px;">
-                <button type="button" onclick="vcCopyScheduleToAll()" style="background:#facb32;color:#232a2c;border:none;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer;margin-bottom:12px;">Copiar para todos os dias</button>
-            </div>
-            ${scheduleHtml}
-        `;
-    }
-
-    // PASSO 4: Categorias do Cardápio
-    function getStep4Content() {
-        // Renderizar categorias já carregadas do PHP
-        let categoriesHtml = '';
-        let warningHtml = '';
-        
-        if (!hasPrimaryCuisine) {
-            warningHtml = '<div style="background:#fffbe2;padding:12px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#856404;border-left:4px solid #facb32;"><strong>⚠️ Aviso:</strong> Você não selecionou um tipo de cozinha principal. Mostrando apenas categorias genéricas. Para receber recomendações específicas, volte ao passo 1 e escolha pelo menos 1 tipo de cozinha principal (ex.: Hamburgueria, Pizzaria, Japonesa).</div>';
-        }
-        
-        if (recommendedCategories && recommendedCategories.length > 0) {
-            categoriesHtml = recommendedCategories.map(cat => `
-                <label class="category-checkbox">
-                    <input type="checkbox" value="${escapeHtml(cat.name)}" onchange="vcToggleCategory('${escapeHtml(cat.name)}')">
-                    <span style="font-weight:600;">${escapeHtml(cat.name)}</span>
-                </label>
-            `).join('');
-        } else {
-            categoriesHtml = '<div style="text-align:center;padding:20px;color:#999;">Nenhuma categoria recomendada encontrada. <a href="#" onclick="wizardStep=1;renderStep();return false;" style="color:#2d8659;text-decoration:underline;">Volte ao passo 1</a> e escolha um tipo de cozinha principal.</div>';
-        }
-        
-        return `
-            <div class="wizard-title">Categorias do seu cardápio</div>
-            <div class="wizard-subtitle">Sugerimos algumas categorias de cardápio para o tipo de restaurante que você escolheu. Você pode editar depois.</div>
-            ${warningHtml}
-            <div id="wizardRecommendedCategories" style="margin-top:24px;">
-                ${categoriesHtml}
-            </div>
-            <div style="margin-top:16px;">
-                <a href="#" onclick="vcSkipCategories();return false;" style="color:#2d8659;text-decoration:underline;font-size:14px;">Pular (vou criar manualmente depois)</a>
-            </div>
-        `;
-    }
-
-    // PASSO 5: Primeiros Produtos
-    function getStep5Content() {
-        const productsHtml = wizardData.products.map((p, idx) => `
-            <div class="product-item">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="font-size:16px;">${escapeHtml(p.name || 'Produto ' + (idx + 1))}</strong>
-                    <button onclick="vcRemoveProduct(${idx})" style="background:#ffe7e7;color:#ea5252;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-weight:600;">Remover</button>
-                </div>
-                <div style="color:#6b7672;font-size:14px;">Categoria: ${escapeHtml(p.category || 'Sem categoria')} | Preço: R$ ${parseFloat(p.price || 0).toFixed(2)}</div>
-            </div>
-        `).join('');
-
-        return `
-            <div class="wizard-title">Cadastre seus primeiros produtos</div>
-            <div class="wizard-subtitle">Comece pelos seus campeões de venda. Recomendamos cadastrar pelo menos 3.</div>
-            
-            <div id="wizardProductsList" style="margin-top:24px;margin-bottom:24px;">
-                ${productsHtml || '<div style="text-align:center;padding:20px;color:#999;">Nenhum produto cadastrado ainda.</div>'}
-            </div>
-            
-            <div style="background:#eaf8f1;padding:16px;border-radius:8px;margin-bottom:16px;">
-                <div style="font-weight:700;margin-bottom:12px;color:#2d8659;">Adicionar Produto</div>
-                <input type="text" id="wizardProductName" placeholder="Nome do produto *" style="margin-bottom:12px;">
-                <select id="wizardProductCategory" style="margin-bottom:12px;">
-                    <option value="">Selecione a categoria</option>
-                </select>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-                    <input type="number" id="wizardProductPrice" placeholder="Preço (R$) *" step="0.01" min="0">
-                    <input type="file" id="wizardProductImage" accept="image/*">
-                </div>
-                <textarea id="wizardProductDescription" placeholder="Descrição (opcional)" rows="2" style="margin-bottom:12px;"></textarea>
-                <button onclick="vcAddProduct()" style="background:#2d8659;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;width:100%;">Adicionar Produto</button>
-            </div>
-            
-            <div style="background:#fffbe2;padding:12px;border-radius:8px;font-size:14px;color:#856404;">
-                Você já cadastrou <strong>${wizardData.products.length}</strong> produto(s). Recomendamos pelo menos 3.
-            </div>
-        `;
-    }
-
-    // PASSO 6: Adicionais (Opcional)
-    function getStep6Content() {
-        return `
-            <div class="wizard-title">Quer oferecer adicionais?</div>
-            <div class="wizard-subtitle">Adicionais como queijos extras, bebidas do combo e molhos podem aumentar o valor de cada pedido.</div>
-            <div id="wizardRecommendedAddons" style="margin-top:24px;">
-                <div style="text-align:center;padding:40px;color:#999;">Carregando grupos recomendados...</div>
-            </div>
-            <div style="margin-top:24px;text-align:center;">
-                <button onclick="vcSkipAddons()" style="background:transparent;color:#6b7672;border:2px solid #e0e0e0;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;">Pular por enquanto</button>
-            </div>
-        `;
-    }
-
-    // PASSO 7: Revisão
-    function getStep7Content() {
-        const hasAddons = wizardData.addon_groups && wizardData.addon_groups.length > 0;
-        
-        return `
-            <div class="wizard-title">Seu restaurante está quase pronto!</div>
-            <div style="margin-top:24px;">
-                <div style="display:flex;align-items:center;padding:12px;background:#eaf8f1;border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:24px;margin-right:12px;">✔</span>
-                    <span style="font-weight:600;">Dados básicos da loja</span>
-                </div>
-                <div style="display:flex;align-items:center;padding:12px;background:#eaf8f1;border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:24px;margin-right:12px;">✔</span>
-                    <span style="font-weight:600;">Endereço e horários</span>
-                </div>
-                <div style="display:flex;align-items:center;padding:12px;background:#eaf8f1;border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:24px;margin-right:12px;">✔</span>
-                    <span style="font-weight:600;">Categorias do cardápio (${wizardData.category_names.length} criadas)</span>
-                </div>
-                <div style="display:flex;align-items:center;padding:12px;background:#eaf8f1;border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:24px;margin-right:12px;">✔</span>
-                    <span style="font-weight:600;">Produtos cadastrados (${wizardData.products.length} produtos)</span>
-                </div>
-                <div style="display:flex;align-items:center;padding:12px;background:${hasAddons ? '#eaf8f1' : '#fffbe2'};border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:24px;margin-right:12px;">${hasAddons ? '✔' : '⭕'}</span>
-                    <span style="font-weight:600;">Adicionais configurados ${hasAddons ? '' : '(opcional)'}</span>
-                </div>
-            </div>
-            
-            <div style="margin-top:32px;padding:20px;background:#f9f9f9;border-radius:8px;">
-                <div style="font-weight:700;margin-bottom:12px;color:#2d8659;">Resumo da sua loja</div>
-                <div style="margin-bottom:8px;"><strong>Nome:</strong> ${escapeHtml(wizardData.name)}</div>
-                <div style="margin-bottom:8px;"><strong>WhatsApp:</strong> ${escapeHtml(wizardData.whatsapp)}</div>
-                <div style="margin-bottom:8px;"><strong>Endereço:</strong> ${escapeHtml(wizardData.address)}</div>
-                <div style="margin-top:16px;">
-                    <strong>Produtos:</strong>
-                    <ul style="margin:8px 0 0 20px;padding:0;">
-                        ${wizardData.products.slice(0, 3).map(p => `<li>${escapeHtml(p.name)} - R$ ${parseFloat(p.price || 0).toFixed(2)}</li>`).join('')}
-                    </ul>
-                </div>
-            </div>
-        `;
-    }
-
-    // Funções de navegação
-    function vcWizardNext() {
-        if (!validateStep(wizardStep)) {
-            return;
-        }
-
-        saveStep(wizardStep).then(() => {
-            if (wizardStep < TOTAL_STEPS) {
-                wizardStep++;
-                renderStep();
-            } else {
-                completeOnboarding();
-            }
-        }).catch(err => {
-            alert('Erro ao salvar: ' + (err.message || 'Erro desconhecido'));
-        });
-    }
-
-    function vcWizardPrev() {
-        if (wizardStep > 1) {
-            wizardStep--;
-            renderStep();
-        }
-    }
-
-    function vcCloseOnboardingWizard() {
-        if (confirm('Tem certeza que deseja sair? Seu progresso será salvo.')) {
-            document.getElementById('vcOnboardingWizard').style.display = 'none';
-            location.reload();
-        }
-    }
-
-    // Validação de passos
-    function validateStep(step) {
-        const errorDiv = document.getElementById('vcWizardError');
-        if (errorDiv) {
-            errorDiv.remove();
-        }
-
-        switch(step) {
-            case 1:
-                if (!wizardData.cuisine_ids || wizardData.cuisine_ids.length === 0) {
-                    showError('Selecione pelo menos um tipo de restaurante.');
-                    return false;
-                }
-                // Validar que pelo menos 1 é primária
-                const selectedPrimary = wizardData.cuisine_ids.filter(id => {
-                    return cuisineOptionsPrimary.some(opt => opt.id === id);
-                });
-                if (selectedPrimary.length === 0) {
-                    showError('Escolha pelo menos 1 tipo de cozinha principal (ex.: Hamburgueria, Pizzaria, Japonesa) para receber recomendações de categorias de cardápio.');
-                    return false;
-                }
-                break;
-            case 2:
-                const name = document.getElementById('wizardName')?.value.trim();
-                const whatsapp = document.getElementById('wizardWhatsapp')?.value.trim();
-                if (!name) {
-                    showError('Nome da loja é obrigatório.');
-                    return false;
-                }
-                if (!whatsapp) {
-                    showError('Telefone/WhatsApp é obrigatório.');
-                    return false;
-                }
-                wizardData.name = name;
-                wizardData.whatsapp = whatsapp;
-                break;
-            case 3:
-                const address = document.getElementById('wizardAddress')?.value.trim();
-                if (!address) {
-                    showError('Endereço é obrigatório.');
-                    return false;
-                }
-                wizardData.address = address;
-                wizardData.neighborhood = document.getElementById('wizardNeighborhood')?.value.trim();
-                wizardData.city = document.getElementById('wizardCity')?.value.trim();
-                wizardData.zipcode = document.getElementById('wizardZipcode')?.value.trim();
-                wizardData.delivery = document.getElementById('wizardDelivery')?.checked || false;
-                wizardData.pickup = document.getElementById('wizardPickup')?.checked || false;
-                
-                // Validar pelo menos um dia de funcionamento
-                let hasSchedule = false;
-                for (const day of ['seg','ter','qua','qui','sex','sab','dom']) {
-                    const enabled = document.getElementById(`schedule_${day}`)?.checked;
-                    if (enabled) {
-                        hasSchedule = true;
-                        break;
-                    }
-                }
-                if (!hasSchedule) {
-                    showError('Configure pelo menos um dia de funcionamento.');
-                    return false;
-                }
-                break;
-            case 4:
-                if (!wizardData.category_names || wizardData.category_names.length === 0) {
-                    showError('Selecione pelo menos uma categoria.');
-                    return false;
-                }
-                break;
-            case 5:
-                if (!wizardData.products || wizardData.products.length === 0) {
-                    showError('Cadastre pelo menos um produto.');
-                    return false;
-                }
-                break;
-        }
-        return true;
-    }
-
-    function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.id = 'vcWizardError';
-        errorDiv.className = 'error-message';
-        errorDiv.textContent = message;
-        const content = document.getElementById('vcWizardContent');
-        content.insertBefore(errorDiv, content.firstChild);
-    }
-
-    // Salvar passo
-    async function saveStep(step) {
-        const stepSlugs = {
-            1: 'welcome',
-            2: 'basic_data',
-            3: 'address_schedule',
-            4: 'categories',
-            5: 'products',
-            6: 'addons',
-        };
-
-        const payload = {
-            step: step,
-            step_slug: stepSlugs[step] || '',
-        };
-
-        // Adicionar dados específicos do passo
-        switch(step) {
-            case 1:
-                payload.cuisine_ids = wizardData.cuisine_ids;
-                break;
-            case 2:
-                payload.name = wizardData.name;
-                payload.whatsapp = wizardData.whatsapp;
-                if (wizardData.logo) {
-                    payload.logo = wizardData.logo;
-                }
-                break;
-            case 3:
-                payload.address = wizardData.address;
-                payload.neighborhood = wizardData.neighborhood;
-                payload.city = wizardData.city;
-                payload.zipcode = wizardData.zipcode;
-                payload.delivery = wizardData.delivery;
-                payload.pickup = wizardData.pickup;
-                payload.schedule = wizardData.schedule;
-                break;
-            case 4:
-                payload.category_names = wizardData.category_names;
-                break;
-            case 5:
-                payload.products = wizardData.products;
-                break;
-            case 6:
-                payload.addon_groups = wizardData.addon_groups;
-                break;
-        }
-
-        const response = await fetch(`${REST_BASE}/onboarding/step`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': REST_NONCE,
-            },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.message || 'Erro ao salvar passo');
-        }
-
-        return await response.json();
-    }
-
-    // Completar onboarding
-    async function completeOnboarding() {
-        try {
-            const response = await fetch(`${REST_BASE}/onboarding/complete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': REST_NONCE,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao completar onboarding');
-            }
-
-            alert('Parabéns! Sua loja está ativa e pronta para receber pedidos!');
-            location.reload();
-        } catch (err) {
-            alert('Erro ao ativar loja: ' + err.message);
-        }
-    }
-
-    // Funções auxiliares globais
-    window.vcToggleCuisine = function(id) {
-        if (!wizardData.cuisine_ids) {
-            wizardData.cuisine_ids = [];
-        }
-        const idx = wizardData.cuisine_ids.indexOf(id);
-        if (idx > -1) {
-            wizardData.cuisine_ids.splice(idx, 1);
-        } else {
-            if (wizardData.cuisine_ids.length < 3) {
-                wizardData.cuisine_ids.push(id);
-            } else {
-                alert('Você pode selecionar no máximo 3 tipos de restaurante.');
-                return;
-            }
-        }
-        renderStep();
-    };
-
-    window.vcHandleLogoUpload = function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            wizardData.logo = e.target.result;
-            const preview = document.getElementById('wizardLogoPreview');
-            if (preview) {
-                preview.innerHTML = `<img src="${e.target.result}" style="max-width:200px;max-height:200px;border-radius:8px;margin-top:8px;">`;
-            }
-        };
-        reader.readAsDataURL(file);
-    };
-
-    window.vcToggleScheduleDay = function(day) {
-        const checkbox = document.getElementById(`schedule_${day}`);
-        const openInput = document.getElementById(`schedule_${day}_open`);
-        const closeInput = document.getElementById(`schedule_${day}_close`);
-        
-        if (openInput) openInput.disabled = !checkbox.checked;
-        if (closeInput) closeInput.disabled = !checkbox.checked;
-        
-        vcUpdateSchedule(day);
-    };
-
-    window.vcUpdateSchedule = function(day) {
-        if (!wizardData.schedule) {
-            wizardData.schedule = {};
-        }
-        const checkbox = document.getElementById(`schedule_${day}`);
-        const openInput = document.getElementById(`schedule_${day}_open`);
-        const closeInput = document.getElementById(`schedule_${day}_close`);
-        
-        wizardData.schedule[day] = {
-            enabled: checkbox?.checked || false,
-            ranges: [{
-                open: openInput?.value || '09:00',
-                close: closeInput?.value || '18:00',
-            }],
-        };
-    };
-
-    window.vcCopyScheduleToAll = function() {
-        const segOpen = document.getElementById('schedule_seg_open')?.value || '09:00';
-        const segClose = document.getElementById('schedule_seg_close')?.value || '18:00';
-        
-        for (const day of ['seg','ter','qua','qui','sex','sab','dom']) {
-            const checkbox = document.getElementById(`schedule_${day}`);
-            const openInput = document.getElementById(`schedule_${day}_open`);
-            const closeInput = document.getElementById(`schedule_${day}_close`);
-            
-            if (checkbox && openInput && closeInput) {
-                checkbox.checked = true;
-                openInput.value = segOpen;
-                closeInput.value = segClose;
-                openInput.disabled = false;
-                closeInput.disabled = false;
-                vcUpdateSchedule(day);
-            }
-        }
-    };
-
-    // Carregar categorias recomendadas (Passo 4)
-    async function loadRecommendedCategories() {
-        try {
-            const response = await fetch(`${REST_BASE}/menu-categories/recommended`, {
-                headers: {
-                    'X-WP-Nonce': REST_NONCE,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao carregar categorias');
-            }
-
-            const categories = await response.json();
-            const container = document.getElementById('wizardRecommendedCategories');
-            
-            if (!container) return;
-
-            if (!categories || categories.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Nenhuma categoria recomendada encontrada.</div>';
-                return;
-            }
-
-            const html = categories.map(cat => `
-                <label class="category-checkbox">
-                    <input type="checkbox" value="${escapeHtml(cat.name)}" onchange="vcToggleCategory('${escapeHtml(cat.name)}')">
-                    <span style="font-weight:600;">${escapeHtml(cat.name)}</span>
-                </label>
-            `).join('');
-
-            container.innerHTML = html;
-        } catch (err) {
-            console.error('Erro ao carregar categorias:', err);
-        }
-    }
-
-    window.vcToggleCategory = function(name) {
-        if (!wizardData.category_names) {
-            wizardData.category_names = [];
-        }
-        const idx = wizardData.category_names.indexOf(name);
-        if (idx > -1) {
-            wizardData.category_names.splice(idx, 1);
-        } else {
-            wizardData.category_names.push(name);
-        }
-    };
-
-    window.vcSkipCategories = function() {
-        if (confirm('Tem certeza que deseja pular? Você pode criar categorias manualmente depois.')) {
-            wizardData.category_names = [];
-            wizardStep++;
-            renderStep();
-        }
-    };
-
-    // Funções de produtos (Passo 5)
-    async function loadProductCategories() {
-        try {
-            const response = await fetch(`${REST_BASE}/menu-categories`, {
-                headers: {
-                    'X-WP-Nonce': REST_NONCE,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao carregar categorias');
-            }
-
-            const categories = await response.json();
-            const select = document.getElementById('wizardProductCategory');
-            
-            if (!select) return;
-
-            select.innerHTML = '<option value="">Selecione a categoria</option>' +
-                categories.map(cat => `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`).join('');
-        } catch (err) {
-            console.error('Erro ao carregar categorias:', err);
-        }
-    }
-
-    window.vcAddProduct = function() {
-        const name = document.getElementById('wizardProductName')?.value.trim();
-        const categoryId = document.getElementById('wizardProductCategory')?.value;
-        const price = document.getElementById('wizardProductPrice')?.value;
-        const description = document.getElementById('wizardProductDescription')?.value.trim();
-
-        if (!name) {
-            alert('Nome do produto é obrigatório.');
-            return;
-        }
-        if (!categoryId) {
-            alert('Selecione uma categoria.');
-            return;
-        }
-        if (!price || parseFloat(price) <= 0) {
-            alert('Preço é obrigatório e deve ser maior que zero.');
-            return;
-        }
-
-        const categorySelect = document.getElementById('wizardProductCategory');
-        const categoryName = categorySelect?.options[categorySelect.selectedIndex]?.text || '';
-
-        const product = {
-            name: name,
-            category: categoryName,
-            category_id: categoryId,
-            price: parseFloat(price),
-            description: description,
-        };
-
-        // Handle image upload
-        const imageInput = document.getElementById('wizardProductImage');
-        if (imageInput?.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                product.image = e.target.result;
-                addProductToList(product);
-            };
-            reader.readAsDataURL(imageInput.files[0]);
-        } else {
-            addProductToList(product);
-        }
-    };
-
-    function addProductToList(product) {
-        if (!wizardData.products) {
-            wizardData.products = [];
-        }
-        wizardData.products.push(product);
-        
-        // Limpar formulário
-        document.getElementById('wizardProductName').value = '';
-        document.getElementById('wizardProductCategory').value = '';
-        document.getElementById('wizardProductPrice').value = '';
-        document.getElementById('wizardProductDescription').value = '';
-        document.getElementById('wizardProductImage').value = '';
-        
-        renderStep();
-    }
-
-    window.vcRemoveProduct = function(index) {
-        if (confirm('Tem certeza que deseja remover este produto?')) {
-            wizardData.products.splice(index, 1);
-            renderStep();
-        }
-    };
-
-    // Carregar adicionais recomendados (Passo 6)
-    async function loadRecommendedAddons() {
-        try {
-            const response = await fetch(`${REST_BASE}/addon-catalog/recommended-groups`, {
-                headers: {
-                    'X-WP-Nonce': REST_NONCE,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Erro ao carregar adicionais');
-            }
-
-            const groups = await response.json();
-            const container = document.getElementById('wizardRecommendedAddons');
-            
-            if (!container) return;
-
-            if (!groups || groups.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Nenhum grupo de adicionais recomendado encontrado.</div>';
-                return;
-            }
-
-            const basicGroups = groups.filter(g => g.difficulty_level === 'basic');
-            const html = basicGroups.map(group => `
-                <label class="category-checkbox">
-                    <input type="checkbox" value="${group.id}" onchange="vcToggleAddonGroup(${group.id})">
-                    <span style="font-weight:600;">${escapeHtml(group.name)}</span>
-                </label>
-            `).join('');
-
-            container.innerHTML = html || '<div style="text-align:center;padding:20px;color:#999;">Nenhum grupo básico disponível.</div>';
-        } catch (err) {
-            console.error('Erro ao carregar adicionais:', err);
-        }
-    }
-
-    window.vcToggleAddonGroup = function(groupId) {
-        if (!wizardData.addon_groups) {
-            wizardData.addon_groups = [];
-        }
-        const idx = wizardData.addon_groups.indexOf(groupId);
-        if (idx > -1) {
-            wizardData.addon_groups.splice(idx, 1);
-        } else {
-            wizardData.addon_groups.push(groupId);
-        }
-    };
-
-    window.vcSkipAddons = function() {
-        wizardData.addon_groups = [];
-        wizardStep++;
-        renderStep();
-    };
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // Expor funções globalmente
-    window.vcWizardNext = vcWizardNext;
-    window.vcWizardPrev = vcWizardPrev;
-    window.vcCloseOnboardingWizard = vcCloseOnboardingWizard;
-
-    // Inicializar quando o passo 4 for renderizado
-    const originalRenderStep = renderStep;
-    renderStep = function() {
-        originalRenderStep();
-        // Categorias já vêm pré-carregadas do PHP, não precisa chamar loadRecommendedCategories()
-        if (wizardStep === 5) {
-            loadProductCategories();
-        } else if (wizardStep === 6) {
-            loadRecommendedAddons();
-        }
-    };
-
-    // Inicializar wizard
-    document.addEventListener('DOMContentLoaded', function() {
-        initWizard();
-    });
-
-    // Se o DOM já estiver carregado
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initWizard);
-    } else {
-        initWizard();
-    }
-})();
-</script>
-

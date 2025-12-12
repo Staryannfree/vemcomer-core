@@ -330,8 +330,17 @@ class Restaurant_Controller {
 
         $q = new WP_Query( $args );
 
+        // Verificar se deve incluir restaurantes inativos
+        $include_inactive = isset( $request['include_inactive'] ) && filter_var( $request['include_inactive'], FILTER_VALIDATE_BOOLEAN );
+
         $items = [];
         foreach ( $q->posts as $p ) {
+            // Verificar status de ativação do restaurante
+            $status = \VC\Services\Restaurant_Status_Service::get_status_for_restaurant( $p->ID );
+            if ( ! $include_inactive && ! $status['active'] ) {
+                continue; // Pular restaurantes inativos
+            }
+
             // Filtrar por is_open_now se solicitado
             if ( isset( $is_open_now ) && filter_var( $is_open_now, FILTER_VALIDATE_BOOLEAN ) ) {
                 if ( ! Schedule_Helper::is_open( $p->ID ) ) {
@@ -342,7 +351,7 @@ class Restaurant_Controller {
             $terms = wp_get_object_terms( $p->ID, CPT_Restaurant::TAX_CUISINE, [ 'fields' => 'slugs' ] );
             $rating = \VC\Utils\Rating_Helper::get_rating( $p->ID );
 
-            $items[] = [
+            $item = [
                 'id'          => $p->ID,
                 'title'       => get_the_title( $p ),
                 'slug'        => $p->post_name, // Adicionar slug para URLs
@@ -356,7 +365,15 @@ class Restaurant_Controller {
                     'average' => $rating['avg'],
                     'count'   => $rating['count'],
                 ],
+                'active'      => $status['active'],
             ];
+
+            // Adicionar informações de progresso de ativação se inativo (útil para debug/admin)
+            if ( ! $status['active'] && $include_inactive ) {
+                $item['activation_progress'] = $status['checks'];
+            }
+
+            $items[] = $item;
         }
 
         return new WP_REST_Response( $items, 200 );

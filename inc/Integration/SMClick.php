@@ -30,7 +30,12 @@ class SMClick {
         $this->dispatch_event( 'restaurant_registered', $post_id );
     }
 
-    public function handle_status_transition( string $new_status, string $old_status, WP_Post $post ): void {
+    public function handle_status_transition( string $new_status, string $old_status, ?WP_Post $post ): void {
+        // O WordPress pode passar null quando um post está sendo criado pela primeira vez
+        if ( ! $post || ! isset( $post->post_type ) ) {
+            return;
+        }
+
         if ( 'vc_restaurant' !== $post->post_type ) {
             return;
         }

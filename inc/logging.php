@@ -61,3 +61,29 @@ function log_event( $message, $context = [], string $level = 'info' ): void {
         error_log( $line );
     }
 }
+
+/**
+ * Loga um evento com contexto automático de variáveis globais
+ *
+ * @param mixed       $message Mensagem do evento.
+ * @param array|mixed $context Dados adicionais para debug.
+ * @param string      $level   Nível textual (info|warning|error|debug, etc).
+ */
+function log_event_with_context( $message, $context = [], string $level = 'info' ): void {
+    global $wpdb, $post, $wp_query;
+    
+    // Adicionar contexto automático
+    $auto_context = [
+        'wpdb_queries' => $wpdb->num_queries ?? 0,
+        'current_post_id' => $post->ID ?? null,
+        'current_post_type' => $post->post_type ?? null,
+        'is_admin' => is_admin(),
+        'is_ajax' => wp_doing_ajax(),
+        'is_rest' => defined( 'REST_REQUEST' ) && REST_REQUEST,
+        'memory_usage_mb' => round( memory_get_usage( true ) / 1024 / 1024, 2 ),
+    ];
+    
+    $merged_context = array_merge( $auto_context, is_array( $context ) ? $context : [] );
+    
+    log_event( $message, $merged_context, $level );
+}

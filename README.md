@@ -1,5 +1,15 @@
 # Pedevem Core
 
+## 🚨 TRIGGER AUTOMÁTICO: AAA
+
+**IMPORTANTE:** Se você digitar **"AAA"** em qualquer mensagem, o assistente será **OBRIGADO** a analisar todos os logs antes de responder.
+
+**AAA = "Analisa Automaticamente Agora"**
+
+Veja: `AAA-PROTOCOLO-OBRIGATORIO.md` para detalhes completos.
+
+---
+
 Core de marketplace para WordPress com:
 - CPTs: **Produtos**, **Pedidos**, **Restaurantes**, **Itens do Cardápio**.
 - Admin Menu, REST API, Status de Pedido, Webhooks e Seed via WP‑CLI.

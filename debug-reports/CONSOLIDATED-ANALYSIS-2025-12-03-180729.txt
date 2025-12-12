@@ -1,0 +1,70 @@
+﻿========================================
+ANÃLISE CONSOLIDADA DE DEBUG
+Gerado em: 2025-12-03 18:07:29
+========================================
+
+========================================
+1. LOGS DO SERVIDOR (PHP)
+========================================
+
+WORDPRESS DEBUG.LOG (Ãºltimas 100 linhas):
+----------------------------------------
+[03-Dec-2025 19:43:26 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 19:43:26 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 19:43:26 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+[03-Dec-2025 19:43:34 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 19:43:34 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 19:43:34 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+[03-Dec-2025 19:43:37 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 19:43:37 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 19:43:37 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+[03-Dec-2025 19:44:00 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 19:44:00 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 19:44:00 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+[03-Dec-2025 19:59:15 UTC] Erro de evento de reagendamento do cron para o gancho: litespeed_task_lqip, cÃ³digo de erro: invalid_schedule, mensagem de erro: Agendamento do evento nÃ£o existe., dados: {"schedule":"litespeed_filter","args":[],"interval":60}
+[03-Dec-2025 20:02:59 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 20:02:59 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 20:02:59 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+[03-Dec-2025 20:03:15 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 20:03:15 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 20:03:15 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+[03-Dec-2025 20:03:50 UTC] FRONT-PAGE.PHP: Arquivo carregado. GET[mode]=nÃ£o definido
+[03-Dec-2025 20:03:50 UTC] FRONT-PAGE.PHP: wp_is_mobile()=false
+[03-Dec-2025 20:03:50 UTC] FRONT-PAGE.PHP: is_mobile_app=false
+
+VEMCOMER DEBUG.LOG (Ãºltimas 100 linhas):
+----------------------------------------
+[2025-12-03 20:03:56] INFO REST cache invalidated
+[2025-12-03 20:03:56] INFO REST cache invalidated
+[2025-12-03 20:04:06] INFO REST cache invalidated
+[2025-12-03 20:04:07] INFO REST cache invalidated
+[2025-12-03 20:12:10] INFO REST cache invalidated
+[2025-12-03 20:12:25] INFO REST cache invalidated
+
+========================================
+2. LOGS DO NAVEGADOR (JavaScript)
+========================================
+
+AVISO: Diretorio de logs do navegador nao encontrado
+   (O script browser-debug-capture.js pode nÃ£o estar ativo)
+
+========================================
+3. ESTADO DO SISTEMA (REST API)
+========================================
+
+AVISO: Nenhum estado da API encontrado
+   Execute: .\scripts\collect-everything-via-api.ps1
+
+========================================
+4. RESUMO E RECOMENDAÃ‡Ã•ES
+========================================
+
+EstatÃ­sticas:
+  - Erros encontrados: 0
+  - Avisos encontrados: 0
+
+PrÃ³ximos passos recomendados:
+  1. Revise os erros listados acima
+  2. Verifique requisiÃ§Ãµes de rede com falha
+  3. Compartilhe este arquivo com o assistente
+

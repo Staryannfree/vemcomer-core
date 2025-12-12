@@ -154,9 +154,29 @@ class CPT_AddonCatalogGroup {
                 <td>
                     <p class="description"><?php _e( 'Selecione as categorias de restaurantes para as quais este grupo de adicionais é recomendado. Lojistas com essas categorias verão este grupo como sugestão ao criar produtos.', 'vemcomer' ); ?></p>
                     <?php
-                    // Mostrar as categorias já selecionadas
+                    // Mostrar as categorias já selecionadas (usando a mesma abordagem do Menu_Category_Catalog_Seeder)
+                    $recommended_cuisines_json = get_post_meta( $post->ID, '_vc_recommended_for_cuisines', true );
+                    if ( ! empty( $recommended_cuisines_json ) ) {
+                        $cuisine_ids = json_decode( $recommended_cuisines_json, true );
+                        if ( is_array( $cuisine_ids ) && ! empty( $cuisine_ids ) ) {
+                            $terms = get_terms( [
+                                'taxonomy' => 'vc_cuisine',
+                                'include'  => $cuisine_ids,
+                                'hide_empty' => false,
+                            ] );
+                            if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+                                echo '<ul>';
+                                foreach ( $terms as $term ) {
+                                    echo '<li>' . esc_html( $term->name ) . '</li>';
+                                }
+                                echo '</ul>';
+                                echo '<p class="description">' . __( 'As categorias são gerenciadas automaticamente pelo seeder. Para editar, use o endpoint REST ou o script de conexão.', 'vemcomer' ) . '</p>';
+                            }
+                        }
+                    }
+                    // Também verificar se há categorias via taxonomia (para compatibilidade)
                     $selected_categories = wp_get_object_terms( $post->ID, 'vc_cuisine', [ 'fields' => 'ids' ] );
-                    if ( ! empty( $selected_categories ) ) {
+                    if ( ! empty( $selected_categories ) && ( empty( $recommended_cuisines_json ) || empty( json_decode( $recommended_cuisines_json, true ) ) ) ) {
                         $terms = get_terms( [
                             'taxonomy' => 'vc_cuisine',
                             'include'  => $selected_categories,
@@ -165,13 +185,13 @@ class CPT_AddonCatalogGroup {
                         if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
                             echo '<ul>';
                             foreach ( $terms as $term ) {
-                                echo '<li>' . esc_html( $term->name ) . '</li>';
+                                echo '<li>' . esc_html( $term->name ) . ' <em>(via taxonomia - será migrado)</em></li>';
                             }
                             echo '</ul>';
-                            echo '<p class="description">' . __( 'Edite as categorias na seção "Categorias" ao lado.', 'vemcomer' ) . '</p>';
                         }
-                    } else {
-                        echo '<p class="description">' . __( 'Nenhuma categoria selecionada. Selecione na seção "Categorias" ao lado.', 'vemcomer' ) . '</p>';
+                    }
+                    if ( empty( $recommended_cuisines_json ) && empty( $selected_categories ) ) {
+                        echo '<p class="description">' . __( 'Nenhuma categoria selecionada. Execute o seeder para popular as categorias.', 'vemcomer' ) . '</p>';
                     }
                     ?>
                 </td>
@@ -237,11 +257,33 @@ class CPT_AddonCatalogGroup {
                 echo $level === 'basic' ? '⭐ ' . __( 'Básico', 'vemcomer' ) : '⚙️ ' . __( 'Avançado', 'vemcomer' );
                 break;
             case 'categories':
-                $terms = wp_get_object_terms( $post_id, 'vc_cuisine', [ 'fields' => 'names' ] );
-                if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-                    echo esc_html( implode( ', ', $terms ) );
+                // Usar a mesma abordagem do Menu_Category_Catalog_Seeder
+                $recommended_cuisines_json = get_post_meta( $post_id, '_vc_recommended_for_cuisines', true );
+                if ( ! empty( $recommended_cuisines_json ) ) {
+                    $cuisine_ids = json_decode( $recommended_cuisines_json, true );
+                    if ( is_array( $cuisine_ids ) && ! empty( $cuisine_ids ) ) {
+                        $terms = get_terms( [
+                            'taxonomy' => 'vc_cuisine',
+                            'include'  => $cuisine_ids,
+                            'hide_empty' => false,
+                            'fields'   => 'names',
+                        ] );
+                        if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+                            echo esc_html( implode( ', ', $terms ) );
+                        } else {
+                            echo '—';
+                        }
+                    } else {
+                        echo '—';
+                    }
                 } else {
-                    echo '—';
+                    // Fallback para taxonomia (compatibilidade)
+                    $terms = wp_get_object_terms( $post_id, 'vc_cuisine', [ 'fields' => 'names' ] );
+                    if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+                        echo esc_html( implode( ', ', $terms ) ) . ' <em>(legado)</em>';
+                    } else {
+                        echo '—';
+                    }
                 }
                 break;
             case 'active':

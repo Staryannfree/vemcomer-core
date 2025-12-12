@@ -8,7 +8,9 @@
 namespace VC\Frontend;
 
 use VC\Order\Statuses;
+use VC\Services\Restaurant_Status_Service;
 use VC\Subscription\Plan_Manager;
+use VC\Utils\Restaurant_Helper;
 use WP_Post;
 use WP_Query;
 use WP_User;
@@ -51,7 +53,7 @@ class RestaurantPanel {
         // tenha sido criada antes da tela de validação via access_url.
         $this->ensure_caps_for_user( $user );
 
-        $restaurant = $this->get_restaurant_for_user( $user );
+        $restaurant = Restaurant_Helper::get_restaurant_for_user( $user->ID );
 
         if ( ! $restaurant ) {
             return $this->render_empty_state();
@@ -141,6 +143,99 @@ class RestaurantPanel {
                     </a>
                 </div>
             </div>
+
+            <?php
+            // Verificar status da loja
+            $status = Restaurant_Status_Service::get_status_for_user( $user->ID );
+            
+            // Calcular porcentagem de progresso (4 checks = 25% cada)
+            $progress_pct = 0;
+            $checks = $status['checks'] ?? [];
+            if ( ! empty( $checks ) ) {
+                $completed = 0;
+                foreach ( $checks as $check ) {
+                    if ( $check ) {
+                        $completed++;
+                    }
+                }
+                $progress_pct = ( $completed / count( $checks ) ) * 100;
+            }
+
+            if ( ! $status['active'] && $status['products'] < Restaurant_Status_Service::MIN_PRODUCTS ) :
+                ?>
+                <div class="vc-limit-alert" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+                    <span>
+                        <strong>⚠ <?php echo esc_html__( 'Sua loja ainda não está ativa', 'vemcomer' ); ?></strong><br>
+                        <?php echo esc_html( $status['reason'] ); ?>
+                    </span>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            // Barra de progresso de ativação
+            if ( ! $status['active'] ) :
+                ?>
+                <div class="vc-activation-progress" style="background: #fff; border: 1px solid #eaf8f1; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #2d8659;">
+                            <?php echo esc_html__( 'Progresso de Ativação', 'vemcomer' ); ?>
+                        </h4>
+                        <span style="font-size: 18px; font-weight: 700; color: #2d8659;">
+                            <?php echo esc_html( round( $progress_pct ) ); ?>%
+                        </span>
+                    </div>
+                    <div style="background: #f0f0f0; border-radius: 4px; height: 8px; margin-bottom: 16px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #2d8659 0%, #4aab7a 100%); height: 100%; width: <?php echo esc_attr( $progress_pct ); ?>%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div class="vc-activation-checklist" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <?php
+                        $check_items = [
+                            'min_products' => [
+                                'label' => sprintf( __( 'Produtos (%d/%d)', 'vemcomer' ), $status['products'], Restaurant_Status_Service::MIN_PRODUCTS ),
+                                'icon' => $checks['min_products'] ?? false ? '✅' : '❌',
+                            ],
+                            'has_whatsapp' => [
+                                'label' => __( 'WhatsApp configurado', 'vemcomer' ),
+                                'icon' => $checks['has_whatsapp'] ?? false ? '✅' : '❌',
+                            ],
+                            'has_address' => [
+                                'label' => __( 'Endereço completo', 'vemcomer' ),
+                                'icon' => $checks['has_address'] ?? false ? '✅' : '❌',
+                            ],
+                            'has_hours' => [
+                                'label' => __( 'Horários definidos', 'vemcomer' ),
+                                'icon' => $checks['has_hours'] ?? false ? '✅' : '⚠️',
+                            ],
+                        ];
+
+                        foreach ( $check_items as $key => $item ) :
+                            $is_complete = $checks[ $key ] ?? false;
+                            ?>
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: <?php echo $is_complete ? '#eaf8f1' : '#fff3cd'; ?>; border-radius: 4px;">
+                                <span style="font-size: 18px;"><?php echo esc_html( $item['icon'] ); ?></span>
+                                <span style="font-size: 14px; color: #333;"><?php echo esc_html( $item['label'] ); ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <?php if ( ! ( $checks['min_products'] ?? false ) ) : ?>
+                            <a href="<?php echo esc_url( $menu_admin_url ?: '#' ); ?>" class="vc-btn" style="text-decoration: none; display: inline-block; padding: 8px 16px; background: #2d8659; color: #fff; border-radius: 4px; font-size: 14px;">
+                                <?php echo esc_html__( 'Cadastrar produtos', 'vemcomer' ); ?>
+                            </a>
+                        <?php endif; ?>
+                        <?php if ( ! ( $checks['has_address'] ?? false ) || ! ( $checks['has_hours'] ?? false ) ) : ?>
+                            <button type="button" class="vc-btn" style="padding: 8px 16px; background: #facb32; color: #232a2c; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;" data-action="open-onboarding" data-step="3">
+                                <?php echo esc_html__( 'Completar endereço e horários', 'vemcomer' ); ?>
+                            </button>
+                        <?php endif; ?>
+                        <?php if ( ! ( $checks['has_whatsapp'] ?? false ) ) : ?>
+                            <a href="<?php echo esc_url( $edit_url ?: '#' ); ?>" class="vc-btn" style="text-decoration: none; display: inline-block; padding: 8px 16px; background: #2d8659; color: #fff; border-radius: 4px; font-size: 14px;">
+                                <?php echo esc_html__( 'Configurar WhatsApp', 'vemcomer' ); ?>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <?php if ( $is_limit_near ) : ?>
                 <div class="vc-limit-alert">
@@ -462,36 +557,6 @@ class RestaurantPanel {
         ];
     }
 
-    public function get_restaurant_for_user( WP_User $user ): ?WP_Post {
-        $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $user );
-        if ( $filtered > 0 ) {
-            $post = get_post( $filtered );
-            if ( $post && 'vc_restaurant' === $post->post_type ) {
-                return $post;
-            }
-        }
-
-        $meta_id = (int) get_user_meta( $user->ID, 'vc_restaurant_id', true );
-        if ( $meta_id ) {
-            $post = get_post( $meta_id );
-            if ( $post && 'vc_restaurant' === $post->post_type ) {
-                return $post;
-            }
-        }
-
-        $q = new WP_Query([
-            'post_type'      => 'vc_restaurant',
-            'author'         => $user->ID,
-            'posts_per_page' => 1,
-            'post_status'    => [ 'publish', 'pending', 'draft' ],
-            'no_found_rows'  => true,
-        ]);
-
-        $post = $q->have_posts() ? $q->posts[0] : null;
-        wp_reset_postdata();
-
-        return $post instanceof WP_Post ? $post : null;
-    }
 
     private function handle_redirect( string $redirect ): void {
         wp_safe_redirect( $redirect ?: home_url() );

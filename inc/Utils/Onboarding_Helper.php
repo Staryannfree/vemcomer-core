@@ -237,11 +237,18 @@ class Onboarding_Helper {
 
     /**
      * Verifica se o restaurante tem produtos no cardápio
+     * Requer pelo menos MIN_PRODUCTS produtos para considerar completo
      */
     private static function has_menu_items( int $restaurant_id ): bool {
+        // Usar o mesmo mínimo do Restaurant_Status_Service para manter consistência
+        $min_products = 5;
+        if ( class_exists( '\\VC\\Services\\Restaurant_Status_Service' ) ) {
+            $min_products = \VC\Services\Restaurant_Status_Service::MIN_PRODUCTS;
+        }
+
         $query = new \WP_Query( [
             'post_type'      => 'vc_menu_item',
-            'posts_per_page' => 1,
+            'posts_per_page' => $min_products,
             'post_status'    => 'any',
             'meta_query'     => [
                 [
@@ -249,10 +256,10 @@ class Onboarding_Helper {
                     'value' => $restaurant_id,
                 ],
             ],
-            'no_found_rows'  => true,
+            'no_found_rows'  => false, // Precisamos contar para verificar se tem pelo menos MIN_PRODUCTS
         ] );
 
-        $has_items = $query->have_posts();
+        $has_items = $query->found_posts >= $min_products;
         wp_reset_postdata();
 
         return $has_items;

@@ -1,0 +1,77 @@
+================================================================================
+INSTRUÇÕES PARA CONFIGURAR O SISTEMA DE ARQUÉTIPOS
+================================================================================
+
+Você precisa executar 2 comandos para configurar o sistema:
+
+1. MIGRAR CUISINES PARA ARQUÉTIPOS
+   Execute no terminal (na raiz do WordPress):
+   
+   wp vemcomer migrate-cuisine-archetypes
+   
+   OU execute o script PHP:
+   
+   php scripts/setup-archetypes.php
+   
+   Este comando vai mapear todos os ~130 tipos de restaurante para os 20 arquétipos.
+
+2. RE-SEED DO CATÁLOGO DE CATEGORIAS
+   Execute no terminal:
+   
+   wp vemcomer reseed-menu-categories
+   
+   OU o script setup-archetypes.php já faz isso automaticamente.
+   
+   Este comando vai:
+   - Limpar categorias de catálogo antigas
+   - Recriar usando os novos blueprints baseados em arquétipos
+
+================================================================================
+TESTE
+================================================================================
+
+Após executar os comandos:
+
+1. Acesse o onboarding como lojista
+2. No passo 1, selecione um tipo de restaurante (ex: "Hamburgueria artesanal")
+3. Avance até o passo 4 (categorias)
+4. Verifique se aparecem categorias recomendadas como:
+   - Destaques da casa
+   - Combos
+   - Hambúrgueres clássicos
+   - Hambúrgueres especiais
+   - etc.
+
+================================================================================
+DEBUG (se necessário)
+================================================================================
+
+Se algumas categorias não aparecerem, use o endpoint de debug:
+
+GET /wp-json/vemcomer/v1/debug/archetypes?restaurant_id=123
+
+Este endpoint mostra:
+- Quais cuisines o restaurante tem
+- Quais arquétipos foram resolvidos
+- Quais categorias são recomendadas para esses arquétipos
+- Se há match entre arquétipos e categorias
+
+================================================================================
+PROBLEMAS COMUNS
+================================================================================
+
+Problema: Categorias não aparecem no passo 4
+Solução: 
+  1. Verifique se executou a migração: wp vemcomer migrate-cuisine-archetypes
+  2. Verifique se executou o re-seed: wp vemcomer reseed-menu-categories
+  3. Limpe o cache do WordPress
+  4. Use o endpoint de debug para ver o que está acontecendo
+
+Problema: Alguns tipos de restaurante não têm categorias
+Solução:
+  1. Verifique o slug do tipo no endpoint de debug
+  2. Se o slug não estiver mapeado, adicione em Cuisine_Helper.php
+  3. Execute a migração novamente
+
+================================================================================
+

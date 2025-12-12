@@ -1,0 +1,32 @@
+SISTEMA DE EXECUÇÃO AUTOMÁTICA DESABILITADO
+===========================================
+
+Data: 2025-12-04
+Motivo: Interceptação de comandos causando lentidão extrema
+
+SCRIPTS QUE NÃO DEVEM SER EXECUTADOS AUTOMATICAMENTE:
+=====================================================
+
+1. check-AAA-trigger.ps1 - DESABILITADO
+2. create-AAA-trigger.ps1 - DESABILITADO  
+3. auto-analyze-all-debug.ps1 - Apenas manualmente
+4. Qualquer script que intercepte comandos do terminal
+
+REGRAS:
+=======
+
+- NUNCA executar scripts automaticamente quando comandos são executados
+- NUNCA interceptar comandos do terminal
+- Scripts só executam quando explicitamente solicitados pelo usuário
+- Não há mais sistema de "trigger" automático
+
+PARA EXECUTAR SCRIPTS:
+======================
+
+Execute manualmente quando necessário:
+- .\scripts\auto-analyze-all-debug.ps1
+- .\scripts\collect-everything-via-api.ps1
+- .\scripts\debug-all.ps1
+
+Mas NUNCA automaticamente.
+

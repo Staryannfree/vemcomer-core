@@ -24,7 +24,18 @@ class Limits_Validator {
 	/**
 	 * Valida limites ao salvar item do cardápio.
 	 */
-	public function validate_menu_item_limits( int $post_id, \WP_Post $post, bool $update ): void {
+	public function validate_menu_item_limits( int $post_id, ?\WP_Post $post, bool $update ): void {
+		// Bypass durante REST requests (onboarding via API)
+		// Isso permite que produtos sejam criados durante o onboarding sem validação de limite
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return;
+		}
+		
+		// Validar se o post existe
+		if ( ! $post || ! $post instanceof \WP_Post ) {
+			return;
+		}
+		
 		// Apenas para novos itens (não atualizações)
 		if ( $update ) {
 			return;

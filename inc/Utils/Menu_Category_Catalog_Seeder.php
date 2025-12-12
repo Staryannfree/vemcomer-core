@@ -8,6 +8,9 @@
 
 namespace VC\Utils;
 
+use VC\Config\Cuisine_Menu_Blueprints;
+use VC\Utils\Cuisine_Helper;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -15,31 +18,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Menu_Category_Catalog_Seeder {
     /**
      * Popula o catálogo com categorias de cardápio sugeridas por tipo de restaurante
+     * 
+     * @param bool $force Se true, força re-seed mesmo se já existir catálogo
      */
-    public static function seed(): void {
+    public static function seed( bool $force = false ): void {
         // Verificar se a taxonomia existe
         if ( ! taxonomy_exists( 'vc_menu_category' ) || ! taxonomy_exists( 'vc_cuisine' ) ) {
             return;
         }
 
-        // Verificar se já foi populado
-        $existing = get_terms( [
-            'taxonomy'   => 'vc_menu_category',
-            'hide_empty' => false,
-            'meta_query' => [
-                [
-                    'key'     => '_vc_is_catalog_category',
-                    'value'   => '1',
-                    'compare' => '=',
+        // Verificar se já foi populado (a menos que force seja true)
+        if ( ! $force ) {
+            $existing = get_terms( [
+                'taxonomy'   => 'vc_menu_category',
+                'hide_empty' => false,
+                'meta_query' => [
+                    [
+                        'key'     => '_vc_is_catalog_category',
+                        'value'   => '1',
+                        'compare' => '=',
+                    ],
                 ],
-            ],
-        ] );
+            ] );
 
-        if ( ! is_wp_error( $existing ) && ! empty( $existing ) ) {
-            return; // Já foi populado
+            if ( ! is_wp_error( $existing ) && ! empty( $existing ) ) {
+                return; // Já foi populado
+            }
         }
 
-        $categories_data = self::get_categories_data();
+        $categories_data = self::get_categories_data_from_blueprints();
 
         foreach ( $categories_data as $category_data ) {
             // Verificar se a categoria já existe
@@ -72,11 +79,15 @@ class Menu_Category_Catalog_Seeder {
                 update_term_meta( $term_id, '_vc_category_order', absint( $category_data['order'] ) );
             }
 
-            // Vincular às categorias de restaurante (vc_cuisine)
-            if ( ! empty( $category_data['cuisine_types'] ) ) {
-                $cuisine_ids = self::get_cuisine_ids_by_names( $category_data['cuisine_types'] );
+            // Vincular aos arquétipos (novo padrão)
+            if ( ! empty( $category_data['archetypes'] ) ) {
+                update_term_meta( $term_id, '_vc_recommended_for_archetypes', wp_json_encode( $category_data['archetypes'] ) );
+            }
+
+            // Vincular às categorias de restaurante (vc_cuisine) - compatibilidade
+            if ( ! empty( $category_data['archetypes'] ) ) {
+                $cuisine_ids = self::get_cuisine_ids_by_archetypes( $category_data['archetypes'] );
                 if ( ! empty( $cuisine_ids ) ) {
-                    // Salvar IDs das categorias de restaurante como term meta
                     update_term_meta( $term_id, '_vc_recommended_for_cuisines', wp_json_encode( $cuisine_ids ) );
                 }
             }
@@ -84,7 +95,70 @@ class Menu_Category_Catalog_Seeder {
     }
 
     /**
-     * Retorna os dados das categorias de cardápio sugeridas
+     * Retorna os dados das categorias de cardápio sugeridas baseadas em blueprints
+     * Nova implementação usando arquétipos em vez de nomes de cuisine
+     */
+    private static function get_categories_data_from_blueprints(): array {
+        $blueprints = Cuisine_Menu_Blueprints::all();
+        $data = [];
+        $seen_categories = []; // Para evitar duplicatas quando categoria aparece em múltiplos arquétipos
+
+        foreach ( $blueprints as $archetype => $blueprint_data ) {
+            if ( ! isset( $blueprint_data['blueprint'] ) || ! is_array( $blueprint_data['blueprint'] ) ) {
+                continue;
+            }
+
+            foreach ( $blueprint_data['blueprint'] as $category ) {
+                $name = $category['name'] ?? '';
+                if ( empty( $name ) ) {
+                    continue;
+                }
+
+                $slug = sanitize_title( $name );
+                
+                // Se já vimos esta categoria, adiciona o arquétipo à lista
+                if ( isset( $seen_categories[ $slug ] ) ) {
+                    $index = $seen_categories[ $slug ];
+                    if ( ! in_array( $archetype, $data[ $index ]['archetypes'], true ) ) {
+                        $data[ $index ]['archetypes'][] = $archetype;
+                    }
+                } else {
+                    // Nova categoria
+                    $seen_categories[ $slug ] = count( $data );
+                    $data[] = [
+                        'name'       => $name,
+                        'order'      => $category['order'] ?? 0,
+                        'archetypes' => [ $archetype ],
+                    ];
+                }
+            }
+        }
+
+        // Adicionar categorias genéricas (para qualquer tipo)
+        $generic_categories = [
+            ['name' => 'Entradas', 'order' => 1],
+            ['name' => 'Pratos principais', 'order' => 2],
+            ['name' => 'Sobremesas', 'order' => 3],
+            ['name' => 'Bebidas', 'order' => 4],
+        ];
+
+        foreach ( $generic_categories as $generic ) {
+            $slug = sanitize_title( $generic['name'] );
+            if ( ! isset( $seen_categories[ $slug ] ) ) {
+                $data[] = [
+                    'name'       => $generic['name'],
+                    'order'      => $generic['order'],
+                    'archetypes' => [], // Vazio = genérico, aparece para todos
+                ];
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Retorna os dados das categorias de cardápio sugeridas (método legado)
+     * @deprecated Use get_categories_data_from_blueprints() em vez disso
      */
     private static function get_categories_data(): array {
         return [
@@ -2646,7 +2720,48 @@ class Menu_Category_Catalog_Seeder {
     }
 
     /**
-     * Busca IDs de termos vc_cuisine pelos nomes
+     * Busca IDs de termos vc_cuisine pelos arquétipos
+     * 
+     * @param array $archetypes Array de slugs de arquétipos
+     * @return array Array de IDs de termos vc_cuisine
+     */
+    private static function get_cuisine_ids_by_archetypes( array $archetypes ): array {
+        if ( empty( $archetypes ) ) {
+            return [];
+        }
+
+        $ids = [];
+        $map = Cuisine_Helper::get_slug_archetype_mapping();
+
+        // Buscar todos os termos vc_cuisine
+        $terms = get_terms( [
+            'taxonomy'   => 'vc_cuisine',
+            'hide_empty' => false,
+        ] );
+
+        if ( is_wp_error( $terms ) || empty( $terms ) ) {
+            return [];
+        }
+
+        foreach ( $terms as $term ) {
+            // Pular grupos pais
+            if ( $term->parent === 0 && str_starts_with( $term->slug, 'grupo-' ) ) {
+                continue;
+            }
+
+            // Verificar se o termo tem um dos arquétipos desejados
+            $term_archetype = Cuisine_Helper::get_archetype_for_cuisine( $term );
+            if ( $term_archetype && in_array( $term_archetype, $archetypes, true ) ) {
+                $ids[] = $term->term_id;
+            }
+        }
+
+        return array_unique( array_filter( $ids ) );
+    }
+
+    /**
+     * Busca IDs de termos vc_cuisine pelos nomes (método legado)
+     * @deprecated Use get_cuisine_ids_by_archetypes() em vez disso
      */
     private static function get_cuisine_ids_by_names( array $names ): array {
         $ids = [];

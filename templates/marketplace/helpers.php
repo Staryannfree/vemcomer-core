@@ -5,43 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! function_exists( 'vc_marketplace_current_restaurant' ) ) {
     function vc_marketplace_current_restaurant(): ?WP_Post {
-        $user = wp_get_current_user();
-        if ( ! ( $user instanceof WP_User ) || 0 === $user->ID ) {
-            return null;
-        }
-
-        $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $user );
-        if ( $filtered > 0 ) {
-            $candidate = get_post( $filtered );
-            if ( $candidate instanceof WP_Post && 'vc_restaurant' === $candidate->post_type ) {
-                return $candidate;
-            }
-        }
-
-        $meta_id = (int) get_user_meta( $user->ID, 'vc_restaurant_id', true );
-        if ( $meta_id ) {
-            $candidate = get_post( $meta_id );
-            if ( $candidate instanceof WP_Post && 'vc_restaurant' === $candidate->post_type ) {
-                return $candidate;
-            }
-        }
-
-        $q = new WP_Query([
-            'post_type'      => 'vc_restaurant',
-            'author'         => $user->ID,
-            'posts_per_page' => 1,
-            'post_status'    => [ 'publish', 'pending', 'draft' ],
-            'no_found_rows'  => true,
-        ]);
-
-        if ( $q->have_posts() ) {
-            $candidate = $q->posts[0];
-            wp_reset_postdata();
-            return $candidate instanceof WP_Post ? $candidate : null;
-        }
-
-        wp_reset_postdata();
-        return null;
+        return \VC\Utils\Restaurant_Helper::get_restaurant_for_user();
     }
 }
 

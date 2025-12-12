@@ -7,6 +7,11 @@
 namespace VC\REST;
 
 use VC\Model\CPT_MenuItem;
+use VC\Services\Menu_Categories_Service;
+use VC\Utils\Restaurant_Helper;
+use VC\Utils\Category_Helper;
+use VC\Utils\Cuisine_Helper;
+use VC\Config\Cuisine_Menu_Blueprints;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -105,53 +110,36 @@ class Menu_Categories_Controller {
     public function get_categories( WP_REST_Request $request ): WP_REST_Response {
         // Buscar restaurante do usuário atual
         $user_id = get_current_user_id();
-        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
-
-        if ( ! $restaurant_id ) {
-            // Tentar buscar pelo post_author
-            $restaurants = get_posts( [
-                'post_type'      => 'vc_restaurant',
-                'author'         => $user_id,
-                'posts_per_page' => 1,
-                'fields'         => 'ids',
-            ] );
-
-            if ( ! empty( $restaurants ) ) {
-                $restaurant_id = $restaurants[0];
-            }
-        }
+        $restaurant_id = Restaurant_Helper::get_restaurant_id_for_user( $user_id );
 
         // Se não tiver restaurante, retornar vazio
-        if ( ! $restaurant_id ) {
+        if ( $restaurant_id <= 0 ) {
+            log_event( 'Menu Categories: Nenhum restaurante encontrado para o usuário', [
+                'user_id' => $user_id,
+            ], 'warning' );
             return new WP_REST_Response( [], 200 );
         }
+        
+        // Limpar cache de termos para garantir dados atualizados
+        clean_term_cache( null, CPT_MenuItem::TAX_CATEGORY );
+        
+        // Buscar categorias usando Category_Helper
+        $categories = Category_Helper::query_restaurant_categories( $restaurant_id );
 
-        $categories = get_terms( [
-            'taxonomy'   => CPT_MenuItem::TAX_CATEGORY,
-            'hide_empty' => false,
-        ] );
-
-        if ( is_wp_error( $categories ) ) {
+        if ( empty( $categories ) ) {
             return new WP_REST_Response( [], 200 );
         }
 
         $items = [];
         foreach ( $categories as $term ) {
-            // Verificar se é categoria do catálogo
-            $is_catalog = get_term_meta( $term->term_id, '_vc_is_catalog_category', true );
-            $term_restaurant_id = (int) get_term_meta( $term->term_id, '_vc_restaurant_id', true );
-            
-            // Incluir apenas categorias criadas pelo usuário (não do catálogo) E do restaurante atual
-            if ( $is_catalog !== '1' && $term_restaurant_id === $restaurant_id ) {
-                $order = (int) get_term_meta( $term->term_id, '_vc_category_order', true );
-                $items[] = [
-                    'id'    => $term->term_id,
-                    'name'  => $term->name,
-                    'slug'  => $term->slug,
-                    'count' => $term->count,
-                    'order' => $order,
-                ];
-            }
+            $order = (int) get_term_meta( $term->term_id, '_vc_category_order', true );
+            $items[] = [
+                'id'    => $term->term_id,
+                'name'  => $term->name,
+                'slug'  => $term->slug,
+                'count' => $term->count,
+                'order' => $order,
+            ];
         }
 
         // Ordenar por ordem, depois por nome
@@ -162,6 +150,12 @@ class Menu_Categories_Controller {
             return strcasecmp( $a['name'], $b['name'] );
         } );
 
+        log_event( 'Menu Categories: Categorias retornadas', [
+            'restaurant_id' => $restaurant_id,
+            'count' => count( $items ),
+            'category_names' => array_column( $items, 'name' ),
+        ], 'debug' );
+
         return new WP_REST_Response( $items, 200 );
     }
 
@@ -170,8 +164,22 @@ class Menu_Categories_Controller {
      * Cria uma nova categoria do cardápio
      */
     public function create_category( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+        // Aceitar tanto JSON quanto body params (para compatibilidade com chamadas internas)
         $body = $request->get_json_params();
         if ( ! $body ) {
+            // Se não tem JSON, tentar body params (usado em chamadas internas)
+            $body = $request->get_body_params();
+        }
+        
+        // Se ainda não tem, tentar get_param direto
+        if ( ! $body || empty( $body ) ) {
+            $body = [
+                'name'  => $request->get_param( 'name' ),
+                'order' => $request->get_param( 'order' ),
+            ];
+        }
+        
+        if ( ! $body || empty( $body ) ) {
             return new WP_Error(
                 'vc_invalid_json',
                 __( 'JSON inválido no body da requisição.', 'vemcomer' ),
@@ -191,23 +199,9 @@ class Menu_Categories_Controller {
 
         // Buscar restaurante do usuário atual
         $user_id = get_current_user_id();
-        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+        $restaurant_id = Restaurant_Helper::get_restaurant_id_for_user( $user_id );
 
-        if ( ! $restaurant_id ) {
-            // Tentar buscar pelo post_author
-            $restaurants = get_posts( [
-                'post_type'      => 'vc_restaurant',
-                'author'         => $user_id,
-                'posts_per_page' => 1,
-                'fields'         => 'ids',
-            ] );
-
-            if ( ! empty( $restaurants ) ) {
-                $restaurant_id = $restaurants[0];
-            }
-        }
-
-        if ( ! $restaurant_id ) {
+        if ( $restaurant_id <= 0 ) {
             return new WP_Error(
                 'vc_no_restaurant',
                 __( 'Nenhum restaurante encontrado para este usuário.', 'vemcomer' ),
@@ -245,64 +239,16 @@ class Menu_Categories_Controller {
             }
         }
 
-        // Criar o termo com slug único por restaurante
-        // Adicionar ID do restaurante ao slug para evitar conflitos entre restaurantes
-        $base_slug = sanitize_title( $name );
-        $unique_slug = $base_slug . '-rest-' . $restaurant_id;
-        
-        $result = wp_insert_term(
-            $name,
-            CPT_MenuItem::TAX_CATEGORY,
-            [
-                'slug' => $unique_slug,
-            ]
-        );
+        // Criar categoria usando Menu_Categories_Service
+        $service = new Menu_Categories_Service();
+        $term_id = $service->create( $body, $restaurant_id );
 
-        if ( is_wp_error( $result ) ) {
+        if ( is_wp_error( $term_id ) ) {
             return new WP_Error(
                 'vc_category_creation_failed',
-                $result->get_error_message(),
+                $term_id->get_error_message(),
                 [ 'status' => 500 ]
             );
-        }
-
-        $term_id = is_array( $result ) ? $result['term_id'] : $result;
-
-        // Vincular categoria ao restaurante
-        update_term_meta( $term_id, '_vc_restaurant_id', $restaurant_id );
-
-        // Salvar campos adicionais se fornecidos
-        if ( isset( $body['order'] ) && is_numeric( $body['order'] ) ) {
-            update_term_meta( $term_id, '_vc_category_order', absint( $body['order'] ) );
-        }
-
-        // Imagem (data:image ou ID)
-        if ( isset( $body['image'] ) && ! empty( $body['image'] ) ) {
-            $image_url = sanitize_text_field( $body['image'] );
-            
-            // Se for data:image, fazer upload
-            if ( strpos( $image_url, 'data:image' ) === 0 ) {
-                require_once ABSPATH . 'wp-admin/includes/image.php';
-                require_once ABSPATH . 'wp-admin/includes/file.php';
-                require_once ABSPATH . 'wp-admin/includes/media.php';
-
-                $upload = wp_upload_bits( 'category-' . $term_id . '.jpg', null, base64_decode( preg_replace( '#^data:image/\w+;base64,#i', '', $image_url ) ) );
-                if ( ! $upload['error'] ) {
-                    $attachment = [
-                        'post_mime_type' => 'image/jpeg',
-                        'post_title'     => sanitize_file_name( $name ),
-                        'post_content'   => '',
-                        'post_status'    => 'inherit',
-                    ];
-                    $attach_id = wp_insert_attachment( $attachment, $upload['file'] );
-                    $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
-                    wp_update_attachment_metadata( $attach_id, $attach_data );
-                    update_term_meta( $term_id, '_vc_category_image', $attach_id );
-                }
-            } elseif ( is_numeric( $image_url ) ) {
-                // Se for ID de attachment
-                update_term_meta( $term_id, '_vc_category_image', absint( $image_url ) );
-            }
         }
 
         log_event( 'REST menu category created', [ 'term_id' => $term_id, 'name' => $name ], 'info' );
@@ -317,12 +263,8 @@ class Menu_Categories_Controller {
 
     /**
      * GET /wp-json/vemcomer/v1/menu-categories/recommended
-     * Retorna categorias de cardápio recomendadas baseadas no tipo de restaurante do usuário
-     */
-    /**
-     * GET /wp-json/vemcomer/v1/menu-categories/recommended
-     * Retorna categorias de cardápio recomendadas baseadas no tipo de restaurante
-     * Agora filtra apenas categorias de cozinha PRIMÁRIAS (não tags/estilo)
+     * Retorna categorias de cardápio recomendadas baseadas nos arquétipos do restaurante
+     * Nova implementação usando arquétipos em vez de cuisine IDs diretamente
      */
     public function get_recommended_categories( WP_REST_Request $request ): WP_REST_Response|WP_Error {
         if ( ! is_user_logged_in() ) {
@@ -335,23 +277,9 @@ class Menu_Categories_Controller {
 
         // Buscar restaurante do usuário atual
         $user_id = get_current_user_id();
-        $restaurant_id = (int) get_user_meta( $user_id, 'vc_restaurant_id', true );
+        $restaurant_id = Restaurant_Helper::get_restaurant_id_for_user( $user_id );
 
-        if ( ! $restaurant_id ) {
-            // Tentar buscar pelo post_author
-            $restaurants = get_posts( [
-                'post_type'      => 'vc_restaurant',
-                'author'         => $user_id,
-                'posts_per_page' => 1,
-                'fields'         => 'ids',
-            ] );
-
-            if ( ! empty( $restaurants ) ) {
-                $restaurant_id = $restaurants[0];
-            }
-        }
-
-        if ( ! $restaurant_id ) {
+        if ( $restaurant_id <= 0 ) {
             return new WP_Error(
                 'vc_no_restaurant',
                 __( 'Nenhum restaurante encontrado para este usuário.', 'vemcomer' ),
@@ -359,22 +287,12 @@ class Menu_Categories_Controller {
             );
         }
 
-        // Buscar categorias de restaurante (vc_cuisine) associadas ao restaurante
-        // FILTRAR APENAS CATEGORIAS PRIMÁRIAS (não tags/estilo)
-        $cuisine_terms = wp_get_post_terms( $restaurant_id, 'vc_cuisine', [ 'fields' => 'all' ] );
+        // Buscar arquétipos do restaurante
+        $archetypes = Cuisine_Helper::get_archetypes_for_restaurant( $restaurant_id );
 
-        if ( is_wp_error( $cuisine_terms ) || empty( $cuisine_terms ) ) {
-            // Se não tiver categorias, retornar categorias genéricas (sem vínculo específico)
-            $cuisine_ids = [];
-        } else {
-            // Filtrar apenas categorias primárias (_vc_is_primary_cuisine = '1')
-            $cuisine_ids = [];
-            foreach ( $cuisine_terms as $term ) {
-                $is_primary = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
-                if ( $is_primary === '1' ) {
-                    $cuisine_ids[] = (int) $term->term_id;
-                }
-            }
+        if ( empty( $archetypes ) ) {
+            // Se não tiver arquétipos, retornar categorias genéricas
+            $archetypes = [];
         }
 
         // Buscar categorias já criadas pelo restaurante (para filtrar das recomendações)
@@ -417,7 +335,8 @@ class Menu_Categories_Controller {
             ], 200 );
         }
 
-        // Filtrar categorias recomendadas baseadas nas categorias do restaurante
+        // Buscar categorias recomendadas baseadas nos arquétipos
+        // Primeiro, tentar via meta _vc_recommended_for_archetypes (novo padrão)
         $recommended = [];
         $generic = []; // Categorias genéricas (sem vínculo específico)
 
@@ -426,6 +345,24 @@ class Menu_Categories_Controller {
             if ( in_array( strtolower( trim( $category->name ) ), $user_category_names, true ) ) {
                 continue;
             }
+
+            // Tentar novo padrão: _vc_recommended_for_archetypes
+            $recommended_for_archetypes = get_term_meta( $category->term_id, '_vc_recommended_for_archetypes', true );
+            
+            if ( ! empty( $recommended_for_archetypes ) ) {
+                $archetype_list = json_decode( $recommended_for_archetypes, true );
+                if ( is_array( $archetype_list ) && ! empty( array_intersect( $archetypes, $archetype_list ) ) ) {
+                    $recommended[] = [
+                        'id'    => $category->term_id,
+                        'name'  => $category->name,
+                        'slug'  => $category->slug,
+                        'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                    ];
+                    continue;
+                }
+            }
+
+            // Fallback: tentar via _vc_recommended_for_cuisines (compatibilidade)
             $recommended_for = get_term_meta( $category->term_id, '_vc_recommended_for_cuisines', true );
             
             if ( empty( $recommended_for ) ) {
@@ -437,20 +374,27 @@ class Menu_Categories_Controller {
                     'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
                 ];
             } else {
+                // Buscar cuisine IDs do restaurante para compatibilidade
+                $cuisine_terms = wp_get_post_terms( $restaurant_id, 'vc_cuisine', [ 'fields' => 'all' ] );
+                $cuisine_ids = [];
+                if ( ! is_wp_error( $cuisine_terms ) && ! empty( $cuisine_terms ) ) {
+                    foreach ( $cuisine_terms as $term ) {
+                        $is_primary = get_term_meta( $term->term_id, '_vc_is_primary_cuisine', true );
+                        if ( $is_primary === '1' ) {
+                            $cuisine_ids[] = (int) $term->term_id;
+                        }
+                    }
+                }
+
                 $recommended_cuisine_ids = json_decode( $recommended_for, true );
                 
-                if ( is_array( $recommended_cuisine_ids ) ) {
-                    // Verificar se alguma categoria do restaurante está na lista de recomendadas
-                    $intersection = array_intersect( $cuisine_ids, $recommended_cuisine_ids );
-                    
-                    if ( ! empty( $intersection ) ) {
-                        $recommended[] = [
-                            'id'    => $category->term_id,
-                            'name'  => $category->name,
-                            'slug'  => $category->slug,
-                            'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
-                        ];
-                    }
+                if ( is_array( $recommended_cuisine_ids ) && ! empty( array_intersect( $cuisine_ids, $recommended_cuisine_ids ) ) ) {
+                    $recommended[] = [
+                        'id'    => $category->term_id,
+                        'name'  => $category->name,
+                        'slug'  => $category->slug,
+                        'order' => (int) get_term_meta( $category->term_id, '_vc_category_order', true ),
+                    ];
                 }
             }
         }
@@ -565,56 +509,15 @@ class Menu_Categories_Controller {
             // Manter o slug único por restaurante
             $base_slug = sanitize_title( $name );
             $unique_slug = $base_slug . '-rest-' . $restaurant_id;
-
-            $result = wp_update_term( $term_id, CPT_MenuItem::TAX_CATEGORY, [
-                'name' => $name,
-                'slug' => $unique_slug,
-            ] );
-
-            if ( is_wp_error( $result ) ) {
-                return new WP_Error(
-                    'vc_category_update_failed',
-                    $result->get_error_message(),
-                    [ 'status' => 500 ]
-                );
-            }
+            $body['slug'] = $unique_slug;
         }
 
-        // Atualizar ordem se fornecida
-        if ( isset( $body['order'] ) && is_numeric( $body['order'] ) ) {
-            update_term_meta( $term_id, '_vc_category_order', absint( $body['order'] ) );
-        }
+        // Usar service para atualizar
+        $service = new Menu_Categories_Service();
+        $result = $service->update( $term_id, $body, $restaurant_id );
 
-        // Atualizar imagem se fornecida
-        if ( isset( $body['image'] ) ) {
-            $image_url = sanitize_text_field( $body['image'] );
-            
-            if ( empty( $image_url ) ) {
-                // Se for vazio, remover imagem
-                delete_term_meta( $term_id, '_vc_category_image' );
-            } elseif ( strpos( $image_url, 'data:image' ) === 0 ) {
-                // Se for data:image, fazer upload
-                require_once ABSPATH . 'wp-admin/includes/image.php';
-                require_once ABSPATH . 'wp-admin/includes/file.php';
-                require_once ABSPATH . 'wp-admin/includes/media.php';
-
-                $upload = wp_upload_bits( 'category-' . $term_id . '.jpg', null, base64_decode( preg_replace( '#^data:image/\w+;base64,#i', '', $image_url ) ) );
-                if ( ! $upload['error'] ) {
-                    $attachment = [
-                        'post_mime_type' => 'image/jpeg',
-                        'post_title'     => sanitize_file_name( $term->name ),
-                        'post_content'   => '',
-                        'post_status'    => 'inherit',
-                    ];
-                    $attach_id = wp_insert_attachment( $attachment, $upload['file'] );
-                    $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
-                    wp_update_attachment_metadata( $attach_id, $attach_data );
-                    update_term_meta( $term_id, '_vc_category_image', $attach_id );
-                }
-            } elseif ( is_numeric( $image_url ) ) {
-                // Se for ID de attachment
-                update_term_meta( $term_id, '_vc_category_image', absint( $image_url ) );
-            }
+        if ( is_wp_error( $result ) ) {
+            return $result;
         }
 
         log_event( 'REST menu category updated', [ 'term_id' => $term_id ], 'info' );
@@ -687,23 +590,12 @@ class Menu_Categories_Controller {
             );
         }
 
-        // Deletar a categoria
-        $result = wp_delete_term( $term_id, CPT_MenuItem::TAX_CATEGORY );
+        // Usar service para deletar
+        $service = new Menu_Categories_Service();
+        $result = $service->delete( $term_id, $restaurant_id );
 
         if ( is_wp_error( $result ) ) {
-            return new WP_Error(
-                'vc_category_deletion_failed',
-                $result->get_error_message(),
-                [ 'status' => 500 ]
-            );
-        }
-
-        if ( ! $result ) {
-            return new WP_Error(
-                'vc_category_deletion_failed',
-                __( 'Não foi possível deletar a categoria.', 'vemcomer' ),
-                [ 'status' => 500 ]
-            );
+            return $result;
         }
 
         log_event( 'REST menu category deleted', [ 'term_id' => $term_id ], 'info' );

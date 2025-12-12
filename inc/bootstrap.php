@@ -74,6 +74,7 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_script('vemcomer-kds', $base_url . 'assets/kds.js', [], $ver, true);
         wp_register_style('vemcomer-onboarding', $base_url . 'assets/css/onboarding.css', [], $ver);
         wp_register_script('vemcomer-onboarding', $base_url . 'assets/js/onboarding.js', ['jquery'], $ver, true);
+        wp_register_script('vemcomer-onboarding-wizard', $base_url . 'assets/js/onboarding-wizard.js', ['jquery'], $ver, true);
         wp_register_style('vemcomer-product-modal', $base_url . 'assets/css/product-modal.css', [], $ver);
         wp_register_script('vemcomer-product-modal', $base_url . 'assets/js/product-modal.js', ['vemcomer-front'], $ver, true);
         wp_register_style('vemcomer-reviews', $base_url . 'assets/css/reviews.css', [], $ver);
@@ -90,6 +91,11 @@ if (!function_exists('vc_register_front_assets')) {
         wp_register_script('vemcomer-orders-history', $base_url . 'assets/js/orders-history.js', ['vemcomer-front'], $ver, true);
         wp_register_style('vemcomer-home', $base_url . 'assets/css/home.css', [], $ver);
         wp_register_script('vemcomer-home', $base_url . 'assets/js/home.js', ['vemcomer-front'], $ver, true);
+        
+        // Browser Debug Capture (apenas em modo debug)
+        if (defined('VC_DEBUG') && VC_DEBUG) {
+            wp_register_script('vemcomer-browser-debug', $base_url . 'assets/js/browser-debug-capture.js', [], $ver, true);
+        }
     }
 }
 
@@ -112,8 +118,32 @@ if (!function_exists('vc_register_admin_assets')) {
         // Scripts
         wp_register_script('vemcomer-admin', $base_url . 'assets/js/admin.js', [], $ver, true);
         wp_register_script('vc-restaurants-admin', $base_url . 'assets/js/restaurants-admin.js', ['jquery'], $ver, true);
+        
+        // Browser Debug Capture (apenas em modo debug)
+        if (defined('VC_DEBUG') && VC_DEBUG) {
+            wp_register_script('vemcomer-browser-debug', $base_url . 'assets/js/browser-debug-capture.js', [], $ver, true);
+        }
     }
 }
 
 add_action('init', 'vc_register_front_assets', 5);
 add_action('admin_init', 'vc_register_admin_assets', 5);
+
+// Enfileirar Browser Debug Capture em todas as páginas quando VC_DEBUG estiver ativo
+if (defined('VC_DEBUG') && VC_DEBUG) {
+    add_action('wp_enqueue_scripts', function() {
+        wp_enqueue_script('vemcomer-browser-debug');
+        wp_localize_script('vemcomer-browser-debug', 'vcDebugCapture', [
+            'restNonce' => wp_create_nonce('wp_rest'),
+            'restUrl' => rest_url('vemcomer/v1/debug/browser-logs'),
+        ]);
+    }, 999);
+    
+    add_action('admin_enqueue_scripts', function() {
+        wp_enqueue_script('vemcomer-browser-debug');
+        wp_localize_script('vemcomer-browser-debug', 'vcDebugCapture', [
+            'restNonce' => wp_create_nonce('wp_rest'),
+            'restUrl' => rest_url('vemcomer/v1/debug/browser-logs'),
+        ]);
+    }, 999);
+}

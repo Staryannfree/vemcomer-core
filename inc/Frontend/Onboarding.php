@@ -13,6 +13,7 @@
 
 namespace VC\Frontend;
 
+use VC\Utils\Restaurant_Helper;
 use WP_Post;
 use WP_Query;
 use WP_User;
@@ -394,7 +395,7 @@ class Onboarding {
 
         $steps = $this->get_steps();
         $user = get_user_by( 'id', $user_id );
-        $restaurant = $user ? $this->get_restaurant_for_user( $user ) : null;
+        $restaurant = $user ? Restaurant_Helper::get_restaurant_for_user( $user->ID ) : null;
         
         $all_completed = count( $completed_steps ) >= count( $steps );
 
@@ -448,42 +449,5 @@ class Onboarding {
         wp_send_json_success();
     }
 
-    /**
-     * Helper para obter restaurante do usuário
-     */
-    private function get_restaurant_for_user( ?WP_User $user ): ?WP_Post {
-        if ( ! $user ) {
-            return null;
-        }
-
-        $filtered = (int) apply_filters( 'vemcomer/restaurant_id_for_user', 0, $user );
-        if ( $filtered > 0 ) {
-            $post = get_post( $filtered );
-            if ( $post && 'vc_restaurant' === $post->post_type ) {
-                return $post;
-            }
-        }
-
-        $meta_id = (int) get_user_meta( $user->ID, 'vc_restaurant_id', true );
-        if ( $meta_id ) {
-            $post = get_post( $meta_id );
-            if ( $post && 'vc_restaurant' === $post->post_type ) {
-                return $post;
-            }
-        }
-
-        $q = new WP_Query([
-            'post_type'      => 'vc_restaurant',
-            'author'         => $user->ID,
-            'posts_per_page' => 1,
-            'post_status'    => [ 'publish', 'pending', 'draft' ],
-            'no_found_rows'  => true,
-        ]);
-
-        $post = $q->have_posts() ? $q->posts[0] : null;
-        wp_reset_postdata();
-
-        return $post instanceof WP_Post ? $post : null;
-    }
 }
 

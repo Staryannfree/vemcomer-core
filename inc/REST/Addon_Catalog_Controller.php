@@ -261,16 +261,13 @@ class Addon_Catalog_Controller {
         // Buscar categorias do restaurante
         $restaurant_categories = wp_get_object_terms( $restaurant_id, 'vc_cuisine', [ 'fields' => 'ids' ] );
 
-        if ( is_wp_error( $restaurant_categories ) || empty( $restaurant_categories ) ) {
-            return new \WP_REST_Response( [
-                'success' => true,
-                'message' => __( 'Nenhuma categoria encontrada para este restaurante.', 'vemcomer' ),
-                'groups'  => [],
-            ] );
+        if ( is_wp_error( $restaurant_categories ) ) {
+            $restaurant_categories = [];
         }
 
         // Buscar grupos do catálogo que estão vinculados a essas categorias
-        $groups_query = new \WP_Query( [
+        // Usando a mesma abordagem do Menu_Category_Catalog_Seeder (meta_query ao invés de tax_query)
+        $all_groups = get_posts( [
             'post_type'      => 'vc_addon_group',
             'posts_per_page' => -1,
             'post_status'    => 'publish',
@@ -280,30 +277,62 @@ class Addon_Catalog_Controller {
                     'value' => '1',
                 ],
             ],
-            'tax_query'      => [
-                [
-                    'taxonomy' => 'vc_cuisine',
-                    'field'    => 'term_id',
-                    'terms'    => $restaurant_categories,
-                ],
-            ],
         ] );
 
+        // Filtrar grupos que têm pelo menos uma categoria em comum com o restaurante
+        // Se o restaurante não tiver categorias, retornar grupos genéricos (sem categorias específicas)
         $groups = [];
-        if ( $groups_query->have_posts() ) {
-            foreach ( $groups_query->posts as $group ) {
-                $groups[] = [
-                    'id'             => $group->ID,
-                    'name'           => $group->post_title,
-                    'description'    => $group->post_content,
-                    'selection_type' => get_post_meta( $group->ID, '_vc_selection_type', true ) ?: 'multiple',
-                    'min_select'      => (int) get_post_meta( $group->ID, '_vc_min_select', true ),
-                    'max_select'     => (int) get_post_meta( $group->ID, '_vc_max_select', true ),
-                    'is_required'    => get_post_meta( $group->ID, '_vc_is_required', true ) === '1',
-                    'difficulty_level' => get_post_meta( $group->ID, '_vc_difficulty_level', true ) ?: 'basic',
-                ];
+        $generic_groups = []; // Grupos sem categorias específicas ou grupos básicos genéricos
+        
+        foreach ( $all_groups as $group ) {
+            $recommended_cuisines_json = get_post_meta( $group->ID, '_vc_recommended_for_cuisines', true );
+            
+            $group_data = [
+                'id'             => $group->ID,
+                'name'           => $group->post_title,
+                'description'    => $group->post_content,
+                'selection_type' => get_post_meta( $group->ID, '_vc_selection_type', true ) ?: 'multiple',
+                'min_select'      => (int) get_post_meta( $group->ID, '_vc_min_select', true ),
+                'max_select'     => (int) get_post_meta( $group->ID, '_vc_max_select', true ),
+                'is_required'    => get_post_meta( $group->ID, '_vc_is_required', true ) === '1',
+                'difficulty_level' => get_post_meta( $group->ID, '_vc_difficulty_level', true ) ?: 'basic',
+            ];
+            
+            // Se não tem categorias recomendadas, é um grupo genérico
+            if ( empty( $recommended_cuisines_json ) ) {
+                // Grupos genéricos básicos
+                $generic_group_names = [ 'Molhos Extras', 'Bebida do Combo', 'Tamanho da Bebida', 'Tamanhos' ];
+                if ( in_array( $group->post_title, $generic_group_names, true ) ) {
+                    $generic_groups[] = $group_data;
+                }
+                continue;
+            }
+
+            $recommended_cuisines = json_decode( $recommended_cuisines_json, true );
+            if ( ! is_array( $recommended_cuisines ) || empty( $recommended_cuisines ) ) {
+                continue;
+            }
+
+            // Se o restaurante tem categorias, verificar interseção
+            if ( ! empty( $restaurant_categories ) ) {
+                $has_match = ! empty( array_intersect( $restaurant_categories, $recommended_cuisines ) );
+                if ( $has_match ) {
+                    $groups[] = $group_data;
+                }
+            } else {
+                // Se o restaurante não tem categorias, incluir grupos genéricos básicos
+                $generic_group_names = [ 'Molhos Extras', 'Bebida do Combo', 'Tamanho da Bebida', 'Tamanhos' ];
+                if ( in_array( $group->post_title, $generic_group_names, true ) ) {
+                    $generic_groups[] = $group_data;
+                }
             }
         }
+        
+        // Se não encontrou grupos específicos, usar grupos genéricos
+        if ( empty( $groups ) && ! empty( $generic_groups ) ) {
+            $groups = $generic_groups;
+        }
+
 
         return new \WP_REST_Response( [
             'success' => true,
