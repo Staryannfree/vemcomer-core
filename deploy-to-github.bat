@@ -10,7 +10,7 @@ git status --porcelain >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo Nenhuma mudança detectada.
     echo.
-    pause
+    timeout /t 2 >nul
     exit /b 0
 )
 
@@ -18,19 +18,48 @@ echo Arquivos modificados:
 git status --short
 echo.
 
-REM Adicionar todos os arquivos modificados
-echo Adicionando arquivos ao staging...
-git add .
+REM Estratégia 1: Tentar adicionar apenas arquivos modificados (mais rápido)
+echo [1/3] Adicionando arquivos modificados ao staging...
+git add -u
+set ADD_RESULT=%ERRORLEVEL%
+
+REM Estratégia 2: Se falhar, adicionar arquivos novos também
+if %ADD_RESULT% NEQ 0 (
+    echo Tentando adicionar todos os arquivos...
+    git add -A
+    set ADD_RESULT=%ERRORLEVEL%
+)
+
+REM Estratégia 3: Se ainda falhar, adicionar arquivos específicos baseado no status
+if %ADD_RESULT% NEQ 0 (
+    echo Adicionando arquivos específicos...
+    for /f "tokens=2" %%f in ('git status --porcelain ^| findstr /r "^.M ^M ^A"') do (
+        git add "%%f" 2>nul
+    )
+    git add -u
+    set ADD_RESULT=%ERRORLEVEL%
+)
+
+if %ADD_RESULT% NEQ 0 (
+    echo.
+    echo ========================================
+    echo   ✗ Erro ao adicionar arquivos!
+    echo ========================================
+    echo.
+    timeout /t 3 >nul
+    exit /b 1
+)
+
+echo ✓ Arquivos adicionados com sucesso.
+echo.
 
 REM Fazer commit com mensagem automática
 for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set datetime=%%I
 set timestamp=%datetime:~0,4%-%datetime:~4,2%-%datetime:~6,2% %datetime:~8,2%:%datetime:~10,2%
-echo Fazendo commit...
+
+echo [2/3] Fazendo commit...
 git commit -m "Deploy automático: %timestamp%"
-if %ERRORLEVEL% EQU 0 (
-    echo ✓ Commit criado com sucesso.
-    echo.
-) else (
+if %ERRORLEVEL% NEQ 0 (
     echo.
     echo ========================================
     echo   ✗ Erro ao fazer commit!
@@ -40,50 +69,41 @@ if %ERRORLEVEL% EQU 0 (
     echo - Nenhuma mudança para commitar
     echo - Problema com mensagem de commit
     echo.
-    pause
+    timeout /t 3 >nul
     exit /b 1
 )
 
+echo ✓ Commit criado com sucesso.
+echo.
+
+REM Fazer push
+echo [3/3] Fazendo push para GitHub...
+git push origin main
+
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ========================================
-    echo   Fazendo push para GitHub...
+    echo   ✓ Deploy concluído com sucesso!
     echo ========================================
-    git push origin main
-    
-    if %ERRORLEVEL% EQU 0 (
-        echo.
-        echo ========================================
-        echo   ✓ Deploy concluído com sucesso!
-        echo ========================================
-        echo.
-        echo O WP Pusher vai fazer o deploy automático
-        echo para seu WordPress na Hostinger.
-        echo.
-        git status
-    ) else (
-        echo.
-        echo ========================================
-        echo   ✗ Erro ao fazer push!
-        echo ========================================
-        echo.
-        echo Possíveis causas:
-        echo - Problema de autenticação
-        echo - Problema de conexão
-        echo - Conflitos no repositório remoto
-        echo.
-    )
+    echo.
+    echo O WP Pusher vai fazer o deploy automático
+    echo para seu WordPress na Hostinger.
+    echo.
+    git status --short
+    echo.
+    timeout /t 3 >nul
 ) else (
     echo.
     echo ========================================
-    echo   ✗ Erro ao fazer commit!
+    echo   ✗ Erro ao fazer push!
     echo ========================================
     echo.
     echo Possíveis causas:
-    echo - Nenhuma mudança para commitar
-    echo - Problema com mensagem de commit
+    echo - Problema de autenticação
+    echo - Problema de conexão
+    echo - Conflitos no repositório remoto
     echo.
+    timeout /t 5 >nul
 )
 
-echo.
-pause
+exit /b 0
