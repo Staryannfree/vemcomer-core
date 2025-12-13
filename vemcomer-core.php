@@ -130,13 +130,20 @@ function vemcomer_fix_wppusher_php82() {
 }
 
 register_activation_hook( __FILE__, function () {
+    // CRÍTICO: Definir flag de ativação ANTES de qualquer operação
+    // Isso previne que hooks 'init' e 'plugins_loaded' executem durante ativação
+    set_transient( 'vemcomer_activating', true, 30 ); // 30 segundos é suficiente para ativação
+    
     $started_buffer = ob_get_level();
     ob_start();
 
     // Corrige WP Pusher automaticamente
     vemcomer_fix_wppusher_php82();
 
-    if ( class_exists( '\\VC\\Admin\\Installer' ) ) {
+    // CRÍTICO: Verificar se já foi instalado para evitar execução repetida
+    // Isso previne múltiplas conexões de banco durante ativação
+    $already_installed = get_option( 'vemcomer_pages', false );
+    if ( ! $already_installed && class_exists( '\\VC\\Admin\\Installer' ) ) {
         ( new \VC\Admin\Installer() )->install_defaults();
     }
 
@@ -149,6 +156,9 @@ register_activation_hook( __FILE__, function () {
             ob_end_clean();
         }
     }
+    
+    // Remover flag após ativação completa
+    delete_transient( 'vemcomer_activating' );
 } );
 
 // Tentar corrigir WP Pusher automaticamente no carregamento (se necessário)
@@ -164,12 +174,17 @@ add_action( 'plugins_loaded', function () {
 }, 1 );
 
 add_action( 'plugins_loaded', function () {
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $start_time = microtime(true);
-    $context = is_admin() ? 'admin' : (defined('REST_REQUEST') && REST_REQUEST ? 'rest' : 'frontend');
-    file_put_contents($log_file, json_encode(['id'=>'perf_plugins_loaded_start','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:166','message'=>'plugins_loaded hook started','data'=>['context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'A'])."\n", FILE_APPEND);
-    // #endregion
+    // CRÍTICO: Não executar durante ativação do plugin
+    // Isso previne múltiplas conexões de banco durante ativação
+    if ( get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' ) ) {
+        return;
+    }
+    
+    // CRÍTICO: Determinar contexto ANTES de inicializar classes
+    // No frontend público, não precisamos de classes admin ou REST (exceto se for requisição REST)
+    $is_admin_context = is_admin();
+    $is_rest_context = defined( 'REST_REQUEST' ) && REST_REQUEST;
+    $is_frontend = ! $is_admin_context && ! $is_rest_context;
     
     // Carregar melhorias de logging se VC_DEBUG estiver ativo
     // DESABILITADO temporariamente para melhorar performance do wizard
@@ -181,20 +196,15 @@ add_action( 'plugins_loaded', function () {
     // }
     
     // (carrega os módulos já existentes dos Pacotes 1..7)
-    // #region agent log
-    $legacy_start = microtime(true);
-    $legacy_classes = 0;
-    // #endregion
-    if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); $legacy_classes++; }
-    if ( class_exists( 'VC_CPT_Produto' ) ) { ( new \VC_CPT_Produto() )->init(); $legacy_classes++; }
-    if ( class_exists( 'VC_CPT_Pedido' ) )  { ( new \VC_CPT_Pedido() )->init(); $legacy_classes++; }
-    if ( class_exists( 'VC_Admin_Menu' ) )  { ( new \VC_Admin_Menu() )->init(); $legacy_classes++; }
-    if ( class_exists( 'VC_REST' ) )        { ( new \VC_REST() )->init(); $legacy_classes++; }
-    // #region agent log
-    $legacy_time = (microtime(true) - $legacy_start) * 1000;
-    file_put_contents($log_file, json_encode(['id'=>'perf_legacy_classes','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:177','message'=>'legacy classes initialized','data'=>['count'=>$legacy_classes,'time_ms'=>$legacy_time,'context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'A'])."\n", FILE_APPEND);
-    // #endregion
+    if ( class_exists( 'VC_Loader' ) ) { ( new \VC_Loader() )->init(); }
+    if ( class_exists( 'VC_CPT_Produto' ) ) { ( new \VC_CPT_Produto() )->init(); }
+    if ( class_exists( 'VC_CPT_Pedido' ) )  { ( new \VC_CPT_Pedido() )->init(); }
+    // Classes admin só no admin
+    if ( $is_admin_context && class_exists( 'VC_Admin_Menu' ) )  { ( new \VC_Admin_Menu() )->init(); }
+    // REST só em requisições REST ou admin
+    if ( ( $is_rest_context || $is_admin_context ) && class_exists( 'VC_REST' ) )        { ( new \VC_REST() )->init(); }
 
+    // CPTs Model - sempre necessários (registram post types)
     if ( class_exists( '\\VC\\Model\\CPT_Restaurant' ) )      { ( new \VC\Model\CPT_Restaurant() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_MenuItem' ) )        { ( new \VC\Model\CPT_MenuItem() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_ProductModifier' ) ) { ( new \VC\Model\CPT_ProductModifier() )->init(); }
@@ -207,49 +217,63 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Model\\CPT_Story' ) ) { ( new \VC\Model\CPT_Story() )->init(); }
     if ( class_exists( '\\VC\\Model\\CPT_SubscriptionPlan' ) ) { ( new \VC\Model\CPT_SubscriptionPlan() )->init(); }
     if ( class_exists( '\\VC\\Subscription\\Limits_Validator' ) ) { ( new \VC\Subscription\Limits_Validator() )->init(); }
-    // #region agent log
-    $rest_start = microtime(true);
-    $rest_classes = 0;
-    $admin_classes = 0;
-    // #endregion
-    if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); $admin_classes++; }
-    if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Merchant_Settings_Controller' ) ) { ( new \VC\REST\Merchant_Settings_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Reviews_Controller' ) ) { ( new \VC\REST\Reviews_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Favorites_Controller' ) ) { ( new \VC\REST\Favorites_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Banners_Controller' ) ) { ( new \VC\REST\Banners_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Events_Controller' ) ) { ( new \VC\REST\Events_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Stories_Controller' ) ) { ( new \VC\REST\Stories_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Menu_Items_Controller' ) ) { ( new \VC\REST\Menu_Items_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Menu_Items_Status_Controller' ) ) { ( new \VC\REST\Menu_Items_Status_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Menu_Categories_Controller' ) ) { ( new \VC\REST\Menu_Categories_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Addon_Catalog_Controller' ) ) { ( new \VC\REST\Addon_Catalog_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Onboarding_Controller' ) ) { ( new \VC\REST\Onboarding_Controller() )->init(); $rest_classes++; }
-    // Registrar Debug Controller
-    if ( class_exists( '\\VC\\REST\\Debug_Controller' ) ) {
-        ( new \VC\REST\Debug_Controller() )->init(); $rest_classes++;
+    
+    // Classes Admin - APENAS no admin
+    if ( $is_admin_context ) {
+        if ( class_exists( '\\VC\\Admin\\Menu_Restaurant' ) )     { ( new \VC\Admin\Menu_Restaurant() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Settings' ) )            { ( new \VC\Admin\Settings() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Archetypes_Manager' ) )  { ( new \VC\Admin\Archetypes_Manager() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Modifiers_Metabox' ) ) { ( new \VC\Admin\Modifiers_Metabox() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Reports' ) )              { ( new \VC\Admin\Reports() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Export' ) )               { ( new \VC\Admin\Export() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); }
+        if ( class_exists( '\\VC\\Admin\\Geocoding_Test' ) )        { ( new \VC\Admin\Geocoding_Test() )->init(); }
     }
-    // Registrar Browser Debug Controller
-    if ( class_exists( '\\VC\\REST\\Browser_Debug_Controller' ) ) {
-        ( new \VC\REST\Browser_Debug_Controller() )->init(); $rest_classes++;
+    
+    // Controllers REST - APENAS em requisições REST ou admin
+    // CRÍTICO: Não inicializar no frontend público para evitar conexões desnecessárias
+    if ( $is_rest_context || $is_admin_context ) {
+        if ( class_exists( '\\VC\\REST\\Restaurant_Controller' ) ) { ( new \VC\REST\Restaurant_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Merchant_Settings_Controller' ) ) { ( new \VC\REST\Merchant_Settings_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Modifiers_Controller' ) ) { ( new \VC\REST\Modifiers_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Reviews_Controller' ) ) { ( new \VC\REST\Reviews_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Favorites_Controller' ) ) { ( new \VC\REST\Favorites_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Banners_Controller' ) ) { ( new \VC\REST\Banners_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Events_Controller' ) ) { ( new \VC\REST\Events_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Stories_Controller' ) ) { ( new \VC\REST\Stories_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Menu_Items_Controller' ) ) { ( new \VC\REST\Menu_Items_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Menu_Items_Status_Controller' ) ) { ( new \VC\REST\Menu_Items_Status_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Menu_Categories_Controller' ) ) { ( new \VC\REST\Menu_Categories_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Addon_Catalog_Controller' ) ) { ( new \VC\REST\Addon_Catalog_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Onboarding_Controller' ) ) { ( new \VC\REST\Onboarding_Controller() )->init(); }
+        // Registrar Debug Controller
+        if ( class_exists( '\\VC\\REST\\Debug_Controller' ) ) {
+            ( new \VC\REST\Debug_Controller() )->init();
+        }
+        // Registrar Browser Debug Controller
+        if ( class_exists( '\\VC\\REST\\Browser_Debug_Controller' ) ) {
+            ( new \VC\REST\Browser_Debug_Controller() )->init();
+        }
+        if ( class_exists( '\\VC\\REST\\Quick_Toggle_Controller' ) ) { ( new \VC\REST\Quick_Toggle_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Subscription_Controller' ) ) { ( new \VC\REST\Subscription_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Addresses_Controller' ) ) { ( new \VC\REST\Addresses_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Notifications_Controller' ) ) { ( new \VC\REST\Notifications_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Reports_Controller' ) ) { ( new \VC\REST\Reports_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Coupons_Controller' ) ) { ( new \VC\REST\Coupons_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Admin_Controller' ) ) { ( new \VC\REST\Admin_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Audit_Controller' ) ) { ( new \VC\REST\Audit_Controller() )->init(); }
+        if ( class_exists( '\\VC\\Analytics\\Analytics_Controller' ) ) { ( new \VC\Analytics\Analytics_Controller() )->init(); }
+        if ( class_exists( '\\VC\\Analytics\\Tracking_Controller' ) ) { ( new \VC\Analytics\Tracking_Controller() )->init(); }
     }
-    if ( class_exists( '\\VC\\REST\\Quick_Toggle_Controller' ) ) { ( new \VC\REST\Quick_Toggle_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Subscription_Controller' ) ) { ( new \VC\REST\Subscription_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Addresses_Controller' ) ) { ( new \VC\REST\Addresses_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Notifications_Controller' ) ) { ( new \VC\REST\Notifications_Controller() )->init(); $rest_classes++; }
+    
+    // Tracking Middleware - sempre necessário (pode rastrear no frontend)
+    if ( class_exists( '\\VC\\Analytics\\Tracking_Middleware' ) ) { ( new \VC\Analytics\Tracking_Middleware() )->init(); }
+    
+    // Utils e Cache - sempre necessários
     if ( class_exists( '\\VC\\Utils\\Image_Optimizer' ) ) { ( new \VC\Utils\Image_Optimizer() )->init(); }
     if ( class_exists( '\\VC\\Cache\\Cache_Manager' ) ) { ( new \VC\Cache\Cache_Manager() )->init(); }
     if ( class_exists( '\\VC\\Cache\\Auto_Cache_Clear' ) ) { ( new \VC\Cache\Auto_Cache_Clear() )->init(); }
-    if ( class_exists( '\\VC\\REST\\Reports_Controller' ) ) { ( new \VC\REST\Reports_Controller() )->init(); $rest_classes++; }
     if ( class_exists( '\\VC\\Model\\CPT_Coupon' ) ) { ( new \VC\Model\CPT_Coupon() )->init(); }
-    if ( class_exists( '\\VC\\REST\\Coupons_Controller' ) ) { ( new \VC\REST\Coupons_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Admin_Controller' ) ) { ( new \VC\REST\Admin_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Audit_Controller' ) ) { ( new \VC\REST\Audit_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\Analytics\\Analytics_Controller' ) ) { ( new \VC\Analytics\Analytics_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\Analytics\\Tracking_Middleware' ) ) { ( new \VC\Analytics\Tracking_Middleware() )->init(); }
-    if ( class_exists( '\\VC\\Analytics\\Tracking_Controller' ) ) { ( new \VC\Analytics\Tracking_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\Admin\\Modifiers_Metabox' ) ) { ( new \VC\Admin\Modifiers_Metabox() )->init(); $admin_classes++; }
 
     // Utils
     if ( class_exists( '\\VC\\Utils\\Schedule_Helper' ) ) {
@@ -262,14 +286,20 @@ add_action( 'plugins_loaded', function () {
         // Classe já está disponível via autoload
     }
 
-    if ( class_exists( '\\VC\\Admin\\Settings' ) )            { ( new \VC\Admin\Settings() )->init(); $admin_classes++; }
-    if ( class_exists( '\\VC\\Admin\\Archetypes_Manager' ) )  { ( new \VC\Admin\Archetypes_Manager() )->init(); $admin_classes++; }
+    // Order Statuses - sempre necessário
     if ( class_exists( '\\VC\\Order\\Statuses' ) )            { ( new \VC\Order\Statuses() )->init(); }
-    if ( class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\CLI\\Seed' ) )                  { ( new \VC\CLI\Seed() )->init(); }
-    if ( class_exists( '\\VC\\CLI\\Migrate_Command' ) )       { ( new \VC\CLI\Migrate_Command() )->init(); }
-    if ( class_exists( '\\VC\\CLI\\Migrate_Cuisine_Archetypes' ) ) { ( new \VC\CLI\Migrate_Cuisine_Archetypes() )->init(); }
-
+    
+    // Webhooks - apenas em REST ou admin
+    if ( ( $is_rest_context || $is_admin_context ) && class_exists( '\\VC\\REST\\Webhooks_Controller' ) )  { ( new \VC\REST\Webhooks_Controller() )->init(); }
+    
+    // CLI - apenas em WP-CLI
+    if ( defined( 'WP_CLI' ) && WP_CLI ) {
+        if ( class_exists( '\\VC\\CLI\\Seed' ) )                  { ( new \VC\CLI\Seed() )->init(); }
+        if ( class_exists( '\\VC\\CLI\\Migrate_Command' ) )       { ( new \VC\CLI\Migrate_Command() )->init(); }
+        if ( class_exists( '\\VC\\CLI\\Migrate_Cuisine_Archetypes' ) ) { ( new \VC\CLI\Migrate_Cuisine_Archetypes() )->init(); }
+    }
+    
+    // Frontend - sempre necessário (shortcodes, templates, etc)
     if ( class_exists( '\\VC\\Frontend\\Shortcodes' ) )        { ( new \VC\Frontend\Shortcodes() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Shipping' ) )          { ( new \VC\Frontend\Shipping() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Signups' ) )           { ( new \VC\Frontend\Signups() )->init(); }
@@ -278,63 +308,47 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Frontend\\Onboarding' ) )       { ( new \VC\Frontend\Onboarding() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Marketplace_Templates' ) ) { ( new \VC\Frontend\Marketplace_Templates() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Home_Template' ) )     { ( new \VC\Frontend\Home_Template() )->init(); }
-    if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Seeder_Controller' ) )     { ( new \VC\REST\Seeder_Controller() )->init(); $rest_classes++; }
-
     if ( class_exists( '\\VC\\Frontend\\Coupons' ) )           { ( new \VC\Frontend\Coupons() )->init(); }
-    if ( class_exists( '\\VC\\REST\\Coupons_Controller' ) )    { ( new \VC\REST\Coupons_Controller() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Orders_Controller' ) )     { ( new \VC\REST\Orders_Controller() )->init(); $rest_classes++; }
+    
+    // REST Controllers adicionais - apenas em REST ou admin
+    if ( $is_rest_context || $is_admin_context ) {
+        if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Seeder_Controller' ) )     { ( new \VC\REST\Seeder_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Orders_Controller' ) )     { ( new \VC\REST\Orders_Controller() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Cache_Middleware' ) )      { ( new \VC\REST\Cache_Middleware() )->init(); }
+        if ( class_exists( '\\VC\\REST\\Invalidation' ) )          { ( new \VC\REST\Invalidation() )->init(); }
+    }
+    
+    // Email - sempre necessário (pode ser usado no frontend)
     if ( class_exists( '\\VC\\Email\\Templates' ) )            { ( new \VC\Email\Templates() )->init(); }
     if ( class_exists( '\\VC\\Email\\Events' ) )               { ( new \VC\Email\Events() )->init(); }
-
-    if ( class_exists( '\\VC\\Admin\\Reports' ) )              { ( new \VC\Admin\Reports() )->init(); $admin_classes++; }
-    if ( class_exists( '\\VC\\Admin\\Export' ) )               { ( new \VC\Admin\Export() )->init(); $admin_classes++; }
-    if ( class_exists( '\\VC\\REST\\Cache_Middleware' ) )      { ( new \VC\REST\Cache_Middleware() )->init(); $rest_classes++; }
-    if ( class_exists( '\\VC\\REST\\Invalidation' ) )          { ( new \VC\REST\Invalidation() )->init(); $rest_classes++; }
+    
+    // Integrações - sempre necessárias (webhooks podem vir do frontend)
     if ( class_exists( '\\VC\\Integration\\MercadoPago\\Webhook_Handler' ) ) { ( new \VC\Integration\MercadoPago\Webhook_Handler() )->init(); }
     if ( class_exists( '\\VC\\Integration\\SMClick' ) )        { ( new \VC\Integration\SMClick() )->init(); }
 
-    // Pacote 8 — Instalador de Páginas
-    if ( class_exists( '\\VC\\Admin\\Installer' ) )            { ( new \VC\Admin\Installer() )->init(); $admin_classes++; }
-    if ( class_exists( '\\VC\\Admin\\Geocoding_Test' ) )        { ( new \VC\Admin\Geocoding_Test() )->init(); $admin_classes++; }
-    // #region agent log
-    $rest_time = (microtime(true) - $rest_start) * 1000;
-    file_put_contents($log_file, json_encode(['id'=>'perf_rest_admin_classes','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:272','message'=>'REST and Admin classes initialized','data'=>['rest_count'=>$rest_classes,'admin_count'=>$admin_classes,'time_ms'=>$rest_time,'context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'B'])."\n", FILE_APPEND);
-    // #endregion
-
-    // Seed automático de planos (uma vez)
-    if ( class_exists( '\\VC\\Utils\\Plan_Seeder' ) ) {
-        $seeded = get_option( 'vemcomer_plans_seeded' );
-        if ( ! $seeded ) {
-            \VC\Utils\Plan_Seeder::seed();
-            update_option( 'vemcomer_plans_seeded', true );
+    // Seed automático de planos (uma vez) - apenas em admin ou primeira vez
+    if ( $is_admin_context || $is_rest_context ) {
+        if ( class_exists( '\\VC\\Utils\\Plan_Seeder' ) ) {
+            $seeded = get_option( 'vemcomer_plans_seeded' );
+            if ( ! $seeded ) {
+                \VC\Utils\Plan_Seeder::seed();
+                update_option( 'vemcomer_plans_seeded', true );
+            }
         }
     }
-    
-    // #region agent log
-    $end_time = microtime(true);
-    $total_time = ($end_time - $start_time) * 1000;
-    $classes_initialized = 0;
-    file_put_contents($log_file, json_encode(['id'=>'perf_plugins_loaded_end','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:290','message'=>'plugins_loaded hook completed','data'=>['total_time_ms'=>$total_time,'context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'A'])."\n", FILE_APPEND);
-    // #endregion
 
 } );
 
 // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
 // OTIMIZADO: Executa apenas em admin ou quando necessário, com flags para evitar execução repetida
 add_action( 'init', function () {
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $init_start = microtime(true);
-    $context = is_admin() ? 'admin' : (defined('REST_REQUEST') && REST_REQUEST ? 'rest' : 'frontend');
-    file_put_contents($log_file, json_encode(['id'=>'perf_init_start','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:294','message'=>'init hook started','data'=>['context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'C'])."\n", FILE_APPEND);
-    // #endregion
-    
-    // Não executar durante ativação/desativação do plugin
-    if ( defined( 'WP_UNINSTALL_PLUGIN' ) || ( is_admin() && ( isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) ) {
-        // #region agent log
-        file_put_contents($log_file, json_encode(['id'=>'perf_init_early_return','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:297','message'=>'init hook early return','data'=>['reason'=>'activation'],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'C'])."\n", FILE_APPEND);
-        // #endregion
+    // CRÍTICO: Não executar durante ativação/desativação do plugin
+    // Verificação melhorada para capturar ativação de forma mais confiável
+    if ( defined( 'WP_UNINSTALL_PLUGIN' ) 
+         || defined( 'WP_INSTALLING' ) 
+         || get_transient( 'vemcomer_activating' )
+         || ( is_admin() && isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) {
         return;
     }
     
@@ -344,31 +358,17 @@ add_action( 'init', function () {
     
     // Se não for admin e todos os seeds já foram executados, pular completamente
     if ( ! $is_admin_context ) {
-        // #region agent log
-        $check_start = microtime(true);
-        // #endregion
         $all_seeds_done = get_option( 'vemcomer_cuisines_seeded' ) 
                        && get_option( 'vemcomer_facilities_seeded' )
                        && get_option( 'vemcomer_addon_catalog_seeded' )
                        && get_option( 'vemcomer_menu_categories_seeded' );
-        // #region agent log
-        $check_time = (microtime(true) - $check_start) * 1000;
-        file_put_contents($log_file, json_encode(['id'=>'perf_init_seeds_check','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:306','message'=>'seeds check completed','data'=>['all_seeds_done'=>$all_seeds_done,'check_time_ms'=>$check_time],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'C'])."\n", FILE_APPEND);
-        // #endregion
         
         if ( $all_seeds_done ) {
-            // #region agent log
-            $init_time = (microtime(true) - $init_start) * 1000;
-            file_put_contents($log_file, json_encode(['id'=>'perf_init_early_return_seeds','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:312','message'=>'init hook early return - all seeds done','data'=>['total_time_ms'=>$init_time],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'C'])."\n", FILE_APPEND);
-            // #endregion
             return; // Pular completamente no frontend se tudo já foi feito
         }
     }
     
     // Cuisine Seeder - com flag para evitar execução repetida
-    // #region agent log
-    $cuisine_start = microtime(true);
-    // #endregion
     if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
         \VC\Utils\Cuisine_Seeder::seed();
         
@@ -380,10 +380,6 @@ add_action( 'init', function () {
             update_option( 'vemcomer_cuisine_terms_updated', true );
         }
     }
-    // #region agent log
-    $cuisine_time = (microtime(true) - $cuisine_start) * 1000;
-    file_put_contents($log_file, json_encode(['id'=>'perf_cuisine_seeder','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:317','message'=>'Cuisine seeder check','data'=>['time_ms'=>$cuisine_time,'context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'C'])."\n", FILE_APPEND);
-    // #endregion
     
     // Facility Seeder - já tem flag interna, mas verificar antes de chamar
     if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) ) {
@@ -394,38 +390,25 @@ add_action( 'init', function () {
     }
     
     // Addon Catalog Seeder - já verifica internamente, mas otimizar
-    // #region agent log
-    $addon_start = microtime(true);
-    // #endregion
     if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
         $addon_catalog_seeded = get_option( 'vemcomer_addon_catalog_seeded', false );
         if ( ! $addon_catalog_seeded ) {
             // Verificar se já existe antes de chamar seed (evita get_posts desnecessário)
-            // #region agent log
-            $get_posts_start = microtime(true);
-            // #endregion
             $existing = get_posts( [
                 'post_type'      => 'vc_addon_group',
                 'posts_per_page' => 1,
                 'post_status'    => 'any',
                 'fields'         => 'ids', // Apenas IDs para economizar memória
             ] );
-            // #region agent log
-            $get_posts_time = (microtime(true) - $get_posts_start) * 1000;
-            file_put_contents($log_file, json_encode(['id'=>'perf_addon_get_posts','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:401','message'=>'Addon catalog get_posts query','data'=>['time_ms'=>$get_posts_time,'found'=>!empty($existing)],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'D'])."\n", FILE_APPEND);
-            // #endregion
             
             if ( empty( $existing ) ) {
                 \VC\Utils\Addon_Catalog_Seeder::seed();
-            } else {
-                update_option( 'vemcomer_addon_catalog_seeded', true );
             }
+            // Definir flag independentemente de seed() ter sido executado ou posts já existirem
+            // Isso previne queries desnecessárias em execuções subsequentes
+            update_option( 'vemcomer_addon_catalog_seeded', true );
         }
     }
-    // #region agent log
-    $addon_time = (microtime(true) - $addon_start) * 1000;
-    file_put_contents($log_file, json_encode(['id'=>'perf_addon_seeder','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:414','message'=>'Addon catalog seeder check','data'=>['time_ms'=>$addon_time,'context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'D'])."\n", FILE_APPEND);
-    // #endregion
     
     // Seed automático de categorias de cardápio sugeridas
     if ( class_exists( '\\VC\\Utils\\Menu_Category_Catalog_Seeder' ) && taxonomy_exists( 'vc_menu_category' ) && taxonomy_exists( 'vc_cuisine' ) ) {
@@ -445,11 +428,6 @@ add_action( 'init', function () {
             update_option( 'vemcomer_addon_items_updated', true );
         }
     }
-    
-    // #region agent log
-    $init_time = (microtime(true) - $init_start) * 1000;
-    file_put_contents($log_file, json_encode(['id'=>'perf_init_end','timestamp'=>microtime(true)*1000,'location'=>'vemcomer-core.php:375','message'=>'init hook completed','data'=>['total_time_ms'=>$init_time,'context'=>$context],'sessionId'=>'perf-opt','runId'=>'run1','hypothesisId'=>'C'])."\n", FILE_APPEND);
-    // #endregion
 }, 20 );
 
 // --- Bootstrap do módulo Restaurantes ---
