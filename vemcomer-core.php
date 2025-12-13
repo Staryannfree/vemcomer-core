@@ -348,10 +348,9 @@ add_action( 'init', function () {
             
             if ( empty( $existing ) ) {
                 \VC\Utils\Addon_Catalog_Seeder::seed();
+            } else {
+                update_option( 'vemcomer_addon_catalog_seeded', true );
             }
-            // Definir flag independentemente de seed() ter sido executado ou posts já existirem
-            // Isso previne queries desnecessárias em execuções subsequentes
-            update_option( 'vemcomer_addon_catalog_seeded', true );
         }
     }
     
