@@ -290,23 +290,68 @@ add_action( 'plugins_loaded', function () {
 } );
 
 // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
+// OTIMIZADO: Executa apenas em admin ou quando necessário, com flags para evitar execução repetida
 add_action( 'init', function () {
     // Não executar durante ativação/desativação do plugin
     if ( defined( 'WP_UNINSTALL_PLUGIN' ) || ( is_admin() && ( isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) ) {
         return;
     }
     
-    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
-        \VC\Utils\Cuisine_Seeder::seed();
-        // Atualizar termos existentes com meta _vc_is_primary_cuisine
-        \VC\Utils\Cuisine_Seeder::update_existing_terms();
+    // CRÍTICO: Executar seeds apenas em admin ou na primeira vez
+    // No frontend público, não há necessidade de executar seeds
+    $is_admin_context = is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST );
+    
+    // Se não for admin e todos os seeds já foram executados, pular completamente
+    if ( ! $is_admin_context ) {
+        $all_seeds_done = get_option( 'vemcomer_cuisines_seeded' ) 
+                       && get_option( 'vemcomer_facilities_seeded' )
+                       && get_option( 'vemcomer_addon_catalog_seeded' )
+                       && get_option( 'vemcomer_menu_categories_seeded' );
+        
+        if ( $all_seeds_done ) {
+            return; // Pular completamente no frontend se tudo já foi feito
+        }
     }
     
-    if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) ) {
-        \VC\Utils\Facility_Seeder::seed();
+    // Cuisine Seeder - com flag para evitar execução repetida
+    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
+        \VC\Utils\Cuisine_Seeder::seed();
+        
+        // CRÍTICO: update_existing_terms() executa get_terms() que busca TODOS os termos
+        // Adicionar flag para executar apenas UMA VEZ
+        $cuisine_terms_updated = get_option( 'vemcomer_cuisine_terms_updated', false );
+        if ( ! $cuisine_terms_updated ) {
+            \VC\Utils\Cuisine_Seeder::update_existing_terms();
+            update_option( 'vemcomer_cuisine_terms_updated', true );
+        }
     }
+    
+    // Facility Seeder - já tem flag interna, mas verificar antes de chamar
+    if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) ) {
+        $facilities_seeded = get_option( 'vemcomer_facilities_seeded' );
+        if ( ! $facilities_seeded ) {
+            \VC\Utils\Facility_Seeder::seed();
+        }
+    }
+    
+    // Addon Catalog Seeder - já verifica internamente, mas otimizar
     if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
-        \VC\Utils\Addon_Catalog_Seeder::seed();
+        $addon_catalog_seeded = get_option( 'vemcomer_addon_catalog_seeded', false );
+        if ( ! $addon_catalog_seeded ) {
+            // Verificar se já existe antes de chamar seed (evita get_posts desnecessário)
+            $existing = get_posts( [
+                'post_type'      => 'vc_addon_group',
+                'posts_per_page' => 1,
+                'post_status'    => 'any',
+                'fields'         => 'ids', // Apenas IDs para economizar memória
+            ] );
+            
+            if ( empty( $existing ) ) {
+                \VC\Utils\Addon_Catalog_Seeder::seed();
+            } else {
+                update_option( 'vemcomer_addon_catalog_seeded', true );
+            }
+        }
     }
     
     // Seed automático de categorias de cardápio sugeridas
