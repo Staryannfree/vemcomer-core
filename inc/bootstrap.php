@@ -7,8 +7,48 @@ if (!defined('VEMCOMER_CORE_PATH')) define('VEMCOMER_CORE_PATH', plugin_dir_path
 if (!defined('VEMCOMER_CORE_URL'))  define('VEMCOMER_CORE_URL', plugin_dir_url(__FILE__) . '..' . '/');
 
 if (!defined('VC_DEBUG')) {
-    $vc_settings = (array) get_option('vemcomer_settings', []);
-    $debug_option = !empty($vc_settings['debug_logging']);
+    // CRÍTICO: Durante ativação, usar valores padrão sem consultar banco
+    // Isso evita conexões excessivas durante ativação do plugin
+    $is_activating = (defined('WP_INSTALLING') && WP_INSTALLING) 
+                     || (isset($_GET['action']) && $_GET['action'] === 'activate' && isset($_GET['plugin']))
+                     || (function_exists('get_transient') && get_transient('vemcomer_activating'));
+    
+    // #region agent log
+    $log_file = dirname(__DIR__) . '/.cursor/debug.log';
+    $log_data = json_encode([
+        'id' => 'bootstrap_vc_debug_check',
+        'timestamp' => microtime(true) * 1000,
+        'location' => 'bootstrap.php:9',
+        'message' => 'VC_DEBUG check in bootstrap',
+        'data' => ['is_activating' => $is_activating, 'will_query_db' => !$is_activating && function_exists('get_option')],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'C'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+    
+    if (!$is_activating && function_exists('get_option')) {
+        $vc_settings = (array) get_option('vemcomer_settings', []);
+        $debug_option = !empty($vc_settings['debug_logging']);
+        
+        // #region agent log
+        $log_data = json_encode([
+            'id' => 'bootstrap_db_query',
+            'timestamp' => microtime(true) * 1000,
+            'location' => 'bootstrap.php:16',
+            'message' => 'get_option called in bootstrap',
+            'data' => ['query_made' => true],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'C'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
+    } else {
+        $vc_settings = [];
+        $debug_option = false;
+    }
     $wp_debug = defined('WP_DEBUG') && WP_DEBUG;
     $debug_flag = (bool) apply_filters('vemcomer_debug_flag', $debug_option || $wp_debug, $vc_settings);
     define('VC_DEBUG', $debug_flag);

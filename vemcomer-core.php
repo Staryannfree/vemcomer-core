@@ -11,6 +11,28 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+// CRÍTICO: Detectar ativação o mais cedo possível para prevenir execução de hooks
+// Verificar se estamos em processo de ativação ANTES de qualquer outra coisa
+$is_activating_early = ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) )
+                        || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING );
+if ( $is_activating_early && function_exists( 'set_transient' ) ) {
+    set_transient( 'vemcomer_activating', true, 60 );
+    // #region agent log
+    $log_file = __DIR__ . '/.cursor/debug.log';
+    $log_data = json_encode([
+        'id' => 'early_activation_flag',
+        'timestamp' => microtime(true) * 1000,
+        'location' => 'vemcomer-core.php:19',
+        'message' => 'Early activation flag set',
+        'data' => ['is_activating' => $is_activating_early, 'get_action' => $_GET['action'] ?? null],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'E'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+}
+
 if ( ! defined( 'VEMCOMER_CORE_VERSION' ) ) {
     define( 'VEMCOMER_CORE_VERSION', '0.8.0' );
 }
@@ -130,39 +152,91 @@ function vemcomer_fix_wppusher_php82() {
 }
 
 register_activation_hook( __FILE__, function () {
+    // #region agent log
+    $log_file = __DIR__ . '/.cursor/debug.log';
+    $log_data = json_encode([
+        'id' => 'activation_hook_start',
+        'timestamp' => microtime(true) * 1000,
+        'location' => 'vemcomer-core.php:140',
+        'message' => 'Activation hook started',
+        'data' => ['ob_level' => ob_get_level(), 'wp_installing' => defined('WP_INSTALLING')],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'A'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+    
     // CRÍTICO: Definir flag de ativação ANTES de qualquer operação
     // Isso previne que hooks 'init' e 'plugins_loaded' executem durante ativação
-    set_transient( 'vemcomer_activating', true, 30 ); // 30 segundos é suficiente para ativação
+    set_transient( 'vemcomer_activating', true, 60 ); // 60 segundos para garantir
     
+    // CRÍTICO: Iniciar output buffering em múltiplos níveis para capturar TODO output
     $started_buffer = ob_get_level();
-    ob_start();
-
-    // Corrige WP Pusher automaticamente
-    vemcomer_fix_wppusher_php82();
-
-    // CRÍTICO: Verificar se já foi instalado para evitar execução repetida
-    // Isso previne múltiplas conexões de banco durante ativação
-    $already_installed = get_option( 'vemcomer_pages', false );
-    if ( ! $already_installed && class_exists( '\\VC\\Admin\\Installer' ) ) {
-        ( new \VC\Admin\Installer() )->install_defaults();
-    }
-
-    $activation_output = ob_get_clean();
-    if ( $activation_output !== '' ) {
-        error_log( sprintf( 'VemComer Core suppressing %d bytes of activation output', strlen( $activation_output ) ) );
-
-        // Limpa buffers adicionais que possam ter sido iniciados antes deste hook
-        while ( ob_get_level() > $started_buffer ) {
-            ob_end_clean();
-        }
+    while ( ob_get_level() < 3 ) {
+        @ob_start();
     }
     
-    // Remover flag após ativação completa
+    // CRÍTICO: Desabilitar qualquer output durante ativação
+    @ini_set( 'display_errors', 0 );
+    @ini_set( 'log_errors', 1 );
+
+    // Corrige WP Pusher automaticamente (sem output)
+    @vemcomer_fix_wppusher_php82();
+
+    // CRÍTICO: NÃO executar install_defaults() durante ativação
+    // Isso cria muitas páginas e abre muitas conexões de banco
+    // O usuário pode executar isso manualmente depois via admin
+    // $already_installed = get_option( 'vemcomer_pages', false );
+    // if ( ! $already_installed && class_exists( '\\VC\\Admin\\Installer' ) ) {
+    //     ( new \VC\Admin\Installer() )->install_defaults();
+    // }
+
+    // Capturar e descartar TODO output gerado
+    $activation_output = '';
+    while ( ob_get_level() > $started_buffer ) {
+        $activation_output .= ob_get_clean();
+    }
+    
+    // #region agent log
+    $log_file = __DIR__ . '/.cursor/debug.log';
+    $log_data = json_encode([
+        'id' => 'activation_output_captured',
+        'timestamp' => microtime(true) * 1000,
+        'location' => 'vemcomer-core.php:167',
+        'message' => 'Activation output captured',
+        'data' => ['output_size' => strlen($activation_output), 'output_preview' => substr($activation_output, 0, 200)],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'B'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+    
+    if ( ! empty( $activation_output ) ) {
+        @error_log( sprintf( 'VemComer Core suppressed %d bytes of activation output', strlen( $activation_output ) ) );
+    }
+    
+    // Garantir que não há buffers restantes
+    while ( ob_get_level() > 0 ) {
+        @ob_end_clean();
+    }
+    
+    // Restaurar configurações
+    @ini_restore( 'display_errors' );
+    
+    // Remover flag após ativação completa (com delay para garantir)
+    // A flag será removida automaticamente após 60 segundos, mas removemos agora também
     delete_transient( 'vemcomer_activating' );
 } );
 
 // Tentar corrigir WP Pusher automaticamente no carregamento (se necessário)
 add_action( 'plugins_loaded', function () {
+    // CRÍTICO: Não executar durante ativação
+    if ( get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' ) ) {
+        return;
+    }
+    
     // Verifica se há erro do WP Pusher e tenta corrigir
     if ( version_compare( PHP_VERSION, '8.2.0', '>=' ) ) {
         $wppusher_fixed = get_transient( 'vemcomer_wppusher_fixed' );
@@ -174,9 +248,38 @@ add_action( 'plugins_loaded', function () {
 }, 1 );
 
 add_action( 'plugins_loaded', function () {
+    // #region agent log
+    $log_file = __DIR__ . '/.cursor/debug.log';
+    $is_activating = get_transient( 'vemcomer_activating' );
+    $log_data = json_encode([
+        'id' => 'plugins_loaded_hook',
+        'timestamp' => microtime(true) * 1000,
+        'location' => 'vemcomer-core.php:206',
+        'message' => 'plugins_loaded hook executed',
+        'data' => ['is_activating' => (bool)$is_activating, 'wp_installing' => defined('WP_INSTALLING'), 'ob_level' => ob_get_level()],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'A'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+    
     // CRÍTICO: Não executar durante ativação do plugin
     // Isso previne múltiplas conexões de banco durante ativação
-    if ( get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' ) ) {
+    if ( $is_activating || defined( 'WP_INSTALLING' ) ) {
+        // #region agent log
+        $log_data = json_encode([
+            'id' => 'plugins_loaded_skipped',
+            'timestamp' => microtime(true) * 1000,
+            'location' => 'vemcomer-core.php:209',
+            'message' => 'plugins_loaded skipped due to activation',
+            'data' => [],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'A'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
         return;
     }
     
@@ -343,12 +446,41 @@ add_action( 'plugins_loaded', function () {
 // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
 // OTIMIZADO: Executa apenas em admin ou quando necessário, com flags para evitar execução repetida
 add_action( 'init', function () {
+    // #region agent log
+    $log_file = __DIR__ . '/.cursor/debug.log';
+    $is_activating = get_transient( 'vemcomer_activating' );
+    $log_data = json_encode([
+        'id' => 'init_hook',
+        'timestamp' => microtime(true) * 1000,
+        'location' => 'vemcomer-core.php:448',
+        'message' => 'init hook executed',
+        'data' => ['is_activating' => (bool)$is_activating, 'wp_installing' => defined('WP_INSTALLING'), 'is_admin' => is_admin()],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'D'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+    
     // CRÍTICO: Não executar durante ativação/desativação do plugin
     // Verificação melhorada para capturar ativação de forma mais confiável
     if ( defined( 'WP_UNINSTALL_PLUGIN' ) 
          || defined( 'WP_INSTALLING' ) 
-         || get_transient( 'vemcomer_activating' )
+         || $is_activating
          || ( is_admin() && isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) {
+        // #region agent log
+        $log_data = json_encode([
+            'id' => 'init_hook_skipped',
+            'timestamp' => microtime(true) * 1000,
+            'location' => 'vemcomer-core.php:454',
+            'message' => 'init hook skipped due to activation',
+            'data' => [],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'D'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
         return;
     }
     
