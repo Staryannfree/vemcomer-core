@@ -416,11 +416,20 @@ add_action( 'init', function () {
     
     // CRÍTICO: Não executar durante ativação/desativação do plugin
     // Verificação melhorada para capturar ativação de forma mais confiável
-    $is_activating = get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' );
+    // IMPORTANTE: Verificar apenas se estamos REALMENTE em processo de ativação
+    // Não bloquear se o transient ainda existir mas a ativação já terminou
+    $is_activating = ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
+                     || ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) && strpos( $_GET['plugin'], 'vemcomer-core' ) !== false )
+                     || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'activate' && isset( $_REQUEST['plugin'] ) && strpos( $_REQUEST['plugin'], 'vemcomer-core' ) !== false );
+    
+    // Se não estamos em processo de ativação, remover transient se existir (limpeza)
+    if ( ! $is_activating && get_transient( 'vemcomer_activating' ) ) {
+        delete_transient( 'vemcomer_activating' );
+    }
+    
     if ( defined( 'WP_UNINSTALL_PLUGIN' ) 
          || defined( 'WP_INSTALLING' ) 
-         || $is_activating
-         || ( is_admin() && isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) {
+         || $is_activating ) {
         // #region agent log
         $log_data = json_encode([
             'id' => 'init_hook_seeds_skipped',
