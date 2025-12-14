@@ -181,9 +181,14 @@ register_activation_hook( __FILE__, function () {
     //     ( new \VC\Admin\Installer() )->install_defaults();
     // }
     
-    // CRÍTICO: NÃO remover a flag imediatamente - deixar expirar após 60 segundos
-    // Isso garante que hooks subsequentes não executem durante a ativação
-    // delete_transient será chamado automaticamente após 60 segundos
+    // CRÍTICO: Remover a flag APÓS a ativação completar
+    // Usar hook 'activated_plugin' para garantir que a ativação terminou
+    // Isso permite que o plugin funcione imediatamente após ativação
+    add_action( 'activated_plugin', function ( $plugin ) {
+        if ( strpos( $plugin, 'vemcomer-core' ) !== false ) {
+            delete_transient( 'vemcomer_activating' );
+        }
+    }, 999 );
     
     // NOTA: Não restaurar configurações aqui - deixar o WordPress fazer isso
     // Restaurar pode causar output se houver erros durante a restauração
@@ -212,7 +217,18 @@ add_action( 'plugins_loaded', function () {
     
     // CRÍTICO: Não executar durante ativação do plugin
     // Isso previne múltiplas conexões de banco durante ativação
-    $is_activating = get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' );
+    // IMPORTANTE: Verificar apenas se estamos REALMENTE em processo de ativação
+    // Não bloquear se o transient ainda existir mas a ativação já terminou
+    $is_activating = ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
+                     || ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) && strpos( $_GET['plugin'], 'vemcomer-core' ) !== false )
+                     || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'activate' && isset( $_REQUEST['plugin'] ) && strpos( $_REQUEST['plugin'], 'vemcomer-core' ) !== false );
+    
+    // Se não estamos em processo de ativação, remover transient se existir (limpeza)
+    if ( ! $is_activating && get_transient( 'vemcomer_activating' ) ) {
+        delete_transient( 'vemcomer_activating' );
+    }
+    
+    // Bloquear apenas se realmente estivermos em processo de ativação
     if ( $is_activating ) {
         return;
     }
@@ -382,6 +398,22 @@ add_action( 'plugins_loaded', function () {
 // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
 // OTIMIZADO: Executa apenas em admin ou quando necessário, com flags para evitar execução repetida
 add_action( 'init', function () {
+    // #region agent log
+    $log_file = 'c:\\Users\\Adm-Sup\\Local Sites\\pedevem-local\\.cursor\\debug.log';
+    $start_time = microtime(true);
+    $log_data = json_encode([
+        'id' => 'init_hook_seeds_start',
+        'timestamp' => $start_time * 1000,
+        'location' => 'vemcomer-core.php:384',
+        'message' => 'init hook seeds started',
+        'data' => ['is_admin' => is_admin(), 'is_rest' => defined('REST_REQUEST'), 'is_frontend' => !is_admin() && !defined('REST_REQUEST')],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'A'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
+    
     // CRÍTICO: Não executar durante ativação/desativação do plugin
     // Verificação melhorada para capturar ativação de forma mais confiável
     $is_activating = get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' );
@@ -389,6 +421,19 @@ add_action( 'init', function () {
          || defined( 'WP_INSTALLING' ) 
          || $is_activating
          || ( is_admin() && isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) {
+        // #region agent log
+        $log_data = json_encode([
+            'id' => 'init_hook_seeds_skipped',
+            'timestamp' => microtime(true) * 1000,
+            'location' => 'vemcomer-core.php:393',
+            'message' => 'init hook seeds skipped',
+            'data' => ['reason' => 'activation_or_uninstall'],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'A'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
         return;
     }
     
@@ -396,14 +441,51 @@ add_action( 'init', function () {
     // No frontend público, não há necessidade de executar seeds
     $is_admin_context = is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST );
     
-    // Se não for admin e todos os seeds já foram executados, pular completamente
+    // OTIMIZAÇÃO CRÍTICA: Usar wp_prime_option_caches() para carregar todas as flags de uma vez
+    // Isso evita 4 queries separadas no frontend
     if ( ! $is_admin_context ) {
+        // Carregar todas as flags de seed de uma vez (1 query ao invés de 4)
+        $seed_flags = wp_prime_option_caches( [
+            'vemcomer_cuisines_seeded',
+            'vemcomer_facilities_seeded',
+            'vemcomer_addon_catalog_seeded',
+            'vemcomer_menu_categories_seeded'
+        ] );
+        
         $all_seeds_done = get_option( 'vemcomer_cuisines_seeded' ) 
                        && get_option( 'vemcomer_facilities_seeded' )
                        && get_option( 'vemcomer_addon_catalog_seeded' )
                        && get_option( 'vemcomer_menu_categories_seeded' );
         
+        // #region agent log
+        $log_data = json_encode([
+            'id' => 'init_hook_frontend_check',
+            'timestamp' => microtime(true) * 1000,
+            'location' => 'vemcomer-core.php:407',
+            'message' => 'frontend seeds check',
+            'data' => ['all_seeds_done' => $all_seeds_done, 'queries_saved' => 3],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'B'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
+        
         if ( $all_seeds_done ) {
+            // #region agent log
+            $end_time = microtime(true);
+            $log_data = json_encode([
+                'id' => 'init_hook_seeds_skipped_frontend',
+                'timestamp' => $end_time * 1000,
+                'location' => 'vemcomer-core.php:408',
+                'message' => 'init hook seeds skipped - frontend all done',
+                'data' => ['duration_ms' => ($end_time - $start_time) * 1000],
+                'sessionId' => 'debug-session',
+                'runId' => 'run1',
+                'hypothesisId' => 'B'
+            ]) . "\n";
+            @file_put_contents($log_file, $log_data, FILE_APPEND);
+            // #endregion
             return; // Pular completamente no frontend se tudo já foi feito
         }
     }
@@ -411,14 +493,75 @@ add_action( 'init', function () {
     // Cuisine Seeder - com flag para evitar execução repetida
     // CRÍTICO: NUNCA executar durante ativação - faz muitas queries (wp_insert_term, get_term_by, etc.)
     if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) && ! $is_activating ) {
+        // #region agent log
+        $seed_start = microtime(true);
+        $log_data = json_encode([
+            'id' => 'cuisine_seeder_start',
+            'timestamp' => $seed_start * 1000,
+            'location' => 'vemcomer-core.php:413',
+            'message' => 'Cuisine_Seeder::seed() starting',
+            'data' => [],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'C'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
+        
         \VC\Utils\Cuisine_Seeder::seed();
+        
+        // #region agent log
+        $seed_end = microtime(true);
+        $log_data = json_encode([
+            'id' => 'cuisine_seeder_end',
+            'timestamp' => $seed_end * 1000,
+            'location' => 'vemcomer-core.php:415',
+            'message' => 'Cuisine_Seeder::seed() completed',
+            'data' => ['duration_ms' => ($seed_end - $seed_start) * 1000],
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'C'
+        ]) . "\n";
+        @file_put_contents($log_file, $log_data, FILE_APPEND);
+        // #endregion
         
         // CRÍTICO: update_existing_terms() executa get_terms() que busca TODOS os termos
         // Adicionar flag para executar apenas UMA VEZ
+        // OTIMIZAÇÃO: Verificar flag ANTES de carregar a classe (se possível)
         $cuisine_terms_updated = get_option( 'vemcomer_cuisine_terms_updated', false );
         if ( ! $cuisine_terms_updated ) {
+            // #region agent log
+            $update_start = microtime(true);
+            $log_data = json_encode([
+                'id' => 'update_existing_terms_start',
+                'timestamp' => $update_start * 1000,
+                'location' => 'vemcomer-core.php:420',
+                'message' => 'update_existing_terms() starting - WARNING: calls get_terms() for ALL terms',
+                'data' => [],
+                'sessionId' => 'debug-session',
+                'runId' => 'run1',
+                'hypothesisId' => 'D'
+            ]) . "\n";
+            @file_put_contents($log_file, $log_data, FILE_APPEND);
+            // #endregion
+            
             \VC\Utils\Cuisine_Seeder::update_existing_terms();
             update_option( 'vemcomer_cuisine_terms_updated', true );
+            
+            // #region agent log
+            $update_end = microtime(true);
+            $log_data = json_encode([
+                'id' => 'update_existing_terms_end',
+                'timestamp' => $update_end * 1000,
+                'location' => 'vemcomer-core.php:422',
+                'message' => 'update_existing_terms() completed',
+                'data' => ['duration_ms' => ($update_end - $update_start) * 1000],
+                'sessionId' => 'debug-session',
+                'runId' => 'run1',
+                'hypothesisId' => 'D'
+            ]) . "\n";
+            @file_put_contents($log_file, $log_data, FILE_APPEND);
+            // #endregion
         }
     }
     
@@ -472,6 +615,21 @@ add_action( 'init', function () {
             update_option( 'vemcomer_addon_items_updated', true );
         }
     }
+    
+    // #region agent log
+    $end_time = microtime(true);
+    $log_data = json_encode([
+        'id' => 'init_hook_seeds_end',
+        'timestamp' => $end_time * 1000,
+        'location' => 'vemcomer-core.php:475',
+        'message' => 'init hook seeds completed',
+        'data' => ['total_duration_ms' => ($end_time - $start_time) * 1000],
+        'sessionId' => 'debug-session',
+        'runId' => 'run1',
+        'hypothesisId' => 'A'
+    ]) . "\n";
+    @file_put_contents($log_file, $log_data, FILE_APPEND);
+    // #endregion
 }, 20 );
 
 // --- Bootstrap do módulo Restaurantes ---
