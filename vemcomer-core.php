@@ -152,35 +152,13 @@ function vemcomer_fix_wppusher_php82() {
 }
 
 register_activation_hook( __FILE__, function () {
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $log_data = json_encode([
-        'id' => 'activation_hook_start',
-        'timestamp' => microtime(true) * 1000,
-        'location' => 'vemcomer-core.php:140',
-        'message' => 'Activation hook started',
-        'data' => ['ob_level' => ob_get_level(), 'wp_installing' => defined('WP_INSTALLING')],
-        'sessionId' => 'debug-session',
-        'runId' => 'run1',
-        'hypothesisId' => 'A'
-    ]) . "\n";
-    @file_put_contents($log_file, $log_data, FILE_APPEND);
-    // #endregion
-    
     // CRÍTICO: Definir flag de ativação ANTES de qualquer operação
     // Isso previne que hooks 'init' e 'plugins_loaded' executem durante ativação
     set_transient( 'vemcomer_activating', true, 60 ); // 60 segundos para garantir
     
-    // CRÍTICO: Iniciar output buffering em múltiplos níveis para capturar TODO output
-    $started_buffer = ob_get_level();
-    while ( ob_get_level() < 3 ) {
-        @ob_start();
-    }
+    // CRÍTICO: NÃO manipular output buffering - WordPress já gerencia isso
+    // Interferir com ob_start/ob_end_clean causa erros "headers already sent"
     
-    // CRÍTICO: Desabilitar qualquer output durante ativação
-    @ini_set( 'display_errors', 0 );
-    @ini_set( 'log_errors', 1 );
-
     // Corrige WP Pusher automaticamente (sem output)
     @vemcomer_fix_wppusher_php82();
 
@@ -191,43 +169,10 @@ register_activation_hook( __FILE__, function () {
     // if ( ! $already_installed && class_exists( '\\VC\\Admin\\Installer' ) ) {
     //     ( new \VC\Admin\Installer() )->install_defaults();
     // }
-
-    // Capturar e descartar TODO output gerado
-    $activation_output = '';
-    while ( ob_get_level() > $started_buffer ) {
-        $activation_output .= ob_get_clean();
-    }
     
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $log_data = json_encode([
-        'id' => 'activation_output_captured',
-        'timestamp' => microtime(true) * 1000,
-        'location' => 'vemcomer-core.php:167',
-        'message' => 'Activation output captured',
-        'data' => ['output_size' => strlen($activation_output), 'output_preview' => substr($activation_output, 0, 200)],
-        'sessionId' => 'debug-session',
-        'runId' => 'run1',
-        'hypothesisId' => 'B'
-    ]) . "\n";
-    @file_put_contents($log_file, $log_data, FILE_APPEND);
-    // #endregion
-    
-    if ( ! empty( $activation_output ) ) {
-        @error_log( sprintf( 'VemComer Core suppressed %d bytes of activation output', strlen( $activation_output ) ) );
-    }
-    
-    // Garantir que não há buffers restantes
-    while ( ob_get_level() > 0 ) {
-        @ob_end_clean();
-    }
-    
-    // Restaurar configurações
-    @ini_restore( 'display_errors' );
-    
-    // Remover flag após ativação completa (com delay para garantir)
-    // A flag será removida automaticamente após 60 segundos, mas removemos agora também
-    delete_transient( 'vemcomer_activating' );
+    // CRÍTICO: NÃO remover a flag imediatamente - deixar expirar após 60 segundos
+    // Isso garante que hooks subsequentes não executem durante a ativação
+    // delete_transient será chamado automaticamente após 60 segundos
 } );
 
 // Tentar corrigir WP Pusher automaticamente no carregamento (se necessário)
