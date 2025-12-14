@@ -382,41 +382,13 @@ add_action( 'plugins_loaded', function () {
 // Seed automático de categorias de cozinha (vc_cuisine) – roda uma vez, após taxonomias existirem
 // OTIMIZADO: Executa apenas em admin ou quando necessário, com flags para evitar execução repetida
 add_action( 'init', function () {
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $is_activating = get_transient( 'vemcomer_activating' );
-    $log_data = json_encode([
-        'id' => 'init_hook',
-        'timestamp' => microtime(true) * 1000,
-        'location' => 'vemcomer-core.php:448',
-        'message' => 'init hook executed',
-        'data' => ['is_activating' => (bool)$is_activating, 'wp_installing' => defined('WP_INSTALLING'), 'is_admin' => is_admin()],
-        'sessionId' => 'debug-session',
-        'runId' => 'run1',
-        'hypothesisId' => 'D'
-    ]) . "\n";
-    @file_put_contents($log_file, $log_data, FILE_APPEND);
-    // #endregion
-    
     // CRÍTICO: Não executar durante ativação/desativação do plugin
     // Verificação melhorada para capturar ativação de forma mais confiável
+    $is_activating = get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' );
     if ( defined( 'WP_UNINSTALL_PLUGIN' ) 
          || defined( 'WP_INSTALLING' ) 
          || $is_activating
          || ( is_admin() && isset( $_GET['action'], $_GET['plugin'] ) && $_GET['action'] === 'activate' ) ) {
-        // #region agent log
-        $log_data = json_encode([
-            'id' => 'init_hook_skipped',
-            'timestamp' => microtime(true) * 1000,
-            'location' => 'vemcomer-core.php:454',
-            'message' => 'init hook skipped due to activation',
-            'data' => [],
-            'sessionId' => 'debug-session',
-            'runId' => 'run1',
-            'hypothesisId' => 'D'
-        ]) . "\n";
-        @file_put_contents($log_file, $log_data, FILE_APPEND);
-        // #endregion
         return;
     }
     
