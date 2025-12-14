@@ -24,7 +24,14 @@ class CPT_Restaurant {
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
         // Concede capabilities nas roles padrão
-        add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        // CRÍTICO: Adiar durante ativação para evitar múltiplas conexões
+        // grant_caps() faz queries (get_role, add_cap) que podem abrir muitas conexões
+        if ( ! get_transient( 'vemcomer_activating' ) && ! defined( 'WP_INSTALLING' ) ) {
+            add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        } else {
+            // Adiar para depois da ativação
+            add_action( 'admin_init', [ $this, 'grant_caps' ], 5 );
+        }
         // Adiciona query vars para slug e ID
         add_filter( 'query_vars', [ $this, 'add_query_vars' ] );
         // Template redirect para buscar restaurante por slug ou ID

@@ -431,7 +431,9 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Integration\\SMClick' ) )        { ( new \VC\Integration\SMClick() )->init(); }
 
     // Seed automático de planos (uma vez) - apenas em admin ou primeira vez
-    if ( $is_admin_context || $is_rest_context ) {
+    // CRÍTICO: NUNCA executar durante ativação para evitar múltiplas conexões
+    $is_activating_check = get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' );
+    if ( ( $is_admin_context || $is_rest_context ) && ! $is_activating_check ) {
         if ( class_exists( '\\VC\\Utils\\Plan_Seeder' ) ) {
             $seeded = get_option( 'vemcomer_plans_seeded' );
             if ( ! $seeded ) {
@@ -501,7 +503,8 @@ add_action( 'init', function () {
     }
     
     // Cuisine Seeder - com flag para evitar execução repetida
-    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) ) {
+    // CRÍTICO: NUNCA executar durante ativação - faz muitas queries (wp_insert_term, get_term_by, etc.)
+    if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) && ! $is_activating ) {
         \VC\Utils\Cuisine_Seeder::seed();
         
         // CRÍTICO: update_existing_terms() executa get_terms() que busca TODOS os termos
@@ -514,7 +517,8 @@ add_action( 'init', function () {
     }
     
     // Facility Seeder - já tem flag interna, mas verificar antes de chamar
-    if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) ) {
+    // CRÍTICO: NUNCA executar durante ativação
+    if ( class_exists( '\\VC\\Utils\\Facility_Seeder' ) && taxonomy_exists( 'vc_facility' ) && ! $is_activating ) {
         $facilities_seeded = get_option( 'vemcomer_facilities_seeded' );
         if ( ! $facilities_seeded ) {
             \VC\Utils\Facility_Seeder::seed();
@@ -522,7 +526,8 @@ add_action( 'init', function () {
     }
     
     // Addon Catalog Seeder - já verifica internamente, mas otimizar
-    if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) ) {
+    // CRÍTICO: NUNCA executar durante ativação
+    if ( class_exists( '\\VC\\Utils\\Addon_Catalog_Seeder' ) && post_type_exists( 'vc_addon_group' ) && ! $is_activating ) {
         $addon_catalog_seeded = get_option( 'vemcomer_addon_catalog_seeded', false );
         if ( ! $addon_catalog_seeded ) {
             // Verificar se já existe antes de chamar seed (evita get_posts desnecessário)
@@ -543,7 +548,8 @@ add_action( 'init', function () {
     }
     
     // Seed automático de categorias de cardápio sugeridas
-    if ( class_exists( '\\VC\\Utils\\Menu_Category_Catalog_Seeder' ) && taxonomy_exists( 'vc_menu_category' ) && taxonomy_exists( 'vc_cuisine' ) ) {
+    // CRÍTICO: NUNCA executar durante ativação
+    if ( class_exists( '\\VC\\Utils\\Menu_Category_Catalog_Seeder' ) && taxonomy_exists( 'vc_menu_category' ) && taxonomy_exists( 'vc_cuisine' ) && ! $is_activating ) {
         $menu_categories_seeded = get_option( 'vemcomer_menu_categories_seeded' );
         if ( ! $menu_categories_seeded ) {
             \VC\Utils\Menu_Category_Catalog_Seeder::seed();

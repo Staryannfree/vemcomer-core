@@ -21,7 +21,12 @@ class CPT_MenuItem {
         add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
-        add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        // CRÍTICO: Adiar durante ativação para evitar múltiplas conexões
+        if ( ! get_transient( 'vemcomer_activating' ) && ! defined( 'WP_INSTALLING' ) ) {
+            add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        } else {
+            add_action( 'admin_init', [ $this, 'grant_caps' ], 5 );
+        }
         // Validação de limite de itens
         add_filter( 'wp_insert_post_data', [ $this, 'check_limit_on_save' ], 10, 2 );
     }

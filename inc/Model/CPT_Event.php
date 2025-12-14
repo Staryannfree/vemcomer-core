@@ -20,7 +20,12 @@ class CPT_Event {
         add_action( 'save_post_' . self::SLUG, [ $this, 'save_meta' ] );
         add_filter( 'manage_' . self::SLUG . '_posts_columns', [ $this, 'admin_columns' ] );
         add_action( 'manage_' . self::SLUG . '_posts_custom_column', [ $this, 'admin_column_values' ], 10, 2 );
-        add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        // CRÍTICO: Adiar durante ativação para evitar múltiplas conexões
+        if ( ! get_transient( 'vemcomer_activating' ) && ! defined( 'WP_INSTALLING' ) ) {
+            add_action( 'init', [ $this, 'grant_caps' ], 5 );
+        } else {
+            add_action( 'admin_init', [ $this, 'grant_caps' ], 5 );
+        }
         
         // Restringir criação baseado em planos
         add_action( 'save_post_' . self::SLUG, [ $this, 'validate_event_limits' ], 5, 3 );
