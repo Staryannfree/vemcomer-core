@@ -1,18 +1,67 @@
-node_modules
-.git
-.gitignore
-*.bat
+# Arquivos e diretórios que NÃO devem ser enviados para produção
+# Estes arquivos não são usados pelo WordPress e apenas ocupam espaço
+
+# Documentação (não é carregada pelo WordPress)
 *.md
-*.zip
+docs/
+README.md
+README_TROUBLESHOOTING.md
+ROADMAP.md
+checklist-v0.6.md
+ANALISE_INSTRUCOES.md
+COMO-*.md
+DIAGNOSTICO-*.md
+EXECUTAR-*.md
+GUIA_*.md
+INSTRUCOES*.md
+POPUP_*.md
+PROBLEMA-*.md
+AAA-PROTOCOLO-*.md
+Estrutura.txt
+
+# Scripts de desenvolvimento (não são executados pelo WordPress)
+*.bat
+*.ps1
+scripts/
+bin/
+
+# Arquivos de teste (não são usados em produção)
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Arquivos de debug (não são usados em produção)
+debug-reports/
+*.log
+browser-debug-capture.js
+
+# Arquivos de configuração de desenvolvimento
 composer.json
 composer.lock
 package.json
 package-lock.json
-.eslintrc
+.eslintrc.json
+.stylelintrc.json
 phpcs.xml
-docs
-bin
-.vscode
-.idea
+eslint.config.mjs
 
+# Arquivos temporários e estranhos
+*.zip
+theme-vemcomer.zip
+endereço
+hort --pretty=format:-h -ad -s -15
+ta z-index e event listeners
+tatus
 
+# Diretórios de desenvolvimento
+.vscode/
+.idea/
+node_modules/
+.git/
+.gitignore
+
+# Arquivos de controle de versão
+.gitattributes
+
+# Arquivos de deploy
+deploy-exclude.txt
