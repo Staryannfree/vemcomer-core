@@ -11,20 +11,29 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+// CRÍTICO: Suprimir TODOS os erros/avisos durante carregamento do plugin
+// Isso previne que avisos de outros plugins (Wordfence, WP Pusher, etc) sejam capturados como output
+// Aplicar ANTES de qualquer outra coisa, incluindo detecção de ativação
+$is_activating_context = (
+    ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) )
+    || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'activate' && isset( $_REQUEST['plugin'] ) )
+    || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
+    || ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() && isset( $_REQUEST['action'] ) && strpos( $_REQUEST['action'], 'activate' ) !== false )
+);
+
+if ( $is_activating_context ) {
+    // Salvar configurações atuais
+    $vemcomer_old_error_reporting = error_reporting( 0 );
+    $vemcomer_old_display_errors = @ini_get( 'display_errors' );
+    @ini_set( 'display_errors', 0 );
+    @ini_set( 'log_errors', 0 );
+}
+
 // CRÍTICO: Detectar ativação o mais cedo possível para prevenir execução de hooks
 // Verificar se estamos em processo de ativação ANTES de qualquer outra coisa
-$is_activating_early = ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) )
-                        || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'activate' && isset( $_REQUEST['plugin'] ) )
-                        || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING );
-if ( $is_activating_early && function_exists( 'set_transient' ) ) {
-    // CRÍTICO: Suprimir erros durante detecção precoce de ativação
-    $old_error_reporting = error_reporting( 0 );
-    @ini_set( 'display_errors', 0 );
-    
+// Nota: A supressão de erros já foi aplicada acima se $is_activating_context for true
+if ( $is_activating_context && function_exists( 'set_transient' ) ) {
     set_transient( 'vemcomer_activating', true, 60 );
-    
-    // Restaurar configurações
-    error_reporting( $old_error_reporting );
 }
 
 if ( ! defined( 'VEMCOMER_CORE_VERSION' ) ) {
@@ -148,9 +157,11 @@ function vemcomer_fix_wppusher_php82() {
 register_activation_hook( __FILE__, function () {
     // CRÍTICO: Suprimir TODOS os erros/avisos durante ativação para evitar output
     // WordPress captura qualquer output e reporta como "output inesperado"
+    // Nota: A supressão já foi aplicada no início do arquivo, mas reforçamos aqui
     $old_error_reporting = error_reporting( 0 );
-    $old_display_errors = ini_get( 'display_errors' );
+    $old_display_errors = @ini_get( 'display_errors' );
     @ini_set( 'display_errors', 0 );
+    @ini_set( 'log_errors', 0 );
     
     // CRÍTICO: Definir flag de ativação ANTES de qualquer operação
     // Isso previne que hooks 'init' e 'plugins_loaded' executem durante ativação
@@ -170,15 +181,12 @@ register_activation_hook( __FILE__, function () {
     //     ( new \VC\Admin\Installer() )->install_defaults();
     // }
     
-    // Restaurar configurações de erro após ativação
-    error_reporting( $old_error_reporting );
-    if ( $old_display_errors !== false ) {
-        @ini_set( 'display_errors', $old_display_errors );
-    }
-    
     // CRÍTICO: NÃO remover a flag imediatamente - deixar expirar após 60 segundos
     // Isso garante que hooks subsequentes não executem durante a ativação
     // delete_transient será chamado automaticamente após 60 segundos
+    
+    // NOTA: Não restaurar configurações aqui - deixar o WordPress fazer isso
+    // Restaurar pode causar output se houver erros durante a restauração
 } );
 
 // Tentar corrigir WP Pusher automaticamente no carregamento (se necessário)
@@ -199,38 +207,13 @@ add_action( 'plugins_loaded', function () {
 }, 1 );
 
 add_action( 'plugins_loaded', function () {
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $is_activating = get_transient( 'vemcomer_activating' );
-    $log_data = json_encode([
-        'id' => 'plugins_loaded_hook',
-        'timestamp' => microtime(true) * 1000,
-        'location' => 'vemcomer-core.php:206',
-        'message' => 'plugins_loaded hook executed',
-        'data' => ['is_activating' => (bool)$is_activating, 'wp_installing' => defined('WP_INSTALLING'), 'ob_level' => ob_get_level()],
-        'sessionId' => 'debug-session',
-        'runId' => 'run1',
-        'hypothesisId' => 'A'
-    ]) . "\n";
-    @file_put_contents($log_file, $log_data, FILE_APPEND);
-    // #endregion
+    static $execution_count = 0;
+    $execution_count++;
     
     // CRÍTICO: Não executar durante ativação do plugin
     // Isso previne múltiplas conexões de banco durante ativação
-    if ( $is_activating || defined( 'WP_INSTALLING' ) ) {
-        // #region agent log
-        $log_data = json_encode([
-            'id' => 'plugins_loaded_skipped',
-            'timestamp' => microtime(true) * 1000,
-            'location' => 'vemcomer-core.php:209',
-            'message' => 'plugins_loaded skipped due to activation',
-            'data' => [],
-            'sessionId' => 'debug-session',
-            'runId' => 'run1',
-            'hypothesisId' => 'A'
-        ]) . "\n";
-        @file_put_contents($log_file, $log_data, FILE_APPEND);
-        // #endregion
+    $is_activating = get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' );
+    if ( $is_activating ) {
         return;
     }
     
