@@ -492,6 +492,7 @@ add_action( 'init', function () {
     
     // Cuisine Seeder - com flag para evitar execução repetida
     // CRÍTICO: NUNCA executar durante ativação - faz muitas queries (wp_insert_term, get_term_by, etc.)
+    // IMPORTANTE: $is_activating já foi verificado acima e o transient foi limpo se necessário
     if ( class_exists( '\\VC\\Utils\\Cuisine_Seeder' ) && taxonomy_exists( 'vc_cuisine' ) && ! $is_activating ) {
         // #region agent log
         $seed_start = microtime(true);
@@ -598,6 +599,7 @@ add_action( 'init', function () {
     
     // Seed automático de categorias de cardápio sugeridas
     // CRÍTICO: NUNCA executar durante ativação
+    // IMPORTANTE: $is_activating já foi verificado acima
     if ( class_exists( '\\VC\\Utils\\Menu_Category_Catalog_Seeder' ) && taxonomy_exists( 'vc_menu_category' ) && taxonomy_exists( 'vc_cuisine' ) && ! $is_activating ) {
         $menu_categories_seeded = get_option( 'vemcomer_menu_categories_seeded' );
         if ( ! $menu_categories_seeded ) {
