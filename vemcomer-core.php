@@ -152,6 +152,12 @@ function vemcomer_fix_wppusher_php82() {
 }
 
 register_activation_hook( __FILE__, function () {
+    // CRÍTICO: Suprimir TODOS os erros/avisos durante ativação para evitar output
+    // WordPress captura qualquer output e reporta como "output inesperado"
+    $old_error_reporting = error_reporting( 0 );
+    $old_display_errors = ini_get( 'display_errors' );
+    @ini_set( 'display_errors', 0 );
+    
     // CRÍTICO: Definir flag de ativação ANTES de qualquer operação
     // Isso previne que hooks 'init' e 'plugins_loaded' executem durante ativação
     set_transient( 'vemcomer_activating', true, 60 ); // 60 segundos para garantir
@@ -169,6 +175,12 @@ register_activation_hook( __FILE__, function () {
     // if ( ! $already_installed && class_exists( '\\VC\\Admin\\Installer' ) ) {
     //     ( new \VC\Admin\Installer() )->install_defaults();
     // }
+    
+    // Restaurar configurações de erro após ativação
+    error_reporting( $old_error_reporting );
+    if ( $old_display_errors !== false ) {
+        @ini_set( 'display_errors', $old_display_errors );
+    }
     
     // CRÍTICO: NÃO remover a flag imediatamente - deixar expirar após 60 segundos
     // Isso garante que hooks subsequentes não executem durante a ativação
