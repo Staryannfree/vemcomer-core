@@ -197,7 +197,12 @@ register_activation_hook( __FILE__, function () {
 // Tentar corrigir WP Pusher automaticamente no carregamento (se necessário)
 add_action( 'plugins_loaded', function () {
     // CRÍTICO: Não executar durante ativação
-    if ( get_transient( 'vemcomer_activating' ) || defined( 'WP_INSTALLING' ) ) {
+    // IMPORTANTE: Verificar apenas se estamos REALMENTE em processo de ativação
+    $is_activating = ( defined( 'WP_INSTALLING' ) && WP_INSTALLING )
+                     || ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) && strpos( $_GET['plugin'], 'vemcomer-core' ) !== false )
+                     || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'activate' && isset( $_REQUEST['plugin'] ) && strpos( $_REQUEST['plugin'], 'vemcomer-core' ) !== false );
+    
+    if ( $is_activating ) {
         return;
     }
     
