@@ -14,23 +14,17 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 // CRÍTICO: Detectar ativação o mais cedo possível para prevenir execução de hooks
 // Verificar se estamos em processo de ativação ANTES de qualquer outra coisa
 $is_activating_early = ( isset( $_GET['action'] ) && $_GET['action'] === 'activate' && isset( $_GET['plugin'] ) )
+                        || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'activate' && isset( $_REQUEST['plugin'] ) )
                         || ( defined( 'WP_INSTALLING' ) && WP_INSTALLING );
 if ( $is_activating_early && function_exists( 'set_transient' ) ) {
+    // CRÍTICO: Suprimir erros durante detecção precoce de ativação
+    $old_error_reporting = error_reporting( 0 );
+    @ini_set( 'display_errors', 0 );
+    
     set_transient( 'vemcomer_activating', true, 60 );
-    // #region agent log
-    $log_file = __DIR__ . '/.cursor/debug.log';
-    $log_data = json_encode([
-        'id' => 'early_activation_flag',
-        'timestamp' => microtime(true) * 1000,
-        'location' => 'vemcomer-core.php:19',
-        'message' => 'Early activation flag set',
-        'data' => ['is_activating' => $is_activating_early, 'get_action' => $_GET['action'] ?? null],
-        'sessionId' => 'debug-session',
-        'runId' => 'run1',
-        'hypothesisId' => 'E'
-    ]) . "\n";
-    @file_put_contents($log_file, $log_data, FILE_APPEND);
-    // #endregion
+    
+    // Restaurar configurações
+    error_reporting( $old_error_reporting );
 }
 
 if ( ! defined( 'VEMCOMER_CORE_VERSION' ) ) {
