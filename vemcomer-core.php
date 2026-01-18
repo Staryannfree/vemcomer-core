@@ -11,6 +11,82 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
+// ============================================================================
+// CORS URGENTE: Deve ser executado ANTES de qualquer output ou processamento
+// Intercepta requisições OPTIONS (preflight) e adiciona headers CORS
+// ============================================================================
+if ( isset( $_SERVER['REQUEST_METHOD'] ) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+    $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+    
+    // Verifica se é uma requisição para a API REST do VemComer
+    if ( strpos( $request_uri, '/wp-json/vemcomer/v1/' ) !== false ) {
+        $allowed_origins = [
+            'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com',
+            'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app',
+            'https://hungry-hub-core.lovable.app',
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'http://localhost:8080',
+            'http://127.0.0.1:5173',
+            'http://127.0.0.1:3000',
+            'http://pedevem-local.local',
+            'https://periodic-symbol.localsite.io',
+        ];
+        
+        $origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
+        
+        // Se a origem está na lista permitida, adiciona headers CORS
+        if ( $origin && in_array( $origin, $allowed_origins, true ) ) {
+            if ( ! headers_sent() ) {
+                header( 'Access-Control-Allow-Origin: ' . $origin );
+                header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
+                header( 'Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With' );
+                header( 'Access-Control-Allow-Credentials: true' );
+                header( 'Access-Control-Max-Age: 86400' );
+                header( 'Content-Length: 0' );
+                header( 'Content-Type: text/plain' );
+                http_response_code( 200 );
+            }
+            exit;
+        }
+    }
+}
+
+// Adiciona CORS headers para requisições GET/POST também, o mais cedo possível
+// Usa plugins_loaded com prioridade 1 para executar antes de quase tudo
+add_action( 'plugins_loaded', function() {
+    $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+    
+    // Apenas processa requisições para a API REST do VemComer
+    if ( strpos( $request_uri, '/wp-json/vemcomer/v1/' ) === false ) {
+        return;
+    }
+    
+    $allowed_origins = [
+        'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com',
+        'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app',
+        'https://hungry-hub-core.lovable.app',
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://localhost:8080',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+        'http://pedevem-local.local',
+        'https://periodic-symbol.localsite.io',
+    ];
+    
+    $origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
+    
+    // Adiciona headers CORS se a origem for permitida e headers ainda não foram enviados
+    if ( $origin && in_array( $origin, $allowed_origins, true ) && ! headers_sent() ) {
+        header( 'Access-Control-Allow-Origin: ' . $origin );
+        header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
+        header( 'Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With' );
+        header( 'Access-Control-Allow-Credentials: true' );
+        header( 'Access-Control-Max-Age: 86400' );
+    }
+}, 1 );
+
 // CRÍTICO: Suprimir TODOS os erros/avisos durante carregamento do plugin
 // Isso previne que avisos de outros plugins (Wordfence, WP Pusher, etc) sejam capturados como output
 // Aplicar ANTES de qualquer outra coisa, incluindo detecção de ativação
@@ -659,66 +735,3 @@ $vc_inc_base = VEMCOMER_CORE_DIR . 'inc/';
 if ( file_exists( $vc_inc_base . 'init-restaurants.php' ) ) {
     require_once $vc_inc_base . 'init-restaurants.php';
 }
-
-// --- CORS Fallback para garantir funcionamento em produção ---
-// Adiciona headers CORS diretamente no hook rest_api_init como fallback
-add_action( 'rest_api_init', function() {
-    // Remove filtro padrão do WordPress
-    remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
-    
-    // Adiciona headers CORS personalizados
-    add_filter( 'rest_pre_serve_request', function( $value ) {
-        $allowed_origins = [
-            'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com',
-            'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app',
-            'https://hungry-hub-core.lovable.app',
-            'http://localhost:5173',
-            'http://pedevem-local.local',
-            'https://periodic-symbol.localsite.io',
-        ];
-        
-        $origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
-        
-        if ( $origin && in_array( $origin, $allowed_origins, true ) ) {
-            header( 'Access-Control-Allow-Origin: ' . $origin );
-            header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
-            header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
-            header( 'Access-Control-Allow-Credentials: true' );
-        }
-        
-        return $value;
-    }, 15 );
-}, 15 );
-
-// Tratar preflight OPTIONS diretamente no init
-add_action( 'init', function() {
-    if ( isset( $_SERVER['REQUEST_METHOD'] ) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
-        $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
-        
-        // Apenas processa se for requisição para a API REST
-        if ( strpos( $request_uri, '/wp-json/vemcomer/v1/' ) !== false ) {
-            $allowed_origins = [
-                'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com',
-                'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app',
-                'https://hungry-hub-core.lovable.app',
-                'http://localhost:5173',
-                'http://pedevem-local.local',
-                'https://periodic-symbol.localsite.io',
-            ];
-            
-            $origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
-            
-            if ( $origin && in_array( $origin, $allowed_origins, true ) ) {
-                header( 'Access-Control-Allow-Origin: ' . $origin );
-            } else {
-                header( 'Access-Control-Allow-Origin: *' );
-            }
-            
-            header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
-            header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
-            header( 'Access-Control-Allow-Credentials: true' );
-            status_header( 200 );
-            exit();
-        }
-    }
-}, 1 );
