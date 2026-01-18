@@ -18,9 +18,57 @@ class CORS_Handler {
 		// Remove o handler padrão do WordPress para ter controle total
 		remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
 		
-		// Adiciona nosso handler de CORS
-		add_filter( 'rest_pre_serve_request', [ $this, 'add_cors_headers' ], 10, 4 );
+		// Adiciona nosso handler de CORS com prioridade alta
 		add_filter( 'rest_pre_serve_request', [ $this, 'handle_preflight' ], 0, 4 );
+		add_filter( 'rest_pre_serve_request', [ $this, 'add_cors_headers' ], 10, 4 );
+		
+		// Também adiciona hook no init para garantir que funcione mesmo fora do contexto REST
+		add_action( 'init', [ $this, 'handle_options_preflight' ], 1 );
+	}
+	
+	/**
+	 * Manipula requisições OPTIONS (preflight) no hook init
+	 * Garante que funcione mesmo antes do WordPress processar a requisição REST
+	 */
+	public function handle_options_preflight(): void {
+		// Apenas processa requisições OPTIONS para endpoints REST
+		if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || $_SERVER['REQUEST_METHOD'] !== 'OPTIONS' ) {
+			return;
+		}
+		
+		// Verifica se é uma requisição para a API REST
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+		if ( strpos( $request_uri, '/wp-json/vemcomer/v1/' ) === false ) {
+			return;
+		}
+		
+		$origin = $this->get_request_origin();
+		if ( ! $origin ) {
+			return;
+		}
+		
+		$allowed_origins = $this->get_allowed_origins();
+		
+		// Verifica se a origem é permitida
+		if ( ! in_array( $origin, $allowed_origins, true ) && ! in_array( '*', $allowed_origins, true ) ) {
+			return;
+		}
+		
+		// Define a origem permitida (ou * se configurado)
+		$allowed_origin = in_array( '*', $allowed_origins, true ) ? '*' : $origin;
+		
+		// Headers para preflight
+		header( 'Access-Control-Allow-Origin: ' . $allowed_origin );
+		header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
+		header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
+		header( 'Access-Control-Allow-Credentials: true' );
+		header( 'Access-Control-Max-Age: 86400' );
+		header( 'Content-Length: 0' );
+		header( 'Content-Type: text/plain' );
+		
+		// Retorna 200 OK para preflight
+		status_header( 200 );
+		exit;
 	}
 
 	/**
@@ -141,6 +189,7 @@ class CORS_Handler {
 			'http://pedevem-local.local', // Ambiente local Local by Flywheel
 			'https://hungry-hub-core.lovable.app', // Frontend Lovable (produção)
 			'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com', // Frontend Lovable (desenvolvimento)
+			'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app', // Frontend Lovable (preview)
 			'https://periodic-symbol.localsite.io', // Live Link do Local by Flywheel
 		];
 

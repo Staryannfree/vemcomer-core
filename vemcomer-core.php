@@ -369,8 +369,9 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Frontend\\Coupons' ) )           { ( new \VC\Frontend\Coupons() )->init(); }
     
     // CORS Handler - sempre necessário para requisições REST do frontend
-    if ( $is_rest_context || $is_admin_context ) {
-        if ( class_exists( '\\VC\\REST\\CORS_Handler' ) ) { ( new \VC\REST\CORS_Handler() )->init(); }
+    // Inicializa sempre, não apenas em contexto REST, para garantir que funcione
+    if ( class_exists( '\\VC\\REST\\CORS_Handler' ) ) { 
+        ( new \VC\REST\CORS_Handler() )->init(); 
     }
     
     // REST Controllers adicionais - apenas em REST ou admin
@@ -658,3 +659,66 @@ $vc_inc_base = VEMCOMER_CORE_DIR . 'inc/';
 if ( file_exists( $vc_inc_base . 'init-restaurants.php' ) ) {
     require_once $vc_inc_base . 'init-restaurants.php';
 }
+
+// --- CORS Fallback para garantir funcionamento em produção ---
+// Adiciona headers CORS diretamente no hook rest_api_init como fallback
+add_action( 'rest_api_init', function() {
+    // Remove filtro padrão do WordPress
+    remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+    
+    // Adiciona headers CORS personalizados
+    add_filter( 'rest_pre_serve_request', function( $value ) {
+        $allowed_origins = [
+            'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com',
+            'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app',
+            'https://hungry-hub-core.lovable.app',
+            'http://localhost:5173',
+            'http://pedevem-local.local',
+            'https://periodic-symbol.localsite.io',
+        ];
+        
+        $origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
+        
+        if ( $origin && in_array( $origin, $allowed_origins, true ) ) {
+            header( 'Access-Control-Allow-Origin: ' . $origin );
+            header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
+            header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
+            header( 'Access-Control-Allow-Credentials: true' );
+        }
+        
+        return $value;
+    }, 15 );
+}, 15 );
+
+// Tratar preflight OPTIONS diretamente no init
+add_action( 'init', function() {
+    if ( isset( $_SERVER['REQUEST_METHOD'] ) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS' ) {
+        $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+        
+        // Apenas processa se for requisição para a API REST
+        if ( strpos( $request_uri, '/wp-json/vemcomer/v1/' ) !== false ) {
+            $allowed_origins = [
+                'https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com',
+                'https://id-preview--47191717-b1f5-4559-bdab-f069bc62cec6.lovable.app',
+                'https://hungry-hub-core.lovable.app',
+                'http://localhost:5173',
+                'http://pedevem-local.local',
+                'https://periodic-symbol.localsite.io',
+            ];
+            
+            $origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
+            
+            if ( $origin && in_array( $origin, $allowed_origins, true ) ) {
+                header( 'Access-Control-Allow-Origin: ' . $origin );
+            } else {
+                header( 'Access-Control-Allow-Origin: *' );
+            }
+            
+            header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );
+            header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
+            header( 'Access-Control-Allow-Credentials: true' );
+            status_header( 200 );
+            exit();
+        }
+    }
+}, 1 );
