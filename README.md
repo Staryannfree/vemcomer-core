@@ -75,14 +75,84 @@ Cria 1 restaurante e 5 itens de cardápio:
 wp vc seed
 ```
 
+## Integração Frontend PWA
+
+O plugin está configurado para comunicação com frontends PWA (Progressive Web Apps) desenvolvidos em React, Vue ou outras frameworks modernas.
+
+**Repositório**: https://github.com/Staryannfree/vemcomer-core
+
+### Configuração CORS
+
+O plugin inclui um handler CORS configurável que permite requisições cross-origin do frontend. As origens permitidas podem ser configuradas via filtro WordPress:
+
+```php
+add_filter( 'vemcomer_rest_allowed_origins', function( $origins ) {
+    $origins[] = 'https://seu-frontend.com';
+    return $origins;
+} );
+```
+
+Por padrão, as seguintes origens são permitidas:
+- `http://localhost:3000`
+- `http://localhost:5173`
+- `http://localhost:8080`
+- `http://127.0.0.1:3000`
+- `http://127.0.0.1:5173`
+- `http://pedevem-local.local` (ambiente local)
+- `https://hungry-hub-core.lovable.app` (frontend Lovable produção)
+- `https://47191717-b1f5-4559-bdab-f069bc62cec6.lovableproject.com` (frontend Lovable desenvolvimento)
+- `https://periodic-symbol.localsite.io` (Live Link Local by Flywheel)
+
+### Documentação da API
+
+A documentação completa da API REST está disponível em:
+- **[Documentação Completa dos Endpoints](./docs/API_ENDPOINTS.md)** - Lista todos os endpoints públicos com exemplos de requisição e resposta
+- **[Guia de Integração para Lovable](./docs/LOVABLE_INTEGRATION.md)** - Guia passo a passo para integrar o frontend PWA, incluindo:
+
+**Links no GitHub:**
+- [API_ENDPOINTS.md](https://github.com/Staryannfree/vemcomer-core/blob/main/docs/API_ENDPOINTS.md)
+- [LOVABLE_INTEGRATION.md](https://github.com/Staryannfree/vemcomer-core/blob/main/docs/LOVABLE_INTEGRATION.md)
+  - Configuração de variáveis de ambiente
+  - Cliente API (fetch wrapper) pronto para uso
+  - Estrutura de dados TypeScript
+  - Tratamento de erros
+  - Exemplos de uso completos
+
+### Exemplo Rápido
+
+```javascript
+// Configuração básica
+// Para desenvolvimento local: http://pedevem-local.local/wp-json/vemcomer/v1
+// Para produção: https://pedevem.com/wp-json/vemcomer/v1
+const API_URL = 'http://pedevem-local.local/wp-json/vemcomer/v1';
+
+// Listar restaurantes
+const restaurants = await fetch(`${API_URL}/restaurants?per_page=20`)
+  .then(res => res.json());
+
+// Obter detalhes de um restaurante
+const restaurant = await fetch(`${API_URL}/restaurants/123`)
+  .then(res => res.json());
+
+// Obter cardápio
+const menuItems = await fetch(`${API_URL}/restaurants/123/menu-items`)
+  .then(res => res.json());
+```
+
+Para mais detalhes e exemplos completos, consulte a [documentação de integração](./docs/LOVABLE_INTEGRATION.md).
+
 ## Endpoints REST
 
 ### Restaurantes
 
-* **GET** `/wp-json/vemcomer/v1/restaurants`
-* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/menu-items`
+* **GET** `/wp-json/vemcomer/v1/restaurants` - Lista restaurantes (suporta filtros: `cuisine`, `delivery`, `is_open`, `search`, `orderby`, `order`, `per_page`, `page`)
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}` - Detalhes de um restaurante
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/menu-items` - Lista itens do cardápio de um restaurante
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/menu-categories` - Lista categorias do cardápio
 * **GET** `/wp-json/vemcomer/v1/restaurants/{id}/schedule` - Horários estruturados do restaurante (inclui feriados)
 * **GET** `/wp-json/vemcomer/v1/restaurants/{id}/is-open?timestamp={opcional}` - Verifica se restaurante está aberto (retorna próximo horário de abertura se fechado)
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/reviews` - Lista avaliações aprovadas de um restaurante
+* **GET** `/wp-json/vemcomer/v1/restaurants/{id}/rating` - Retorna rating agregado (média e total)
 
 ### Modificadores de Produtos
 
@@ -138,6 +208,11 @@ wp vc seed
 * Parâmetros obrigatórios: `restaurant_id`, `subtotal`
 * Parâmetros opcionais: `lat`, `lng`, `address`, `neighborhood` (para cálculo por distância)
 * Retorna: array de métodos disponíveis, distância calculada, se está no raio, se restaurante está aberto
+
+### Banners
+
+* **GET** `/wp-json/vemcomer/v1/banners` - Lista banners ativos da home (público)
+* Parâmetros opcionais: `restaurant_id` - Filtrar banners de um restaurante específico
 
 Exemplo de registro:
 

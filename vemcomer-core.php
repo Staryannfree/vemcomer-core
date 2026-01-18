@@ -368,6 +368,11 @@ add_action( 'plugins_loaded', function () {
     if ( class_exists( '\\VC\\Frontend\\Home_Template' ) )     { ( new \VC\Frontend\Home_Template() )->init(); }
     if ( class_exists( '\\VC\\Frontend\\Coupons' ) )           { ( new \VC\Frontend\Coupons() )->init(); }
     
+    // CORS Handler - sempre necessário para requisições REST do frontend
+    if ( $is_rest_context || $is_admin_context ) {
+        if ( class_exists( '\\VC\\REST\\CORS_Handler' ) ) { ( new \VC\REST\CORS_Handler() )->init(); }
+    }
+    
     // REST Controllers adicionais - apenas em REST ou admin
     if ( $is_rest_context || $is_admin_context ) {
         if ( class_exists( '\\VC\\REST\\Shipping_Controller' ) )   { ( new \VC\REST\Shipping_Controller() )->init(); }
